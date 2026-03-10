@@ -1,0 +1,30 @@
+---
+import '../../styles/global.css';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<html lang="ko">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<title>{t('site.title')}</title>
+	</head>
+	<body class="min-h-screen bg-gray-50 flex items-center justify-center">
+		<div class="text-center">
+			<h1 class="text-4xl font-bold text-blue-600 mb-4">{t('site.title')}</h1>
+			<p class="text-lg text-gray-600">{t('site.description')}</p>
+			<nav class="mt-8 flex gap-6 justify-center text-gray-700">
+				<a href="/ko/about" class="hover:text-blue-600 transition">{t('nav.about')}</a>
+				<a href="/ko/apps" class="hover:text-blue-600 transition">{t('nav.apps')}</a>
+				<a href="/ko/blog" class="hover:text-blue-600 transition">{t('nav.blog')}</a>
+			</nav>
+			<div class="mt-4">
+				<a href="/en/" class="text-sm text-gray-400 hover:text-gray-600 transition">English</a>
+			</div>
+		</div>
+	</body>
+</html>

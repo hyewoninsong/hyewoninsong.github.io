@@ -1,0 +1,23 @@
+{
+  "site.title": "Hyewon & Insong",
+  "site.description": "모바일로 일상을 더 편리하게",
+  "nav.about": "회사 소개",
+  "nav.apps": "앱",
+  "nav.blog": "블로그",
+  "lang.ko": "KO",
+  "lang.en": "EN",
+  "status.released": "출시",
+  "status.dev": "개발중",
+  "blog.title": "개발 블로그",
+  "blog.allPosts": "전체",
+  "blog.noPosts": "아직 작성된 글이 없습니다.",
+  "blog.prevPost": "이전 글",
+  "blog.nextPost": "다음 글",
+  "blog.viewAll": "전체 보기",
+  "apps.title": "우리가 만든 앱",
+  "apps.learnMore": "자세히 보기",
+  "about.title": "회사 소개",
+  "footer.rights": "All rights reserved.",
+  "pagination.prev": "이전",
+  "pagination.next": "다음"
+}

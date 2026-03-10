@@ -1,0 +1,23 @@
+{
+  "site.title": "Hyewon & Insong",
+  "site.description": "Making everyday life easier with mobile",
+  "nav.about": "About",
+  "nav.apps": "Apps",
+  "nav.blog": "Blog",
+  "lang.ko": "KO",
+  "lang.en": "EN",
+  "status.released": "Released",
+  "status.dev": "In Development",
+  "blog.title": "Dev Blog",
+  "blog.allPosts": "All",
+  "blog.noPosts": "No posts yet.",
+  "blog.prevPost": "Previous",
+  "blog.nextPost": "Next",
+  "blog.viewAll": "View All",
+  "apps.title": "Our Apps",
+  "apps.learnMore": "Learn More",
+  "about.title": "About",
+  "footer.rights": "All rights reserved.",
+  "pagination.prev": "Previous",
+  "pagination.next": "Next"
+}
