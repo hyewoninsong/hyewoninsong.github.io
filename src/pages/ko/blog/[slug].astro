@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog');
+  const koPosts = allPosts.filter((post) => post.id.startsWith('ko/'));
+  return koPosts.map((post) => ({
+    params: { slug: post.id.replace('ko/', '') },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const { Content } = await render(post);
+
+const formattedDate = post.data.date.toLocaleDateString('en-CA');
+
+// Get prev/next posts
+const allPosts = await getCollection('blog');
+const koPosts = allPosts
+  .filter((p) => p.id.startsWith('ko/'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const currentIndex = koPosts.findIndex((p) => p.id === post.id);
+const prevPost = koPosts[currentIndex + 1];
+const nextPost = koPosts[currentIndex - 1];
+---
+
+<BaseLayout title={`${post.data.title} - ${t('site.title')}`} description={post.data.summary} lang={lang}>
+  <div class="max-w-2xl mx-auto px-6 py-24 md:py-36">
+    <!-- Header -->
+    <div class="text-center mb-16 md:mb-20">
+      <div class="flex items-center justify-center gap-3 text-xs text-text-sub mb-4">
+        <time datetime={formattedDate}>{formattedDate}</time>
+        {post.data.tags.map((tag) => (
+          <a href={`/ko/blog/tag/${tag}`} class="hover:text-text transition">#{tag}</a>
+        ))}
+      </div>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight">{post.data.title}</h1>
+    </div>
+
+    <!-- Content -->
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h1:hidden
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-p:text-text-sub prose-p:leading-7
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+      prose-code:text-sm prose-code:font-mono
+      prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-100
+    ">
+      <Content />
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-16 pt-8 border-t border-gray-100 flex justify-between text-sm">
+      {prevPost ? (
+        <a href={`/ko/blog/${prevPost.id.replace('ko/', '')}`} class="text-text-sub hover:text-text transition">
+          ← {t('blog.prevPost')}
+        </a>
+      ) : <span />}
+      {nextPost ? (
+        <a href={`/ko/blog/${nextPost.id.replace('ko/', '')}`} class="text-text-sub hover:text-text transition">
+          {t('blog.nextPost')} →
+        </a>
+      ) : <span />}
+    </div>
+  </div>
+</BaseLayout>

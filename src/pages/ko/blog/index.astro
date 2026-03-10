@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BlogPostCard from '../../../components/BlogPostCard.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getCollection } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const allPosts = await getCollection('blog');
+const posts = allPosts
+  .filter((post) => post.id.startsWith('ko/'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
+---
+
+<BaseLayout title={`${t('blog.title')} - ${t('site.title')}`} lang={lang}>
+  <div class="max-w-2xl mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">{t('blog.title')}</h1>
+    </div>
+
+    {allTags.length > 0 && (
+      <div class="flex gap-2 flex-wrap mb-10">
+        <a href="/ko/blog" class="text-sm px-3 py-1 rounded-full bg-text text-white">{t('blog.allPosts')}</a>
+        {allTags.map((tag) => (
+          <a href={`/ko/blog/tag/${tag}`} class="text-sm px-3 py-1 rounded-full border border-gray-200 text-text-sub hover:border-gray-400 transition">{tag}</a>
+        ))}
+      </div>
+    )}
+
+    {posts.length === 0 ? (
+      <p class="text-center text-text-sub">{t('blog.noPosts')}</p>
+    ) : (
+      <div class="grid gap-4">
+        {posts.map((post) => {
+          const slug = post.id.replace('ko/', '');
+          return (
+            <BlogPostCard
+              title={post.data.title}
+              date={post.data.date}
+              tags={post.data.tags}
+              summary={post.data.summary}
+              href={`/ko/blog/${slug}`}
+            />
+          );
+        })}
+      </div>
+    )}
+  </div>
+</BaseLayout>
