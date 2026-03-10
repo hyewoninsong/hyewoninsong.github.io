@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary: #2563EB;
+  --color-primary-dark: #1D4ED8;
+  --color-secondary: #10B981;
+  --color-bg: #FFFFFF;
+  --color-bg-alt: #F9FAFB;
+  --color-text: #111827;
+  --color-text-sub: #6B7280;
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Noto Sans KR', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}

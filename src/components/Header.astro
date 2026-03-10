@@ -1,0 +1,93 @@
+---
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const navItems = [
+  { label: t('nav.about'), href: `/${lang}/about` },
+  { label: t('nav.apps'), href: `/${lang}/apps` },
+  { label: t('nav.blog'), href: `/${lang}/blog` },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="bg-white border-b border-gray-100">
+  <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href={`/${lang}/`} class="flex items-center gap-2 font-bold text-lg text-text hover:text-primary transition">
+      Hyewon & Insong
+    </a>
+
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-6">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class:list={[
+            'text-sm font-medium transition',
+            currentPath.startsWith(item.href)
+              ? 'text-primary'
+              : 'text-text-sub hover:text-text',
+          ]}
+        >
+          {item.label}
+        </a>
+      ))}
+      <LanguageSwitcher />
+    </nav>
+
+    <!-- Mobile Hamburger -->
+    <button
+      id="menu-toggle"
+      class="md:hidden flex flex-col gap-1.5 p-2"
+      aria-label="Toggle menu"
+    >
+      <span class="block w-5 h-0.5 bg-text transition-transform" id="bar1"></span>
+      <span class="block w-5 h-0.5 bg-text transition-opacity" id="bar2"></span>
+      <span class="block w-5 h-0.5 bg-text transition-transform" id="bar3"></span>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
+    <nav class="max-w-5xl mx-auto px-4 py-4 flex flex-col gap-4">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class:list={[
+            'text-sm font-medium transition',
+            currentPath.startsWith(item.href)
+              ? 'text-primary'
+              : 'text-text-sub hover:text-text',
+          ]}
+        >
+          {item.label}
+        </a>
+      ))}
+      <div class="pt-2 border-t border-gray-100">
+        <LanguageSwitcher />
+      </div>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.getElementById('menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const bar1 = document.getElementById('bar1');
+  const bar2 = document.getElementById('bar2');
+  const bar3 = document.getElementById('bar3');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = !menu?.classList.contains('hidden');
+    menu?.classList.toggle('hidden');
+    bar1?.classList.toggle('rotate-45');
+    bar1?.classList.toggle('translate-y-[4px]');
+    bar2?.classList.toggle('opacity-0');
+    bar3?.classList.toggle('-rotate-45');
+    bar3?.classList.toggle('-translate-y-[4px]');
+  });
+</script>
