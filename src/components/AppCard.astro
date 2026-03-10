@@ -1,0 +1,27 @@
+---
+interface Props {
+  title: string;
+  summary: string;
+  status: string;
+  statusLabel: string;
+  href: string;
+}
+
+const { title, summary, status, statusLabel, href } = Astro.props;
+const isReleased = status === '출시' || status === 'released';
+---
+
+<a href={href} class="block group">
+  <div class="border border-gray-100 rounded-lg p-6 transition hover:border-gray-300">
+    <div class="flex items-start justify-between mb-3">
+      <h3 class="text-lg font-semibold text-text group-hover:text-primary transition">{title}</h3>
+      <span class:list={[
+        'text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ml-3',
+        isReleased ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-text-sub',
+      ]}>
+        {statusLabel}
+      </span>
+    </div>
+    <p class="text-sm text-text-sub leading-relaxed">{summary}</p>
+  </div>
+</a>

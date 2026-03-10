@@ -11,7 +11,11 @@ const about = defineCollection({
 });
 
 const apps = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/apps' }),
+  loader: glob({
+    pattern: '**/*.md',
+    base: './src/content/apps',
+    generateId: ({ entry }) => entry.replace(/\.md$/, ''),
+  }),
   schema: z.object({
     title: z.string(),
     slug: z.string(),
@@ -24,7 +28,11 @@ const apps = defineCollection({
 });
 
 const blog = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+  loader: glob({
+    pattern: '**/*.md',
+    base: './src/content/blog',
+    generateId: ({ entry }) => entry.replace(/\.md$/, ''),
+  }),
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),

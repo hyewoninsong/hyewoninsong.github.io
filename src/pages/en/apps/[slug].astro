@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allApps = await getCollection('apps');
+  const enApps = allApps.filter((app) => app.id.startsWith('en/'));
+  return enApps.map((app) => ({
+    params: { slug: app.data.slug },
+    props: { app },
+  }));
+}
+
+const { app } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const { Content } = await render(app);
+
+const isReleased = app.data.status === 'released';
+const statusMap: Record<string, string> = { 'released': t('status.released'), 'in-development': t('status.dev') };
+const statusLabel = statusMap[app.data.status] || app.data.status;
+---
+
+<BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
+  <div class="max-w-2xl mx-auto px-6 py-24 md:py-36">
+    <!-- Header -->
+    <div class="text-center mb-16 md:mb-20">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight">{app.data.title}</h1>
+        <span class:list={[
+          'text-xs px-2 py-0.5 rounded-full font-medium',
+          isReleased ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-text-sub',
+        ]}>
+          {statusLabel}
+        </span>
+      </div>
+      <p class="text-base text-text-sub">{app.data.summary}</p>
+      {app.data.appStoreUrl && (
+        <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer" class="inline-block mt-4 text-sm text-primary hover:underline">
+          App Store →
+        </a>
+      )}
+    </div>
+
+    <!-- Content -->
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h1:hidden
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-p:text-text-sub prose-p:leading-7
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+    ">
+      <Content />
+    </div>
+
+    <!-- Back -->
+    <div class="mt-16 pt-8 border-t border-gray-100">
+      <a href="/en/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+    </div>
+  </div>
+</BaseLayout>
