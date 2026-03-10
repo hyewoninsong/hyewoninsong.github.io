@@ -8,9 +8,11 @@ interface Props {
   title: string;
   description?: string;
   lang: Lang;
+  ogImage?: string;
 }
 
-const { title, description = '', lang } = Astro.props;
+const { title, description = '', lang, ogImage } = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <html lang={lang}>
@@ -20,6 +22,19 @@ const { title, description = '', lang } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonicalUrl.href} />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonicalUrl.href} />
+    <meta property="og:site_name" content="Hyewon & Insong" />
+    <meta property="og:locale" content={lang === 'ko' ? 'ko_KR' : 'en_US'} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
