@@ -14,11 +14,11 @@ const navItems = [
 const currentPath = Astro.url.pathname;
 ---
 
-<header class="bg-white border-b border-gray-100">
-  <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+<header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
     <!-- Logo -->
-    <a href={`/${lang}/`} class="flex items-center gap-2 font-bold text-lg text-text hover:text-primary transition">
-      Hyewon & Insong
+    <a href={`/${lang}/`} class="flex items-center gap-2 group">
+      <span class="text-[15px] font-semibold text-text tracking-tight group-hover:text-primary transition">Hyewon & Insong</span>
     </a>
 
     <!-- Desktop Nav -->
@@ -27,22 +27,24 @@ const currentPath = Astro.url.pathname;
         <a
           href={item.href}
           class:list={[
-            'text-sm font-medium transition',
+            'text-sm transition',
             currentPath.startsWith(item.href)
-              ? 'text-primary'
+              ? 'text-text font-medium'
               : 'text-text-sub hover:text-text',
           ]}
         >
           {item.label}
         </a>
       ))}
-      <LanguageSwitcher />
+      <div class="ml-2">
+        <LanguageSwitcher />
+      </div>
     </nav>
 
     <!-- Mobile Hamburger -->
     <button
       id="menu-toggle"
-      class="md:hidden flex flex-col gap-1.5 p-2"
+      class="md:hidden flex flex-col gap-1.5 p-2 -mr-2"
       aria-label="Toggle menu"
     >
       <span class="block w-5 h-0.5 bg-text transition-transform" id="bar1"></span>
@@ -52,22 +54,22 @@ const currentPath = Astro.url.pathname;
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
-    <nav class="max-w-5xl mx-auto px-4 py-4 flex flex-col gap-4">
+  <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+    <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
       {navItems.map((item) => (
         <a
           href={item.href}
           class:list={[
-            'text-sm font-medium transition',
+            'px-3 py-2.5 text-sm transition',
             currentPath.startsWith(item.href)
-              ? 'text-primary'
+              ? 'text-text font-medium'
               : 'text-text-sub hover:text-text',
           ]}
         >
           {item.label}
         </a>
       ))}
-      <div class="pt-2 border-t border-gray-100">
+      <div class="px-3 pt-2 mt-1 border-t border-gray-100">
         <LanguageSwitcher />
       </div>
     </nav>
@@ -82,7 +84,6 @@ const currentPath = Astro.url.pathname;
   const bar3 = document.getElementById('bar3');
 
   toggle?.addEventListener('click', () => {
-    const isOpen = !menu?.classList.contains('hidden');
     menu?.classList.toggle('hidden');
     bar1?.classList.toggle('rotate-45');
     bar1?.classList.toggle('translate-y-[4px]');

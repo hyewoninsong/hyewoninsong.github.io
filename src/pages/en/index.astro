@@ -7,18 +7,15 @@ const t = useTranslations(lang);
 ---
 
 <BaseLayout title={t('site.title')} description={t('site.description')} lang={lang}>
-  <div class="flex-1 flex items-center justify-center">
+  <div class="flex-1 flex items-center justify-center px-6">
     <div class="text-center">
-      <h1 class="text-4xl font-bold text-primary mb-4">{t('site.title')}</h1>
-      <p class="text-lg text-text-sub">{t('site.description')}</p>
-      <nav class="mt-8 flex gap-6 justify-center text-text">
-        <a href="/en/about" class="hover:text-primary transition">{t('nav.about')}</a>
-        <a href="/en/apps" class="hover:text-primary transition">{t('nav.apps')}</a>
-        <a href="/en/blog" class="hover:text-primary transition">{t('nav.blog')}</a>
+      <h1 class="text-4xl md:text-5xl font-semibold text-text tracking-tight mb-4">{t('site.title')}</h1>
+      <p class="text-base text-text-sub">{t('site.description')}</p>
+      <nav class="mt-10 flex gap-4 justify-center text-sm">
+        <a href="/en/about" class="text-text-sub hover:text-text transition">{t('nav.about')}</a>
+        <a href="/en/apps" class="text-text-sub hover:text-text transition">{t('nav.apps')}</a>
+        <a href="/en/blog" class="text-text-sub hover:text-text transition">{t('nav.blog')}</a>
       </nav>
-      <div class="mt-4">
-        <a href="/ko/" class="text-sm text-text-sub hover:text-text transition">한국어</a>
-      </div>
     </div>
   </div>
 </BaseLayout>

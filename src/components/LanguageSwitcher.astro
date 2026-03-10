@@ -2,25 +2,24 @@
 import { getLangFromUrl, getLocalizedPath } from '../i18n/utils';
 
 const lang = getLangFromUrl(Astro.url);
-const otherLang = lang === 'ko' ? 'en' : 'ko';
-const otherPath = getLocalizedPath(Astro.url.pathname, otherLang);
 ---
 
-<div class="flex items-center gap-1 text-sm font-medium">
+<div class="flex items-center gap-1 text-sm">
   <a
     href={lang === 'ko' ? Astro.url.pathname : getLocalizedPath(Astro.url.pathname, 'ko')}
     class:list={[
-      'px-2 py-1 rounded transition',
-      lang === 'ko' ? 'bg-primary text-white' : 'text-text-sub hover:text-text',
+      'px-2 py-0.5 rounded transition',
+      lang === 'ko' ? 'text-text font-medium' : 'text-text-sub hover:text-text',
     ]}
   >
     KO
   </a>
+  <span class="text-gray-300">/</span>
   <a
     href={lang === 'en' ? Astro.url.pathname : getLocalizedPath(Astro.url.pathname, 'en')}
     class:list={[
-      'px-2 py-1 rounded transition',
-      lang === 'en' ? 'bg-primary text-white' : 'text-text-sub hover:text-text',
+      'px-2 py-0.5 rounded transition',
+      lang === 'en' ? 'text-text font-medium' : 'text-text-sub hover:text-text',
     ]}
   >
     EN
