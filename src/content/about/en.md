@@ -1,18 +1,18 @@
 ---
-title: "About"
-description: "Hyewon & Insong builds mobile apps that make everyday life easier."
+title: "About Us"
+description: "Hyewon & Insong is a professional development partner providing innovative mobile software solutions."
 ---
 
-## Our Mission
+## Core Values & Vision
 
-**We never overlook the small inconveniences.**
-We start by noticing the little frustrations hidden in everyday routines — and we build solutions for them.
+**User-Centric UI/UX Design**
+We deliver highly refined mobile experiences by identifying the most essential needs of our customers. Based on thorough research, we develop solutions that resolve inefficiencies in daily life.
 
-**Easy enough to use right away.**
-No manuals needed. We craft apps that make sense the moment you open them. We believe intuitive experience is the best feature.
+**Intuitive and Elegant Software Architecture**
+We build intuitive interfaces that anyone can utilize instantly without complex manuals. We prioritize user convenience as much as functional advancement.
 
-**The best technology is invisible.**
-We leverage cutting-edge tech, but aim for experiences so natural that users never think about the technology behind them.
+**Stable and Robust Engineering**
+Behind the scenes, we apply the latest technology stacks and stable architectures to build and operate sustainable, reliable application environments.
 
-**Apps you reach for every day.**
-More than a flashy idea — we build tools that become part of your daily life.
+**Continuous Lifestyle Innovation**
+Beyond simply providing services, our goal is to establish our products as essential digital tools that maximize the efficiency of our users' daily lives and workflows.
