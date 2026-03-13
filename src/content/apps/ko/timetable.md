@@ -4,6 +4,7 @@ slug: "timetable"
 status: "개발중"
 icon: ""
 summary: "내 손끝에서 완성되는 가장 직관적이고 아름다운 시간표"
+platform: ["iOS", "Android"]
 order: 1
 ---
 

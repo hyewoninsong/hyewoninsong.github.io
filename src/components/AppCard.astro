@@ -4,10 +4,11 @@ interface Props {
   summary: string;
   status: string;
   statusLabel: string;
+  platform: ('iOS' | 'Android')[];
   href: string;
 }
 
-const { title, summary, status, statusLabel, href } = Astro.props;
+const { title, summary, status, statusLabel, platform, href } = Astro.props;
 const isReleased = status === '출시' || status === 'released';
 ---
 
@@ -22,6 +23,11 @@ const isReleased = status === '출시' || status === 'released';
         {statusLabel}
       </span>
     </div>
-    <p class="text-sm text-text-sub leading-relaxed">{summary}</p>
+    <p class="text-sm text-text-sub leading-relaxed mb-3">{summary}</p>
+    <div class="flex gap-1.5">
+      {platform.map((p) => (
+        <span class="text-xs px-2 py-0.5 rounded bg-gray-50 text-text-sub">{p}</span>
+      ))}
+    </div>
   </div>
 </a>

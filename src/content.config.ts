@@ -22,6 +22,7 @@ const apps = defineCollection({
     status: z.string(),
     icon: z.string().optional(),
     summary: z.string(),
+    platform: z.array(z.enum(['iOS', 'Android'])).default(['iOS']),
     order: z.number().default(0),
     appStoreUrl: z.string().optional(),
   }),

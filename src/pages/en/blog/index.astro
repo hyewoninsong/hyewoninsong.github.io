@@ -34,7 +34,7 @@ const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
     {posts.length === 0 ? (
       <p class="text-center text-text-sub">{t('blog.noPosts')}</p>
     ) : (
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4">
         {posts.map((post) => {
           const slug = post.id.replace('en/', '');
           return (

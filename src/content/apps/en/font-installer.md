@@ -4,6 +4,7 @@ slug: "font-installer"
 status: "in-development"
 icon: ""
 summary: "Install and effortlessly manage fonts on iOS"
+platform: ["iOS"]
 order: 2
 ---
 

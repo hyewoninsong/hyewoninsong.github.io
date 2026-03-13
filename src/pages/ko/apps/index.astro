@@ -19,13 +19,14 @@ const apps = allApps
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">{t('apps.title')}</h1>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4">
       {apps.map((app) => (
         <AppCard
           title={app.data.title}
           summary={app.data.summary}
           status={app.data.status}
-          statusLabel={statusMap[app.data.status] || app.data.status}
+          statusLabel={app.data.status}
+          platform={app.data.platform}
           href={`/ko/apps/${app.data.slug}`}
         />
       ))}
