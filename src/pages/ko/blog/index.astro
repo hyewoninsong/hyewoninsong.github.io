@@ -16,7 +16,7 @@ const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
 ---
 
 <BaseLayout title={`${t('blog.title')} - ${t('site.title')}`} lang={lang}>
-  <div class="max-w-2xl mx-auto px-6 py-24 md:py-36">
+  <div class="max-w-4xl mx-auto px-6 py-24 md:py-36">
     <div class="text-center mb-16 md:mb-20">
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">{t('blog.title')}</h1>
     </div>
@@ -33,7 +33,7 @@ const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
     {posts.length === 0 ? (
       <p class="text-center text-text-sub">{t('blog.noPosts')}</p>
     ) : (
-      <div class="grid gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {posts.map((post) => {
           const slug = post.id.replace('ko/', '');
           return (
