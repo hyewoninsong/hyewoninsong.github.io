@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={`Privacy Policy - ${t('site.title')}`} lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
+      <p class="text-sm text-text-sub">Effective Date: January 1, 2025</p>
+    </div>
+
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-p:text-text-sub prose-p:leading-7
+      prose-strong:text-text prose-strong:font-medium
+    ">
+      <h2>1. Purpose of Processing Personal Information</h2>
+      <p>
+        Hyewon & Insong ("Company") processes personal information for the following purposes.
+        The personal information collected will not be used for any purpose other than those stated below.
+        If the purpose of use changes, necessary measures such as obtaining separate consent will be taken.
+      </p>
+      <ul>
+        <li>Providing and operating app services</li>
+        <li>Analyzing app errors and improving service stability</li>
+        <li>Improving service quality through usage statistics analysis</li>
+      </ul>
+
+      <h2>2. Personal Information Collected</h2>
+      <p>The Company may automatically collect the following information to provide its services:</p>
+      <ul>
+        <li><strong>Device Information</strong>: Device model, operating system version, app version</li>
+        <li><strong>Usage Statistics</strong>: App launch count, screen views, feature usage frequency (Firebase Analytics)</li>
+        <li><strong>Error Information</strong>: App crash logs, error timestamps and status information (Firebase Crashlytics)</li>
+      </ul>
+      <p>The Company does not collect personally identifiable information such as names, email addresses, or phone numbers.</p>
+
+      <h2>3. Retention Period</h2>
+      <p>Collected information is retained during the service operation period and is promptly destroyed once the purpose of collection is achieved.</p>
+      <ul>
+        <li>Usage statistics data: Automatically deleted after a maximum of 14 months from the date of collection</li>
+        <li>Error logs: Automatically deleted after a maximum of 90 days from the date of collection</li>
+      </ul>
+
+      <h2>4. Disclosure to Third Parties</h2>
+      <p>
+        The Company does not, in principle, provide users' personal information to third parties.
+        However, exceptions are made in the following cases:
+      </p>
+      <ul>
+        <li>When the user has given prior consent</li>
+        <li>When required by law or requested by investigative agencies in accordance with legally prescribed procedures</li>
+      </ul>
+
+      <h2>5. Outsourcing of Personal Information Processing</h2>
+      <p>The Company outsources personal information processing for service operation as follows:</p>
+      <ul>
+        <li><strong>Google LLC (Firebase)</strong>: App usage analytics and error collection (<a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy Policy</a>)</li>
+      </ul>
+
+      <h2>6. User Rights</h2>
+      <p>Users may exercise the following rights at any time:</p>
+      <ul>
+        <li>You can opt out of analytics data collection in your device settings.</li>
+        <li>Deleting the app will immediately stop data collection from that device.</li>
+        <li>You can request deletion of collected data.</li>
+      </ul>
+
+      <h2>7. Privacy Officer</h2>
+      <p>For inquiries regarding personal information processing, please contact us at:</p>
+      <ul>
+        <li><strong>Company</strong>: Hyewon & Insong</li>
+        <li><strong>Email</strong>: contact@hyewoninsong.com</li>
+      </ul>
+
+      <h2>8. Changes to This Policy</h2>
+      <p>
+        This Privacy Policy is effective from the date stated above. If there are additions, deletions,
+        or corrections due to changes in relevant laws or policies, we will notify users through this page
+        at least 7 days before the changes take effect.
+      </p>
+    </div>
+  </div>
+</BaseLayout>
