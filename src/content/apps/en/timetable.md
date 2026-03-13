@@ -1,5 +1,5 @@
 ---
-title: "Timetable Management - Timetable"
+title: "Timetable"
 slug: "timetable"
 status: "In Development"
 icon: ""
