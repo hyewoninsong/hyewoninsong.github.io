@@ -24,9 +24,7 @@ const apps = allApps
         <AppCard
           title={app.data.title}
           summary={app.data.summary}
-          status={app.data.status}
-          statusLabel={app.data.status}
-          platform={app.data.platform}
+          platforms={app.data.platforms}
           href={`/ko/apps/${app.data.slug}`}
         />
       ))}

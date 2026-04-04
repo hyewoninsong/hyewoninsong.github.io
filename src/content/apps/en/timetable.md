@@ -1,10 +1,12 @@
 ---
 title: "Timetable"
 slug: "timetable"
-status: "In Development"
 icon: ""
 summary: "The most intuitive and beautiful timetable created right at your fingertips."
-platform: ["iOS", "Android"]
+platforms:
+  iphone: "in-development"
+  ipad: "in-development"
+  android: "in-development"
 order: 1
 ---
 

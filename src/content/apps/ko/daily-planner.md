@@ -1,10 +1,12 @@
 ---
 title: "Daily Planner"
 slug: "daily-planner"
-status: "개발중"
 icon: ""
 summary: "완벽한 하루를 설계하는 직관적인 데일리 플래너"
-platform: ["iOS", "Android"]
+platforms:
+  iphone: "in-development"
+  ipad: "in-development"
+  android: "in-development"
 order: 3
 ---
 
