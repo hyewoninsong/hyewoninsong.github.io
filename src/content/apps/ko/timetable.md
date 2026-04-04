@@ -1,11 +1,10 @@
 ---
-title: "Timetable"
+title: "SuperTimetable"
 slug: "timetable"
 icon: ""
 summary: "내 손끝에서 완성되는 가장 직관적이고 아름다운 시간표"
 platforms:
-  iphone: "in-development"
-  ipad: "in-development"
+  iphone: "released"
   android: "in-development"
 order: 1
 ---

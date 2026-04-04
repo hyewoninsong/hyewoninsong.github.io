@@ -1,11 +1,10 @@
 ---
-title: "Timetable"
+title: "SuperTimetable"
 slug: "timetable"
 icon: ""
 summary: "The most intuitive and beautiful timetable created right at your fingertips."
 platforms:
-  iphone: "in-development"
-  ipad: "in-development"
+  iphone: "released"
   android: "in-development"
 order: 1
 ---
