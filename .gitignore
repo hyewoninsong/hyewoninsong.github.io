@@ -17,6 +17,9 @@ pnpm-debug.log*
 .env
 .env.production
 
+# claude project config (contains slack tokens)
+.claude/project.json
+
 # macOS-specific files
 .DS_Store
 
