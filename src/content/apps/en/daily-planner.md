@@ -1,10 +1,12 @@
 ---
 title: "Daily Planner"
 slug: "daily-planner"
-status: "in-development"
 icon: ""
 summary: "An intuitive daily planner designed to architect your perfect day."
-platform: ["iOS", "Android"]
+platforms:
+  iphone: "in-development"
+  ipad: "in-development"
+  android: "in-development"
 order: 3
 ---
 

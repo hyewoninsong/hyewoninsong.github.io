@@ -7,8 +7,6 @@ import { getCollection } from 'astro:content';
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
-const statusMap: Record<string, string> = { 'released': t('status.released'), 'in-development': t('status.dev') };
-
 const allApps = await getCollection('apps');
 const apps = allApps
   .filter((app) => app.id.startsWith('en/'))
@@ -26,9 +24,7 @@ const apps = allApps
         <AppCard
           title={app.data.title}
           summary={app.data.summary}
-          status={app.data.status}
-          statusLabel={statusMap[app.data.status] || app.data.status}
-          platform={app.data.platform}
+          platforms={app.data.platforms}
           href={`/en/apps/${app.data.slug}`}
         />
       ))}

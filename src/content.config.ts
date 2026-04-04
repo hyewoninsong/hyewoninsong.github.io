@@ -10,6 +10,8 @@ const about = defineCollection({
   }),
 });
 
+const platformStatus = z.enum(['released', 'in-development']);
+
 const apps = defineCollection({
   loader: glob({
     pattern: '**/*.md',
@@ -19,10 +21,14 @@ const apps = defineCollection({
   schema: z.object({
     title: z.string(),
     slug: z.string(),
-    status: z.string(),
     icon: z.string().optional(),
     summary: z.string(),
-    platform: z.array(z.enum(['iOS', 'Android'])).default(['iOS']),
+    platforms: z.object({
+      iphone: platformStatus.optional(),
+      ipad: platformStatus.optional(),
+      mac: platformStatus.optional(),
+      android: platformStatus.optional(),
+    }).default({}),
     order: z.number().default(0),
     appStoreUrl: z.string().optional(),
   }),
