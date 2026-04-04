@@ -1,0 +1,367 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getEntry } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const app = (await getEntry('apps', 'en/timetable'))!;
+
+const { platforms = {} } = app.data;
+const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
+const hasAndroid = !!platforms.android;
+
+const badgeClass = (status: 'released' | 'in-development') =>
+  status === 'released'
+    ? 'border-green-200 bg-green-50 text-green-700'
+    : 'border-border bg-muted text-muted-foreground';
+
+const statusLabel = (status: 'released' | 'in-development') =>
+  status === 'released' ? t('status.released') : t('status.dev');
+---
+
+<BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
+
+  <style>
+    .animate-reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .animate-reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .delay-1 { transition-delay: 0.06s; }
+    .delay-2 { transition-delay: 0.12s; }
+    .delay-3 { transition-delay: 0.18s; }
+
+    .screenshot {
+      border-radius: 2.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: block;
+    }
+    .screenshot:hover {
+      transform: scale(1.02) translateY(-2px);
+      box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .section-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .theme-strip {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+      scrollbar-width: none;
+    }
+    .theme-strip::-webkit-scrollbar { display: none; }
+    .theme-strip img {
+      height: 320px;
+      width: auto;
+      flex-shrink: 0;
+      border-radius: 1.5rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      transition: transform 0.25s ease;
+    }
+    .theme-strip img:hover { transform: scale(1.03); }
+
+    .mini-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mini-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+  </style>
+
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+
+    <!-- ── Header ── -->
+    <div class="text-center mb-20 md:mb-28 animate-reveal">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
+      <p class="text-base text-text-sub mb-6 max-w-md mx-auto">{app.data.summary}</p>
+
+      <div class="flex flex-col items-center gap-2">
+        {hasIOS && (
+          <div class="flex items-center gap-2 flex-wrap justify-center">
+            <span class="flex items-center gap-1 text-xs text-text-sub w-16 justify-end shrink-0">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              iOS
+            </span>
+            <div class="flex gap-1.5 flex-wrap justify-center">
+              {platforms.iphone && (
+                <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
+                  iPhone · {statusLabel(platforms.iphone)}
+                </span>
+              )}
+              {platforms.ipad && (
+                <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.ipad)]}>
+                  iPad · {statusLabel(platforms.ipad)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        {hasAndroid && (
+          <div class="flex items-center gap-2 justify-center">
+            <span class="flex items-center gap-1 text-xs text-text-sub w-16 justify-end shrink-0">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+                <path d="M17.523 15.341a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m-11.046 0a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m11.405-6.022l1.969-3.411a.41.41 0 00-.149-.559.41.41 0 00-.559.149l-1.994 3.454A11.774 11.774 0 0012 8.098c-1.73 0-3.364.393-4.799 1.084L5.207 5.698a.41.41 0 00-.559-.149.41.41 0 00-.149.559l1.969 3.411C3.945 10.878 2.5 13.239 2.5 15.898h19c0-2.659-1.445-5.02-3.618-6.579z"/>
+              </svg>
+              Android
+            </span>
+            <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.android!)]}>
+              {statusLabel(platforms.android!)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {app.data.appStoreUrl && (
+        <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer"
+           class="inline-block mt-5 text-sm text-primary hover:underline">
+          App Store →
+        </a>
+      )}
+    </div>
+
+    <!-- ── Intro screenshot ── -->
+    <div class="flex justify-center mb-28 animate-reveal delay-1">
+      <img
+        src="/apps/timetable/colorful-overview.png"
+        alt="SuperTimetable overview"
+        class="screenshot w-full max-w-[300px]"
+      />
+    </div>
+
+  </div>
+
+  <!-- ── Section: Drag & Gestures ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Drag & Gestures</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Build your schedule with your hands</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Drag across any empty cell to create a new event — no tapping through menus.
+          Long-press a block to pick it up and drop it on a different day or time.
+          Pull the top or bottom handle to stretch or shrink its duration.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          As you drag, guide lines appear at the edges of nearby events so you can snap
+          precisely to existing boundaries. The grid auto-scrolls when you reach the edge —
+          you never have to stop and reposition.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center gap-4 animate-reveal delay-1">
+        <img
+          src="/apps/timetable/drag-time-display.png"
+          alt="Dragging an event with live time display"
+          class="screenshot w-full max-w-[220px]"
+        />
+        <img
+          src="/apps/timetable/time-snap-guide.png"
+          alt="Snap guide lines aligning with nearby events"
+          class="screenshot w-full max-w-[220px]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: Themes & Colors ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="flex flex-col md:flex-row items-start gap-16">
+        <div class="flex-1 animate-reveal md:sticky md:top-32">
+          <span class="section-label">Themes & Colors</span>
+          <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">11 themes. 330 colors.</h2>
+          <p class="text-text-sub leading-relaxed mb-4">
+            Choose from 11 hand-crafted themes — Standard, Vivid, Earth, Ocean, Sunset, Forest,
+            Candy, Vintage, Monochrome, Neon, and Jewel. Each theme includes 30 colors across
+            three intensity levels.
+          </p>
+          <p class="text-text-sub leading-relaxed">
+            Switch themes anytime. Your existing event colors remap automatically
+            to the new palette — no manual recoloring.
+          </p>
+        </div>
+        <div class="flex-1 animate-reveal delay-1 overflow-hidden">
+          <div class="theme-strip">
+            <img src="/apps/timetable/theme-1.png" alt="Standard theme" />
+            <img src="/apps/timetable/theme-2.png" alt="Vivid theme" />
+            <img src="/apps/timetable/theme-3.png" alt="Earth theme" />
+            <img src="/apps/timetable/theme-4.png" alt="Ocean theme" />
+            <img src="/apps/timetable/theme-5.png" alt="Neon theme" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: Custom View ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Custom View</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Show only what matters to you</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Each timetable has its own view settings, independent of every other.
+          Set the day range to weekdays only, Mon–Sat, or the full week.
+          Choose whether the week starts on Monday or Sunday.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          Set a custom start and end hour — anywhere from 0 to 24 — so only
+          the hours you actually use take up screen space.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img
+          src="/apps/timetable/custom-view.png"
+          alt="Timetable showing only relevant days and hours"
+          class="screenshot w-full max-w-[280px]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: Widgets ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Widgets</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Your schedule, always visible</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Place the full timetable widget on your Home screen to see the entire week
+          at a glance without opening the app.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          The Today widget shows a timeline of your day with a red line marking
+          the current time — so you always know what's happening right now and what's next.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img
+          src="/apps/timetable/widget.png"
+          alt="Home screen widgets showing the full timetable and today's schedule"
+          class="screenshot w-full max-w-[300px]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: Share & Export ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Share & Export</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Share it your way</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Export your timetable as a clean image in light or dark mode — ready to
+          share directly or save to your photo library.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          Use the file export to back up your timetable or send a complete copy
+          to another device. Anyone with SuperTimetable can import it directly.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img
+          src="/apps/timetable/share-light.png"
+          alt="Timetable export and sharing options"
+          class="screenshot w-full max-w-[280px]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── More Features ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14 animate-reveal">
+        <span class="section-label">More</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight">Every detail, considered</h2>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src="/apps/timetable/presets.png" alt="Event presets" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">Presets</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              Group recurring events under a preset. Change the preset once — all linked events update instantly.
+            </p>
+          </div>
+        </div>
+
+        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src="/apps/timetable/timetable-list.png" alt="Timetable list" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">Multiple Timetables</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              Keep a separate timetable for each semester, project, or context. Switch between them in one tap.
+            </p>
+          </div>
+        </div>
+
+        <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src="/apps/timetable/duplicate-event-1.png" alt="Duplicating events" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">Duplicate Events</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              Copy any event and place it in another slot in seconds — no re-entering titles or colors.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Undo/redo + notifications text-only row -->
+      <div class="mt-6 grid sm:grid-cols-2 gap-6">
+
+        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-1.5">Unlimited Undo & Redo</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            Every timetable keeps its own independent history. Moves, resizes, preset changes —
+            all tracked, all reversible, with no depth limit.
+          </p>
+        </div>
+
+        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-1.5">Smart Notifications</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            Set reminders per event: at start time, or 5, 10, 15, 20, 25, 30 minutes,
+            1 hour, or 2 hours before. Weekly repeating, automatically.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Back ── -->
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+    <a href="/en/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+  </div>
+
+</BaseLayout>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
+  );
+  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
+</script>
