@@ -1,0 +1,55 @@
+name: Slack PR Merged Notification
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  notify:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reply to Slack thread
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 << 'PYEOF'
+          import json, urllib.request, os, re
+
+          token = os.environ["SLACK_BOT_TOKEN"]
+          channel = os.environ["SLACK_CHANNEL_ID"]
+          pr_body = os.environ.get("PR_BODY", "")
+          pr_url = os.environ.get("PR_URL", "")
+          repo = os.environ.get("REPO", "")
+
+          match = re.search(r'<!-- SLACK_TS: ([^\s>]+) -->', pr_body)
+          if not match:
+              print("No SLACK_TS found in PR body, skipping.")
+              exit(0)
+
+          ts = match.group(1)
+          msg = f"✅ *Merged* — `{repo}`\n{pr_url}"
+
+          payload = json.dumps({
+              "channel": channel,
+              "thread_ts": ts,
+              "text": msg
+          }).encode("utf-8")
+
+          req = urllib.request.Request(
+              "https://slack.com/api/chat.postMessage",
+              data=payload,
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Content-type": "application/json; charset=utf-8"
+              }
+          )
+          with urllib.request.urlopen(req) as r:
+              result = json.loads(r.read())
+              print("ok:", result.get("ok"), "ts:", result.get("ts", ""))
+          PYEOF
