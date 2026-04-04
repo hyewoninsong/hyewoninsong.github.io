@@ -10,11 +10,11 @@ const t = useTranslations(lang);
   <div class="flex-1 flex items-center justify-center px-6">
     <div class="text-center">
       <h1 class="text-4xl md:text-5xl font-semibold text-text tracking-tight mb-4">{t('site.title')}</h1>
-      <p class="text-base text-text-sub">{t('site.description')}</p>
-      <nav class="mt-10 flex gap-4 justify-center text-sm">
-        <a href="/ko/about" class="text-text-sub hover:text-text transition">{t('nav.about')}</a>
-        <a href="/ko/apps" class="text-text-sub hover:text-text transition">{t('nav.apps')}</a>
-        <a href="/ko/blog" class="text-text-sub hover:text-text transition">{t('nav.blog')}</a>
+      <p class="text-base text-text-sub max-w-sm mx-auto leading-relaxed">{t('site.description')}</p>
+      <nav class="mt-8 flex gap-2 justify-center flex-wrap">
+        <a href="/ko/about" class="inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-text-sub transition-colors hover:bg-muted hover:text-text">{t('nav.about')}</a>
+        <a href="/ko/apps" class="inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-text-sub transition-colors hover:bg-muted hover:text-text">{t('nav.apps')}</a>
+        <a href="/ko/blog" class="inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-text-sub transition-colors hover:bg-muted hover:text-text">{t('nav.blog')}</a>
       </nav>
     </div>
   </div>

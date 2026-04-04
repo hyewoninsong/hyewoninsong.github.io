@@ -2,17 +2,33 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
+  /* Primary */
   --color-primary: #4F6DF0;
-  --color-primary-light: #EEF1FE;
+  --color-primary-light: #EFF1FE;
   --color-primary-dark: #3B55D4;
+
+  /* Accent */
   --color-secondary: #34C793;
   --color-warm: #F97E5A;
+
+  /* Backgrounds — zinc 기반 */
   --color-bg: #FFFFFF;
-  --color-bg-alt: #FAFBFC;
+  --color-bg-alt: #FAFAFA;
   --color-bg-warm: #FFF8F5;
-  --color-text: #1E293B;
-  --color-text-sub: #64748B;
-  --color-border: #E8ECF1;
+  --color-card: #FFFFFF;
+
+  /* Text — zinc 기반 */
+  --color-text: #18181B;
+  --color-text-sub: #71717A;
+
+  /* Muted */
+  --color-muted: #F4F4F5;
+  --color-muted-foreground: #71717A;
+
+  /* Border */
+  --color-border: #E4E4E7;
+
+  /* Fonts */
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Noto Sans KR', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }

@@ -12,18 +12,23 @@ const formattedDate = date.toLocaleDateString('en-CA');
 ---
 
 <a href={href} class="block group">
-  <article class="border border-gray-100 rounded-lg p-6 transition hover:border-gray-300">
-    <div class="flex items-center gap-3 text-xs text-text-sub mb-2">
-      <time datetime={formattedDate}>{formattedDate}</time>
+  <article class="border border-border rounded-xl bg-card shadow-sm p-6 transition-shadow hover:shadow-md">
+    <div class="flex items-center gap-2 mb-3">
+      <time datetime={formattedDate} class="text-xs text-muted-foreground tabular-nums">{formattedDate}</time>
       {tags.length > 0 && (
-        <div class="flex gap-1.5">
-          {tags.map((tag) => (
-            <span class="text-text-sub">#{tag}</span>
-          ))}
-        </div>
+        <>
+          <span class="text-border text-xs">·</span>
+          <div class="flex gap-1.5 flex-wrap">
+            {tags.map((tag) => (
+              <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </>
       )}
     </div>
-    <h3 class="text-lg font-semibold text-text group-hover:text-primary transition mb-2">{title}</h3>
+    <h3 class="text-[15px] font-semibold text-text group-hover:text-primary transition-colors leading-snug mb-2">{title}</h3>
     <p class="text-sm text-text-sub leading-relaxed">{summary}</p>
   </article>
 </a>
