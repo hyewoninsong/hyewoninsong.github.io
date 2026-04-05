@@ -5,7 +5,6 @@ icon: ""
 summary: "드래그 하나로 완성하는 시간표 — 11가지 테마, 강력한 위젯, 내 일정을 내 스타일대로."
 platforms:
   iphone: "released"
-  android: "in-development"
 order: 1
 ---
 
