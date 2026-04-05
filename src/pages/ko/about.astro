@@ -5,211 +5,150 @@ import { getEntry } from 'astro:content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
-
 const about = (await getEntry('about', 'ko'))!;
-
-const stats = [
-  { number: "2", label: "플랫폼", sub: "iOS & Android" },
-  { number: "11", label: "테마", sub: "SuperTimetable 기준" },
-  { number: "330+", label: "색상", sub: "정성껏 고른 팔레트" },
-  { number: "∞", label: "언두/리두", sub: "제한 없이" },
-];
 
 const pillars = [
   {
-    icon: "👆",
     title: "제스처 중심의 디자인",
-    desc: "모든 인터랙션은 자연스러워야 합니다. 폼과 다이얼로그 대신 드래그, 길게 누르기, 스와이프로 조작하는 터치 퍼스트 경험을 설계합니다. SuperTimetable의 드래그 생성과 실시간 리사이즈가 그 철학의 증거입니다.",
-    color: "#4F6DF0",
-    bg: "rgba(79,109,240,0.04)",
-    delay: "delay-1",
+    desc: "폼과 다이얼로그 대신 드래그, 길게 누르기, 스와이프로 조작합니다. 모든 인터랙션이 손의 자연스러운 연장선처럼 느껴지도록 설계합니다.",
   },
   {
-    icon: "🎨",
     title: "깊이 있는 커스터마이징",
-    desc: "사용자마다 취향과 루틴이 다릅니다. 11가지 정성껏 만든 테마, 시간표별 독립적인 시간 범위, 유연한 요일 설정으로 모든 세팅이 내 것처럼 느껴지는 앱을 만듭니다.",
-    color: "#34C793",
-    bg: "rgba(52,199,147,0.04)",
-    delay: "delay-2",
+    desc: "사용자마다 취향과 루틴이 다릅니다. 테마, 시간 범위, 요일 설정 등 모든 세팅이 내 것처럼 느껴지는 앱을 만듭니다.",
   },
   {
-    icon: "📱",
     title: "네이티브 플랫폼 장인정신",
-    desc: "iOS는 Swift & SwiftUI, Android는 Kotlin & Jetpack Compose로 개발합니다. 네이티브 코드는 유려한 애니메이션, 정확한 Safe Area 처리, 그리고 사용자가 이미 익숙한 플랫폼 관습을 보장합니다.",
-    color: "#F97E5A",
-    bg: "rgba(249,126,90,0.04)",
-    delay: "delay-3",
+    desc: "iOS는 Swift & SwiftUI, Android는 Kotlin & Jetpack Compose로 개발합니다. 네이티브 코드는 유려한 애니메이션과 각 플랫폼의 관습을 보장합니다.",
   },
   {
-    icon: "↩️",
     title: "신뢰감과 안정성",
-    desc: "좋은 UX에는 안전망이 포함됩니다. 무제한 언두/리두, 실수 방지 잠금 모드, 위젯 업데이트, 스마트 알림 — 사용자가 앱과 인터랙션하는 것을 두려워하지 않도록 만듭니다.",
-    color: "#8B5CF6",
-    bg: "rgba(139,92,246,0.04)",
-    delay: "delay-4",
+    desc: "좋은 UX에는 안전망이 포함됩니다. 무제한 언두/리두, 잠금 모드, 위젯, 스마트 알림 — 사용자가 앱과 인터랙션하는 것을 두려워하지 않도록 합니다.",
   },
 ];
 
 const features = [
-  { icon: "👆", label: "드래그로 생성 & 리사이즈" },
-  { icon: "↩️", label: "무제한 언두/리두" },
-  { icon: "🎨", label: "11가지 테마 · 330가지 색상" },
-  { icon: "📐", label: "요일 & 시간 범위 설정" },
-  { icon: "📲", label: "홈 화면 위젯" },
-  { icon: "🔔", label: "스마트 알림" },
+  { label: "드래그로 생성 & 리사이즈" },
+  { label: "무제한 언두/리두" },
+  { label: "11가지 테마 · 330가지 색상" },
+  { label: "요일 & 시간 범위 설정" },
+  { label: "홈 화면 위젯" },
+  { label: "스마트 알림" },
 ];
 ---
 
 <BaseLayout title={`${t('about.title')} - ${t('site.title')}`} description={about.data.description} lang={lang}>
 
   <style>
-    .gradient-text {
-      background: linear-gradient(135deg, #4F6DF0 0%, #34C793 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.12;
-      pointer-events: none;
-    }
-    .blob-1 { animation: blobFloat 9s ease-in-out infinite; }
-    .blob-2 { animation: blobFloat 12s ease-in-out infinite reverse; }
-    .blob-3 { animation: blobFloat 7s ease-in-out infinite; animation-delay: -3s; }
-
-    @keyframes blobFloat {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33%       { transform: translate(24px, -18px) scale(1.06); }
-      66%       { transform: translate(-18px, 16px) scale(0.94); }
-    }
-
     .animate-reveal {
       opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.55s ease, transform 0.55s ease;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
     .animate-reveal.visible {
       opacity: 1;
       transform: translateY(0);
     }
-    .delay-1 { transition-delay: 0.08s; }
-    .delay-2 { transition-delay: 0.16s; }
-    .delay-3 { transition-delay: 0.24s; }
-    .delay-4 { transition-delay: 0.32s; }
+    .delay-1 { transition-delay: 0.06s; }
+    .delay-2 { transition-delay: 0.12s; }
+    .delay-3 { transition-delay: 0.18s; }
+    .delay-4 { transition-delay: 0.24s; }
 
-    .stat-number {
-      background: linear-gradient(135deg, #4F6DF0, #34C793);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    .section-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: 0.75rem;
     }
 
     .pillar-card {
-      transition: transform 0.22s ease, box-shadow 0.22s ease;
-    }
-    .pillar-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 16px 40px rgba(0,0,0,0.07);
-    }
-
-    .feature-chip {
-      transition: background 0.18s ease, transform 0.18s ease;
-    }
-    .feature-chip:hover {
-      background: var(--color-primary-light);
-      transform: translateY(-1px);
-    }
-
-    .platform-pill {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .platform-pill:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.07);
     }
 
-    .cta-btn {
-      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    .feature-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
     }
-    .cta-btn:hover {
-      background: var(--color-primary-dark);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(79,109,240,0.3);
+    @media (min-width: 640px) {
+      .feature-row { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 
-  <!-- ── Hero ── -->
-  <section class="relative overflow-hidden px-6 py-32 md:py-44 text-center">
-    <div class="hero-blob blob-1 w-[500px] h-[500px] top-[-100px] left-[-100px]" style="background:#4F6DF0"></div>
-    <div class="hero-blob blob-2 w-[400px] h-[400px] bottom-[-80px] right-[-80px]" style="background:#34C793"></div>
-    <div class="hero-blob blob-3 w-[300px] h-[300px] top-[40%] right-[10%]" style="background:#F97E5A"></div>
-
-    <div class="relative max-w-3xl mx-auto">
-      <div class="inline-flex items-center gap-2 bg-primary-light text-primary text-xs font-semibold px-3.5 py-1.5 rounded-full mb-7 animate-reveal">
-        <span class="w-1.5 h-1.5 bg-primary rounded-full inline-block"></span>
-        iOS · Android 앱 스튜디오
-      </div>
-
-      <h1 class="text-4xl md:text-[3.5rem] font-bold tracking-tight leading-tight mb-6 animate-reveal delay-1">
-        사람들이 진심으로<br>
-        <span class="gradient-text">좋아하는 앱을 만듭니다</span>
+  <!-- ── Header ── -->
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="max-w-xl animate-reveal">
+      <span class="section-label">About</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">
+        Hyewon &amp; Insong
       </h1>
-
-      <p class="text-base md:text-lg text-text-sub leading-relaxed max-w-lg mx-auto mb-10 animate-reveal delay-2">
-        Hyewon &amp; Insong은 터치 인터랙션과 아름다운 디자인에 집착하는 두 명의 모바일 스튜디오입니다. 손에 쥐었을 때 <em>딱 맞는 느낌</em>을 주는 앱을 만드는 것을 목표로 합니다.
+      <p class="text-base text-text-sub leading-relaxed">
+        iOS와 Android 앱을 전문으로 개발하는 두 명의 모바일 스튜디오입니다.
+        터치 인터랙션, 시각적 완성도, 그리고 소프트웨어를 진심으로 즐겁게 만드는
+        작은 디테일들에 집중합니다.
       </p>
+    </div>
+  </div>
 
-      <div class="flex items-center justify-center gap-3 flex-wrap animate-reveal delay-3">
-        <div class="platform-pill flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 text-sm font-medium text-text shadow-sm">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-text-sub shrink-0">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-          </svg>
-          Swift · SwiftUI
-        </div>
-        <div class="platform-pill flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2.5 text-sm font-medium text-text shadow-sm">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-text-sub shrink-0">
-            <path d="M17.523 15.341a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m-11.046 0a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m11.405-6.022l1.969-3.411a.41.41 0 00-.149-.559.41.41 0 00-.559.149l-1.994 3.454A11.774 11.774 0 0012 8.098c-1.73 0-3.364.393-4.799 1.084L5.207 5.698a.41.41 0 00-.559-.149.41.41 0 00-.149.559l1.969 3.411C3.945 10.878 2.5 13.239 2.5 15.898h19c0-2.659-1.445-5.02-3.618-6.579z"/>
-          </svg>
-          Kotlin · Compose
+  <!-- ── What we do ── -->
+  <section class="py-20 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 items-start">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Focus</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">
+          처음부터 모바일 퍼스트
+        </h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          iOS는 Swift &amp; SwiftUI, Android는 Kotlin &amp; Jetpack Compose로 개발합니다.
+          두 플랫폼 모두 네이티브로 — 크로스플랫폼 타협 없이.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          네이티브 개발은 유려한 애니메이션, 정확한 시스템 통합,
+          그리고 각 플랫폼 사용자가 이미 익숙한 관습을 의미합니다.
+        </p>
+      </div>
+      <div class="flex-1 animate-reveal delay-1">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-3 bg-bg-alt border border-border rounded-xl px-4 py-3.5">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-text-sub shrink-0">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            <div>
+              <div class="text-sm font-medium text-text">iOS</div>
+              <div class="text-xs text-text-sub">Swift · SwiftUI · iPhone · iPad</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-bg-alt border border-border rounded-xl px-4 py-3.5">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-text-sub shrink-0">
+              <path d="M17.523 15.341a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m-11.046 0a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m11.405-6.022l1.969-3.411a.41.41 0 00-.149-.559.41.41 0 00-.559.149l-1.994 3.454A11.774 11.774 0 0012 8.098c-1.73 0-3.364.393-4.799 1.084L5.207 5.698a.41.41 0 00-.559-.149.41.41 0 00-.149.559l1.969 3.411C3.945 10.878 2.5 13.239 2.5 15.898h19c0-2.659-1.445-5.02-3.618-6.579z"/>
+            </svg>
+            <div>
+              <div class="text-sm font-medium text-text">Android</div>
+              <div class="text-xs text-text-sub">Kotlin · Jetpack Compose</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Stats ── -->
-  <section class="border-y border-border bg-bg-alt py-14 px-6">
-    <div class="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-      {stats.map((s, i) => (
-        <div class={`animate-reveal delay-${i + 1}`}>
-          <div class="stat-number text-4xl md:text-5xl font-bold mb-1">{s.number}</div>
-          <div class="text-sm font-semibold text-text">{s.label}</div>
-          <div class="text-xs text-text-sub mt-0.5">{s.sub}</div>
-        </div>
-      ))}
-    </div>
-  </section>
-
-  <!-- ── Core Pillars ── -->
-  <section class="py-28 px-6">
+  <!-- ── Philosophy ── -->
+  <section class="py-20 px-6 bg-bg-alt border-t border-border">
     <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16 animate-reveal">
-        <p class="text-xs font-semibold tracking-widest uppercase text-primary mb-3">Our Philosophy</p>
-        <h2 class="text-2xl md:text-3xl font-bold text-text mb-3">모든 결정의 기준</h2>
-        <p class="text-text-sub max-w-md mx-auto">모든 화면, 모든 제스처, 모든 픽셀에 녹아 있는 네 가지 원칙.</p>
+      <div class="mb-12 animate-reveal">
+        <span class="section-label">Philosophy</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight">모든 결정의 기준</h2>
       </div>
-
-      <div class="grid md:grid-cols-2 gap-5">
-        {pillars.map(p => (
-          <div
-            class={`pillar-card animate-reveal ${p.delay} rounded-2xl border border-border p-8`}
-            style={`border-top: 3px solid ${p.color}; background: ${p.bg};`}
-          >
-            <div class="text-3xl mb-4">{p.icon}</div>
-            <h3 class="text-base font-semibold text-text mb-2">{p.title}</h3>
+      <div class="grid sm:grid-cols-2 gap-5">
+        {pillars.map((p, i) => (
+          <div class={`pillar-card animate-reveal delay-${(i % 4) + 1} bg-card border border-border rounded-2xl p-7`}>
+            <h3 class="text-sm font-semibold text-text mb-2">{p.title}</h3>
             <p class="text-sm text-text-sub leading-relaxed">{p.desc}</p>
           </div>
         ))}
@@ -217,71 +156,48 @@ const features = [
     </div>
   </section>
 
-  <!-- ── SuperTimetable Spotlight ── -->
-  <section class="py-28 px-6 bg-bg-alt">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-16 animate-reveal">
-        <p class="text-xs font-semibold tracking-widest uppercase text-primary mb-3">Currently Shipping</p>
-        <h2 class="text-2xl md:text-3xl font-bold text-text mb-3">저희의 철학, 실제로</h2>
-        <p class="text-text-sub max-w-md mx-auto">첫 번째 앱이 앞으로 만들 모든 것의 기준이 됩니다.</p>
+  <!-- ── Currently Shipping ── -->
+  <section class="py-20 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row gap-16 items-start">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Currently Shipping</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">SuperTimetable</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          앞으로 만들 모든 앱의 기준이 되는 첫 번째 작품입니다.
+          드래그 제스처만으로 완성되는 시간표 — 생성, 이동, 리사이즈까지
+          단 한 번의 폼 입력도 없이 손가락으로 해결합니다.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-8">
+          11가지 정성껏 만든 테마, 시간표별 독립 뷰 설정, 홈 화면 위젯,
+          무제한 언두/리두. iOS에서 만나보세요.
+        </p>
+        <a href="/ko/apps/timetable" class="text-sm font-medium text-primary hover:underline">
+          앱 자세히 보기 →
+        </a>
       </div>
-
-      <div class="rounded-3xl border border-border bg-card overflow-hidden animate-reveal">
-        <!-- Top accent bar -->
-        <div class="h-1 w-full" style="background: linear-gradient(90deg, #4F6DF0, #34C793, #F97E5A)"></div>
-
-        <div class="p-8 md:p-12 flex flex-col md:flex-row gap-10 items-start">
-          <div class="flex-1 min-w-0">
-            <div class="inline-flex items-center gap-2 text-xs font-semibold text-primary bg-primary-light px-3 py-1 rounded-full mb-5">
-              ✦ iOS 출시
+      <div class="flex-1 animate-reveal delay-1">
+        <div class="feature-row">
+          {features.map(f => (
+            <div class="bg-bg-alt border border-border rounded-xl px-4 py-3 text-xs text-text-sub">
+              {f.label}
             </div>
-            <h3 class="text-2xl font-bold text-text mb-3">SuperTimetable</h3>
-            <p class="text-text-sub leading-relaxed mb-6 text-sm">
-              설명서가 필요 없는 시간표 앱. 드래그만으로 일정을 만들고, 옮기고, 조절하세요.
-              11가지 테마, 시간표별 맞춤 시간 범위, 홈 화면 위젯까지 — 내 일정을 내 스타일대로.
-            </p>
-            <a href="/ko/apps/timetable" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-              자세히 보기 →
-            </a>
-          </div>
-
-          <div class="flex-1 grid grid-cols-2 gap-2.5 w-full">
-            {features.map(f => (
-              <div class="feature-chip flex items-center gap-2.5 bg-muted rounded-xl px-3.5 py-3">
-                <span class="text-lg shrink-0">{f.icon}</span>
-                <span class="text-xs text-text-sub leading-tight">{f.label}</span>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── CTA ── -->
-  <section class="py-28 px-6 text-center">
-    <div class="max-w-lg mx-auto animate-reveal">
-      <div class="text-4xl mb-5">🚀</div>
-      <h2 class="text-2xl md:text-3xl font-bold text-text mb-4">직접 경험해보세요</h2>
-      <p class="text-text-sub mb-8 leading-relaxed">저희 앱을 탐색하고 디테일을 직접 느껴보세요.</p>
-      <a href="/ko/apps" class="cta-btn inline-flex items-center gap-2 bg-primary text-white font-semibold px-7 py-3.5 rounded-xl text-sm">
-        앱 보러 가기 →
-      </a>
-    </div>
-  </section>
+  <!-- ── Back ── -->
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+    <a href="/ko/apps" class="text-sm text-text-sub hover:text-text transition">앱 보러 가기 →</a>
+  </div>
 
 </BaseLayout>
 
 <script>
   const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    },
-    { threshold: 0.08, rootMargin: '0px 0px -32px 0px' }
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
   );
   document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
 </script>
