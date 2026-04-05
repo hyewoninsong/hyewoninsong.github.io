@@ -57,6 +57,16 @@ const statusLabel = (status: 'released' | 'in-development') =>
       margin-bottom: 0.75rem;
     }
 
+    .screenshot-pair {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screenshot-pair::-webkit-scrollbar { display: none; }
+    .screenshot-pair img { flex-shrink: 0; }
+
     .theme-strip {
       display: flex;
       gap: 0.75rem;
@@ -165,7 +175,7 @@ const statusLabel = (status: 'released' | 'in-development') =>
           you never have to stop and reposition.
         </p>
       </div>
-      <div class="flex-1 flex justify-center gap-4 animate-reveal delay-1">
+      <div class="flex-1 screenshot-pair animate-reveal delay-1">
         <img
           src="/apps/timetable/drag-time-display.png"
           alt="Dragging an event with live time display"
@@ -339,13 +349,6 @@ const statusLabel = (status: 'released' | 'in-development') =>
           </p>
         </div>
 
-        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">Smart Notifications</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            Set reminders per event: at start time, or 5, 10, 15, 20, 25, 30 minutes,
-            1 hour, or 2 hours before. Weekly repeating, automatically.
-          </p>
-        </div>
 
       </div>
     </div>
