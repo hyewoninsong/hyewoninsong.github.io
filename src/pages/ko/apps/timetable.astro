@@ -57,6 +57,16 @@ const statusLabel = (status: 'released' | 'in-development') =>
       margin-bottom: 0.75rem;
     }
 
+    .screenshot-pair {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screenshot-pair::-webkit-scrollbar { display: none; }
+    .screenshot-pair img { flex-shrink: 0; }
+
     .theme-strip {
       display: flex;
       gap: 0.75rem;
@@ -164,7 +174,7 @@ const statusLabel = (status: 'released' | 'in-development') =>
           화면 끝에 닿으면 자동으로 스크롤되어 손을 뗄 필요가 없습니다.
         </p>
       </div>
-      <div class="flex-1 flex justify-center gap-4 animate-reveal delay-1">
+      <div class="flex-1 screenshot-pair animate-reveal delay-1">
         <img
           src="/apps/timetable/drag-time-display.png"
           alt="드래그 중 실시간 시각 표시"
@@ -332,12 +342,6 @@ const statusLabel = (status: 'released' | 'in-development') =>
           </p>
         </div>
 
-        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">스마트 알림</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            일정 시작 시각, 또는 5·10·15·20·25·30분 전, 1시간·2시간 전 중 일정마다 자유롭게 알림을 설정하세요. 매주 자동으로 반복됩니다.
-          </p>
-        </div>
 
       </div>
     </div>
