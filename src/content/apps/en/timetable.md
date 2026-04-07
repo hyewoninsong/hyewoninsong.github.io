@@ -4,7 +4,7 @@ slug: "timetable"
 icon: ""
 summary: "Design your perfect weekly schedule with drag gestures, 11 themes, and powerful widgets — no typing needed."
 platforms:
-  iphone: "released"
+  iphone: "in-development"
 order: 1
 ---
 
