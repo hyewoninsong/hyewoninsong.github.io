@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../i18n/utils';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const allReports = await getCollection('reports');
+  const koReports = allReports.filter((r) => r.id.startsWith('ko/'));
+
+  return koReports.map((report) => {
+    // id format: ko/super-timetable/2026-04-08
+    const idWithoutLang = report.id.replace('ko/', '');
+    const project = report.data.project;
+    const slug = idWithoutLang.replace(`${project}/`, '');
+
+    return {
+      params: { project, slug },
+      props: { report },
+    };
+  });
+}
+
+const { report } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const { Content } = await render(report);
+
+const formattedDate = report.data.date.toLocaleDateString('en-CA');
+---
+
+<BaseLayout title={`${report.data.project} ${formattedDate} - ${t('reports.title')}`} description={report.data.summary} lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="mb-8">
+      <a href={`/ko/reports/${report.data.project}`} class="text-sm text-text-sub hover:text-text transition">
+        ← {t('reports.backToList')}
+      </a>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center mb-12 md:mb-16">
+      <div class="flex items-center justify-center gap-3 text-xs text-text-sub mb-4">
+        <time datetime={formattedDate}>{formattedDate}</time>
+        {report.data.tags.map((tag) => (
+          <span>#{tag}</span>
+        ))}
+      </div>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-2">{report.data.project}</h1>
+      <p class="text-text-sub">{report.data.summary}</p>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="flex gap-3 flex-wrap justify-center mb-12">
+      {report.data.commits > 0 && (
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 text-primary px-3 py-1.5 text-sm font-medium">
+          {t('reports.commits')} {report.data.commits}
+        </span>
+      )}
+      {report.data.docsUpdated > 0 && (
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-secondary/10 text-secondary px-3 py-1.5 text-sm font-medium">
+          {t('reports.docsUpdated')} {report.data.docsUpdated}
+        </span>
+      )}
+      {report.data.specsUpdated > 0 && (
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-secondary/10 text-secondary px-3 py-1.5 text-sm font-medium">
+          {t('reports.specsUpdated')} {report.data.specsUpdated}
+        </span>
+      )}
+      {report.data.testsUpdated > 0 && (
+        <span class="inline-flex items-center gap-1.5 rounded-lg bg-warm/10 text-warm px-3 py-1.5 text-sm font-medium">
+          {t('reports.testsUpdated')} {report.data.testsUpdated}
+        </span>
+      )}
+    </div>
+
+    <!-- Content -->
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h1:hidden
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-p:text-text-sub prose-p:leading-7
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+      prose-code:text-sm prose-code:font-mono
+      prose-pre:bg-gray-50 prose-pre:border prose-pre:border-gray-100
+      prose-table:text-sm
+      prose-th:text-left prose-th:font-medium prose-th:text-text
+      prose-td:text-text-sub
+    ">
+      <Content />
+    </div>
+  </div>
+</BaseLayout>

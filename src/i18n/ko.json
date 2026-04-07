@@ -19,5 +19,14 @@
   "about.title": "회사 소개",
   "footer.rights": "All rights reserved.",
   "pagination.prev": "이전",
-  "pagination.next": "다음"
+  "pagination.next": "다음",
+  "nav.reports": "보고서",
+  "reports.title": "개발 보고서",
+  "reports.noReports": "아직 보고서가 없습니다.",
+  "reports.commits": "커밋",
+  "reports.docsUpdated": "문서 변경",
+  "reports.specsUpdated": "스펙 변경",
+  "reports.testsUpdated": "테스트 변경",
+  "reports.viewAll": "전체 보기",
+  "reports.backToList": "목록으로"
 }
