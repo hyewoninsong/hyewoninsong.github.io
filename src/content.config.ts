@@ -49,4 +49,22 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { about, apps, blog };
+const reports = defineCollection({
+  loader: glob({
+    pattern: '**/*.md',
+    base: './src/content/reports',
+    generateId: ({ entry }) => entry.replace(/\.md$/, ''),
+  }),
+  schema: z.object({
+    project: z.string(),
+    date: z.coerce.date(),
+    summary: z.string(),
+    tags: z.array(z.string()).default([]),
+    commits: z.number().default(0),
+    docsUpdated: z.number().default(0),
+    specsUpdated: z.number().default(0),
+    testsUpdated: z.number().default(0),
+  }),
+});
+
+export const collections = { about, apps, blog, reports };

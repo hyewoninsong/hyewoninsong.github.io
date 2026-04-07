@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={`${t('reports.title')} - ${t('site.title')}`} lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-6">{t('reports.title')}</h1>
+      <p class="text-text-sub mb-8">Reports are available in Korean only.</p>
+      <a href="/ko/reports" class="text-primary hover:underline text-sm">
+        Go to Korean reports →
+      </a>
+    </div>
+  </div>
+</BaseLayout>

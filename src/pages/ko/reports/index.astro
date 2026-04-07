@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ReportCard from '../../../components/ReportCard.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getCollection } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const allReports = await getCollection('reports');
+const reports = allReports
+  .filter((report) => report.id.startsWith('ko/'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// Group by project
+const projectMap = new Map<string, typeof reports>();
+for (const report of reports) {
+  const project = report.data.project;
+  if (!projectMap.has(project)) {
+    projectMap.set(project, []);
+  }
+  projectMap.get(project)!.push(report);
+}
+---
+
+<BaseLayout title={`${t('reports.title')} - ${t('site.title')}`} lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">{t('reports.title')}</h1>
+    </div>
+
+    {reports.length === 0 ? (
+      <p class="text-center text-text-sub">{t('reports.noReports')}</p>
+    ) : (
+      <div class="space-y-16">
+        {[...projectMap.entries()].map(([project, projectReports]) => {
+          const recentReports = projectReports.slice(0, 5);
+          return (
+            <section>
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-text tracking-tight">{project}</h2>
+                {projectReports.length > 5 && (
+                  <a href={`/ko/reports/${project}`} class="text-sm text-primary hover:underline">
+                    {t('reports.viewAll')} →
+                  </a>
+                )}
+              </div>
+              <div class="grid grid-cols-1 gap-4">
+                {recentReports.map((report) => {
+                  const slug = report.id.replace('ko/', '');
+                  return (
+                    <ReportCard
+                      project={report.data.project}
+                      date={report.data.date}
+                      summary={report.data.summary}
+                      tags={report.data.tags}
+                      commits={report.data.commits}
+                      docsUpdated={report.data.docsUpdated}
+                      specsUpdated={report.data.specsUpdated}
+                      testsUpdated={report.data.testsUpdated}
+                      href={`/ko/reports/${slug}`}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</BaseLayout>
