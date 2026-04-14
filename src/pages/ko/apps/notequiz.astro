@@ -1,0 +1,206 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getEntry } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const app = (await getEntry('apps', 'ko/notequiz'))!;
+
+const { platforms = {} } = app.data;
+
+const badgeClass = (status: 'released' | 'in-development') =>
+  status === 'released'
+    ? 'border-green-200 bg-green-50 text-green-700'
+    : 'border-border bg-muted text-muted-foreground';
+
+const statusLabel = (status: 'released' | 'in-development') =>
+  status === 'released' ? t('status.released') : t('status.dev');
+---
+
+<BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
+
+  <style>
+    .animate-reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .animate-reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .delay-1 { transition-delay: 0.06s; }
+    .delay-2 { transition-delay: 0.12s; }
+    .delay-3 { transition-delay: 0.18s; }
+
+    .screenshot {
+      border-radius: 2.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: block;
+    }
+    .screenshot:hover {
+      transform: scale(1.02) translateY(-2px);
+      box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
+    }
+
+    .section-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .mini-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mini-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+  </style>
+
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+
+    <!-- ── Header ── -->
+    <div class="text-center mb-20 md:mb-28 animate-reveal">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
+      <p class="text-base text-text-sub mb-6 max-w-md mx-auto">{app.data.summary}</p>
+
+      <div class="flex flex-col items-center gap-2">
+        {platforms.iphone && (
+          <div class="flex items-center gap-2 flex-wrap justify-center">
+            <span class="flex items-center gap-1 text-xs text-text-sub w-16 justify-end shrink-0">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              iOS
+            </span>
+            <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
+              iPhone · {statusLabel(platforms.iphone)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- ── Hero screenshot ── -->
+    <div class="flex justify-center mb-28 animate-reveal delay-1">
+      <img
+        src="/apps/notequiz/02_home.png"
+        alt="NoteQuiz — 클레프와 난이도 선택"
+        class="screenshot w-full max-w-[300px]"
+      />
+    </div>
+
+  </div>
+
+  <!-- ── Section: 퀴즈 ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">퀴즈</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">보고 탭하면 끝</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          오선지에 음표가 나타나면 도·레·미·파·솔·라·시 버튼을 탭하세요.
+          정답이면 다음 문제로, 틀리면 음표가 그대로 남아 다시 확인할 수 있어요.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          높은음자리표, 낮은음자리표, 또는 두 가지를 섞어서 연습할 수 있어요.
+          쉬움·어려움 두 단계 난이도로 수준에 맞게 단계별로 실력을 키우세요.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img
+          src="/apps/notequiz/03_quiz.png"
+          alt="NoteQuiz — 퀴즈 진행 중"
+          class="screenshot w-full max-w-[280px]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: 기록 ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">기록</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">틀린 음표를 오선지로 복기</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          퀴즈가 끝나면 한 세션의 모든 답변이 오선지와 함께 저장돼요.
+          어떤 음표에서 맞히고 틀렸는지 한눈에 확인할 수 있습니다.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          세션별 기록이 쌓이면서 어떤 음이 반복적으로 약한지 파악할 수 있어요.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img
+          src="/apps/notequiz/04_records.png"
+          alt="NoteQuiz — 오선지와 함께하는 세션 기록"
+          class="screenshot w-full max-w-[280px]"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── More Features ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14 animate-reveal">
+        <span class="section-label">더보기</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight">세세한 것까지 놓치지 않았어요</h2>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-5">
+
+        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">높은음자리표 · 낮은음자리표</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            두 클레프를 따로 또는 함께 연습할 수 있어요.
+            매 퀴즈 시작 전에 원하는 유형을 선택하세요.
+          </p>
+        </div>
+
+        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">2단계 난이도</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            쉬움은 덧줄 2줄 이하, 어려움은 3~5줄까지 확장.
+            실력이 쌓이면 단계를 올려보세요.
+          </p>
+        </div>
+
+        <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">실시간 세션 점수</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            탭할 때마다 정오답 카운트가 업데이트돼요.
+            퀴즈를 끝내지 않아도 내 상태를 바로 알 수 있습니다.
+          </p>
+        </div>
+
+        <div class="mini-card animate-reveal delay-1 bg-bg-alt border border-border rounded-2xl p-6 flex flex-col justify-center">
+          <p class="text-xs text-text-sub leading-relaxed font-medium">광고 없음 · 오프라인 작동 · 무료</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Back ── -->
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+    <a href="/ko/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+  </div>
+
+</BaseLayout>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
+  );
+  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
+</script>
