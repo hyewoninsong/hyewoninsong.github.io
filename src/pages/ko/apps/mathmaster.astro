@@ -1,0 +1,164 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getEntry } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const app = (await getEntry('apps', 'ko/mathmaster'))!;
+
+const { platforms = {} } = app.data;
+
+const badgeClass = (status: 'released' | 'in-development') =>
+  status === 'released'
+    ? 'border-green-200 bg-green-50 text-green-700'
+    : 'border-border bg-muted text-muted-foreground';
+
+const statusLabel = (status: 'released' | 'in-development') =>
+  status === 'released' ? t('status.released') : t('status.dev');
+---
+
+<BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
+
+  <style>
+    .animate-reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .animate-reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .delay-1 { transition-delay: 0.06s; }
+    .delay-2 { transition-delay: 0.12s; }
+    .delay-3 { transition-delay: 0.18s; }
+    .delay-4 { transition-delay: 0.24s; }
+    .delay-5 { transition-delay: 0.30s; }
+
+    .section-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.07);
+    }
+  </style>
+
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+
+    <!-- ── Header ── -->
+    <div class="text-center mb-20 md:mb-28 animate-reveal">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
+      <p class="text-base text-text-sub mb-6 max-w-md mx-auto">{app.data.summary}</p>
+
+      <div class="flex flex-col items-center gap-2">
+        {platforms.iphone && (
+          <div class="flex items-center gap-2 flex-wrap justify-center">
+            <span class="flex items-center gap-1 text-xs text-text-sub w-16 justify-end shrink-0">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              iOS
+            </span>
+            <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
+              iPhone · {statusLabel(platforms.iphone)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- ── Hero copy ── -->
+    <div class="max-w-xl mx-auto text-center mb-20 animate-reveal delay-1">
+      <p class="text-2xl md:text-3xl font-semibold text-text tracking-tight mb-4">매일 5분,<br/>수학이 빨라진다.</p>
+      <p class="text-text-sub leading-relaxed">
+        덧셈·뺄셈·곱셈·나눗셈·구구단을 한 앱에서.
+        세부 난이도를 직접 설정해서 오늘 연습할 것만 골라 시작하세요.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ── Features ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14 animate-reveal">
+        <span class="section-label">기능</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight">연습에 필요한 모든 것</h2>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <div class="feature-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">사칙연산 전부 + 구구단</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            덧셈·뺄셈·곱셈·나눗셈, 구구단 ×·÷ 를 한 앱에서.
+            오늘 연습할 연산만 골라서 시작하세요.
+          </p>
+        </div>
+
+        <div class="feature-card animate-reveal delay-2 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">내 수준에 딱 맞는 세부 난이도</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            덧셈 9단계, 곱셈 7단계 등 연산별 세부 난이도를 직접 선택.
+            "한 자리 덧셈"만 할지 "세 자리 덧셈"까지 할지 내가 정합니다.
+          </p>
+        </div>
+
+        <div class="feature-card animate-reveal delay-3 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">즉각적인 피드백</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            정답이면 바로 다음 문제로, 틀리면 정답을 즉시 확인.
+            소리와 색깔로 확실하게 구분됩니다.
+          </p>
+        </div>
+
+        <div class="feature-card animate-reveal delay-4 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">가족이 함께, 기록은 따로</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            이름만 입력하면 기록이 분리됩니다.
+            한 기기로 여러 명이 각자의 성적을 관리할 수 있어요.
+          </p>
+        </div>
+
+        <div class="feature-card animate-reveal delay-5 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-2">정답률 통계</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            연산별·난이도별 정답률을 한 화면에서 확인.
+            어떤 유형이 약한지 바로 파악할 수 있어요.
+          </p>
+        </div>
+
+        <div class="feature-card animate-reveal delay-1 bg-bg-alt border border-border rounded-2xl p-6 flex flex-col justify-center">
+          <p class="text-xs text-text-sub leading-relaxed font-medium">광고 없음 · 인터넷 불필요 · 완전 무료</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Back ── -->
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+    <a href="/ko/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+  </div>
+
+</BaseLayout>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
+  );
+  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
+</script>
