@@ -19,14 +19,5 @@
   "about.title": "About",
   "footer.rights": "All rights reserved.",
   "pagination.prev": "Previous",
-  "pagination.next": "Next",
-  "nav.reports": "Reports",
-  "reports.title": "Dev Reports",
-  "reports.noReports": "No reports yet.",
-  "reports.commits": "Commits",
-  "reports.docsUpdated": "Docs changed",
-  "reports.specsUpdated": "Specs changed",
-  "reports.testsUpdated": "Tests changed",
-  "reports.viewAll": "View all",
-  "reports.backToList": "Back to list"
+  "pagination.next": "Next"
 }
