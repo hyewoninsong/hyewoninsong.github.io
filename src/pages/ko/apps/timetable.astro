@@ -239,8 +239,9 @@ const img = (name: string) => `/apps/timetable/ko/${name}.png`;
           바뀌는 건 제목과 색상뿐. 각 블록의 요일, 시간, 메모, 알림은 그대로 유지됩니다.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img src={img('batch-edit')} alt="같은 스타일 일정을 함께 바꿀지 묻는 확인 시트" class="screenshot w-full max-w-[280px]" />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('batch-edit')} alt="같은 스타일 일정을 함께 바꿀지 묻는 확인 시트" class="screenshot w-full max-w-[220px]" />
+        <img src={img('batch-edit-after')} alt="같은 스타일 블록이 모두 새 제목과 색상으로 바뀐 그리드" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>

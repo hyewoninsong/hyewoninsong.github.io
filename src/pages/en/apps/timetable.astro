@@ -239,8 +239,9 @@ const img = (name: string) => `/apps/timetable/en/${name}.png`;
           Only the title and color are updated. Days, times, memos, and alarms on each block stay as they were.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img src={img('batch-edit')} alt="Confirmation sheet offering to update matching blocks" class="screenshot w-full max-w-[280px]" />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('batch-edit')} alt="Confirmation sheet offering to update matching blocks" class="screenshot w-full max-w-[220px]" />
+        <img src={img('batch-edit-after')} alt="Grid after every matching block took the new title and color" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
