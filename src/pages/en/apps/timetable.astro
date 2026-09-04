@@ -18,6 +18,8 @@ const badgeClass = (status: 'released' | 'in-development') =>
 
 const statusLabel = (status: 'released' | 'in-development') =>
   status === 'released' ? t('status.released') : t('status.dev');
+
+const img = (name: string) => `/apps/timetable/en/${name}.png`;
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
@@ -63,27 +65,30 @@ const statusLabel = (status: 'released' | 'in-development') =>
       overflow-x: auto;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
+      padding: 0.5rem 0;
     }
     .screenshot-pair::-webkit-scrollbar { display: none; }
     .screenshot-pair img { flex-shrink: 0; }
 
-    .theme-strip {
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+    .step-list li {
       display: flex;
       gap: 0.75rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-      scrollbar-width: none;
+      font-size: 0.875rem;
+      color: var(--color-text-sub);
+      line-height: 1.6;
     }
-    .theme-strip::-webkit-scrollbar { display: none; }
-    .theme-strip img {
-      height: 320px;
-      width: auto;
+    .step-list li span:first-child {
       flex-shrink: 0;
-      border-radius: 1.5rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      transition: transform 0.25s ease;
+      font-weight: 600;
+      color: var(--color-text);
+      min-width: 4.5rem;
     }
-    .theme-strip img:hover { transform: scale(1.03); }
 
     .mini-card {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -92,6 +97,13 @@ const statusLabel = (status: 'released' | 'in-development') =>
       transform: translateY(-3px);
       box-shadow: 0 12px 32px rgba(0,0,0,0.08);
     }
+    .mini-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      object-position: top;
+    }
+    .mini-card img.from-bottom { object-position: bottom; }
   </style>
 
   <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
@@ -150,8 +162,8 @@ const statusLabel = (status: 'released' | 'in-development') =>
     <!-- ── Intro screenshot ── -->
     <div class="flex justify-center mb-28 animate-reveal delay-1">
       <img
-        src="/apps/timetable/colorful-overview.png"
-        alt="SuperTimetable overview"
+        src={img('hero')}
+        alt="SuperTimetable weekly grid with color-coded schedule blocks"
         class="screenshot w-full max-w-[300px]"
       />
     </div>
@@ -164,140 +176,155 @@ const statusLabel = (status: 'released' | 'in-development') =>
       <div class="flex-1 animate-reveal">
         <span class="section-label">Drag & Gestures</span>
         <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Build your schedule with your hands</h2>
-        <p class="text-text-sub leading-relaxed mb-4">
-          Drag across any empty cell to create a new event — no tapping through menus.
-          Long-press a block to pick it up and drop it on a different day or time.
-          Pull the top or bottom handle to stretch or shrink its duration.
-        </p>
         <p class="text-text-sub leading-relaxed">
-          As you drag, guide lines appear at the edges of nearby events so you can snap
-          precisely to existing boundaries. The grid auto-scrolls when you reach the edge —
-          you never have to stop and reposition.
+          No forms, no date pickers. Every schedule block is created, moved, and resized
+          directly on the grid, with a live time label that follows your finger.
+        </p>
+        <ul class="step-list">
+          <li><span>Create</span><span>Drag across empty space. Drag up or down and the block grows in either direction.</span></li>
+          <li><span>Move</span><span>Pick up a block and drop it on another day or time. A haptic tick marks every minute you pass.</span></li>
+          <li><span>Resize</span><span>Pull the top or bottom handle to change only that edge.</span></li>
+        </ul>
+        <p class="text-text-sub leading-relaxed mt-5">
+          Guide lines appear at the edges of nearby blocks so you can snap precisely to them,
+          and the grid scrolls on its own when you reach the top or bottom.
         </p>
       </div>
       <div class="flex-1 screenshot-pair animate-reveal delay-1">
-        <img
-          src="/apps/timetable/drag-time-display.png"
-          alt="Dragging an event with live time display"
-          class="screenshot w-full max-w-[220px]"
-        />
-        <img
-          src="/apps/timetable/time-snap-guide.png"
-          alt="Snap guide lines aligning with nearby events"
-          class="screenshot w-full max-w-[220px]"
-        />
+        <img src={img('drag-create')} alt="Creating a block by dragging across empty cells" class="screenshot w-full max-w-[200px]" />
+        <img src={img('move-drag')} alt="Moving a block to another day with live time labels" class="screenshot w-full max-w-[200px]" />
+        <img src={img('resize-drag')} alt="Resizing a block by pulling its bottom handle" class="screenshot w-full max-w-[200px]" />
       </div>
     </div>
   </section>
 
-  <!-- ── Section: Themes & Colors ── -->
+  <!-- ── Section: Edit Sheet ── -->
   <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto">
-      <div class="flex flex-col md:flex-row items-start gap-16">
-        <div class="flex-1 animate-reveal md:sticky md:top-32">
-          <span class="section-label">Themes & Colors</span>
-          <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">11 themes. 330 colors.</h2>
-          <p class="text-text-sub leading-relaxed mb-4">
-            Choose from 11 hand-crafted themes — Standard, Vivid, Earth, Ocean, Sunset, Forest,
-            Candy, Vintage, Monochrome, Neon, and Jewel. Each theme includes 30 colors across
-            three intensity levels.
-          </p>
-          <p class="text-text-sub leading-relaxed">
-            Switch themes anytime. Your existing event colors remap automatically
-            to the new palette — no manual recoloring.
-          </p>
-        </div>
-        <div class="flex-1 animate-reveal delay-1 overflow-hidden">
-          <div class="theme-strip">
-            <img src="/apps/timetable/theme-1.png" alt="Standard theme" />
-            <img src="/apps/timetable/theme-2.png" alt="Vivid theme" />
-            <img src="/apps/timetable/theme-3.png" alt="Earth theme" />
-            <img src="/apps/timetable/theme-4.png" alt="Ocean theme" />
-            <img src="/apps/timetable/theme-5.png" alt="Neon theme" />
-          </div>
-        </div>
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Edit Sheet</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Everything about a block, in one place</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Tap a block to open a calendar-style sheet. Title, color, days, and time sit at the top.
+          Below them, two alarms and a memo, so the block carries everything you need to remember.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Alarms fire at the start, or 5 minutes to 2 hours before, with a choice of five sounds.
+          Set a second alarm when one reminder is not enough.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          Pick from 10 basic colors or build your own with the custom color editor.
+          Change a custom color later and every block using it updates across all your timetables.
+        </p>
+      </div>
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('quick-edit')} alt="Edit sheet with title, color, days, time, alarm, and memo" class="screenshot w-full max-w-[220px]" />
+        <img src={img('color-variant')} alt="Same block with a different color applied" class="screenshot w-full max-w-[220px]" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: Batch Update ── -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Batch Update</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Change one, update them all</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Blocks that share a title and color count as the same style. Rename or recolor one of them
+          and SuperTimetable asks whether the other matching blocks should follow, with a before-and-after
+          preview so you know exactly what changes.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          Only the title and color are updated. Days, times, memos, and alarms on each block stay as they were.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img src={img('batch-edit')} alt="Confirmation sheet offering to update matching blocks" class="screenshot w-full max-w-[280px]" />
       </div>
     </div>
   </section>
 
   <!-- ── Section: Custom View ── -->
-  <section class="py-24 px-6 border-t border-border">
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
       <div class="flex-1 animate-reveal">
         <span class="section-label">Custom View</span>
         <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Show only what matters to you</h2>
         <p class="text-text-sub leading-relaxed mb-4">
-          Each timetable has its own view settings, independent of every other.
-          Set the day range to weekdays only, Mon–Sat, or the full week.
-          Choose whether the week starts on Monday or Sunday.
+          Each timetable keeps its own view settings. Show weekdays only, add Saturday, or the full week,
+          and start the week on Monday or Sunday.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Drag the hour slider to display anything from a single morning to all 24 hours,
+          so the hours you actually use fill the screen.
         </p>
         <p class="text-text-sub leading-relaxed">
-          Set a custom start and end hour — anywhere from 0 to 24 — so only
-          the hours you actually use take up screen space.
+          Switch between 12-hour and 24-hour time, and choose light, dark, or automatic appearance.
+          Lock the grid when you are done editing to keep taps from moving anything.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img
-          src="/apps/timetable/custom-view.png"
-          alt="Timetable showing only relevant days and hours"
-          class="screenshot w-full max-w-[280px]"
-        />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('day-range')} alt="Timetable showing a custom day range" class="screenshot w-full max-w-[220px]" />
+        <img src={img('dark-mode')} alt="Timetable in dark mode" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
   <!-- ── Section: Widgets ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+  <section class="py-24 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
       <div class="flex-1 animate-reveal">
         <span class="section-label">Widgets</span>
         <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Your schedule, always visible</h2>
         <p class="text-text-sub leading-relaxed mb-4">
-          Place the full timetable widget on your Home screen to see the entire week
-          at a glance without opening the app.
+          The Week widget puts the whole grid on your Home Screen in large or extra-large size,
+          with the current day and time highlighted.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          The Today widget shows a timeline centered on the current moment, in every size from small
+          to extra large. Tap it to jump straight into the app.
         </p>
         <p class="text-text-sub leading-relaxed">
-          The Today widget shows a timeline of your day with a red line marking
-          the current time — so you always know what's happening right now and what's next.
+          Choose which timetable each widget shows. Both follow your system appearance and your 12-hour
+          or 24-hour preference.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img
-          src="/apps/timetable/widget.png"
-          alt="Home screen widgets showing the full timetable and today's schedule"
-          class="screenshot w-full max-w-[300px]"
-        />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('widget-light')} alt="Home Screen with the Week and Today widgets in light mode" class="screenshot w-full max-w-[220px]" />
+        <img src={img('widget-dark')} alt="Home Screen with the Week and Today widgets in dark mode" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
-  <!-- ── Section: Share & Export ── -->
-  <section class="py-24 px-6 border-t border-border">
+  <!-- ── Section: Share & Print ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
       <div class="flex-1 animate-reveal">
-        <span class="section-label">Share & Export</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Share it your way</h2>
+        <span class="section-label">Share & Print</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">On screen, on paper, or on another device</h2>
         <p class="text-text-sub leading-relaxed mb-4">
-          Export your timetable as a clean image in light or dark mode — ready to
-          share directly or save to your photo library.
+          Export a clean image of your timetable in light or dark, in 12-hour or 24-hour time,
+          with a live preview before you share it.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          Print straight from the app. Choose A3 to Letter or a custom paper size, portrait or landscape,
+          fit or fill, and put 1, 2, or 4 timetables on a page. Pinch to zoom the preview to check every detail.
         </p>
         <p class="text-text-sub leading-relaxed">
-          Use the file export to back up your timetable or send a complete copy
-          to another device. Anyone with SuperTimetable can import it directly.
+          Share a timetable as a file to back it up or hand it to someone else.
+          Anyone with SuperTimetable opens it as a ready-to-edit copy.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img
-          src="/apps/timetable/share-light.png"
-          alt="Timetable export and sharing options"
-          class="screenshot w-full max-w-[280px]"
-        />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('image-share')} alt="Share sheet with light and dark image preview" class="screenshot w-full max-w-[220px]" />
+        <img src={img('print')} alt="Print options with paper size, orientation, and copies per page" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
   <!-- ── More Features ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+  <section class="py-24 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-14 animate-reveal">
         <span class="section-label">More</span>
@@ -307,48 +334,65 @@ const statusLabel = (status: 'released' | 'in-development') =>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl overflow-hidden">
-          <img src="/apps/timetable/presets.png" alt="Event presets" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <img src={img('timetable-list')} alt="Timetable list with full-size previews" />
           <div class="p-5">
-            <h3 class="text-sm font-semibold text-text mb-1.5">Presets</h3>
+            <h3 class="text-sm font-semibold text-text mb-1.5">Multiple Timetables</h3>
             <p class="text-xs text-text-sub leading-relaxed">
-              Group recurring events under a preset. Change the preset once — all linked events update instantly.
+              Keep one per semester, job, or family member. Swipe through full-size previews and switch in one tap.
             </p>
           </div>
         </div>
 
         <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl overflow-hidden">
-          <img src="/apps/timetable/timetable-list.png" alt="Timetable list" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <img src={img('duplicate-timetable')} alt="Duplicating a timetable from the list" />
           <div class="p-5">
-            <h3 class="text-sm font-semibold text-text mb-1.5">Multiple Timetables</h3>
+            <h3 class="text-sm font-semibold text-text mb-1.5">Duplicate a Timetable</h3>
             <p class="text-xs text-text-sub leading-relaxed">
-              Keep a separate timetable for each semester, project, or context. Switch between them in one tap.
+              Start a new semester from last one. Duplicate the whole timetable, rename it, and adjust only what changed.
             </p>
           </div>
         </div>
 
         <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl overflow-hidden">
-          <img src="/apps/timetable/duplicate-event-1.png" alt="Duplicating events" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <img src={img('title-suggestions')} alt="Copy Style From list showing existing title and color pairs" />
           <div class="p-5">
-            <h3 class="text-sm font-semibold text-text mb-1.5">Duplicate Events</h3>
+            <h3 class="text-sm font-semibold text-text mb-1.5">Copy Style From</h3>
             <p class="text-xs text-text-sub leading-relaxed">
-              Copy any event and place it in another slot in seconds — no re-entering titles or colors.
+              Adding another Math class? Pick an existing title and color pair from the list, most used first, instead of typing it again.
             </p>
           </div>
         </div>
 
-      </div>
-
-      <!-- Undo/redo + notifications text-only row -->
-      <div class="mt-6 grid sm:grid-cols-2 gap-6">
-
-        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">Unlimited Undo & Redo</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            Every timetable keeps its own independent history. Moves, resizes, preset changes —
-            all tracked, all reversible, with no depth limit.
-          </p>
+        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src={img('undo-redo')} alt="Undo and redo buttons in the bottom toolbar" class="from-bottom" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">Unlimited Undo & Redo</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              Every timetable keeps its own history. Moves, resizes, edits, and deletions are all reversible, with no depth limit.
+            </p>
+          </div>
         </div>
 
+        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src={img('lock-toggle')} alt="Locked timetable with the lock button in the corner" class="from-bottom" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">Lock When Done</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              One tap locks the grid so nothing moves by accident. Tap a block while locked to just read its details.
+            </p>
+          </div>
+        </div>
+
+        <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-1.5">Guided First Run</h3>
+          <p class="text-xs text-text-sub leading-relaxed mb-4">
+            A short interactive tutorial walks you through creating, moving, resizing, and locking on a sample timetable. Skip it anytime, replay it from the menu.
+          </p>
+          <h3 class="text-sm font-semibold text-text mb-1.5">iPhone and iPad</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            On iPad, a side panel edits blocks next to the grid. Available in English, Korean, Japanese, and Simplified and Traditional Chinese.
+          </p>
+        </div>
 
       </div>
     </div>

@@ -18,6 +18,8 @@ const badgeClass = (status: 'released' | 'in-development') =>
 
 const statusLabel = (status: 'released' | 'in-development') =>
   status === 'released' ? t('status.released') : t('status.dev');
+
+const img = (name: string) => `/apps/timetable/ko/${name}.png`;
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
@@ -63,27 +65,30 @@ const statusLabel = (status: 'released' | 'in-development') =>
       overflow-x: auto;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
+      padding: 0.5rem 0;
     }
     .screenshot-pair::-webkit-scrollbar { display: none; }
     .screenshot-pair img { flex-shrink: 0; }
 
-    .theme-strip {
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+    .step-list li {
       display: flex;
       gap: 0.75rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-      scrollbar-width: none;
+      font-size: 0.875rem;
+      color: var(--color-text-sub);
+      line-height: 1.6;
     }
-    .theme-strip::-webkit-scrollbar { display: none; }
-    .theme-strip img {
-      height: 320px;
-      width: auto;
+    .step-list li span:first-child {
       flex-shrink: 0;
-      border-radius: 1.5rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      transition: transform 0.25s ease;
+      font-weight: 600;
+      color: var(--color-text);
+      min-width: 4.5rem;
     }
-    .theme-strip img:hover { transform: scale(1.03); }
 
     .mini-card {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -92,6 +97,13 @@ const statusLabel = (status: 'released' | 'in-development') =>
       transform: translateY(-3px);
       box-shadow: 0 12px 32px rgba(0,0,0,0.08);
     }
+    .mini-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      object-position: top;
+    }
+    .mini-card img.from-bottom { object-position: bottom; }
   </style>
 
   <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
@@ -150,149 +162,168 @@ const statusLabel = (status: 'released' | 'in-development') =>
     <!-- ── Intro screenshot ── -->
     <div class="flex justify-center mb-28 animate-reveal delay-1">
       <img
-        src="/apps/timetable/colorful-overview.png"
-        alt="SuperTimetable 전체 화면"
+        src={img('hero')}
+        alt="SuperTimetable 주간 시간표 화면"
         class="screenshot w-full max-w-[300px]"
       />
     </div>
 
   </div>
 
-  <!-- ── Section: 드래그 & 제스처 ── -->
+  <!-- ── Section: Drag & Gestures ── -->
   <section class="py-24 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
       <div class="flex-1 animate-reveal">
         <span class="section-label">Drag & Gestures</span>
         <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">손으로 완성하는 시간표</h2>
-        <p class="text-text-sub leading-relaxed mb-4">
-          빈 칸 위에서 드래그하면 새 일정이 바로 만들어집니다. 메뉴를 탭할 필요가 없습니다.
-          일정을 길게 눌러 들어올린 뒤 다른 요일이나 시간대에 내려놓으세요.
-          블록의 위아래 핸들을 잡아당겨 시간을 늘리거나 줄일 수 있습니다.
-        </p>
         <p class="text-text-sub leading-relaxed">
-          드래그 중에는 주변 일정의 경계에 가이드 라인이 표시되어 정확한 위치에 스냅할 수 있습니다.
-          화면 끝에 닿으면 자동으로 스크롤되어 손을 뗄 필요가 없습니다.
+          입력 폼도, 날짜 선택창도 없어요. 모든 일정은 그리드 위에서 바로 만들고, 옮기고, 늘립니다.
+          손가락을 따라오는 시간 라벨이 지금 몇 시인지 실시간으로 알려줘요.
+        </p>
+        <ul class="step-list">
+          <li><span>만들기</span><span>빈 칸을 드래그하면 끝. 위로 끌든 아래로 끌든 그 방향으로 블록이 늘어나요.</span></li>
+          <li><span>옮기기</span><span>블록을 집어 다른 요일이나 시간에 내려놓으세요. 1분 지날 때마다 손끝에 진동이 톡톡 전해져요.</span></li>
+          <li><span>늘이기</span><span>위아래 핸들을 잡아당기면 그쪽 끝만 바뀝니다.</span></li>
+        </ul>
+        <p class="text-text-sub leading-relaxed mt-5">
+          드래그 중에는 주변 블록의 경계에 가이드 라인이 떠서 딱 맞게 붙일 수 있고,
+          화면 끝에 닿으면 그리드가 알아서 스크롤됩니다.
         </p>
       </div>
       <div class="flex-1 screenshot-pair animate-reveal delay-1">
-        <img
-          src="/apps/timetable/drag-time-display.png"
-          alt="드래그 중 실시간 시각 표시"
-          class="screenshot w-full max-w-[220px]"
-        />
-        <img
-          src="/apps/timetable/time-snap-guide.png"
-          alt="주변 일정과 일치 여부 스냅 가이드"
-          class="screenshot w-full max-w-[220px]"
-        />
+        <img src={img('drag-create')} alt="빈 칸을 드래그해 일정 만들기" class="screenshot w-full max-w-[200px]" />
+        <img src={img('move-drag')} alt="시간 라벨을 보며 다른 요일로 옮기기" class="screenshot w-full max-w-[200px]" />
+        <img src={img('resize-drag')} alt="아래 핸들을 당겨 시간 늘이기" class="screenshot w-full max-w-[200px]" />
       </div>
     </div>
   </section>
 
-  <!-- ── Section: 테마 & 색상 ── -->
+  <!-- ── Section: Edit Sheet ── -->
   <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto">
-      <div class="flex flex-col md:flex-row items-start gap-16">
-        <div class="flex-1 animate-reveal md:sticky md:top-32">
-          <span class="section-label">Themes & Colors</span>
-          <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">11가지 테마, 330가지 색상</h2>
-          <p class="text-text-sub leading-relaxed mb-4">
-            Standard, Vivid, Earth, Ocean, Sunset, Forest, Candy, Vintage, Monochrome, Neon, Jewel.
-            11개의 정성껏 만든 테마, 각각 세 가지 강도로 30가지 색상을 제공합니다.
-          </p>
-          <p class="text-text-sub leading-relaxed">
-            언제든지 테마를 바꿀 수 있습니다. 기존 일정 색상은 새 팔레트로 자동 매핑됩니다.
-          </p>
-        </div>
-        <div class="flex-1 animate-reveal delay-1 overflow-hidden">
-          <div class="theme-strip">
-            <img src="/apps/timetable/theme-1.png" alt="Standard 테마" />
-            <img src="/apps/timetable/theme-2.png" alt="Vivid 테마" />
-            <img src="/apps/timetable/theme-3.png" alt="Earth 테마" />
-            <img src="/apps/timetable/theme-4.png" alt="Ocean 테마" />
-            <img src="/apps/timetable/theme-5.png" alt="Neon 테마" />
-          </div>
-        </div>
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Edit Sheet</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">일정 하나에 필요한 건 전부 한 화면에</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          블록을 탭하면 캘린더 앱 같은 편집 시트가 열려요. 제목, 색상, 요일, 시간이 맨 위에,
+          그 아래 알림 두 개와 메모까지. 기억해야 할 건 일정 안에 다 담아두세요.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          알림은 정시부터 5분 전, 최대 2시간 전까지 고를 수 있고 사운드도 5가지 중에서 선택해요.
+          한 번으로 부족하면 두 번째 알림을 추가하면 됩니다.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          기본 색상 10가지 중에 고르거나, 색상 편집기로 원하는 색을 직접 만들 수 있어요.
+          나중에 그 색을 바꾸면 모든 시간표에서 그 색을 쓰던 블록이 한꺼번에 바뀝니다.
+        </p>
+      </div>
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('quick-edit')} alt="제목, 색상, 요일, 시간, 알림, 메모가 있는 편집 시트" class="screenshot w-full max-w-[220px]" />
+        <img src={img('color-variant')} alt="같은 일정에 다른 색상을 적용한 모습" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
-  <!-- ── Section: 커스텀 뷰 ── -->
+  <!-- ── Section: Batch Update ── -->
   <section class="py-24 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
+      <div class="flex-1 animate-reveal">
+        <span class="section-label">Batch Update</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">하나만 고치면 나머지도 따라와요</h2>
+        <p class="text-text-sub leading-relaxed mb-4">
+          제목과 색상이 같은 블록은 같은 스타일로 묶여요. 그중 하나의 이름이나 색을 바꾸면
+          나머지 블록도 같이 바꿀지 물어봅니다. 바뀌기 전과 후를 나란히 보여주니까
+          뭐가 달라지는지 바로 알 수 있어요.
+        </p>
+        <p class="text-text-sub leading-relaxed">
+          바뀌는 건 제목과 색상뿐. 각 블록의 요일, 시간, 메모, 알림은 그대로 유지됩니다.
+        </p>
+      </div>
+      <div class="flex-1 flex justify-center animate-reveal delay-1">
+        <img src={img('batch-edit')} alt="같은 스타일 일정을 함께 바꿀지 묻는 확인 시트" class="screenshot w-full max-w-[280px]" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section: Custom View ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
       <div class="flex-1 animate-reveal">
         <span class="section-label">Custom View</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">필요한 것만 보여주는 뷰</h2>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">필요한 것만 보여주는 화면</h2>
         <p class="text-text-sub leading-relaxed mb-4">
-          시간표마다 독립적인 뷰 설정을 가집니다.
-          요일 범위를 평일만, 월~토, 또는 전체 주 중에서 선택하세요.
-          시작 요일도 월요일 또는 일요일 중 고를 수 있습니다.
+          시간표마다 보기 설정이 따로 있어요. 평일만, 토요일까지, 또는 일주일 전체를 보여주고
+          한 주의 시작을 월요일이나 일요일로 정할 수 있습니다.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          시간 슬라이더를 끌어 오전 몇 시간만 보든 24시간을 다 보든 자유롭게. 실제로 쓰는 시간대가
+          화면을 꽉 채웁니다.
         </p>
         <p class="text-text-sub leading-relaxed">
-          시작 시각과 종료 시각을 0시~24시 사이에서 자유롭게 설정해
-          실제로 사용하는 시간대만 화면에 표시할 수 있습니다.
+          12시간제와 24시간제, 라이트·다크·자동 모드도 원하는 대로. 편집이 끝나면 그리드를 잠가서
+          실수로 뭔가 움직이는 일을 막아두세요.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img
-          src="/apps/timetable/custom-view.png"
-          alt="필요한 요일과 시간만 표시한 시간표"
-          class="screenshot w-full max-w-[280px]"
-        />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('day-range')} alt="요일 범위를 조정한 시간표" class="screenshot w-full max-w-[220px]" />
+        <img src={img('dark-mode')} alt="다크 모드 시간표" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
-  <!-- ── Section: 위젯 ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+  <!-- ── Section: Widgets ── -->
+  <section class="py-24 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
       <div class="flex-1 animate-reveal">
         <span class="section-label">Widgets</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">앱을 열지 않아도 바로 확인</h2>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">앱을 열지 않아도 바로 보여요</h2>
         <p class="text-text-sub leading-relaxed mb-4">
-          전체 시간표 위젯을 홈 화면에 배치하면 앱을 열지 않고도 한 주 일정을 한눈에 볼 수 있습니다.
+          주간 위젯은 시간표 전체를 홈 화면에 올려줍니다. 큰 크기와 특대 크기를 지원하고,
+          오늘 요일과 현재 시각이 강조돼요.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          오늘 위젯은 지금 이 순간을 가운데 둔 타임라인이에요. 작은 크기부터 특대까지 모두 지원하고,
+          탭하면 바로 앱으로 들어갑니다.
         </p>
         <p class="text-text-sub leading-relaxed">
-          오늘 일정 위젯은 하루 일정을 타임라인으로 보여주며, 빨간 선으로 현재 시각을 표시합니다.
-          지금 무엇을 해야 하는지 바로 파악할 수 있습니다.
+          위젯마다 어떤 시간표를 보여줄지 고를 수 있고, 시스템 외관과 12·24시간제 설정을 그대로 따라갑니다.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img
-          src="/apps/timetable/widget.png"
-          alt="홈 화면의 시간표 위젯"
-          class="screenshot w-full max-w-[300px]"
-        />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('widget-light')} alt="라이트 모드 홈 화면의 주간·오늘 위젯" class="screenshot w-full max-w-[220px]" />
+        <img src={img('widget-dark')} alt="다크 모드 홈 화면의 주간·오늘 위젯" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
-  <!-- ── Section: 공유 & 내보내기 ── -->
-  <section class="py-24 px-6 border-t border-border">
+  <!-- ── Section: Share & Print ── -->
+  <section class="py-24 px-6 bg-bg-alt border-t border-border">
     <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
       <div class="flex-1 animate-reveal">
-        <span class="section-label">Share & Export</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">원하는 방식으로 공유</h2>
+        <span class="section-label">Share & Print</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">화면으로, 종이로, 다른 기기로</h2>
         <p class="text-text-sub leading-relaxed mb-4">
-          라이트 또는 다크 모드로 깔끔한 이미지를 만들어 바로 공유하거나 사진 앱에 저장하세요.
+          시간표를 깔끔한 이미지로 내보내세요. 라이트·다크, 12·24시간제를 고르면
+          미리보기가 바로 바뀌어서 공유 전에 확인할 수 있어요.
+        </p>
+        <p class="text-text-sub leading-relaxed mb-4">
+          앱에서 바로 인쇄도 됩니다. A3부터 Letter, 직접 입력한 용지 크기까지, 세로·가로, 맞춤·채움,
+          한 장에 1·2·4개 배치까지 고를 수 있어요. 미리보기를 핀치로 확대해 구석구석 확인하세요.
         </p>
         <p class="text-text-sub leading-relaxed">
-          파일 내보내기로 시간표를 통째로 백업하거나 다른 기기로 전송할 수 있습니다.
-          SuperTimetable이 설치된 기기라면 누구든 바로 가져올 수 있습니다.
+          파일로 공유하면 백업도 되고 다른 사람에게 통째로 넘길 수도 있어요.
+          SuperTimetable이 있는 사람이라면 누구나 바로 편집 가능한 사본으로 열립니다.
         </p>
       </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img
-          src="/apps/timetable/share-light.png"
-          alt="시간표 내보내기 및 공유 화면"
-          class="screenshot w-full max-w-[280px]"
-        />
+      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
+        <img src={img('image-share')} alt="라이트·다크 미리보기가 있는 공유 시트" class="screenshot w-full max-w-[220px]" />
+        <img src={img('print')} alt="용지 크기, 방향, 장당 개수를 고르는 인쇄 옵션" class="screenshot w-full max-w-[220px]" />
       </div>
     </div>
   </section>
 
   <!-- ── More Features ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
+  <section class="py-24 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-14 animate-reveal">
         <span class="section-label">More</span>
@@ -302,46 +333,65 @@ const statusLabel = (status: 'released' | 'in-development') =>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
         <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl overflow-hidden">
-          <img src="/apps/timetable/presets.png" alt="프리셋 관리" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <img src={img('timetable-list')} alt="실물 크기 미리보기가 있는 시간표 목록" />
           <div class="p-5">
-            <h3 class="text-sm font-semibold text-text mb-1.5">프리셋</h3>
+            <h3 class="text-sm font-semibold text-text mb-1.5">여러 개의 시간표</h3>
             <p class="text-xs text-text-sub leading-relaxed">
-              반복되는 일정을 프리셋으로 묶어두세요. 프리셋을 한 번 수정하면 연결된 모든 일정이 함께 바뀝니다.
+              학기별, 직장별, 가족 구성원별로 따로 만들어두세요. 실물 크기 미리보기를 넘겨보며 탭 한 번에 전환합니다.
             </p>
           </div>
         </div>
 
         <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl overflow-hidden">
-          <img src="/apps/timetable/timetable-list.png" alt="시간표 목록" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <img src={img('duplicate-timetable')} alt="목록에서 시간표 복제하기" />
           <div class="p-5">
-            <h3 class="text-sm font-semibold text-text mb-1.5">여러 개의 시간표</h3>
+            <h3 class="text-sm font-semibold text-text mb-1.5">시간표 복제</h3>
             <p class="text-xs text-text-sub leading-relaxed">
-              학기별, 프로젝트별, 상황별로 별도의 시간표를 만들어두고 탭 하나로 전환하세요.
+              새 학기는 지난 학기에서 시작하세요. 시간표를 통째로 복제하고 이름을 바꾼 뒤 달라진 부분만 손보면 됩니다.
             </p>
           </div>
         </div>
 
         <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl overflow-hidden">
-          <img src="/apps/timetable/duplicate-event-1.png" alt="일정 복제" class="w-full object-cover" style="max-height:220px; object-position: top;" />
+          <img src={img('title-suggestions')} alt="기존 제목·색상 조합을 보여주는 스타일 가져오기 목록" />
           <div class="p-5">
-            <h3 class="text-sm font-semibold text-text mb-1.5">일정 복제</h3>
+            <h3 class="text-sm font-semibold text-text mb-1.5">스타일 가져오기</h3>
             <p class="text-xs text-text-sub leading-relaxed">
-              같은 일정을 다른 시간대에 빠르게 복제해 배치할 수 있습니다. 제목과 색상을 다시 입력할 필요가 없습니다.
+              수학 수업을 하나 더 넣을 땐 다시 입력하지 마세요. 많이 쓴 순서로 정렬된 제목·색상 조합을 골라 그대로 적용합니다.
             </p>
           </div>
         </div>
 
-      </div>
-
-      <div class="mt-6 grid sm:grid-cols-2 gap-6">
-
-        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">무제한 언두/리두</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            시간표마다 독립적인 히스토리를 유지합니다. 이동, 리사이즈, 프리셋 변경까지 모두 기록되며 되돌릴 횟수에 제한이 없습니다.
-          </p>
+        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src={img('undo-redo')} alt="하단 툴바의 실행 취소·다시 실행 버튼" class="from-bottom" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">무제한 실행 취소·다시 실행</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              시간표마다 독립된 히스토리를 가집니다. 이동, 크기 조절, 편집, 삭제 모두 되돌릴 수 있고 횟수 제한이 없어요.
+            </p>
+          </div>
         </div>
 
+        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl overflow-hidden">
+          <img src={img('lock-toggle')} alt="잠금 버튼이 있는 잠긴 시간표" class="from-bottom" />
+          <div class="p-5">
+            <h3 class="text-sm font-semibold text-text mb-1.5">다 만들었으면 잠그기</h3>
+            <p class="text-xs text-text-sub leading-relaxed">
+              탭 한 번으로 그리드를 잠가 실수로 움직이는 일을 막습니다. 잠긴 상태에서 블록을 탭하면 내용만 확인할 수 있어요.
+            </p>
+          </div>
+        </div>
+
+        <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl p-6">
+          <h3 class="text-sm font-semibold text-text mb-1.5">처음엔 튜토리얼과 함께</h3>
+          <p class="text-xs text-text-sub leading-relaxed mb-4">
+            샘플 시간표 위에서 만들기, 옮기기, 늘이기, 잠그기를 직접 해보며 익힙니다. 언제든 건너뛸 수 있고 메뉴에서 다시 볼 수 있어요.
+          </p>
+          <h3 class="text-sm font-semibold text-text mb-1.5">iPhone과 iPad</h3>
+          <p class="text-xs text-text-sub leading-relaxed">
+            iPad에서는 그리드 옆 패널에서 바로 편집합니다. 한국어, 영어, 일본어, 중국어 간체·번체를 지원해요.
+          </p>
+        </div>
 
       </div>
     </div>
