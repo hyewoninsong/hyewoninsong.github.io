@@ -2,56 +2,44 @@
 title: "SuperTimetable"
 slug: "timetable"
 icon: ""
-summary: "Design your perfect weekly schedule with drag gestures, 11 themes, and powerful widgets — no typing needed."
+summary: "Build your weekly timetable by hand. Drag to create, move, and resize, then keep it on your Home Screen, on paper, or in a shared file."
 platforms:
   iphone: "in-development"
+  ipad: "in-development"
 order: 1
 ---
 
-**SuperTimetable** turns your weekly schedule into something you'll actually enjoy managing. No forms, no typing, no friction — just your fingers and an infinitely customizable canvas.
+**SuperTimetable** turns your weekly schedule into something you actually enjoy managing. No forms, no typing through date pickers, just your fingers on a grid.
 
-## 👆 Create, Move, Resize — All with Drag
+## Create, move, resize by dragging
 
-Forget tapping through date pickers. Your hands are faster.
+- **Create in one swipe**: drag across empty space and a block appears, growing in whichever direction you drag.
+- **Move anywhere**: pick up a block and drop it on another day or time. Guide lines snap to neighboring blocks and the grid auto-scrolls at the edges.
+- **Resize by the edge**: pull the top or bottom handle to change only that side.
+- **Lock when done**: one tap keeps everything in place.
 
-- **Create in one swipe**: Drag across any empty cell to instantly create a new schedule block. The grid snaps to your preferred unit (5, 10, 15, 30, or 60 minutes) so your layout stays clean.
-- **Move anywhere**: Long-press a block and drag it to a different day or time slot. Guide lines appear near neighboring schedules, making precise placement effortless.
-- **Resize on the fly**: Pull the top or bottom handle to extend or shorten a block. The grid auto-scrolls when you reach the edge — no need to stop and reposition.
-- **Lock when done**: Tap the padlock to prevent accidental edits. Your timetable stays exactly the way you built it.
+## One sheet for everything
 
-## ↩️ Unlimited Undo & Redo
+Tap a block to edit its title, color, days, and time, plus up to two alarms (from the start time to 2 hours before, five sounds) and a memo. Choose from 10 basic colors or make your own.
 
-Made a mistake? Just undo it. Changed your mind again? Redo it. Every timetable keeps its own independent history — moves, resizes, creations, deletions, even preset changes are all tracked. There's no limit to how far back you can go.
+## Change one, update them all
 
-## 🎨 11 Themes. 330 Colors.
+Blocks sharing a title and color are one style. Rename or recolor one and SuperTimetable offers to update the rest, with a before-and-after preview.
 
-Your timetable is a reflection of you. Choose from 11 hand-crafted themes — each with 30 colors across three intensity levels:
+## Unlimited undo and redo
 
-**Standard · Vivid · Earth · Ocean · Sunset · Forest · Candy · Vintage · Monochrome · Neon · Jewel**
+Every timetable keeps its own history. Moves, resizes, edits, and deletions are all reversible.
 
-Switch themes anytime and your existing schedule colors automatically remap to the new palette — no manual recoloring.
+## Your view, your rules
 
-## 📐 Tailored to Your Schedule
+Weekdays only, with Saturday, or the full week. Monday or Sunday start. Any hour range from 0 to 24. 12-hour or 24-hour time. Light, dark, or automatic appearance.
 
-Every timetable is configured independently, so each semester or context gets exactly the view it needs:
+## Widgets
 
-- **Day range**: Show weekdays only (Mon–Fri), Mon–Sat, or the full week — whichever matches your routine
-- **Start day**: Choose Monday or Sunday as the first column
-- **Time range**: Set any start and end hour from 0 to 24 — display only the hours that matter to you
+A Week widget for the whole grid and a Today widget with a timeline centered on now, in every size, following your system appearance.
 
-## 📲 Widgets That Work While You Don't
+## Share, print, back up
 
-Check your schedule without opening the app:
+Export a light or dark image, print with paper size, orientation, and 1, 2, or 4 per page, or share a `.supertimetable` file that opens on any other device.
 
-- **Full Timetable Widget**: See your entire weekly grid right on the Home screen
-- **Today Widget**: A timeline view of today's schedule, with a red line marking the current time — so you always know what's next
-
-## 🔔 Smart Alarms & Easy Sharing
-
-- **Flexible notifications**: Get reminded at start time, or 5, 10, 15, 20, 25, 30 minutes, 1 hour, or 2 hours before any event — set individually per schedule
-- **Export as image**: Save your timetable as a clean image in light or dark mode — perfect for sharing
-- **File backup**: Export and import `.supertimetable` files to back up or share entire timetables with others
-
----
-
-Your schedule, your rules. Download **SuperTimetable** and build the weekly view you've always wanted.
+Available on iPhone and iPad in English, Korean, Japanese, and Simplified and Traditional Chinese.
