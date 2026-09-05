@@ -1,6 +1,6 @@
 ---
 title: "About Us"
-description: "Hyewon & Insong is a professional development partner providing innovative mobile software solutions."
+description: "A two-person mobile studio building native iOS and Android apps, from SuperTimetable onward, with gesture-first design and careful polish."
 ---
 
 ## Core Values & Vision

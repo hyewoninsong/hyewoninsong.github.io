@@ -1,6 +1,6 @@
 ---
 title: "회사 소개"
-description: "Hyewon & Insong은 혁신적인 모바일 소프트웨어 솔루션을 제공하는 전문 개발 파트너입니다."
+description: "iOS와 Android 네이티브 앱을 만드는 두 명의 모바일 스튜디오. 제스처 중심 디자인과 세심한 마감으로 SuperTimetable을 비롯한 앱을 직접 설계하고 개발합니다."
 ---
 
 ## 핵심 가치 및 비전
