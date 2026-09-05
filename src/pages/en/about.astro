@@ -1,11 +1,42 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../i18n/utils';
-import { getEntry } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const about = (await getEntry('about', 'en'))!;
+
+const allApps = await getCollection('apps');
+const apps = allApps
+  .filter((app) => app.id.startsWith('en/'))
+  .sort((a, b) => a.data.order - b.data.order);
+const featured = apps.find((app) => app.data.slug === 'timetable')!;
+const otherApps = apps.filter((app) => app.data.slug !== 'timetable');
+
+type PlatformStatus = 'released' | 'in-development';
+const badgeClass = (status: PlatformStatus) =>
+  status === 'released'
+    ? 'border-green-200 bg-green-50 text-green-700'
+    : 'border-border bg-muted text-muted-foreground';
+const statusLabel = (status: PlatformStatus) =>
+  status === 'released' ? t('status.released') : t('status.dev');
+const platformBadges = (platforms: Record<string, PlatformStatus | undefined>) =>
+  ([
+    ['iphone', 'iPhone'],
+    ['ipad', 'iPad'],
+    ['mac', 'Mac'],
+    ['android', 'Android'],
+  ] as const)
+    .filter(([key]) => platforms[key])
+    .map(([key, label]) => ({ label, status: platforms[key]! }));
+
+const facts = [
+  { value: '2', label: 'People' },
+  { value: '2', label: 'Native platforms' },
+  { value: String(apps.length), label: 'Apps in progress' },
+  { value: '5', label: 'Languages' },
+];
 
 const pillars = [
   {
@@ -26,13 +57,32 @@ const pillars = [
   },
 ];
 
-const features = [
-  { label: "Drag to create & resize" },
-  { label: "Unlimited undo / redo" },
-  { label: "Alarms, memos & batch update" },
-  { label: "Custom days & hours" },
-  { label: "Home screen widgets" },
-  { label: "Print & share" },
+const steps = [
+  {
+    title: "Start with what we use",
+    desc: "We look for friction in the tools we reach for every day. If we wouldn't use an app ourselves, we don't build it.",
+  },
+  {
+    title: "Hands before forms",
+    desc: "Before drawing a screen we ask whether a gesture can solve it. Prototypes are tested on real devices, not just the simulator.",
+  },
+  {
+    title: "Polish frame by frame",
+    desc: "Animations are recorded and checked frame by frame. Dark mode, widgets, and iPad layouts are held to the same standard.",
+  },
+  {
+    title: "Shipping is the start",
+    desc: "Every release runs a regression suite, and saved data is protected with migration backups. Every UI decision is logged so the next one starts from the last.",
+  },
+];
+
+const featuredHighlights = [
+  "Drag to create & resize",
+  "Unlimited undo / redo",
+  "Alarms, memos & batch update",
+  "Home screen widgets",
+  "Print & file share",
+  "5 languages",
 ];
 ---
 
@@ -63,12 +113,57 @@ const features = [
       margin-bottom: 0.75rem;
     }
 
+    .mono-index {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: var(--color-primary);
+    }
+
     .pillar-card {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .pillar-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 12px 32px rgba(0,0,0,0.07);
+    }
+
+    .fact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem 2rem;
+    }
+    @media (min-width: 640px) {
+      .fact-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .fact {
+      border-top: 1px solid var(--color-border);
+      padding-top: 1rem;
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 3rem 1fr;
+      gap: 0.5rem 1rem;
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--color-border);
+    }
+    .step:last-child { border-bottom: 1px solid var(--color-border); }
+
+    .screenshot {
+      border-radius: 2.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: block;
+    }
+    .screenshot:hover {
+      transform: scale(1.02) translateY(-2px);
+      box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
     }
 
     .feature-row {
@@ -79,10 +174,22 @@ const features = [
     @media (min-width: 640px) {
       .feature-row { grid-template-columns: repeat(3, 1fr); }
     }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .app-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .app-grid { grid-template-columns: repeat(4, 1fr); }
+    }
   </style>
 
   <!-- ── Header ── -->
-  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+  <div class="max-w-5xl w-full mx-auto px-6 pt-24 md:pt-36 pb-16 md:pb-24">
     <div class="max-w-xl animate-reveal">
       <span class="section-label">About</span>
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">
@@ -93,6 +200,14 @@ const features = [
         We care about touch interactions, visual polish, and the small details that make
         software genuinely enjoyable.
       </p>
+    </div>
+    <div class="fact-grid mt-16 md:mt-20 animate-reveal delay-2">
+      {facts.map((f) => (
+        <div class="fact">
+          <div class="text-2xl md:text-3xl font-semibold text-text tracking-tight">{f.value}</div>
+          <div class="text-xs text-text-sub mt-1">{f.label}</div>
+        </div>
+      ))}
     </div>
   </div>
 
@@ -114,6 +229,7 @@ const features = [
           <p class="text-text-sub leading-relaxed">
             Native development means fluid animations, correct system integration,
             and the familiar conventions users already know on each platform.
+            The difference shows most where an app meets the system: widgets, dark mode, printing, file sharing.
           </p>
         </div>
         <div class="flex-1 animate-reveal delay-2">
@@ -152,6 +268,7 @@ const features = [
       <div class="grid sm:grid-cols-2 gap-5">
         {pillars.map((p, i) => (
           <div class={`pillar-card animate-reveal delay-${(i % 4) + 1} bg-card border border-border rounded-2xl p-7`}>
+            <span class="mono-index block mb-3">0{i + 1}</span>
             <h3 class="text-sm font-semibold text-text mb-2">{p.title}</h3>
             <p class="text-sm text-text-sub leading-relaxed">{p.desc}</p>
           </div>
@@ -160,36 +277,119 @@ const features = [
     </div>
   </section>
 
-  <!-- ── Currently Shipping ── -->
+  <!-- ── Process ── -->
   <section class="py-20 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto">
       <div class="mb-8 animate-reveal">
-        <span class="section-label">Currently Shipping</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight">SuperTimetable</h2>
+        <span class="section-label">Process</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight">How we build</h2>
       </div>
       <div class="flex flex-col md:flex-row gap-16 items-start">
+        <div class="md:w-2/5 animate-reveal delay-1">
+          <p class="text-text-sub leading-relaxed mb-4">
+            Two people handle planning, design, development, and release.
+            Decisions are fast, and whoever makes one sees it through.
+          </p>
+          <p class="text-text-sub leading-relaxed">
+            The bar stays high regardless. Every screen goes through the same
+            steps before it ships.
+          </p>
+        </div>
+        <div class="flex-1 w-full animate-reveal delay-2">
+          <div class="step-list">
+            {steps.map((s, i) => (
+              <div class="step">
+                <span class="mono-index pt-0.5">0{i + 1}</span>
+                <div>
+                  <h3 class="text-sm font-semibold text-text mb-1.5">{s.title}</h3>
+                  <p class="text-sm text-text-sub leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Apps ── -->
+  <section class="py-20 px-6 bg-bg-alt border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="mb-12 animate-reveal">
+        <span class="section-label">Apps</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight">What we're building</h2>
+      </div>
+
+      <!-- Featured: SuperTimetable -->
+      <div class="flex flex-col md:flex-row gap-12 md:gap-16 items-center md:items-start mb-16">
         <div class="flex-1 animate-reveal delay-1">
+          <h3 class="text-lg font-semibold text-text tracking-tight mb-3">{featured.data.title}</h3>
           <p class="text-text-sub leading-relaxed mb-4">
             Our first app sets the standard for everything we build next.
             A timetable built entirely around drag gestures — create, move, and resize
             schedule blocks without touching a single form field.
           </p>
-          <p class="text-text-sub leading-relaxed mb-8">
+          <p class="text-text-sub leading-relaxed mb-6">
             Alarms and memos on every block, per-timetable view settings, home screen widgets,
             printing, and unlimited undo/redo. Available on iPhone and iPad.
           </p>
-          <a href="/en/apps/timetable" class="text-sm font-medium text-primary hover:underline">
-            View app →
-          </a>
-        </div>
-        <div class="flex-1 animate-reveal delay-2">
-          <div class="feature-row">
-            {features.map(f => (
-              <div class="bg-bg-alt border border-border rounded-xl px-4 py-3 text-xs text-text-sub">
-                {f.label}
+          <div class="feature-row mb-8">
+            {featuredHighlights.map((label) => (
+              <div class="bg-card border border-border rounded-xl px-4 py-3 text-xs text-text-sub">
+                {label}
               </div>
             ))}
           </div>
+          <a href={`/en/apps/${featured.data.slug}`} class="text-sm font-medium text-primary hover:underline">
+            View app →
+          </a>
+        </div>
+        <div class="shrink-0 animate-reveal delay-2">
+          <img
+            src="/apps/timetable/en/hero.png"
+            alt="SuperTimetable weekly timetable screen"
+            class="screenshot w-full max-w-[240px]"
+            width="720"
+            height="1564"
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      <!-- Other apps -->
+      <div class="app-grid">
+        {otherApps.map((app, i) => (
+          <a
+            href={`/en/apps/${app.data.slug}`}
+            class={`pillar-card animate-reveal delay-${(i % 4) + 1} group flex flex-col bg-card border border-border rounded-2xl p-6`}
+          >
+            <h3 class="text-sm font-semibold text-text group-hover:text-primary transition-colors mb-2">{app.data.title}</h3>
+            <p class="text-xs text-text-sub leading-relaxed flex-1 mb-5">{app.data.summary}</p>
+            <div class="flex gap-1.5 flex-wrap">
+              {platformBadges(app.data.platforms).map((b) => (
+                <span class:list={['inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium', badgeClass(b.status)]}>
+                  {b.label} · {statusLabel(b.status)}
+                </span>
+              ))}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Closing ── -->
+  <section class="py-20 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="max-w-xl animate-reveal">
+        <span class="section-label">Next</span>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">More on the way</h2>
+        <p class="text-text-sub leading-relaxed mb-8">
+          New apps, updates, and what we learn along the way are written up on the blog.
+        </p>
+        <div class="flex flex-wrap gap-x-6 gap-y-2">
+          <a href="/en/apps" class="text-sm font-medium text-primary hover:underline">All apps →</a>
+          <a href="/en/blog" class="text-sm font-medium text-primary hover:underline">Dev blog →</a>
         </div>
       </div>
     </div>
