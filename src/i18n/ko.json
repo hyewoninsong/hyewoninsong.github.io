@@ -18,6 +18,8 @@
   "apps.learnMore": "자세히 보기",
   "about.title": "회사 소개",
   "footer.rights": "All rights reserved.",
+  "footer.support": "지원",
+  "footer.privacy": "개인정보처리방침",
   "pagination.prev": "이전",
   "pagination.next": "다음"
 }
