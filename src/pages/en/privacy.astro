@@ -10,15 +10,25 @@ const t = useTranslations(lang);
   <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
     <div class="text-center mb-16 md:mb-20">
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
-      <p class="text-sm text-text-sub">Effective Date: January 1, 2025</p>
+      <p class="text-sm text-text-sub">Effective Date: September 17, 2026</p>
     </div>
 
     <div class="prose prose-gray max-w-none
       prose-headings:font-semibold prose-headings:tracking-tight
       prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
       prose-p:text-text-sub prose-p:leading-7
+      prose-li:text-text-sub
       prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
     ">
+      <p>
+        This policy applies to every Hyewon &amp; Insong app.
+        Where an app has a more specific policy, it is listed below.
+      </p>
+      <ul>
+        <li><a href="/en/apps/timetable/privacy/">SuperTimetable Privacy Policy</a></li>
+      </ul>
+
       <h2>1. Purpose of Processing Personal Information</h2>
       <p>
         Hyewon & Insong ("Company") processes personal information for the following purposes.
@@ -34,11 +44,16 @@ const t = useTranslations(lang);
       <h2>2. Personal Information Collected</h2>
       <p>The Company may automatically collect the following information to provide its services:</p>
       <ul>
-        <li><strong>Device Information</strong>: Device model, operating system version, app version</li>
+        <li><strong>Device Information</strong>: Device model, operating system version, language and region settings, app version</li>
+        <li><strong>Anonymous Identifier</strong>: A Firebase installation ID used to tell devices apart (not linked to your identity)</li>
         <li><strong>Usage Statistics</strong>: App launch count, screen views, feature usage frequency (Firebase Analytics)</li>
         <li><strong>Error Information</strong>: App crash logs, error timestamps and status information (Firebase Crashlytics)</li>
       </ul>
       <p>The Company does not collect personally identifiable information such as names, email addresses, or phone numbers.</p>
+      <p>
+        The Company's apps <strong>do not collect the advertising identifier (IDFA) and do not track users.</strong>
+        They therefore never ask for App Tracking Transparency permission.
+      </p>
 
       <h2>3. Retention Period</h2>
       <p>Collected information is retained during the service operation period and is promptly destroyed once the purpose of collection is achieved.</p>
@@ -66,9 +81,9 @@ const t = useTranslations(lang);
       <h2>6. User Rights</h2>
       <p>Users may exercise the following rights at any time:</p>
       <ul>
-        <li>You can opt out of analytics data collection in your device settings.</li>
         <li>Deleting the app will immediately stop data collection from that device.</li>
-        <li>You can request deletion of collected data.</li>
+        <li>You can request deletion of collected data at the contact address below.</li>
+        <li>The Company's apps do not track you, so no separate opt-out step is needed.</li>
       </ul>
 
       <h2>7. Privacy Officer</h2>
