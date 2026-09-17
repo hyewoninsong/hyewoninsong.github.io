@@ -122,7 +122,13 @@ const devices: Device[] = ['iphone', 'ipad'];
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    padding: 0.75rem 0;
+    /* overflow-x: auto 인 스크롤 컨테이너는 세로·좌우 모두 잘린다(overflow-y 를 visible 로
+       둘 수 없다). 패딩이 0.75rem 뿐이면 box-shadow(아래로 20+60/2 = 50px, 옆으로 30px)가
+       잘려 스샷 밑에 각진 회색 띠로 남는다 — 그림자가 아니라 슬래브로 보인다.
+       그림자가 다 들어갈 만큼 패딩을 주고, 레이아웃 여백은 같은 크기의 음수 마진으로 되돌린다.
+       좌우 1.25rem 은 섹션 px-6(1.5rem)보다 작아야 가로 스크롤이 생기지 않는다. */
+    padding: 1.5rem 1.25rem 4.5rem;
+    margin: -0.75rem -1.25rem -3.75rem;
   }
   .shot-row::-webkit-scrollbar { display: none; }
   .shot-row > img,
