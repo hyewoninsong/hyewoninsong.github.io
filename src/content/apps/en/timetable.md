@@ -17,6 +17,6 @@ Put the week already in your head straight onto the screen. Drag across an empty
 - Alarms that arrive in time
 - The next class without opening the app
 - A timetable that leaves the screen, as a picture, a file, or on paper
-- Separate timetables for each semester, each job, each person at home
+- Separate timetables for each semester and each person at home
 
 Your timetables stay on the device. No account, no sign-in.
