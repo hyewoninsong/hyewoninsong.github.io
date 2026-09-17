@@ -76,7 +76,30 @@ const devices: Device[] = ['iphone', 'ipad'];
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: block;
   }
-  .screenshot.ipad { border-radius: 1.25rem; }
+
+  /* iPad 캡처(4:3)는 화면 모서리가 직각이라 상태바·툴바·시각 축이 모서리에 붙어 있다.
+     이미지에 직접 border-radius 를 주면 그 UI 가 잘린다 (좁은 폭일수록 심함 —
+     곡률은 20px 로 고정인데 이미지는 345px 까지 줄어든다).
+     곡률은 베젤 프레임이 갖고, 이미지 자신은 거의 각지게 둔다. */
+  .shot-frame {
+    display: block;
+    padding: 0.4rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .shot-frame:hover {
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
+  }
+  .shot-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+  }
   .screenshot:hover {
     transform: scale(1.02) translateY(-2px);
     box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
@@ -102,7 +125,8 @@ const devices: Device[] = ['iphone', 'ipad'];
     padding: 0.75rem 0;
   }
   .shot-row::-webkit-scrollbar { display: none; }
-  .shot-row img { flex-shrink: 0; }
+  .shot-row > img,
+  .shot-row > .shot-frame { flex-shrink: 0; }
   .shot-row.single { justify-content: center; }
 
   .step-list {
@@ -229,7 +253,9 @@ const devices: Device[] = ['iphone', 'ipad'];
     <!-- ── Intro screenshot ── -->
     <div class="flex justify-center mb-28 animate-reveal delay-1">
       <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" width="720" height="1564" />
-      <img src={img('ipad', 'hero')} alt={copy.hero.ipad} class="only-ipad screenshot ipad w-full max-w-[760px]" width="1200" height="900" loading="lazy" />
+      <div class="only-ipad shot-frame w-full max-w-[760px]">
+        <img src={img('ipad', 'hero')} alt={copy.hero.ipad} width="1200" height="900" loading="lazy" />
+      </div>
     </div>
 
   </div>
@@ -269,7 +295,7 @@ const devices: Device[] = ['iphone', 'ipad'];
                 <div class:list={[`only-${d}`, 'shot-row', shots.length === 1 && 'single']}>
                   {shots.map((sh) => (
                     d === 'ipad'
-                      ? <img src={img(d, sh.file)} alt={sh.alt} class="screenshot ipad w-full max-w-[480px]" width="1200" height="900" loading="lazy" />
+                      ? <div class="shot-frame w-full max-w-[480px]"><img src={img(d, sh.file)} alt={sh.alt} width="1200" height="900" loading="lazy" /></div>
                       : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
                   ))}
                 </div>
