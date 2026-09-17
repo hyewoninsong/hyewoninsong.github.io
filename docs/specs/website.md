@@ -144,6 +144,8 @@ src/content/
 
 - 모바일: 이미지와 텍스트가 세로로 쌓이는 1컬럼 레이아웃
 
+> **현재 상태 (2026-09-17):** 회사 소개는 짧게 — 한 문단 인사말 + 원칙 카드 3개(손이 먼저 · 꼭 필요한 만큼만 · 실수해도 괜찮게) + 앱/블로그 링크. 기술 스택·수치·프로세스·앱 설명 섹션은 뺐다. `about/*.md` 본문은 SEO description 과 같은 문구를 담는 원본이고 페이지는 `about.astro` 가 직접 그린다.
+
 -----
 
 ### 4.2 앱 소개 페이지 (/ko/apps, /en/apps)
@@ -194,6 +196,8 @@ order: 1
 - 각 카드: 앱 아이콘 + 앱 이름 + 한 줄 소개 + 상태 뱃지(출시/개발중)
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
+
+> **현재 상태 (2026-09-17):** 목록에는 SuperTimetable 하나만 보인다. 다른 앱(mathmaster · notequiz · superfont · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
 
 **레이아웃:**
 

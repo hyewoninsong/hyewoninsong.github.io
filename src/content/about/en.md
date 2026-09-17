@@ -1,18 +1,15 @@
 ---
 title: "About Us"
-description: "A two-person mobile studio building native iOS and Android apps, from SuperTimetable onward, with gesture-first design and careful polish."
+description: "A small two-person mobile studio. We take the tedious parts out of everyday tools and build apps that make sense without instructions."
 ---
 
-## Core Values & Vision
+## What we hold to
 
-**User-Centric UI/UX Design**
-We deliver highly refined mobile experiences by identifying the most essential needs of our customers. Based on thorough research, we develop solutions that resolve inefficiencies in daily life.
+**Hands first**
+Touch it directly instead of filling in a form. The first screen should make sense to your hands before you read a word.
 
-**Intuitive and Elegant Software Architecture**
-We build intuitive interfaces that anyone can utilize instantly without complex manuals. We prioritize user convenience as much as functional advancement.
+**Only what's needed**
+Fewer choices means you finish sooner. We keep what has a clear reason to exist and take the rest away.
 
-**Stable and Robust Engineering**
-Behind the scenes, we apply the latest technology stacks and stable architectures to build and operate sustainable, reliable application environments.
-
-**Continuous Lifestyle Innovation**
-Beyond simply providing services, our goal is to establish our products as essential digital tools that maximize the efficiency of our users' daily lives and workflows.
+**Safe to get wrong**
+Anything can be undone, and anything finished can be locked. A tool is only comfortable when you can poke at it without worry.
