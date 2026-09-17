@@ -6,21 +6,6 @@ import { getEntry } from 'astro:content';
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const about = (await getEntry('about', 'en'))!;
-
-const principles = [
-  {
-    title: "Hands first",
-    desc: "Touch it directly instead of filling in a form. The first screen should make sense to your hands before you read a word.",
-  },
-  {
-    title: "Only what's needed",
-    desc: "Fewer choices means you finish sooner. We keep what has a clear reason to exist and take the rest away.",
-  },
-  {
-    title: "Safe to get wrong",
-    desc: "Anything can be undone, and anything finished can be locked. A tool is only comfortable when you can poke at it without worry.",
-  },
-];
 ---
 
 <BaseLayout title={`${t('about.title')} - ${t('site.title')}`} description={about.data.description} lang={lang}>
@@ -35,10 +20,6 @@ const principles = [
       opacity: 1;
       transform: translateY(0);
     }
-    .delay-1 { transition-delay: 0.06s; }
-    .delay-2 { transition-delay: 0.12s; }
-    .delay-3 { transition-delay: 0.18s; }
-
     .section-label {
       display: block;
       font-size: 0.7rem;
@@ -49,21 +30,6 @@ const principles = [
       margin-bottom: 0.75rem;
     }
 
-    .mono-index {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      color: var(--color-primary);
-    }
-
-    .pillar-card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .pillar-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.07);
-    }
   </style>
 
   <!-- ── Header ── -->
@@ -74,39 +40,19 @@ const principles = [
         Hyewon &amp; Insong
       </h1>
       <p class="text-base text-text-sub leading-relaxed">
-        A small two-person mobile studio. We take the tedious parts out of everyday tools
-        and build apps that make sense without instructions.
+        A small two-person mobile studio, based in Pangyo, Korea.
       </p>
     </div>
   </div>
-
-  <!-- ── Principles ── -->
-  <section class="py-20 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto">
-      <div class="mb-12 animate-reveal">
-        <span class="section-label">Principles</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight">What we hold to</h2>
-      </div>
-      <div class="grid sm:grid-cols-3 gap-5">
-        {principles.map((p, i) => (
-          <div class={`pillar-card animate-reveal delay-${i + 1} bg-card border border-border rounded-2xl p-7`}>
-            <span class="mono-index block mb-3">0{i + 1}</span>
-            <h3 class="text-sm font-semibold text-text mb-2">{p.title}</h3>
-            <p class="text-sm text-text-sub leading-relaxed">{p.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
 
   <!-- ── Next ── -->
   <section class="py-20 px-6 border-t border-border">
     <div class="max-w-5xl mx-auto">
       <div class="max-w-xl animate-reveal">
         <span class="section-label">Next</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">What we make, and what we learn</h2>
+        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">What we make, and how</h2>
         <p class="text-text-sub leading-relaxed mb-8">
-          The apps we are building now, and the notes we keep while building them.
+          The apps we are building now, and a record of how they come together.
         </p>
         <div class="flex flex-wrap gap-x-6 gap-y-2">
           <a href="/en/apps" class="text-sm font-medium text-primary hover:underline">See the app →</a>
