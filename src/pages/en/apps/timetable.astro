@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import TimetableAppPage, { type Copy } from '../../../components/TimetableAppPage.astro';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getEntry } from 'astro:content';
 
@@ -7,407 +8,217 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const app = (await getEntry('apps', 'en/timetable'))!;
 
-const { platforms = {} } = app.data;
-const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
-const hasAndroid = !!platforms.android;
-
-const badgeClass = (status: 'released' | 'in-development') =>
-  status === 'released'
-    ? 'border-green-200 bg-green-50 text-green-700'
-    : 'border-border bg-muted text-muted-foreground';
-
-const statusLabel = (status: 'released' | 'in-development') =>
-  status === 'released' ? t('status.released') : t('status.dev');
-
-const img = (name: string) => `/apps/timetable/en/${name}.png`;
+const copy: Copy = {
+  tagline: 'A timetable you draw by hand',
+  summary: 'Put the week already in your head straight onto the screen. Drag to draw it, glance at it on your Home Screen, pin it to a wall.',
+  hero: { iphone: 'SuperTimetable weekly grid on iPhone', ipad: 'SuperTimetable weekly grid on iPad' },
+  tabs: { iphone: 'iPhone', ipad: 'iPad' },
+  closing: ['Your timetables stay on the device.', 'No account, no sign-in.'],
+  sections: [
+    {
+      label: 'Just Drag',
+      title: 'Create, move, and resize. Just drag.',
+      lead: {
+        iphone: 'Drag across an empty slot and the class appears right there. There is nothing to type into a form. A time label follows your finger and a tap of haptic feedback tells you where you landed.',
+        ipad: 'Drag across an empty slot and the class appears right there. There is nothing to type into a form. A time label follows your finger and tells you where you landed.',
+      },
+      steps: [
+        ['Create', 'Swipe up or down over empty space and a block fills exactly that much.'],
+        ['Move', 'Pick up a block and drop it on another day. The day and time travel with it, so nothing has to be deleted and remade.'],
+        ['Resize', 'Pull one end and only that end changes. When an exact value matters, set it in the edit screen.'],
+      ],
+      shots: {
+        iphone: [
+          { file: 'drag-create', alt: 'Dragging across empty space to create a class' },
+          { file: 'move-drag', alt: 'Moving a block to another day with the time label following' },
+          { file: 'resize-drag', alt: 'Pulling the bottom handle to extend a class' },
+        ],
+        ipad: [
+          { file: 'drag-create', alt: 'Dragging across empty space on the iPad grid to create a class' },
+        ],
+      },
+    },
+    {
+      label: 'Undo & Lock',
+      title: 'A layout you can keep changing',
+      lead: 'A timetable is never right the first time. Most of the work is moving, stretching, and moving again, so the changing itself is made light.',
+      points: [
+        'Guide lines appear on neighboring blocks as you drag, so nothing ends up a few minutes out of line.',
+        'Undo and redo have no limit, so you can rearrange as freely as you like.',
+        'Lock a finished timetable and you will never nudge it while you are only looking.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'undo-redo', alt: 'Undoing a move from the bottom toolbar' },
+          { file: 'lock', alt: 'Lock indicator on a locked timetable' },
+        ],
+        ipad: [
+          { file: 'lock', alt: 'Lock indicator on a locked timetable on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Batch Edit',
+      title: 'One edit that covers every repeat',
+      lead: 'If the same class meets three times a week, that is three places to rename. Blocks sharing a title and color are one group, so changing one asks whether to change the rest.',
+      points: [
+        'Before and after sit side by side, so nothing changes without you seeing it first.',
+        'Each block keeps its own day, time, note, and alarms.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'batch-edit', alt: 'Confirmation asking whether to change matching classes together' },
+          { file: 'batch-edit-after', alt: 'Grid with every matching class renamed and recolored' },
+        ],
+        ipad: [
+          { file: 'batch-edit', alt: 'Confirmation on iPad asking whether to change matching classes together' },
+        ],
+      },
+    },
+    {
+      label: 'Your Style',
+      title: 'Pick any colour and name',
+      lead: 'Every title and color you have used stays in a list, so adding the same class again is a matter of picking it. If none of the colors is right, make your own.',
+      points: [
+        'Colors you make stay in your own palette, ready for the next class.',
+        'One color per subject, and the week sorts itself by color.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'style-sheet', alt: 'Style list of titles and colors already in use' },
+          { file: 'custom-color-picker', alt: 'Color editor for making your own color' },
+          { file: 'custom-color', alt: 'Style list with a custom color added' },
+        ],
+        ipad: [
+          { file: 'style-sheet', alt: 'Style popover anchored to the color circle on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Display',
+      title: 'A day only as long as yours',
+      lead: 'Hours you never use take up the room the ones you do need. Narrow the days and hours shown, per timetable, and the time you actually use fills the screen.',
+      points: [
+        'The first day of the week and the clock format stay the way you already read them.',
+        'Widen to the weekend or keep weekdays only, decided per timetable.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'display-settings', alt: 'Display settings sheet for days and hour range' },
+          { file: 'day-range', alt: 'Timetable widened to include Sunday' },
+        ],
+        ipad: [
+          { file: 'display-settings', alt: 'Display settings on iPad' },
+          { file: 'day-range', alt: 'Timetable widened to include Sunday on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Dark Mode',
+      title: 'Easy on the eyes at night',
+      lead: 'Let the appearance follow the room, or keep it the way you always see it. Colors stay just as clear on a dark screen, so tomorrow\'s first class is readable with the lights off.',
+      shots: {
+        iphone: [
+          { file: 'dark-mode', alt: 'Timetable in dark mode' },
+        ],
+        ipad: [
+          { file: 'dark-mode', alt: 'Timetable in dark mode on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Alarms & Edit',
+      title: 'Get reminded before each class',
+      lead: 'The time to get ready and the time to start are not the same. Put up to two alarms on one class, so preparing and starting reach you separately.',
+      points: {
+        iphone: [
+          'Hear an alarm sound before you choose it, so nothing rings as a surprise.',
+          'Title, color, time, alarms, and a note all live on one screen, so whatever you need to remember stays inside the class.',
+        ],
+        ipad: [
+          'Hear an alarm sound before you choose it, so nothing rings as a surprise.',
+          'Editing happens in a panel beside the block. No sheet covers the grid, so you see the whole week while you change one class.',
+        ],
+      },
+      shots: {
+        iphone: [
+          { file: 'alarm', alt: 'Schedule editor with two alarms set' },
+          { file: 'quick-edit', alt: 'Schedule editor with title, days, time, alarm, and note' },
+        ],
+        ipad: [
+          { file: 'alarm', alt: 'Edit panel on iPad with two alarms set' },
+          { file: 'edit-panel', alt: 'Edit panel beside the block on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Widgets',
+      title: 'The next class without opening the app',
+      lead: 'Opening an app just to check is the part you stop doing.',
+      points: [
+        'The home screen widget shows the whole week; the today widget shows a timeline centered on right now.',
+        'The lock screen widget names the one class coming next.',
+        'Choose which timetable each widget shows, so only what matters today is on screen.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'widget-light', alt: 'Week and Today widgets on a light home screen' },
+          { file: 'widget-dark', alt: 'Week and Today widgets on a dark home screen' },
+        ],
+        ipad: [
+          { file: 'widget-light', alt: 'Week and Today widgets on an iPad home screen' },
+          { file: 'widget-dark', alt: 'Week and Today widgets on a dark iPad home screen' },
+        ],
+      },
+    },
+    {
+      label: 'Share & Print',
+      title: 'As a picture, a file, or on paper',
+      lead: 'Some timetables end up on a wall, others in someone else\'s hands.',
+      points: {
+        iphone: [
+          'Choose the paper size and orientation and print straight from the app, crisp and in the same colors as the screen.',
+          'Export an image, with the preview changing as you pick each setting, so you see it before you send it.',
+          'Share a file to keep a backup, and whoever receives it opens an editable copy and carries on.',
+        ],
+        ipad: [
+          'Options sit in their own column on the right, so you choose while looking at a large preview.',
+          'Choose the paper size and orientation and print straight from the app, crisp and in the same colors as the screen.',
+          'Share a file to keep a backup, and whoever receives it opens an editable copy and carries on.',
+        ],
+      },
+      shots: {
+        iphone: [
+          { file: 'image-share', alt: 'Share screen with a live preview' },
+          { file: 'print', alt: 'Print preview showing the timetable on the page' },
+        ],
+        ipad: [
+          { file: 'image-share', alt: 'Share screen on iPad with the preview and an options column' },
+          { file: 'print', alt: 'Print screen on iPad with the page preview and an options column' },
+        ],
+      },
+    },
+    {
+      label: 'Timetable List',
+      title: 'Every timetable in one app',
+      lead: 'Even one person has several weeks to keep track of. Keep separate timetables for each semester and each person at home.',
+      points: [
+        'Start a new semester by duplicating the last one and changing only what moved.',
+        'Flip through the previews and switch with a single tap.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'timetable-list', alt: 'Timetable list with swipeable previews' },
+        ],
+        ipad: [
+          { file: 'timetable-list', alt: 'Timetable list floating over the grid on iPad' },
+        ],
+      },
+    },
+  ],
+};
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
-
-  <style>
-    .animate-reveal {
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-    }
-    .animate-reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .delay-1 { transition-delay: 0.06s; }
-    .delay-2 { transition-delay: 0.12s; }
-
-    .screenshot {
-      border-radius: 2.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: block;
-    }
-    .screenshot:hover {
-      transform: scale(1.02) translateY(-2px);
-      box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
-    }
-
-    .section-label {
-      display: block;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-primary);
-      margin-bottom: 0.75rem;
-    }
-
-    .screenshot-pair {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-      padding: 0.5rem 0;
-    }
-    .screenshot-pair::-webkit-scrollbar { display: none; }
-    .screenshot-pair img { flex-shrink: 0; }
-
-    .step-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1.25rem;
-    }
-    .step-list li {
-      display: flex;
-      gap: 0.75rem;
-      font-size: 0.875rem;
-      color: var(--color-text-sub);
-      line-height: 1.6;
-    }
-    .step-list li span:first-child {
-      flex-shrink: 0;
-      font-weight: 600;
-      color: var(--color-text);
-      min-width: 4.5rem;
-    }
-
-    .screenshot-trio {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 1.5rem;
-      margin-top: 3.5rem;
-    }
-    .point-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      margin-top: 1.25rem;
-    }
-    .point-list li {
-      position: relative;
-      padding-left: 1.1rem;
-      font-size: 0.875rem;
-      color: var(--color-text-sub);
-      line-height: 1.6;
-    }
-    .point-list li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0.7rem;
-      width: 0.35rem;
-      height: 0.35rem;
-      border-radius: 9999px;
-      background: var(--color-primary);
-    }
-  </style>
-
-  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
-
-    <!-- ── Header ── -->
-    <div class="text-center mb-20 md:mb-28 animate-reveal">
-      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
-      <p class="text-lg text-text font-medium mb-3">A timetable you draw by hand</p>
-      <p class="text-base text-text-sub mb-6 max-w-md mx-auto leading-relaxed">
-        Put the week already in your head straight onto the screen.
-        Drag to draw it, glance at it on your Home Screen, pin it to a wall.
-      </p>
-
-      <div class="flex flex-col items-center gap-2">
-        {hasIOS && (
-          <div class="flex items-center gap-2 flex-wrap justify-center">
-            <span class="flex items-center gap-1 text-xs text-text-sub w-16 justify-end shrink-0">
-              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
-              iOS
-            </span>
-            <div class="flex gap-1.5 flex-wrap justify-center">
-              {platforms.iphone && (
-                <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
-                  iPhone · {statusLabel(platforms.iphone)}
-                </span>
-              )}
-              {platforms.ipad && (
-                <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.ipad)]}>
-                  iPad · {statusLabel(platforms.ipad)}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-        {hasAndroid && (
-          <div class="flex items-center gap-2 justify-center">
-            <span class="flex items-center gap-1 text-xs text-text-sub w-16 justify-end shrink-0">Android</span>
-            <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.android!)]}>
-              {statusLabel(platforms.android!)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {app.data.appStoreUrl && (
-        <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer"
-           class="inline-block mt-5 text-sm text-primary hover:underline">
-          App Store →
-        </a>
-      )}
-    </div>
-
-    <!-- ── Intro screenshot ── -->
-    <div class="flex justify-center mb-28 animate-reveal delay-1">
-      <img
-        src={img('hero')}
-        alt="SuperTimetable weekly grid"
-        class="screenshot w-full max-w-[300px]"
-        width="720"
-        height="1564"
-      />
-    </div>
-
-  </div>
-
-  <!-- ── Just Drag ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto">
-      <div class="max-w-2xl animate-reveal">
-        <span class="section-label">Just Drag</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Create, move, and resize. Just drag.</h2>
-        <p class="text-text-sub leading-relaxed">
-          Drag across an empty slot and the class appears right there. There is nothing to type
-          into a form. A time label follows your finger and a tap of haptic feedback tells you
-          where you landed, so your eyes never leave the grid.
-        </p>
-        <ul class="step-list">
-          <li><span>Create</span><span>Swipe up or down over empty space and a block fills exactly that much.</span></li>
-          <li><span>Move</span><span>Pick up a block and drop it on another day. The day and time travel with it, so nothing has to be deleted and remade.</span></li>
-          <li><span>Resize</span><span>Pull one end and only that end changes. When an exact value matters, set it in the edit screen.</span></li>
-        </ul>
-      </div>
-      <div class="screenshot-trio animate-reveal delay-1">
-        <img src={img('drag-create')} alt="Dragging across empty space to create a class" class="screenshot w-full max-w-[240px]" width="720" height="1564" loading="lazy" />
-        <img src={img('move-drag')} alt="Moving a block to another day with the time label following" class="screenshot w-full max-w-[240px]" width="720" height="1564" loading="lazy" />
-        <img src={img('resize-drag')} alt="Pulling the bottom handle to extend a class" class="screenshot w-full max-w-[240px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Undo & Lock ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Undo & Lock</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">A layout you can keep changing</h2>
-        <p class="text-text-sub leading-relaxed">
-          A timetable is never right the first time. Most of the work is moving, stretching,
-          and moving again, so the changing itself is made light.
-        </p>
-        <ul class="point-list">
-          <li>Guide lines appear on neighboring blocks as you drag, so nothing ends up a few minutes out of line.</li>
-          <li>Undo and redo have no limit, so you can rearrange as freely as you like.</li>
-          <li>Lock a finished timetable and you will never nudge it while you are only looking.</li>
-        </ul>
-      </div>
-      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
-        <img src={img('undo-redo')} alt="Undoing a move from the bottom toolbar" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-        <img src={img('lock')} alt="Lock indicator on a locked timetable" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Batch Edit ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Batch Edit</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">One edit that covers every repeat</h2>
-        <p class="text-text-sub leading-relaxed">
-          If the same class meets three times a week, that is three places to rename.
-          Blocks sharing a title and color are one group, so changing one asks whether to change the rest.
-        </p>
-        <ul class="point-list">
-          <li>Before and after sit side by side, so nothing changes without you seeing it first.</li>
-          <li>Each block keeps its own day, time, note, and alarms.</li>
-        </ul>
-      </div>
-      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
-        <img src={img('batch-edit')} alt="Confirmation asking whether to change matching classes together" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-        <img src={img('batch-edit-after')} alt="Grid with every matching class renamed and recolored" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Your Style ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Your Style</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Pick any colour and name</h2>
-        <p class="text-text-sub leading-relaxed">
-          Every title and color you have used stays in a list, so adding the same class again
-          is a matter of picking it. If none of the colors is right, make your own.
-        </p>
-        <ul class="point-list">
-          <li>Change a color and every block using it follows, across all your timetables.</li>
-          <li>One color per subject, and the week sorts itself by color.</li>
-        </ul>
-      </div>
-      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
-        <img src={img('style-sheet')} alt="Style list of titles and colors already in use" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-        <img src={img('custom-color')} alt="Style list with a custom color added" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Display ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto">
-      <div class="max-w-2xl animate-reveal">
-        <span class="section-label">Display</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">A day only as long as yours</h2>
-        <p class="text-text-sub leading-relaxed">
-          Hours you never use take up the room the ones you do need. Narrow the days and hours
-          shown, per timetable, and the time you actually use fills the screen.
-        </p>
-        <ul class="point-list">
-          <li>The first day of the week and the clock format stay the way you already read them.</li>
-          <li>Let the appearance follow the room, or keep it the way you always see it. Easy on the eyes at night.</li>
-        </ul>
-      </div>
-      <div class="screenshot-trio animate-reveal delay-1">
-        <img src={img('display-settings')} alt="Display settings sheet for days and hour range" class="screenshot w-full max-w-[240px]" width="720" height="1564" loading="lazy" />
-        <img src={img('day-range')} alt="Timetable widened to include Sunday" class="screenshot w-full max-w-[240px]" width="720" height="1564" loading="lazy" />
-        <img src={img('dark-mode')} alt="Timetable in dark mode" class="screenshot w-full max-w-[240px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Alarms ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Alarms</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Get reminded before each class</h2>
-        <p class="text-text-sub leading-relaxed">
-          The time to get ready and the time to start are not the same. Put up to two alarms
-          on one class, so preparing and starting reach you separately.
-        </p>
-        <ul class="point-list">
-          <li>Hear an alarm sound before you choose it, so nothing rings as a surprise.</li>
-          <li>Title, color, time, alarms, and a note all live on one screen, so whatever you need to remember stays inside the class.</li>
-        </ul>
-      </div>
-      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
-        <img src={img('alarm')} alt="Schedule editor with two alarms set" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-        <img src={img('quick-edit')} alt="Schedule editor with title, days, time, alarm, and note" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Widgets ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Widgets</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">The next class without opening the app</h2>
-        <p class="text-text-sub leading-relaxed">
-          Opening an app just to check is the part you stop doing.
-        </p>
-        <ul class="point-list">
-          <li>The home screen widget shows the whole week; the today widget shows a timeline centered on right now.</li>
-          <li>The lock screen widget names the one class coming next.</li>
-          <li>Choose which timetable each widget shows, so only what matters today is on screen.</li>
-        </ul>
-      </div>
-      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
-        <img src={img('widget-light')} alt="Week and Today widgets on a light home screen" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-        <img src={img('widget-dark')} alt="Week and Today widgets on a dark home screen" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Share & Print ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Share & Print</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">As a picture, a file, or on paper</h2>
-        <p class="text-text-sub leading-relaxed">
-          Some timetables end up on a wall, others in someone else's hands.
-        </p>
-        <ul class="point-list">
-          <li>Choose the paper size and orientation and print straight from the app, crisp and in the same colors as the screen.</li>
-          <li>Export an image, with the preview changing as you pick each setting, so you see it before you send it.</li>
-          <li>Share a file to keep a backup, and whoever receives it opens an editable copy and carries on.</li>
-        </ul>
-      </div>
-      <div class="flex-1 screenshot-pair justify-center animate-reveal delay-1">
-        <img src={img('image-share')} alt="Share screen with a live preview" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-        <img src={img('print')} alt="Print preview showing the timetable on the page" class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Timetable List ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
-      <div class="flex-1 animate-reveal">
-        <span class="section-label">Timetable List</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Every timetable in one app</h2>
-        <p class="text-text-sub leading-relaxed">
-          Even one person has several weeks to keep track of. Keep separate timetables for
-          each semester, each job, each person at home.
-        </p>
-        <ul class="point-list">
-          <li>Start a new semester by duplicating the last one and changing only what moved.</li>
-          <li>Flip through the previews and switch with a single tap.</li>
-          <li>On iPad, edit in the panel beside the grid.</li>
-        </ul>
-      </div>
-      <div class="flex-1 flex justify-center animate-reveal delay-1">
-        <img src={img('timetable-list')} alt="Timetable list with swipeable previews" class="screenshot w-full max-w-[260px]" width="720" height="1564" loading="lazy" />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Closing ── -->
-  <section class="py-20 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto text-center animate-reveal">
-      <p class="text-base text-text font-medium mb-2">Your timetables stay on the device.</p>
-      <p class="text-sm text-text-sub">No account, no sign-in.</p>
-    </div>
-  </section>
-
-  <!-- ── Back ── -->
-  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
-    <a href="/en/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
-  </div>
-
+  <TimetableAppPage lang={lang} app={app} copy={copy} />
 </BaseLayout>
-
-<script>
-  const observer = new IntersectionObserver(
-    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
-    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
-  );
-  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
-</script>

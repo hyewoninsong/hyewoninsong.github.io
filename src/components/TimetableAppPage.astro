@@ -1,0 +1,325 @@
+---
+/**
+ * SuperTimetable 소개 페이지 템플릿 — ko/en 페이지가 카피만 넘긴다.
+ * iPhone / iPad 탭: 루트의 data-device 로 갈라지고, 섹션마다 기기별 문장·스샷을 따로 둔다.
+ * 스샷 행은 전부 가로 스크롤(.shot-row) 하나로 통일.
+ */
+import { useTranslations, type Lang } from '../i18n/utils';
+
+type Device = 'iphone' | 'ipad';
+type Shot = { file: string; alt: string };
+type PerDevice<T> = T | { iphone: T; ipad: T };
+
+export interface Section {
+  label: string;
+  title: PerDevice<string>;
+  lead: PerDevice<string>;
+  /** 라벨 + 설명 쌍 (드래그 섹션) */
+  steps?: PerDevice<[string, string][]>;
+  points?: PerDevice<string[]>;
+  shots: { iphone: Shot[]; ipad: Shot[] };
+}
+
+export interface Copy {
+  tagline: string;
+  summary: string;
+  hero: { iphone: string; ipad: string };
+  tabs: { iphone: string; ipad: string };
+  sections: Section[];
+  closing: [string, string];
+}
+
+interface Props {
+  lang: Lang;
+  app: { data: { title: string; summary: string; appStoreUrl?: string; platforms?: Record<string, 'released' | 'in-development' | undefined> } };
+  copy: Copy;
+}
+
+const { lang, app, copy } = Astro.props;
+const t = useTranslations(lang);
+const platforms = app.data.platforms ?? {};
+const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
+
+const badgeClass = (status: 'released' | 'in-development') =>
+  status === 'released'
+    ? 'border-green-200 bg-green-50 text-green-700'
+    : 'border-border bg-muted text-muted-foreground';
+const statusLabel = (status: 'released' | 'in-development') =>
+  status === 'released' ? t('status.released') : t('status.dev');
+
+const pick = <T,>(v: PerDevice<T>, d: Device): T =>
+  (typeof v === 'object' && v !== null && 'iphone' in (v as object) && 'ipad' in (v as object))
+    ? (v as { iphone: T; ipad: T })[d]
+    : (v as T);
+
+const img = (d: Device, file: string) =>
+  d === 'ipad' ? `/apps/timetable/${lang}/ipad/${file}.png` : `/apps/timetable/${lang}/${file}.png`;
+
+const devices: Device[] = ['iphone', 'ipad'];
+---
+
+<style>
+  .animate-reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .animate-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.06s; }
+
+  .screenshot {
+    border-radius: 2.5rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: block;
+  }
+  .screenshot.ipad { border-radius: 1.25rem; }
+  .screenshot:hover {
+    transform: scale(1.02) translateY(-2px);
+    box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
+  }
+
+  .section-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin-bottom: 0.75rem;
+  }
+
+  /* 스샷 행 — 기기 불문 가로 스크롤 하나 */
+  .shot-row {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.75rem 0;
+  }
+  .shot-row::-webkit-scrollbar { display: none; }
+  .shot-row img { flex-shrink: 0; }
+  .shot-row.single { justify-content: center; }
+
+  .step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  .step-list li {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text-sub);
+    line-height: 1.6;
+  }
+  .step-list li span:first-child {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--color-text);
+    min-width: 4.5rem;
+  }
+
+  .point-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+  .point-list li {
+    position: relative;
+    padding-left: 1.1rem;
+    font-size: 0.875rem;
+    color: var(--color-text-sub);
+    line-height: 1.6;
+  }
+  .point-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.7rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+  }
+
+  /* 기기 탭 */
+  .device-tabs {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: var(--color-bg-alt);
+  }
+  .device-tabs button {
+    border: 0;
+    border-radius: 9999px;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-sub);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .device-tabs button[aria-selected="true"] {
+    background: var(--color-card);
+    color: var(--color-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  [data-device="iphone"] .only-ipad { display: none !important; }
+  [data-device="ipad"] .only-iphone { display: none !important; }
+</style>
+
+<div id="device-root" data-device="iphone">
+
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+
+    <!-- ── Header ── -->
+    <div class="text-center mb-16 md:mb-20 animate-reveal">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
+      <p class="text-lg text-text font-medium mb-3">{copy.tagline}</p>
+      <p class="text-base text-text-sub mb-6 max-w-md mx-auto leading-relaxed">{copy.summary}</p>
+
+      {hasIOS && (
+        <div class="flex items-center gap-2 flex-wrap justify-center mb-8">
+          <span class="flex items-center gap-1 text-xs text-text-sub shrink-0">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            iOS
+          </span>
+          <div class="flex gap-1.5 flex-wrap justify-center">
+            {platforms.iphone && (
+              <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
+                iPhone · {statusLabel(platforms.iphone)}
+              </span>
+            )}
+            {platforms.ipad && (
+              <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.ipad)]}>
+                iPad · {statusLabel(platforms.ipad)}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div class="device-tabs" role="tablist" aria-label="Device">
+        <button type="button" role="tab" data-device-tab="iphone" aria-selected="true">{copy.tabs.iphone}</button>
+        <button type="button" role="tab" data-device-tab="ipad" aria-selected="false">{copy.tabs.ipad}</button>
+      </div>
+
+      {app.data.appStoreUrl && (
+        <div>
+          <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer"
+             class="inline-block mt-6 text-sm text-primary hover:underline">
+            App Store →
+          </a>
+        </div>
+      )}
+    </div>
+
+    <!-- ── Intro screenshot ── -->
+    <div class="flex justify-center mb-28 animate-reveal delay-1">
+      <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" width="720" height="1564" />
+      <img src={img('ipad', 'hero')} alt={copy.hero.ipad} class="only-ipad screenshot ipad w-full max-w-[760px]" width="1200" height="900" loading="lazy" />
+    </div>
+
+  </div>
+
+  {copy.sections.map((s, i) => {
+    const alt = i % 2 === 1;
+    return (
+      <section class:list={['py-24 px-6 border-t border-border', alt && 'bg-bg-alt']}>
+        <div class:list={['max-w-5xl mx-auto flex flex-col items-center gap-16', alt ? 'md:flex-row-reverse' : 'md:flex-row']}>
+          <div class="flex-1 min-w-0 animate-reveal">
+            <span class="section-label">{s.label}</span>
+            {devices.map((d) => {
+              const steps = s.steps ? pick(s.steps, d) : undefined;
+              const points = s.points ? pick(s.points, d) : undefined;
+              return (
+                <div class={`only-${d}`}>
+                  <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">{pick(s.title, d)}</h2>
+                  <p class="text-text-sub leading-relaxed">{pick(s.lead, d)}</p>
+                  {steps && (
+                    <ul class="step-list">
+                      {steps.map(([k, v]) => (<li><span>{k}</span><span>{v}</span></li>))}
+                    </ul>
+                  )}
+                  {points && points.length > 0 && (
+                    <ul class="point-list">
+                      {points.map((p) => (<li>{p}</li>))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div class="flex-1 min-w-0 w-full animate-reveal delay-1">
+            {devices.map((d) => {
+              const shots = s.shots[d];
+              return (
+                <div class:list={[`only-${d}`, 'shot-row', shots.length === 1 && 'single']}>
+                  {shots.map((sh) => (
+                    d === 'ipad'
+                      ? <img src={img(d, sh.file)} alt={sh.alt} class="screenshot ipad w-full max-w-[480px]" width="1200" height="900" loading="lazy" />
+                      : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  })}
+
+  <!-- ── Closing ── -->
+  <section class:list={['py-20 px-6 border-t border-border', copy.sections.length % 2 === 0 && 'bg-bg-alt']}>
+    <div class="max-w-5xl mx-auto text-center animate-reveal">
+      <p class="text-base text-text font-medium mb-2">{copy.closing[0]}</p>
+      <p class="text-sm text-text-sub">{copy.closing[1]}</p>
+    </div>
+  </section>
+
+  <!-- ── Back ── -->
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+    <a href={`/${lang}/apps`} class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+  </div>
+
+</div>
+
+<script>
+  const root = document.getElementById('device-root');
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-device-tab]'));
+
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
+  );
+  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
+
+  function select(device: string, persist = true) {
+    if (!root) return;
+    root.dataset.device = device;
+    tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.deviceTab === device)));
+    if (persist) {
+      try { localStorage.setItem('timetable-device', device); } catch {}
+      history.replaceState(null, '', device === 'ipad' ? '#ipad' : location.pathname + location.search);
+    }
+  }
+
+  tabs.forEach(b => b.addEventListener('click', () => select(b.dataset.deviceTab || 'iphone')));
+
+  let initial = 'iphone';
+  if (location.hash === '#ipad') initial = 'ipad';
+  else { try { initial = localStorage.getItem('timetable-device') || 'iphone'; } catch {} }
+  if (initial === 'ipad') select('ipad', false);
+</script>
