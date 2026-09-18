@@ -283,8 +283,12 @@ const statusLabel = (status: 'released' | 'in-development') =>
   </section>
 
   <!-- ── Back ── -->
-  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border flex flex-wrap items-center justify-between gap-4">
     <a href="/ko/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+    <div class="flex items-center gap-6">
+      <a href="/ko/apps/superfont/support/" class="text-sm text-text-sub hover:text-text transition">지원</a>
+      <a href="/ko/apps/superfont/privacy/" class="text-sm text-text-sub hover:text-text transition">개인정보처리방침</a>
+    </div>
   </div>
 
 </BaseLayout>

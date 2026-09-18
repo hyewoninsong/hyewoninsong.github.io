@@ -197,7 +197,7 @@ order: 1
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
 
-> **현재 상태 (2026-09-17):** 목록에는 SuperTimetable 하나만 보인다. 다른 앱(mathmaster · notequiz · superfont · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
+> **현재 상태 (2026-09-18):** 목록에는 SuperTimetable 과 SuperFont 둘이 보인다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
 
 **레이아웃:**
 

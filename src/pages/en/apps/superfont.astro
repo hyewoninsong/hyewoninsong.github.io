@@ -286,8 +286,12 @@ const statusLabel = (status: 'released' | 'in-development') =>
   </section>
 
   <!-- ── Back ── -->
-  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border flex flex-wrap items-center justify-between gap-4">
     <a href="/en/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+    <div class="flex items-center gap-6">
+      <a href="/en/apps/superfont/support/" class="text-sm text-text-sub hover:text-text transition">Support</a>
+      <a href="/en/apps/superfont/privacy/" class="text-sm text-text-sub hover:text-text transition">Privacy Policy</a>
+    </div>
   </div>
 
 </BaseLayout>
