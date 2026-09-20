@@ -4,6 +4,8 @@ import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getCollection, render } from 'astro:content';
 import { withHash } from '../../../lib/asset-hash';
 import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../../../lib/platform-status';
+import { appKeyOf, blogAppForAppSlug, tagsWithoutApp } from '../../../lib/blog-apps';
+import BlogPostCard from '../../../components/BlogPostCard.astro';
 
 export async function getStaticPaths() {
   const allApps = await getCollection('apps');
@@ -27,6 +29,15 @@ const hasAndroid = !!platforms.android;
 
 const badgeClass = statusBadgeClass;
 const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
+
+/** 이 앱을 만들며 쓴 개발 블로그 글 — 최근 셋만 여기 걸고 나머지는 앱별 목록으로 보낸다. */
+const blogApp = blogAppForAppSlug(app.data.slug);
+const allPosts = await getCollection('blog');
+const appPosts = blogApp
+  ? allPosts
+      .filter((post) => post.id.startsWith('en/') && appKeyOf(post.data) === blogApp.key)
+      .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  : [];
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
@@ -108,6 +119,29 @@ const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
     ">
       <Content />
     </div>
+    )}
+
+    {appPosts.length > 0 && (
+      <section class="mt-16 pt-12 border-t border-border">
+        <div class="flex items-baseline justify-between gap-4 mb-5">
+          <h2 class="text-2xl font-semibold text-text tracking-tight">{t('apps.devlog')}</h2>
+          {appPosts.length > 3 && (
+            <a href={`/en/blog/app/${blogApp!.key}`} class="text-sm font-medium text-primary hover:underline shrink-0">{t('blog.viewAll')} →</a>
+          )}
+        </div>
+        <p class="text-sm text-text-sub leading-relaxed mb-6 max-w-xl">{t('apps.devlog.body')}</p>
+        <div class="grid grid-cols-1 gap-4">
+          {appPosts.slice(0, 3).map((post) => (
+            <BlogPostCard
+              title={post.data.title}
+              date={post.data.date}
+              tags={tagsWithoutApp(post.data)}
+              summary={post.data.summary}
+              href={`/en/blog/${post.id.replace('en/', '')}`}
+            />
+          ))}
+        </div>
+      </section>
     )}
 
     <!-- Back -->

@@ -1,7 +1,8 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
 date: 2026-09-20
-tags: ["daily-planner", "devlog", "swiftui", "gesture"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags."
 ---
 

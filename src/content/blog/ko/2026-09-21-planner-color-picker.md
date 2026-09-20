@@ -1,7 +1,8 @@
 ---
 title: "할일 색 고르기를 팝오버에서 꺼내 시트에 펼쳤다"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "swiftui", "design"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "design"]
 summary: "색을 바꾸려면 동그라미를 눌러 팝오버를 띄워야 했다. 이제 시트를 열면 팔레트가 이미 거기 있다. 그 대신 이름 칸 자동 키보드를 포기했다."
 ---
 

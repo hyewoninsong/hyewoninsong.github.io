@@ -45,6 +45,8 @@ const blog = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
+    /** 어느 앱을 만들다 나온 글인지 — `src/lib/blog-apps.ts` 의 키. 앱과 무관한 글(소식)은 비운다. */
+    app: z.string().optional(),
     tags: z.array(z.string()).default([]),
     summary: z.string(),
     thumbnail: z.string().optional(),

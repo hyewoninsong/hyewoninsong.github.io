@@ -1,7 +1,8 @@
 ---
 title: "The color picker came out of its popover"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "swiftui", "design"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "design"]
 summary: "Picking a todo color meant tapping a circle to open a popover. Now the palette is already there when the sheet opens — at the cost of the keyboard that used to come up with it."
 ---
 

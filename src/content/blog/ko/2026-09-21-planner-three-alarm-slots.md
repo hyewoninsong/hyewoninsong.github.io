@@ -1,7 +1,8 @@
 ---
 title: "배치 알림 하나를 알람 세 개로 쪼갰다"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "swiftui", "alarmkit"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "alarmkit"]
 summary: "하나뿐이던 알림 선택지에 '어느 시각 기준'과 '얼마나 앞당길지'가 섞여 있어서, 시작과 끝에 같이 울리는 게 아예 표현되지 않았다. 슬롯 셋으로 나누고 전달을 AlarmKit 으로 바꿨다."
 ---
 

@@ -29,3 +29,8 @@ export function getLocalizedPath(path: string, lang: Lang): string {
   const cleanPath = path.replace(/^\/(ko|en)/, '');
   return `/${lang}${cleanPath || '/'}`;
 }
+
+/** "글 5개" / "5 posts" — 수와 단위가 언어마다 붙는 자리가 달라 t() 로는 안 된다. */
+export function postCountLabel(lang: Lang, count: number): string {
+  return lang === 'ko' ? `글 ${count}개` : `${count} ${count === 1 ? 'post' : 'posts'}`;
+}

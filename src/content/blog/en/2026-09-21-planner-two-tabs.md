@@ -1,7 +1,8 @@
 ---
 title: "Two of three tabs were showing the same thing"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "design", "swiftui"]
+app: "daily-planner"
+tags: ["devlog", "design", "swiftui"]
 summary: "The daily planner's Home tab is gone, folded into the Todos tab. The app now opens on the planner, and each todo row carries its own contribution graph."
 ---
 

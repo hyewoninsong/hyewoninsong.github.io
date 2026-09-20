@@ -1,7 +1,8 @@
 ---
 title: "지우지 않던 앱에 삭제를 들였다"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "swiftui", "data"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "data"]
 summary: "하루 플래너의 할일은 보관만 되고 삭제는 없었다. 오타로 만든 할일이 보관함에 쌓이는 걸 보고 규칙을 뒤집었다 — 경고 한 번, 되돌리기는 없다."
 ---
 
