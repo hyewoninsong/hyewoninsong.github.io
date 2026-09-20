@@ -1,8 +1,7 @@
 ---
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
 import { withHash } from '../lib/asset-hash';
-
-type PlatformStatus = 'released' | 'in-development';
+import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../lib/platform-status';
 
 interface Props {
   title: string;
@@ -26,13 +25,8 @@ const t = useTranslations(lang);
 const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
 const hasAndroid = !!platforms.android;
 
-const badgeClass = (status: PlatformStatus) =>
-  status === 'released'
-    ? 'border-green-200 bg-green-50 text-green-700'
-    : 'border-border bg-muted text-muted-foreground';
-
-const statusLabel = (status: PlatformStatus) =>
-  status === 'released' ? t('status.released') : t('status.dev');
+const badgeClass = statusBadgeClass;
+const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
 ---
 
 <a href={href} class="block group">

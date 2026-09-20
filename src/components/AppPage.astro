@@ -6,6 +6,7 @@
  */
 import { withHash } from '../lib/asset-hash';
 import { useTranslations, type Lang } from '../i18n/utils';
+import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../lib/platform-status';
 
 type Device = 'iphone' | 'ipad';
 type Shot = { file: string; alt: string };
@@ -34,7 +35,7 @@ interface Props {
   lang: Lang;
   /** public/apps/<slug>/ 아래에서 스샷을 찾고, 기기 탭 상태를 저장할 때도 쓴다. */
   slug: string;
-  app: { data: { title: string; summary: string; icon?: string; appStoreUrl?: string; platforms?: Record<string, 'released' | 'in-development' | undefined> } };
+  app: { data: { title: string; summary: string; icon?: string; appStoreUrl?: string; platforms?: Record<string, PlatformStatus | undefined> } };
   copy: Copy;
   /**
    * iPad 스샷을 어떻게 얹을지. 'frame' 은 베젤 카드 안에 넣는다 — 가로(4:3) 캡처는 화면 모서리가
@@ -61,12 +62,8 @@ const t = useTranslations(lang);
 const platforms = app.data.platforms ?? {};
 const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
 
-const badgeClass = (status: 'released' | 'in-development') =>
-  status === 'released'
-    ? 'border-green-200 bg-green-50 text-green-700'
-    : 'border-border bg-muted text-muted-foreground';
-const statusLabel = (status: 'released' | 'in-development') =>
-  status === 'released' ? t('status.released') : t('status.dev');
+const badgeClass = statusBadgeClass;
+const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
 
 const pick = <T,>(v: PerDevice<T>, d: Device): T =>
   (typeof v === 'object' && v !== null && 'iphone' in (v as object) && 'ipad' in (v as object))

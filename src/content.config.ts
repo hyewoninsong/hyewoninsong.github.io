@@ -10,7 +10,7 @@ const about = defineCollection({
   }),
 });
 
-const platformStatus = z.enum(['released', 'in-development']);
+const platformStatus = z.enum(['released', 'in-review', 'in-development']);
 
 const apps = defineCollection({
   loader: glob({
@@ -31,6 +31,8 @@ const apps = defineCollection({
     }).default({}),
     order: z.number().default(0),
     appStoreUrl: z.string().optional(),
+    /** 상세 페이지를 아직 안 쓴 앱 — 본문 대신 "준비 중" 안내만 나온다. */
+    comingSoon: z.boolean().default(false),
   }),
 });
 

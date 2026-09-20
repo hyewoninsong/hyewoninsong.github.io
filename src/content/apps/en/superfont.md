@@ -4,8 +4,8 @@ slug: "superfont"
 icon: "/apps/superfont/icon.png"
 summary: "An iPhone that uses the fonts you bought. Add the file, follow the guide, type with it in Notes and documents. No account, no sign-in."
 platforms:
-  iphone: "in-development"
-  ipad: "in-development"
+  iphone: "in-review"
+  ipad: "in-review"
 order: 2
 ---
 

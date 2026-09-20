@@ -4,8 +4,8 @@ slug: "superfont"
 icon: "/apps/superfont/icon.png"
 summary: "보유한 폰트를 쓰는 iPhone. 파일을 넣고, 안내를 따라가고, 메모와 문서에서 그대로 쓰세요. 계정도 로그인도 없습니다."
 platforms:
-  iphone: "in-development"
-  ipad: "in-development"
+  iphone: "in-review"
+  ipad: "in-review"
 order: 2
 ---
 
