@@ -4,8 +4,7 @@
  * iPhone / iPad 탭: 루트의 data-device 로 갈라지고, 섹션마다 기기별 문장·스샷을 따로 둔다.
  * 스샷 행은 전부 가로 스크롤(.shot-row) 하나로 통일.
  */
-import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { withHash } from '../lib/asset-hash';
 import { useTranslations, type Lang } from '../i18n/utils';
 
 type Device = 'iphone' | 'ipad';
@@ -35,7 +34,7 @@ interface Props {
   lang: Lang;
   /** public/apps/<slug>/ 아래에서 스샷을 찾고, 기기 탭 상태를 저장할 때도 쓴다. */
   slug: string;
-  app: { data: { title: string; summary: string; appStoreUrl?: string; platforms?: Record<string, 'released' | 'in-development' | undefined> } };
+  app: { data: { title: string; summary: string; icon?: string; appStoreUrl?: string; platforms?: Record<string, 'released' | 'in-development' | undefined> } };
   copy: Copy;
   /**
    * iPad 스샷을 어떻게 얹을지. 'frame' 은 베젤 카드 안에 넣는다 — 가로(4:3) 캡처는 화면 모서리가
@@ -74,30 +73,8 @@ const pick = <T,>(v: PerDevice<T>, d: Device): T =>
     ? (v as { iphone: T; ipad: T })[d]
     : (v as T);
 
-/**
- * 스샷 경로에 내용 해시를 붙인다.
- *
- * 앱 페이지를 고칠 때 스샷은 같은 이름 그대로 새 캡처로 갈아끼운다 (`import.png` 는 계속
- * `import.png` 다). 그런데 GitHub Pages 는 `public/` 자산을 `cache-control: max-age=14400`
- * 으로 내보내기 때문에, 교체 직전에 페이지를 연 사람은 그 뒤 네 시간 동안 옛 스샷을 본다 —
- * 2026-09-20 에 잘린 스샷을 온전한 것으로 바꾸고도 "아직 잘려 보인다" 는 말을 들었고,
- * 확인해 보니 CDN 은 새 파일을 주고 있었다. 쿼리에 해시를 달면 교체와 동시에 URL 이 바뀐다.
- */
-// import.meta.url 은 번들된 청크를 가리킬 수 있어 소스 기준 상대경로가 빗나간다.
-// astro dev/build 는 프로젝트 루트에서 돌기 때문에 cwd 가 확실하다.
-const publicDir = `${process.cwd()}/public/`;
-const hashes = new Map<string, string>();
-const withHash = (path: string) => {
-  if (!hashes.has(path)) {
-    const file = publicDir + path.slice(1);
-    hashes.set(
-      path,
-      existsSync(file) ? createHash('sha1').update(readFileSync(file)).digest('hex').slice(0, 8) : ''
-    );
-  }
-  const h = hashes.get(path);
-  return h ? `${path}?v=${h}` : path;
-};
+/** 앱 아이콘 — 언어 공용이라 `.md` frontmatter 의 `icon` 경로 하나다. 비어 있으면 헤더에서 뺀다. */
+const icon = app.data.icon ? withHash(app.data.icon) : null;
 
 const img = (d: Device, file: string) =>
   withHash(d === 'ipad' ? `/apps/${slug}/${lang}/ipad/${file}.png` : `/apps/${slug}/${lang}/${file}.png`);
@@ -266,6 +243,10 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
 
     <!-- ── Header ── -->
     <div class="text-center mb-16 md:mb-20 animate-reveal">
+      {icon && (
+        <img src={icon} alt="" aria-hidden="true" width="256" height="256"
+             class="app-icon w-20 h-20 md:w-24 md:h-24 mx-auto mb-5" />
+      )}
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
       <p class="text-lg text-text font-medium mb-3">{copy.tagline}</p>
       <p class="text-base text-text-sub mb-6 max-w-md mx-auto leading-relaxed">{copy.summary}</p>

@@ -1,7 +1,7 @@
 ---
 title: "SuperTimetable"
 slug: "timetable"
-icon: ""
+icon: "/apps/timetable/icon.png"
 summary: "A timetable you draw by hand. Drag to draw it, glance at it on your Home Screen, pin it to a wall. No account, no sign-in."
 platforms:
   iphone: "in-development"

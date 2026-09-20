@@ -1,7 +1,7 @@
 ---
 title: "SuperTimetable"
 slug: "timetable"
-icon: ""
+icon: "/apps/timetable/icon.png"
 summary: "손으로 그리는 시간표. 드래그로 그리고, 홈 화면에서 보고, 종이에 붙이세요. 계정도 로그인도 없습니다."
 platforms:
   iphone: "in-development"

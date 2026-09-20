@@ -171,7 +171,7 @@ src/content/apps/
 title: "시간표 관리"
 slug: "timetable"
 status: "출시"          # "출시" | "개발중"
-icon: "./images/timetable-icon.png"
+icon: "/apps/timetable/icon.png"   # public/ 경로 — 카드와 상세 상단에 그려진다
 summary: "한 눈에 보는 나만의 시간표"
 order: 1                # 목록 정렬 순서
 ---
@@ -184,7 +184,7 @@ order: 1                # 목록 정렬 순서
 title: "Timetable"
 slug: "timetable"
 status: "released"      # "released" | "in-development"
-icon: "./images/timetable-icon.png"
+icon: "/apps/timetable/icon.png"   # public/ 경로 — 카드와 상세 상단에 그려진다
 summary: "Your schedule at a glance"
 order: 1
 ---
@@ -194,6 +194,9 @@ order: 1
 
 - 카드 그리드 형태로 모든 앱 표시
 - 각 카드: 앱 아이콘 + 앱 이름 + 한 줄 소개 + 상태 뱃지(출시/개발중)
+- 아이콘 파일은 앱 저장소의 Icon Composer 번들(`<App>.icon`)을 라이트 외관으로 합성해 만든다
+  (`web-app-page` 스킬의 `scripts/app-icon.swift`, 256px). 곡률은 파일이 아니라 `.app-icon`
+  클래스가 준다 — iOS 앱 아이콘과 같은 22.37%
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
 
