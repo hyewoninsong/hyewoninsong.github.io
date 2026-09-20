@@ -1,11 +1,14 @@
 ---
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import { withHash } from '../lib/asset-hash';
 
 type PlatformStatus = 'released' | 'in-development';
 
 interface Props {
   title: string;
   summary: string;
+  /** `public/` 기준 앱 아이콘 경로 (`.md` frontmatter 의 `icon`). 없으면 제목만 나온다. */
+  icon?: string;
   platforms?: {
     iphone?: PlatformStatus;
     ipad?: PlatformStatus;
@@ -15,7 +18,8 @@ interface Props {
   href: string;
 }
 
-const { title, summary, platforms = {}, href } = Astro.props;
+const { title, summary, icon, platforms = {}, href } = Astro.props;
+const iconSrc = icon ? withHash(icon) : null;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
@@ -32,7 +36,12 @@ const statusLabel = (status: PlatformStatus) =>
 ---
 
 <a href={href} class="block group">
-  <div class="border border-border rounded-xl bg-card shadow-sm p-6 transition-shadow hover:shadow-md">
+  <div class="border border-border rounded-xl bg-card shadow-sm p-6 transition-shadow hover:shadow-md flex items-start gap-4">
+    {iconSrc && (
+      <img src={iconSrc} alt="" aria-hidden="true" width="256" height="256"
+           class="app-icon w-14 h-14 md:w-16 md:h-16" />
+    )}
+    <div class="min-w-0 flex-1">
     <h3 class="text-[15px] font-semibold text-text group-hover:text-primary transition-colors leading-snug mb-2">{title}</h3>
     <p class="text-sm text-text-sub leading-relaxed mb-5">{summary}</p>
 
@@ -80,6 +89,7 @@ const statusLabel = (status: PlatformStatus) =>
           </span>
         </div>
       )}
+      </div>
     </div>
   </div>
 </a>
