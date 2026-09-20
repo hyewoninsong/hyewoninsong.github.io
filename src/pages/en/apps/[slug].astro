@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getCollection, render } from 'astro:content';
 import { withHash } from '../../../lib/asset-hash';
+import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../../../lib/platform-status';
 
 export async function getStaticPaths() {
   const allApps = await getCollection('apps');
@@ -24,13 +25,8 @@ const icon = app.data.icon ? withHash(app.data.icon) : null;
 const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
 const hasAndroid = !!platforms.android;
 
-const badgeClass = (status: 'released' | 'in-development') =>
-  status === 'released'
-    ? 'border-green-200 bg-green-50 text-green-700'
-    : 'border-border bg-muted text-muted-foreground';
-
-const statusLabel = (status: 'released' | 'in-development') =>
-  status === 'released' ? t('status.released') : t('status.dev');
+const badgeClass = statusBadgeClass;
+const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
@@ -96,6 +92,12 @@ const statusLabel = (status: 'released' | 'in-development') =>
     </div>
 
     <!-- Content -->
+    {app.data.comingSoon ? (
+      <div class="border border-border rounded-xl bg-card px-6 py-12 text-center">
+        <p class="text-base font-medium text-text mb-2">{t('apps.comingSoon.title')}</p>
+        <p class="text-sm text-text-sub leading-relaxed max-w-md mx-auto">{t('apps.comingSoon.body')}</p>
+      </div>
+    ) : (
     <div class="prose prose-gray max-w-none
       prose-headings:font-semibold prose-headings:tracking-tight
       prose-h1:hidden
@@ -106,6 +108,7 @@ const statusLabel = (status: 'released' | 'in-development') =>
     ">
       <Content />
     </div>
+    )}
 
     <!-- Back -->
     <div class="mt-16 pt-8 border-t border-border">
