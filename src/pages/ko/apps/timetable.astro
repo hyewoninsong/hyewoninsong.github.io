@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import TimetableAppPage, { type Copy } from '../../../components/TimetableAppPage.astro';
+import AppPage, { type Copy } from '../../../components/AppPage.astro';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getEntry } from 'astro:content';
 
@@ -220,5 +220,5 @@ const copy: Copy = {
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
-  <TimetableAppPage lang={lang} app={app} copy={copy} />
+  <AppPage lang={lang} slug="timetable" app={app} copy={copy} />
 </BaseLayout>

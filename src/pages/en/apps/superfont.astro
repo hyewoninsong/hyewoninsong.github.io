@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AppPage, { type Copy } from '../../../components/AppPage.astro';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getEntry } from 'astro:content';
 
@@ -7,348 +8,147 @@ const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const app = (await getEntry('apps', 'en/superfont'))!;
 
-const { platforms = {} } = app.data;
+const copy: Copy = {
+  tagline: 'An iPhone that uses the fonts you bought',
+  summary: 'Typefaces that have been sitting in your downloads start showing up in Notes, in documents, in slides.',
+  hero: {
+    iphone: 'Installed fonts, each row drawn in its own typeface (iPhone)',
+    ipad: 'Installed fonts, each row drawn in its own typeface (iPad)',
+  },
+  tabs: { iphone: 'iPhone', ipad: 'iPad' },
+  closing: ['Your font files and install history stay on the device.', 'No account, no sign-in.'],
+  sections: [
+    {
+      label: 'Import',
+      title: 'Take the files exactly as they came',
+      lead: 'Buying or downloading a typeface is easy. Getting it onto an iPhone is where it stops — there is barely a way to even open the file. Drop in what the foundry sent you, unedited, with no detour through a Mac.',
+      steps: [
+        ['ZIP as-is', 'Add the archive without unpacking it and the typefaces inside are found for you. No round trip through the Files app.'],
+        ['No duplicates', 'When the same typeface arrives as both TTF and OTF, one is kept. Your font list does not fill up with the same name twice.'],
+        ['Sorted out early', 'Files that cannot be installed are set aside with the reason up front, instead of failing at the end of the process.'],
+      ],
+      shots: {
+        iphone: [{ file: 'import', alt: '13 families and 17 styles found inside a single ZIP' }],
+        ipad: [{ file: 'import', alt: 'A single ZIP loaded on iPad' }],
+      },
+    },
+    {
+      label: 'Browse',
+      title: 'Finding something new, without leaving the app',
+      lead: 'Font hunting usually starts in a browser and ends in file management — downloading, unzipping, then looking for where it went. That whole errand moves inside the app.',
+      points: [
+        'Thousands of free typefaces are there to flip through, right where you install them.',
+        'Narrow to handwriting or monospace only, or to a language, and stop scrolling past what you will not use.',
+        'Whether a font covers your language is shown in the list, so nothing breaks once you actually use it.',
+        'When one catches your eye, installing it continues right there — no browser, no download folder.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'browse', alt: 'Free fonts narrowed down by category and language' },
+          { file: 'browse-search', alt: 'A font found by name, with language coverage shown' },
+        ],
+        ipad: [
+          { file: 'browse', alt: 'Free fonts narrowed down by category on iPad' },
+          { file: 'browse-search', alt: 'A font found by name on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Preview',
+      title: 'Choose with your eyes, before installing',
+      lead: 'A font picked by name turns out wrong only once it is in the document. The list you are about to install draws every typeface in itself.',
+      points: [
+        'Push the size up and you can tell whether it holds as a heading or stays readable as body text.',
+        'Put your own words in the preview and you catch a font missing the characters you need before it reaches a document.',
+        'Anything already on the device is marked as installed, so you do not add it twice.',
+        'Take one weight out of a family, or bundle more than a dozen fonts — either way the install happens once.',
+      ],
+      shots: {
+        iphone: [{ file: 'preview', alt: 'Fonts about to be installed, each drawn in its own typeface' }],
+        ipad: [{ file: 'preview', alt: 'Fonts about to be installed, shown on iPad' }],
+      },
+    },
+    {
+      label: 'Profile',
+      title: 'A profile you never have to build',
+      lead: 'iOS does not let an app install a system font. It wants a configuration profile instead — the kind of file an IT administrator normally hand-builds for a company device, and one that is refused outright if its structure is even slightly off.',
+      points: [
+        'The profile is generated around the typefaces you picked, so its internals stay none of your business.',
+        'The name Settings will display is filled in ahead of time, so you can find it again months later.',
+        'Several fonts go into a single profile. You are not repeating the same errand for each one.',
+      ],
+      shots: {
+        iphone: [{ file: 'profile', alt: 'Download step with the selected fonts and a pre-filled profile name' }],
+        ipad: [{ file: 'profile', alt: 'The profile download step on iPad' }],
+      },
+    },
+    {
+      label: 'Guide',
+      title: 'An install that does not strand you',
+      lead: 'Installing means crossing between Safari and Settings, and a "not signed" warning shows up partway through. That warning is where most people quit.',
+      steps: [
+        ['Real screens', 'Every step is shown as a picture of the actual screen, so you are never hunting for the next button.'],
+        ['Warning explained', 'Why that warning is normal is explained right where it appears, so second-guessing does not stop you halfway.'],
+        ['Picks up for you', 'Finish in Settings, come back, and the app moves on by itself. You do not have to remember where you left off.'],
+      ],
+      shots: {
+        iphone: [
+          { file: 'guide-safari', alt: 'Where to tap Allow in Safari, shown on the real screen' },
+          { file: 'guide-install', alt: 'The seven things to do in Settings, listed in order' },
+          { file: 'guide-settings', alt: 'Where the Install button sits in Settings, shown on the real screen' },
+        ],
+        ipad: [
+          { file: 'guide-install', alt: 'The things to do in Settings, listed on iPad' },
+          { file: 'guide-settings', alt: 'Where the Install button sits, shown on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'My Fonts',
+      title: 'Knowing what is actually installed',
+      lead: 'A week after installing, nobody remembers which fonts made it onto the device. The list is built so you never have to guess at the current state.',
+      points: [
+        'Installed and not-yet-installed sit in one list, clearly apart.',
+        'Every row is drawn in its own typeface, so you read the shape instead of the name.',
+        'Expand a family and you see which weights actually landed.',
+        'Search by name, filter by installed or not — dozens in, you still get to the one you want in a moment.',
+      ],
+      shots: {
+        iphone: [{ file: 'my-fonts', alt: 'A family expanded to show which weights are installed' }],
+        ipad: [{ file: 'my-fonts', alt: 'The font list on iPad' }],
+      },
+    },
+    {
+      label: 'Reinstall',
+      title: 'When they disappear, you do not start over',
+      lead: 'Reset the device or delete the profile and the fonts go with it. Remembering where the original files came from is the next problem.',
+      points: [
+        'The files you installed are kept, so you pick out the ones that vanished and bring them back in one go.',
+        'Fonts you no longer want go from the same screen.',
+        'Nothing to re-download, and no folder to remember.',
+      ],
+      shots: {
+        iphone: [{ file: 'reinstall', alt: 'Several fonts selected for reinstalling or removal' }],
+        ipad: [{ file: 'reinstall', alt: 'Several fonts selected for reinstalling on iPad' }],
+      },
+    },
+  ],
+};
 
-const badgeClass = (status: 'released' | 'in-development') =>
-  status === 'released'
-    ? 'border-green-200 bg-green-50 text-green-700'
-    : 'border-border bg-muted text-muted-foreground';
-
-const statusLabel = (status: 'released' | 'in-development') =>
-  status === 'released' ? t('status.released') : t('status.dev');
-
-const img = (name: string) => `/apps/superfont/en/${name}.png`;
+const footerLinks = [
+  { href: '/en/apps/superfont/support/', label: 'Support' },
+  { href: '/en/apps/superfont/privacy/', label: 'Privacy Policy' },
+];
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
-
-  <style>
-    .animate-reveal {
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 0.5s ease, transform 0.5s ease;
-    }
-    .animate-reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .delay-1 { transition-delay: 0.06s; }
-    .delay-2 { transition-delay: 0.12s; }
-    .delay-3 { transition-delay: 0.18s; }
-
-    .screenshot {
-      border-radius: 2.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: block;
-    }
-    .screenshot:hover {
-      transform: scale(1.02) translateY(-2px);
-      box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
-    }
-
-    .section-label {
-      display: block;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-primary);
-      margin-bottom: 0.75rem;
-    }
-
-    .step-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1.25rem;
-    }
-    .step-list li {
-      display: flex;
-      gap: 0.75rem;
-      font-size: 0.875rem;
-      color: var(--color-text-sub);
-      line-height: 1.6;
-    }
-    .step-list li span:first-child {
-      flex-shrink: 0;
-      font-weight: 600;
-      color: var(--color-text);
-      min-width: 7.5rem;
-    }
-
-    .point-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      margin-top: 1.25rem;
-    }
-    .point-list li {
-      position: relative;
-      padding-left: 1.1rem;
-      font-size: 0.875rem;
-      color: var(--color-text-sub);
-      line-height: 1.6;
-    }
-    .point-list li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0.7rem;
-      width: 0.35rem;
-      height: 0.35rem;
-      border-radius: 9999px;
-      background: var(--color-primary);
-    }
-
-    .mini-card {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .mini-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-    }
-  </style>
-
-  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
-
-    <!-- ── Header ── -->
-    <div class="text-center mb-20 md:mb-28 animate-reveal">
-      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
-      <p class="text-lg text-text font-medium mb-3">An iPhone that uses the fonts you bought</p>
-      <p class="text-base text-text-sub mb-6 max-w-md mx-auto leading-relaxed">
-        Typefaces that have been sitting in your downloads start showing up in Notes, in documents, in slides.
-      </p>
-
-      {(platforms.iphone || platforms.ipad) && (
-        <div class="flex items-center gap-2 flex-wrap justify-center">
-          <span class="flex items-center gap-1 text-xs text-text-sub shrink-0">
-            <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-            </svg>
-            iOS
-          </span>
-          <div class="flex gap-1.5 flex-wrap justify-center">
-            {platforms.iphone && (
-              <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
-                iPhone · {statusLabel(platforms.iphone)}
-              </span>
-            )}
-            {platforms.ipad && (
-              <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.ipad)]}>
-                iPad · {statusLabel(platforms.ipad)}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {app.data.appStoreUrl && (
-        <div>
-          <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer"
-             class="inline-block mt-6 text-sm text-primary hover:underline">
-            App Store →
-          </a>
-        </div>
-      )}
-    </div>
-
-    <!-- ── Intro screenshot ── -->
-    <div class="flex justify-center mb-28 animate-reveal delay-1">
-      <img
-        src={img('my-fonts')}
-        alt="Installed fonts, each row drawn in its own typeface"
-        class="screenshot w-full max-w-[300px]"
-        width="1090" height="2079"
-      />
-    </div>
-
-  </div>
-
-  <!-- ── Section: Import ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
-      <div class="flex-1 min-w-0 animate-reveal">
-        <span class="section-label">Import</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Take the files exactly as they came</h2>
-        <p class="text-text-sub leading-relaxed">
-          Buying or downloading a typeface is easy. Getting it onto an iPhone is where it stops —
-          there is barely a way to even open the file. Drop in what the foundry sent you, unedited,
-          with no detour through a Mac.
-        </p>
-        <ul class="step-list">
-          <li><span>ZIP as-is</span><span>Add the archive without unpacking it and the typefaces inside are found for you. No round trip through the Files app.</span></li>
-          <li><span>No duplicates</span><span>When the same typeface arrives as both TTF and OTF, one is kept. Your font list does not fill up with the same name twice.</span></li>
-          <li><span>Sorted out early</span><span>Files that cannot be installed are set aside with the reason up front, instead of failing at the end of the process.</span></li>
-        </ul>
-      </div>
-      <div class="flex-1 min-w-0 flex justify-center animate-reveal delay-1">
-        <img
-          src={img('import')}
-          alt="13 families and 17 styles found inside a single ZIP"
-          class="screenshot w-full max-w-[280px]"
-          width="1090" height="2079" loading="lazy"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Section: Browse ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
-      <div class="flex-1 min-w-0 animate-reveal">
-        <span class="section-label">Browse</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Finding something new, without leaving the app</h2>
-        <p class="text-text-sub leading-relaxed">
-          Font hunting usually starts in a browser and ends in file management — downloading,
-          unzipping, then looking for where it went. That whole errand moves inside the app.
-        </p>
-        <ul class="point-list">
-          <li>Thousands of free typefaces are there to flip through, right where you install them.</li>
-          <li>Narrow to handwriting or monospace only, or to a language, and stop scrolling past what you will not use.</li>
-          <li>Whether a font covers your language is shown in the list, so nothing breaks once you actually use it.</li>
-          <li>When one catches your eye, installing it continues right there — no browser, no download folder.</li>
-        </ul>
-      </div>
-      <div class="flex-1 min-w-0 flex justify-center animate-reveal delay-1">
-        <img
-          src={img('google-fonts')}
-          alt="Free fonts narrowed down by category and language"
-          class="screenshot w-full max-w-[280px]"
-          width="1090" height="2079" loading="lazy"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Section: Install ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
-      <div class="flex-1 min-w-0 animate-reveal">
-        <span class="section-label">Install</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">A profile you never have to build</h2>
-        <p class="text-text-sub leading-relaxed">
-          iOS does not let an app install a system font. It wants a configuration profile instead —
-          the kind of file an IT administrator normally hand-builds for a company device, and one that is
-          refused outright if its structure is even slightly off. SuperFont builds it, then stays with you
-          until the font is in.
-        </p>
-        <ul class="step-list">
-          <li><span>Built for you</span><span>The profile is generated around the typefaces you picked, and the name Settings will display is filled in ahead of time, so you can find it again months later.</span></li>
-          <li><span>All in one go</span><span>Several fonts go into a single profile. You are not repeating the same errand for each one.</span></li>
-          <li><span>Real screens</span><span>Every step between Safari and Settings is shown as a picture of the actual screen, so you are never hunting for the next button.</span></li>
-          <li><span>Warning explained</span><span>Why the "not signed" warning is normal is explained right where it appears, so second-guessing does not stop you halfway.</span></li>
-          <li><span>Picks up for you</span><span>Finish in Settings, come back, and the app moves on by itself. You do not have to remember where you left off.</span></li>
-        </ul>
-      </div>
-      <div class="flex-1 min-w-0 flex justify-center animate-reveal delay-1">
-        <img
-          src={img('profile')}
-          alt="Download step with the selected fonts and a pre-filled profile name"
-          class="screenshot w-full max-w-[280px]"
-          width="1090" height="2079" loading="lazy"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Section: My Fonts ── -->
-  <section class="py-24 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row-reverse items-center gap-16">
-      <div class="flex-1 min-w-0 animate-reveal">
-        <span class="section-label">My Fonts</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">Knowing what is actually installed</h2>
-        <p class="text-text-sub leading-relaxed">
-          A week after installing, nobody remembers which fonts made it onto the device.
-          The list is built so you never have to guess at the current state.
-        </p>
-        <ul class="point-list">
-          <li>Installed and not-yet-installed sit in one list, clearly apart.</li>
-          <li>Every row is drawn in its own typeface, so you read the shape instead of the name.</li>
-          <li>Push the size up and you can tell whether it holds as a heading or stays readable as body text.</li>
-          <li>Put your own words in the preview and you catch a font missing the characters you need before it reaches a document.</li>
-        </ul>
-      </div>
-      <div class="flex-1 min-w-0 flex justify-center animate-reveal delay-1">
-        <img
-          src={img('my-fonts')}
-          alt="Font list with installed badges and language coverage"
-          class="screenshot w-full max-w-[280px]"
-          width="1090" height="2079" loading="lazy"
-        />
-      </div>
-    </div>
-  </section>
-
-  <!-- ── More ── -->
-  <section class="py-24 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto">
-      <div class="text-center mb-14 animate-reveal">
-        <span class="section-label">More</span>
-        <h2 class="text-2xl font-semibold text-text tracking-tight">The parts you notice later</h2>
-      </div>
-
-      <div class="grid sm:grid-cols-2 gap-6">
-
-        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">When they disappear</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            Reset the device or delete the profile and the fonts go with it. The files you installed are kept,
-            so you are not tracking the originals down again — pick out the ones that vanished and bring them back in one go.
-          </p>
-        </div>
-
-        <div class="mini-card animate-reveal delay-2 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">Search and filter</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            Once fonts pile up, search by name, filter by installed or not, and reorder the list.
-            Dozens in, you still get to the one you want in a moment.
-          </p>
-        </div>
-
-        <div class="mini-card animate-reveal delay-3 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">iPhone and iPad</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            The same app installs on both. On the larger screen previews run bigger,
-            which makes it easier to judge how a typeface will read in a real document.
-          </p>
-        </div>
-
-        <div class="mini-card animate-reveal delay-1 bg-card border border-border rounded-2xl p-6">
-          <h3 class="text-sm font-semibold text-text mb-1.5">Five languages</h3>
-          <p class="text-xs text-text-sub leading-relaxed">
-            English, Korean, Japanese, Simplified and Traditional Chinese. The install instructions are
-            written in each of them, so you are not translating an unfamiliar screen as you go.
-          </p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Closing ── -->
-  <section class="py-20 px-6 bg-bg-alt border-t border-border">
-    <div class="max-w-5xl mx-auto text-center animate-reveal">
-      <p class="text-base text-text font-medium mb-2">Your font files and install history stay on the device.</p>
-      <p class="text-sm text-text-sub">No account, no sign-in.</p>
-    </div>
-  </section>
-
-  <!-- ── Back ── -->
-  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border flex flex-wrap items-center justify-between gap-4">
-    <a href="/en/apps" class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
-    <div class="flex items-center gap-6">
-      <a href="/en/apps/superfont/support/" class="text-sm text-text-sub hover:text-text transition">Support</a>
-      <a href="/en/apps/superfont/privacy/" class="text-sm text-text-sub hover:text-text transition">Privacy Policy</a>
-    </div>
-  </div>
-
+  <AppPage
+    lang={lang}
+    slug="superfont"
+    app={app}
+    copy={copy}
+    ipadShot="plain"
+    shotSize={{ iphone: [720, 1564], ipad: [720, 960] }}
+    footerLinks={footerLinks}
+  />
 </BaseLayout>
-
-<script>
-  const observer = new IntersectionObserver(
-    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
-    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
-  );
-  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
-</script>
