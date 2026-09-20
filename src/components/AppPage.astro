@@ -1,6 +1,6 @@
 ---
 /**
- * SuperTimetable 소개 페이지 템플릿 — ko/en 페이지가 카피만 넘긴다.
+ * 앱 소개 페이지 템플릿 — ko/en 페이지가 slug 와 카피만 넘긴다.
  * iPhone / iPad 탭: 루트의 data-device 로 갈라지고, 섹션마다 기기별 문장·스샷을 따로 둔다.
  * 스샷 행은 전부 가로 스크롤(.shot-row) 하나로 통일.
  */
@@ -31,11 +31,31 @@ export interface Copy {
 
 interface Props {
   lang: Lang;
+  /** public/apps/<slug>/ 아래에서 스샷을 찾고, 기기 탭 상태를 저장할 때도 쓴다. */
+  slug: string;
   app: { data: { title: string; summary: string; appStoreUrl?: string; platforms?: Record<string, 'released' | 'in-development' | undefined> } };
   copy: Copy;
+  /**
+   * iPad 스샷을 어떻게 얹을지. 'frame' 은 베젤 카드 안에 넣는다 — 가로(4:3) 캡처는 화면 모서리가
+   * 직각이라 이미지에 곡률을 주면 상태바·툴바가 잘리기 때문이다. 세로 캡처는 그 문제가 없으니
+   * 'plain' 으로 테두리 없이 iPhone 과 같은 모양으로 둔다.
+   */
+  ipadShot?: 'frame' | 'plain';
+  /** 스샷의 실제 픽셀 크기 — 로딩 중 레이아웃이 튀지 않게 img 에 그대로 넣는다. */
+  shotSize?: { iphone: [number, number]; ipad: [number, number] };
+  /** 하단 "← 앱" 줄 오른쪽에 붙는 링크 (지원 / 개인정보처리방침 등). */
+  footerLinks?: { href: string; label: string }[];
 }
 
-const { lang, app, copy } = Astro.props;
+const {
+  lang,
+  slug,
+  app,
+  copy,
+  ipadShot = 'frame',
+  shotSize = { iphone: [720, 1564], ipad: [1200, 900] },
+  footerLinks = [],
+} = Astro.props;
 const t = useTranslations(lang);
 const platforms = app.data.platforms ?? {};
 const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
@@ -53,9 +73,10 @@ const pick = <T,>(v: PerDevice<T>, d: Device): T =>
     : (v as T);
 
 const img = (d: Device, file: string) =>
-  d === 'ipad' ? `/apps/timetable/${lang}/ipad/${file}.png` : `/apps/timetable/${lang}/${file}.png`;
+  d === 'ipad' ? `/apps/${slug}/${lang}/ipad/${file}.png` : `/apps/${slug}/${lang}/${file}.png`;
 
 const devices: Device[] = ['iphone', 'ipad'];
+const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
 ---
 
 <style>
@@ -104,6 +125,10 @@ const devices: Device[] = ['iphone', 'ipad'];
     transform: scale(1.02) translateY(-2px);
     box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
   }
+
+  /* ipadShot="plain" — 테두리 없이 스샷만 얹는다. iPad 캡처는 상태바·툴바가 화면 모서리에
+     바짝 붙어 있어서 곡률을 크게 주면 그 UI 가 잘린다. 그림자로 띄우고 곡률은 거의 주지 않는다. */
+  .screenshot-flat { border-radius: 0.25rem; }
 
   .section-label {
     display: block;
@@ -208,7 +233,7 @@ const devices: Device[] = ['iphone', 'ipad'];
   [data-device="ipad"] .only-iphone { display: none !important; }
 </style>
 
-<div id="device-root" data-device="iphone">
+<div id="device-root" data-device="iphone" data-slug={slug}>
 
   <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
 
@@ -258,10 +283,14 @@ const devices: Device[] = ['iphone', 'ipad'];
 
     <!-- ── Intro screenshot ── -->
     <div class="flex justify-center mb-28 animate-reveal delay-1">
-      <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" width="720" height="1564" />
-      <div class="only-ipad shot-frame w-full max-w-[760px]">
-        <img src={img('ipad', 'hero')} alt={copy.hero.ipad} width="1200" height="900" loading="lazy" />
-      </div>
+      <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" {...dim('iphone')} />
+      {ipadShot === 'frame' ? (
+        <div class="only-ipad shot-frame w-full max-w-[760px]">
+          <img src={img('ipad', 'hero')} alt={copy.hero.ipad} {...dim('ipad')} loading="lazy" />
+        </div>
+      ) : (
+        <img src={img('ipad', 'hero')} alt={copy.hero.ipad} class="only-ipad screenshot screenshot-flat w-full max-w-[420px]" {...dim('ipad')} loading="lazy" />
+      )}
     </div>
 
   </div>
@@ -301,8 +330,10 @@ const devices: Device[] = ['iphone', 'ipad'];
                 <div class:list={[`only-${d}`, 'shot-row', shots.length === 1 && 'single']}>
                   {shots.map((sh) => (
                     d === 'ipad'
-                      ? <div class="shot-frame w-full max-w-[480px]"><img src={img(d, sh.file)} alt={sh.alt} width="1200" height="900" loading="lazy" /></div>
-                      : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot w-full max-w-[220px]" width="720" height="1564" loading="lazy" />
+                      ? (ipadShot === 'frame'
+                          ? <div class="shot-frame w-full max-w-[480px]"><img src={img(d, sh.file)} alt={sh.alt} {...dim(d)} loading="lazy" /></div>
+                          : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot screenshot-flat w-full max-w-[300px]" {...dim(d)} loading="lazy" />)
+                      : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot w-full max-w-[220px]" {...dim(d)} loading="lazy" />
                   ))}
                 </div>
               );
@@ -322,8 +353,15 @@ const devices: Device[] = ['iphone', 'ipad'];
   </section>
 
   <!-- ── Back ── -->
-  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border">
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border flex flex-wrap items-center justify-between gap-4">
     <a href={`/${lang}/apps`} class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+    {footerLinks.length > 0 && (
+      <div class="flex items-center gap-6">
+        {footerLinks.map((l) => (
+          <a href={l.href} class="text-sm text-text-sub hover:text-text transition">{l.label}</a>
+        ))}
+      </div>
+    )}
   </div>
 
 </div>
@@ -331,6 +369,7 @@ const devices: Device[] = ['iphone', 'ipad'];
 <script>
   const root = document.getElementById('device-root');
   const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-device-tab]'));
+  const storeKey = `${root?.dataset.slug || 'app'}-device`;
 
   const observer = new IntersectionObserver(
     (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
@@ -343,7 +382,7 @@ const devices: Device[] = ['iphone', 'ipad'];
     root.dataset.device = device;
     tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.deviceTab === device)));
     if (persist) {
-      try { localStorage.setItem('timetable-device', device); } catch {}
+      try { localStorage.setItem(storeKey, device); } catch {}
       history.replaceState(null, '', device === 'ipad' ? '#ipad' : location.pathname + location.search);
     }
   }
@@ -352,6 +391,6 @@ const devices: Device[] = ['iphone', 'ipad'];
 
   let initial = 'iphone';
   if (location.hash === '#ipad') initial = 'ipad';
-  else { try { initial = localStorage.getItem('timetable-device') || 'iphone'; } catch {} }
+  else { try { initial = localStorage.getItem(storeKey) || 'iphone'; } catch {} }
   if (initial === 'ipad') select('ipad', false);
 </script>
