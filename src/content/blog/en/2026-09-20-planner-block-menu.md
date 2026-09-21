@@ -18,7 +18,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 |---|---|
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
-| Tap the selected block again | Context menu: edit, push back, pull up, swap, tomorrow, drawer, remove from schedule (reworked twice, see the 2026-09-21 sections below) |
+| Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below) |
 | Hold 0.2 s then drag, or drag a selected block | Move, unchanged |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
@@ -93,18 +93,18 @@ Each reschedule tool had been added one at a time, and at ten rows the feedback 
 
 Three down arrows: `arrow.down.square`, `arrow.down.to.line`, `arrow.down.circle`. The square, line and circle carried no meaning, so three rows in a row had the same silhouette. Then `arrow.down.to.line` (push back from here: me and everything after) and `arrow.up.to.line` (pull later blocks up: only what comes after) looked like a pair, and a pair promises inverse operations. These two do not even move the same blocks. And the titles named the mechanism (push, pull, swap) without leading with **who moves**. "Later blocks" appeared in three items with three different subjects, and the menu said "push later blocks back" while the sheet it opened called the same mode "later blocks only".
 
-One rule fixed all three. **Group by outcome, make every top-level silhouette different, and where the subject is what differs, put the items in a submenu with no icons and only the subject.**
+One rule fixed all three. **Group by outcome, make every top-level silhouette different, and where the subject is what differs, put the items in a submenu with no icons and only the subject.** (The last clause gets reversed in the final section — at five rows, words alone stopped separating them.)
 
 | Group | Items | Icons |
 |---|---|---|
 | Edit | Edit… | pencil |
-| Move within today | Clear overlap (*gone now — last section*) · Push back ▸ · Pull later blocks up · Swap ▸ | two rectangles · ↓ · ↑ · ↕ |
+| Move within today | Clear overlap (*gone — see below*) · Push back ▸ · Pull later blocks up (*gone — last section*) · Swap ▸ | two rectangles · ↓ · ↑ · ↕ |
 | Take out of today | Move to tomorrow · Put in drawer | ↳ · tray |
 | Remove | Remove from schedule | trash |
 
 ![Eight top-level rows, eight different shapes. One down arrow for pushing, one up arrow for pulling; push and swap open submenus behind the chevron](/blog/planner-block-menu/menu-regrouped.png)
 
-*Push back ▸* holds exactly two items, "From this block…" and "Later blocks only…", the names the sheet already uses for its modes, so nothing gets renamed between the menu and the sheet. *Swap ▸* holds "With previous" and "With next". The submenus carry no icons on purpose: trying to tell these apart by icon was the problem.
+At the time *Push back ▸* held exactly two items, "From this block…" and "Later blocks only…", the names the sheet already used for its modes, so nothing got renamed between the menu and the sheet. *Swap ▸* holds "With previous" and "With next". The submenus carried no icons on purpose: trying to tell these apart by icon was the problem.
 
 *Push back clear of overlap* became *Clear overlap* and stayed outside the push submenu — not for long, as the next section tells. Its purpose is removing an overlap, not pushing, and it is the only move that runs without a sheet, so it keeps its one-tap spot. Its icon is the same metaphor the canvas uses for overlap hatching, two overlapping rectangles. The disabled subtitle stays.
 
@@ -124,7 +124,58 @@ The number is the same as before: flush against the end of what it overlaps, nev
 
 The pure calculation changed shape too, so the number is not computed in two places. It used to answer "where should this go" (a new start minute); it now answers "how many minutes are needed", taking the blocks that move and the blocks that stay. It does not clamp a value that runs past midnight — clamping is exactly how a move that cannot clear the overlap got called a success last time.
 
-Something was lost: "shift this one and leave the rest" is gone. That is a drag now, or picking the minutes yourself in the sheet, and the tap count went from one to three. In exchange all three taps show you the result. Two paths to the same goal that can only be told apart by reading the small print — one moves this block, one moves everything after — cost more than the two extra taps.
+Something was lost: "shift this one and leave the rest" is gone. That is a drag now, or picking the minutes yourself in the sheet, and the tap count went from one to three. (It came back as *This one only…* in the last section.) In exchange all three taps show you the result. Two paths to the same goal that can only be told apart by reading the small print — one moves this block, one moves everything after — cost more than the two extra taps.
+
+## 2026-09-21 — Two directions, five scopes, and icons drawn by hand
+
+The "move within today" group had always leaned one way. Pushing back had a submenu and a sheet, so you could choose how many minutes. Pulling forward was a single row, *Pull later blocks up*, which ran immediately at a fixed distance — up to the end of the block in front. There was no way to pull one block up by thirty minutes, and no way, in either direction, to touch the blocks **before** the one you picked. When a morning meeting ran late, nothing in the menu applied.
+
+So the group was rebuilt as **two directions × five scopes**.
+
+![The top level is move earlier ▸, push back ▸ and swap ▸; the group below holds yesterday and tomorrow side by side](/blog/planner-block-menu/shift-menu-top.png)
+
+The top level now names only the direction: `↑ Move earlier ▸` and `↓ Push back ▸`. Both open the **same five rows**: this one only; this one and all earlier; all earlier, not this one; this one and all later; all later, not this one. Whichever row you take, you land in the same sheet, and the direction becomes its title, its confirm button and the sign of the move. The sheet now asks one thing: how far.
+
+### "Later" stopped meaning "overlapping me"
+
+The old definition got in the way first. *Later blocks only* used to treat "later" as **starts after me, plus anything overlapping me** — a rule added so that dropping a block on top of one that starts a few minutes earlier still pushes it.
+
+With five scopes that definition cannot hold: if an overlapping block is both "earlier" and "later", two rows grab the same block. So a scope is now decided purely by **position in the day's blocks sorted by (start, end)**. Overlap plays no part.
+
+The case the old rule protected did not disappear, it got shorter: select the block you covered and use *Push back ▸ This one only…*. Naming the block you mean beats reaching it through a third one.
+
+### The icons are drawn, not picked
+
+Leaving icons out of submenus was the decision of the section above. With two rows, "From this block" versus "Later blocks only" separated on two words. With five, every row reads "this one … all … " in nearly the same shape, and you have to finish the sentence to know which is which.
+
+SF Symbols has no silhouette that separates "from this row up" from "everything above this row". So the icons are drawn with `UIGraphicsImageRenderer`: a 20pt square holding **five horizontal bars**, early at the top, late at the bottom. The middle bar is the block you picked, and it is the only full-width one. Bars that move are solid; bars that stay are faint.
+
+```
+This one only          · · ▮ · ·
+This one and earlier   ▬ ▬ ▮ · ·
+Earlier, not this one  ▬ ▬ · · ·
+This one and later     · · ▮ ▬ ▬
+Later, not this one    · · · ▬ ▬
+```
+
+![Each of the five rows carries a five-bar icon. Solid bars are what moves; the wide middle bar is the block you picked. The last row is greyed out because nothing sits after this block](/blog/planner-block-menu/shift-scope-submenu.png)
+
+They are template images, so the menu tints them — a disabled row dims its icon too. A scope with no targets stays in place, disabled, rather than disappearing: rows that come and go make the same menu a different height on every block.
+
+### Pulling needed a first row of its own
+
+*Until clear of overlap* (the section above) carries over unchanged, just mirrored: pushing goes past the **end** of what it overlaps, pulling goes past the **start**.
+
+The open question was the default when nothing overlaps and you are pulling. The job the old *Pull later blocks up* did — close the gap to the block in front — became a row, *Until it meets the block before*. The first implementation got this wrong: with nothing in front, it treated 00:00 as the wall, so opening the sheet on an afternoon block defaulted to something like "2 h 55 min". "Meet the block before" had quietly become "send it to the top of the day". Now, with no block in front, the row does not appear at all and the default is 15 minutes.
+
+![The pull sheet opened on a block with an 08:00 block above it. The top row is the 2 h 55 min that closes the gap, and the confirm button reads "Move"](/blog/planner-block-menu/pull-sheet.png)
+
+The date group was one-sided too — *Move to tomorrow* with no *Move to yesterday*. Yesterday now sits above tomorrow; side by side, the two arrows explain each other.
+
+### What it costs
+
+*Pull later blocks up* was one tap and is now three (direction, scope, confirm). The labels are long enough to widen the menu and wrap. In exchange all three taps show the result, and the same three taps reach the other nine combinations. Cutting the scopes to three (this one / earlier / later) was considered, but "everything after me, not me" and "me and everything after" are genuinely different jobs — clearing an overlap versus postponing the rest of the day.
+
 
 ## History
 
@@ -133,3 +184,4 @@ Something was lost: "shift this one and leave the rest" is gone. That is a drag 
 - 2026-09-21 — Dropped the half-move at the end of the day; disabled items now say why
 - 2026-09-21 — Regrouped the menu by outcome, moved push and swap into submenus, gave every top-level row a distinct icon
 - 2026-09-21 — Removed *Clear overlap* from the menu; the push sheet's first row, *Until clear of overlap*, does that job now
+- 2026-09-21 — Rebuilt moving as two directions × five scopes, drew the submenu icons by hand, and added *Move to yesterday*
