@@ -3,7 +3,7 @@ title: "Four places the app failed without telling anyone"
 date: 2026-09-21
 app: "daily-planner"
 tags: ["devlog", "data", "swiftui"]
-summary: "A failed save, a failed alarm, and a fallback that wipes the store and starts over — none of it was recorded anywhere. Adding crash and event reporting meant stopping the simulator from inventing users, and then watching the verification fail a perfectly healthy app."
+summary: "A failed save, a failed alarm, and a fallback that wipes the store and starts over — none of it was recorded anywhere. Adding crash and event reporting meant stopping the simulator from inventing users, watching the verification fail a perfectly healthy app, and learning that without symbols a crash report is a column of addresses."
 ---
 
 The daily planner had no instrumentation at all. Crashes showed up as a number in App Store Connect, and the worse category — failures that aren't crashes — showed up nowhere. There were four of them, and in all four the screen looked fine.
@@ -72,6 +72,33 @@ This is the same mistake as the config-file misreading earlier in this post, com
 
 One thing became visible along the way: across three uninstall-reinstall cycles on the same simulator, the instance id came out `889148C0…`, `4D7ECF71…`, `F256E21A…`. To Firebase those are three different people — which is the whole argument for keeping simulators out.
 
+## Without symbols, a crash report is a column of addresses
+
+Instrumentation is wasted if the last piece is missing. A release build is optimized and stripped, so when it dies all that's left is memory addresses:
+
+```
+0   todo    0x0000000102a4c1f8  0x102a40000 + 49656
+1   todo    0x0000000102a3b904  0x102a30000 + 47876
+```
+
+The table that turns those back into function names and line numbers is the dSYM. It's produced per build and matches exactly one, so the moment the build number ticks, the old one is useless. It has to go up where it was made — in the release lane, right after the build and before the store upload.
+
+A failed symbol upload doesn't fail the deploy. Symbols can be re-uploaded; a build has to be rebuilt.
+
+### Three things blocked it
+
+**One: the deploy tool can't find the upload tool.** fastlane's symbol-upload action looks where CocoaPods would have installed it. This project uses Swift Package Manager, so that path is empty. The binary lives inside the package checkout, which lives in the build cache, which a disk cleanup deletes wholesale. Assuming it's there means one day symbols quietly stop going up. So it's resolved in three steps: a copy kept in the repo, then the newest build cache for this app, and failing that, resolve the packages fresh — without building.
+
+**Two: plain code inside a lane doesn't run from the project root.** Arguments handed to the deploy tool are resolved against the root; code that checks whether a file exists is not — it runs from the script folder. The evidence was already in the file: an existing line reached up one level with `../Project.xcodeproj`. I missed it, used a relative path, and found out when the manual upload command died with "file not found." Now a helper computes the root explicitly and everything is built from it.
+
+**Three: fetching dSYMs back from the store usually returns nothing.** App Store Connect only serves them for builds Apple recompiled. For a modern upload the list is empty — which is normal, and treating it as a failure stops the deploy. It now says "nothing to fetch, upload a local dSYM" and exits.
+
+There's also a way to check the wiring without waiting for a deploy: a command that takes any dSYM by path and uploads it. Two seconds, and you know it works.
+
+### Backfilling the builds already out there
+
+Automation only covers builds from here on, so the last build's dSYM went up by hand for all three apps — the daily planner, the timetable app, the font manager — so crashes arriving right now are readable. The timetable app's widget extension symbols went up with it.
+
 ## Where it stands
 
-Left to do: add dSYM upload to the release lane, force one crash on a real device to clear the console's onboarding screen, and fill in the App Store privacy questionnaire. The wrapper builds and runs without the config file and says so in the log, so nobody cloning the repo hits a wall.
+Left to do: force one crash on a real device to clear the console's onboarding screen, and fill in the App Store privacy questionnaire. The wrapper builds and runs without the config file and says so in the log, so nobody cloning the repo hits a wall.
