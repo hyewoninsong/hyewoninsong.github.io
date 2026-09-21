@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-21T19:20:00+09:00
+date: 2026-09-22T01:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -19,7 +19,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
 | Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below; the last of them gave the rows a naming rule, so these read *Pull Earlier* / *Push Later* now) |
-| Hold 0.2 s then drag, or drag a selected block | Move, unchanged |
+| Hold 0.2 s then drag, or drag a selected block | Move, unchanged (drag a corner chip on the selected block and everything before or after comes along — last section, 2026-09-22) |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
 
@@ -265,6 +265,28 @@ Hiding the hatch during the move and restoring it on arrival was the obvious alt
 
 The timeline canvas and the minimap each hold one of these and follow the same rule. Settled screenshots cannot catch timing like this, so the rule was pulled out as a plain type and pinned with unit tests: the old value holds while the block slides, it updates after the landing, and a drag updates at once.
 
+## 2026-09-22 — Ten rows and a sheet, replaced by dragging one chip
+
+Eight rounds of menu work made the move group precise, and just as deep. Pushing this block and everything after it back by thirty minutes took six taps: select, tap again for the menu, *Push Later ▸*, *This and all later…*, *30 min* in the sheet, *Push*. Four of the six are places where you read and choose. The feedback was short: too deep, too much reading, why not icons or a gesture.
+
+A move decides three things: which way, how far, and what comes along. The menu asks all three in words. The drag that already existed answers the first two with one finger; the only thing it could not do was *what comes along*. A drag always moved one block, and there was no gesture for several, so the menu had to carry everything.
+
+So the selected block now has a small chip at its top-right and bottom-right corners. Drag the bottom chip and this block plus **everything after it** slides the same distance; drag the top chip and **everything before it** comes along. Release and it applies — no sheet. Direction is the finger, distance is the finger plus snapping, and scope is which chip you grabbed. Six taps became one tap and one drag.
+
+![The selected middle block shows a chip at each right-hand corner. The three bars in a chip: the wide one is this block, the short pair are the blocks that come along](/blog/planner-block-menu/group-chips-selected.png)
+
+![After dragging the bottom chip: the grabbed block moved an hour later and the block after it moved the same amount. The block before stayed put](/blog/planner-block-menu/group-chips-after-drag.png)
+
+A chip appears only when there is something in that direction. The first block of the day has no top chip; the last has no bottom chip, so the chip itself says "there is something this way". The glyph speaks the same language as the submenu icons: bars are blocks, the wide bar is the one you grabbed, the short ones follow.
+
+The sheet's two smart presets became magnets. Only the grabbed block snaps — to the grid and to the edges of blocks that stay put — and the rest take the same offset. *Until it meets the block before* is now the grabbed block's start catching on the previous block's end, and *Until clear of overlap* is it catching on the end of whatever it overlaps. Blocks that travel together keep their spacing, so they are not magnet candidates for each other.
+
+The wall is different from the sheet's. The sheet's push pins each block that would cross midnight to 24:00 individually and leaves them overlapping. In a live drag that would show the group crumpling against the wall in real time. So the group's own ends are the wall: if any block would leave the day, the whole group stops, and the blocked distance feeds the same resistance haptic and squash a single-block drag already had.
+
+Three alternatives lost. Up and down arrow buttons on the selected block, one snap unit per tap, take six taps for thirty minutes at a five-minute snap, and a scope toggle is a mode you have to read. Ripple editing from the time ruler — grab the gap between blocks and everything below moves — has a clean mental model but starts without a selection, so it is harder to find than a chip. A two-finger drag is hardest to find and cannot tell before from after. Five chips, one per menu scope, do not fit on one edge, and the two "excluding this one" scopes are rare enough to stay in the menu.
+
+The ten menu rows stay. VoiceOver cannot drag a chip, and picking an exact number of minutes is still the sheet's job. The reschedule event now records whether a move came from the drag or the menu, so the ratio decides when the rows shrink. A tutorial step for the chips is still to do.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -276,3 +298,4 @@ The timeline canvas and the minimap each hold one of these and follow the same r
 - 2026-09-21 — Removed *Move to yesterday* and *Move to tomorrow* so the drawer is the only way off a day; reschedules and undo now show the move
 - 2026-09-21 — Gave the rows one naming grammar (`Pull Earlier` ↔ `Push Later`), and caught the catalog trap where renaming a key leaves only Korean devices on the old wording
 - 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
+- 2026-09-22 — Two group-drag chips on the selected block turn "move everything before or after" from six taps into one tap and one drag
