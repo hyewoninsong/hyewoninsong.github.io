@@ -18,7 +18,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 |---|---|
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
-| Tap the selected block again | Context menu: edit, push back from here, pull forward, swap, tomorrow, drawer, remove from schedule |
+| Tap the selected block again | Context menu: edit, clear overlap, push back, pull up, swap, tomorrow, drawer, remove from schedule (regrouped once, see the 2026-09-21 section below) |
 | Hold 0.2 s then drag, or drag a selected block | Move, unchanged |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
@@ -63,7 +63,7 @@ VoiceOver can activate the block title to select it and reach the menu, but it c
 
 The planner never blocks overlaps. When a meeting runs long you drop a block on top of another and sort it out later. But every cleanup item moved several blocks at once: *push back from here* (me and everything after), *push later blocks back* (everything after me), *pull later blocks up* (everything after). There was no "move just this one until it stops overlapping" — and the first two open a sheet asking how many minutes. Minutes are not what you know; the end of the block underneath is.
 
-So the menu's push group now starts with **Push back clear of overlap**. It runs immediately, moves only the selected block, and lands it flush against the latest end among the blocks it currently overlaps. With nothing overlapping, the item is disabled — opening the menu tells you whether this block is overlapped at all.
+So the menu's push group now starts with **Push back clear of overlap** (since renamed *Clear overlap*, see below). It runs immediately, moves only the selected block, and lands it flush against the latest end among the blocks it currently overlaps. With nothing overlapping, the item is disabled — opening the menu tells you whether this block is overlapped at all.
 
 Two things it deliberately does not do. It does not look for a free slot: if another block sits at the destination, it lands on top of it. Dodging makes the distance unpredictable — on a full day one tap would fly to the evening. Tap again and it steps past the new overlap. And it does not round to the snap grid: the target is the other block's end, not a 15-minute line, and rounding would leave an odd gap exactly where you want to see the overlap gone.
 
@@ -87,8 +87,32 @@ Two changes. **A partial run that misses the point is not a success:** the pure 
 
 The tests had the same gap. "Nothing overlaps" and "cannot move at all" were covered; the case in between — moving halfway — was not. Two tests hold it now.
 
+## 2026-09-21 — At ten rows, the icons started lying
+
+Each reschedule tool had been added one at a time, and at ten rows the feedback was "the icons and the wording are confusing". Three causes.
+
+Three down arrows: `arrow.down.square`, `arrow.down.to.line`, `arrow.down.circle`. The square, line and circle carried no meaning, so three rows in a row had the same silhouette. Then `arrow.down.to.line` (push back from here: me and everything after) and `arrow.up.to.line` (pull later blocks up: only what comes after) looked like a pair, and a pair promises inverse operations. These two do not even move the same blocks. And the titles named the mechanism (push, pull, swap) without leading with **who moves**. "Later blocks" appeared in three items with three different subjects, and the menu said "push later blocks back" while the sheet it opened called the same mode "later blocks only".
+
+One rule fixed all three. **Group by outcome, make every top-level silhouette different, and where the subject is what differs, put the items in a submenu with no icons and only the subject.**
+
+| Group | Items | Icons |
+|---|---|---|
+| Edit | Edit… | pencil |
+| Move within today | Clear overlap · Push back ▸ · Pull later blocks up · Swap ▸ | two rectangles · ↓ · ↑ · ↕ |
+| Take out of today | Move to tomorrow · Put in drawer | ↳ · tray |
+| Remove | Remove from schedule | trash |
+
+![Eight top-level rows, eight different shapes. One down arrow for pushing, one up arrow for pulling; push and swap open submenus behind the chevron](/blog/planner-block-menu/menu-regrouped.png)
+
+*Push back ▸* holds exactly two items, "From this block…" and "Later blocks only…", the names the sheet already uses for its modes, so nothing gets renamed between the menu and the sheet. *Swap ▸* holds "With previous" and "With next". The submenus carry no icons on purpose: trying to tell these apart by icon was the problem.
+
+*Push back clear of overlap* became *Clear overlap* and stays outside the push submenu. Its purpose is removing an overlap, not pushing, and it is the only move that runs without a sheet, so it keeps its one-tap spot. Its icon is the same metaphor the canvas uses for overlap hatching, two overlapping rectangles. The disabled subtitle stays.
+
+Two alternatives lost. Keeping the structure and only leading each title with its subject does not add a tap, but leaves three identical arrows in a row. Swapping the three push icons for more distinct symbols fails because the difference between them is who moves, and no symbol says that. The submenus cost push and swap one extra tap; in return the top level drops from ten rows to eight, and the most common action, clearing an overlap, is still one tap.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
 - 2026-09-21 — Added *Push back clear of overlap*: one block, flush against what it overlaps
 - 2026-09-21 — Dropped the half-move at the end of the day; disabled items now say why
+- 2026-09-21 — Regrouped the menu by outcome, moved push and swap into submenus, gave every top-level row a distinct icon
