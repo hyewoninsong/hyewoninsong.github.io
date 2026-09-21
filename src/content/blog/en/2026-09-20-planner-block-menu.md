@@ -1,9 +1,9 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-20
+date: 2026-09-21
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
-summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags."
+summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and the menu now clears one block out of an overlap."
 ---
 
 The day planner we are building places pre-registered todos as blocks on a vertical timeline. Tapping the circle at the left of a block now completes it, and tapping a selected block once more opens a menu right under the finger. Before, a tap opened the edit sheet, which is the wrong weight for an app whose whole point is fixing the day quickly.
@@ -58,3 +58,18 @@ The smoke test now asserts "hold 0.5 s, drag, block moved 160 pt, no menu". A ge
 ## What is left
 
 VoiceOver can activate the block title to select it and reach the menu, but it cannot hit the checkbox band. The title carries a done/not-done value for now; a proper accessibility action for completion is next.
+
+## 2026-09-21 — Moving one block clear of what it overlaps
+
+The planner never blocks overlaps. When a meeting runs long you drop a block on top of another and sort it out later. But every cleanup item moved several blocks at once: *push back from here* (me and everything after), *push later blocks back* (everything after me), *pull later blocks up* (everything after). There was no "move just this one until it stops overlapping" — and the first two open a sheet asking how many minutes. Minutes are not what you know; the end of the block underneath is.
+
+So the menu's push group now starts with **Push back clear of overlap**. It runs immediately, moves only the selected block, and lands it flush against the latest end among the blocks it currently overlaps. With nothing overlapping, the item is disabled — opening the menu tells you whether this block is overlapped at all.
+
+Two things it deliberately does not do. It does not look for a free slot: if another block sits at the destination, it lands on top of it. Dodging makes the distance unpredictable — on a full day one tap would fly to the evening. Tap again and it steps past the new overlap. And it does not round to the snap grid: the target is the other block's end, not a 15-minute line, and rounding would leave an odd gap exactly where you want to see the overlap gone.
+
+Only the end of the day blocks it. If 24:00 leaves no room, the item is disabled by the same check that handles "nothing overlaps" — one `nil`. One undo puts it back.
+
+## History
+
+- 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
+- 2026-09-21 — Added *Push back clear of overlap*: one block, flush against what it overlaps
