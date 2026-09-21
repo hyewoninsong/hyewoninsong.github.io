@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-21T18:45:00+09:00
+date: 2026-09-21T19:20:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -197,6 +197,8 @@ The value now comes from **what the model says** — the block's start and end m
 
 ### Undo was happening off-screen
 
+(This one lasted a day — the last section below takes the screen movement back out.)
+
 Undo can revert a block on another day, or one you have scrolled past. The button responds, the screen does not. A single haptic is the whole signal, so you start wondering whether the tap registered and press again.
 
 Each history entry now carries **the id of the block it touched**. After undoing, the planner moves to that block's day, scrolls so the block is visible, and selects it. A grouped move takes the **earliest** block as its representative — seeing the head of the group is what tells you the whole run moved.
@@ -236,6 +238,32 @@ The menu had opened. Only the last row of the accessibility dump was stale — b
 The two parity tests in place did not care. One checks that all five languages exist, the other that format specifiers match. There is now a third invariant: in every entry, the source-language value must equal its key, character for character.
 
 The other lesson is about failure messages. *The menu did not open* is the name of the line the assertion sits on, not what happened. Reading the accessibility dump in the result bundle first would have taken five minutes.
+## 2026-09-21 — Undo stays put, and the hatch waits for the landing
+
+Of the two changes in *The two date rows are gone, and moves are shown instead of announced*, one lasted a day — and the other dragged a neighbouring drawing in with it.
+
+### Moving the screen lost the place you were in
+
+Jumping to the day and position of the block you just undid only holds up for a single press. Undo is usually pressed **several times in a row**, and across three presses the date pages past and the vertical scroll lands somewhere different each time. You can see what came back, but not where you were. And undo is nearly always pressed right where you just did something — the off-screen case was rarer than the fix assumed.
+
+So undo and redo now change values only. The day you were on and the scroll position stay; the selection is cleared, so a block that undo deleted cannot leave its menu behind. The plumbing added the day before — the block id each history entry carried, the representative block for a grouped move, the value type that turned it into a day and a start minute — came out with it. Values nobody reads get refilled by the next person who finds them.
+
+### The hatch arrived before the blocks did
+
+The report: "when the blocks animate during a swap, the overlapping area is hatched **before** they get there, and it looks wrong."
+
+It was, and the cause was the sliding added the day before. SwiftUI's implicit animation interpolates **drawing only**. The model is already at its final value on the frame the button is pressed; only frames and offsets pass through intermediate values over the next 0.3 seconds. The overlap hatch is computed from that model value, so it is drawn while the blocks are still apart — a result rendered as a prediction.
+
+There is no way to read the interpolated position: it lives inside SwiftUI. So the drawing is what waits. One type owns when the overlap ranges update:
+
+- when a block that already existed changes range (it is about to slide), the update waits out the slide and then fades in;
+- a drag, which follows the finger with no animation, and blocks that appear or disappear update immediately.
+
+The ranges are held **relative to the block's own start**. Held as absolute times, an old hatch detaches from the block and sits in the wrong place; held relative, it rides along with the block — and when two overlapping blocks are pushed by the same amount, so the overlap never changes, nothing happens at all.
+
+Hiding the hatch during the move and restoring it on arrival was the obvious alternative, and it produces a 0.3-second flicker in exactly that case. Carrying the old value is better than hiding it.
+
+The timeline canvas and the minimap each hold one of these and follow the same rule. Settled screenshots cannot catch timing like this, so the rule was pulled out as a plain type and pinned with unit tests: the old value holds while the block slides, it updates after the landing, and a drag updates at once.
 
 ## History
 
@@ -247,3 +275,4 @@ The other lesson is about failure messages. *The menu did not open* is the name 
 - 2026-09-21 — Rebuilt moving as two directions × five scopes, drew the submenu icons by hand, and added *Move to yesterday*
 - 2026-09-21 — Removed *Move to yesterday* and *Move to tomorrow* so the drawer is the only way off a day; reschedules and undo now show the move
 - 2026-09-21 — Gave the rows one naming grammar (`Pull Earlier` ↔ `Push Later`), and caught the catalog trap where renaming a key leaves only Korean devices on the old wording
+- 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
