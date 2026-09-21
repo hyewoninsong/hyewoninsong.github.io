@@ -1,6 +1,6 @@
 ---
 title: "The thing hiding the current time was the thing you were doing"
-date: 2026-09-21
+date: 2026-09-21T11:14:15+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "The now line sat behind whatever block was running. It moved above the blocks, and past blocks are now dimmed at a level that reads differently from done."

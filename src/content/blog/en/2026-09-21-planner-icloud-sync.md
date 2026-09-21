@@ -1,6 +1,6 @@
 ---
 title: "iPhone and iPad share a plan, with no sign-in screen"
-date: 2026-09-21
+date: 2026-09-21T14:14:17+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "data"]
 summary: "Linking one person's devices without an account left exactly one option: CloudKit. The price was unique constraints, and breaking the schema rules turns sync off silently while the app keeps working."

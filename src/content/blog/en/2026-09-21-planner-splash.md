@@ -1,6 +1,6 @@
 ---
 title: "The splash fills a day from the top down"
-date: 2026-09-21
+date: 2026-09-21T11:15:27+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "On launch the whole screen becomes the day's time axis; todo blocks grow in from the top one by one and one of them gets checked. The launch-screen dissolve and the display timing are each guarded, by a recording and by a test."

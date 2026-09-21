@@ -4,6 +4,7 @@ import BlogPostCard from '../../../components/BlogPostCard.astro';
 import { getLangFromUrl, useTranslations, postCountLabel } from '../../../i18n/utils';
 import { getCollection } from 'astro:content';
 import { appKeyOf, blogAppResolver, groupPostsByApp, isBlogAppKey, tagsWithoutApp } from '../../../lib/blog-apps';
+import { byNewest } from '../../../lib/blog-posts';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -11,7 +12,7 @@ const t = useTranslations(lang);
 const allPosts = await getCollection('blog');
 const posts = allPosts
   .filter((post) => post.id.startsWith('ko/'))
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+  .sort(byNewest);
 
 const resolve = await blogAppResolver(lang);
 /** 앱별 타일 — 글이 많은 앱부터. 앱이 붙지 않은 글(소식 등)은 아래 목록에만 나온다. */

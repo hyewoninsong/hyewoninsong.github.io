@@ -7,6 +7,7 @@
 import { withHash } from '../lib/asset-hash';
 import { useTranslations, type Lang } from '../i18n/utils';
 import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../lib/platform-status';
+import AppDevlog from './AppDevlog.astro';
 
 type Device = 'iphone' | 'ipad';
 type Shot = { file: string; alt: string };
@@ -381,6 +382,9 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
       <p class="text-sm text-text-sub">{copy.closing[1]}</p>
     </div>
   </section>
+
+  <!-- ── 개발 기록 ── 배경은 Closing 과 엇갈린다 -->
+  <AppDevlog lang={lang} slug={slug} variant="section" alt={copy.sections.length % 2 === 1} />
 
   <!-- ── Back ── -->
   <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border flex flex-wrap items-center justify-between gap-4">

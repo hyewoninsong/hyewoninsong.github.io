@@ -1,6 +1,6 @@
 ---
 title: "빈 배열 하나를 못 봐서 빌드를 여섯 번 날렸다"
-date: 2026-09-21
+date: 2026-09-21T15:49:51+09:00
 app: "daily-planner"
 tags: ["devlog", "appstore"]
 summary: "iCloud 동기화를 붙인 뒤 첫 TestFlight 빌드가 코드 서명에서 여섯 번 죽었다. 매번 컴파일 3분을 다 쓰고 나서. 원인은 전부 '켜져 있는데 아무것도 안 붙어 있는' 상태를 구별하지 못한 데 있었다."

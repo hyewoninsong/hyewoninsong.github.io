@@ -1,6 +1,6 @@
 ---
 title: "The app icon is the planner screen itself"
-date: 2026-09-21
+date: 2026-09-21T09:21:26+09:00
 tags: ["daily-planner", "devlog", "design"]
 summary: "The placeholder icon became three blocks on a time axis. Of five candidates, the one that speaks the same language as the first screen won, and the title bars came out because at 29pt they were only smudges."
 ---

@@ -1,6 +1,6 @@
 ---
 title: "Adding delete to an app that never deleted"
-date: 2026-09-21
+date: 2026-09-21T08:04:28+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "data"]
 summary: "Todos in the day planner could only be archived, never deleted. Watching typo todos pile up in the archive flipped the rule — one warning, no undo."

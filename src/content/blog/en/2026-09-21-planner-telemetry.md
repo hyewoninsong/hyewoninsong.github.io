@@ -1,6 +1,6 @@
 ---
 title: "Four places the app failed without telling anyone"
-date: 2026-09-21
+date: 2026-09-21T13:56:53+09:00
 app: "daily-planner"
 tags: ["devlog", "data", "swiftui"]
 summary: "A failed save, a failed alarm, and a fallback that wipes the store and starts over — none of it was recorded anywhere. Adding crash and event reporting meant stopping the simulator from inventing users, watching the verification fail a perfectly healthy app, and learning that without symbols a crash report is a column of addresses."
