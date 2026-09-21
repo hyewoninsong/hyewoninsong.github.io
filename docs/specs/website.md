@@ -203,12 +203,13 @@ order: 1
 - 카드 그리드 형태로 모든 앱 표시
 - 각 카드: 앱 아이콘 + 앱 이름 + 한 줄 소개 + 상태 뱃지(출시/개발중)
 - 아이콘 파일은 앱 저장소의 Icon Composer 번들(`<App>.icon`)을 라이트 외관으로 합성해 만든다
-  (`web-app-page` 스킬의 `scripts/app-icon.swift`, 256px). 곡률은 파일이 아니라 `.app-icon`
+  (`web-app-page` 스킬의 `scripts/app-icon.swift`, 256px). 번들이 없고 `AppIcon.appiconset` 만
+  있는 앱은 라이트용 `AppIcon-1024.png` 를 256px 로 줄여 쓴다. 곡률은 파일이 아니라 `.app-icon`
   클래스가 준다 — iOS 앱 아이콘과 같은 22.37%
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
 
-> **현재 상태 (2026-09-20):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 심사중, 상세 페이지 있음)와 SuperMusicNote·SuperPlanner·SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). 새 셋은 아이콘·스샷이 아직 없어 카드에 제목과 뱃지만 나온다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
+> **현재 상태 (2026-09-20):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 심사중, 상세 페이지 있음)와 SuperMusicNote·SuperPlanner·SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. 나머지 둘(SuperMusicNote·SuperPDF)은 아이콘·스샷이 아직 없어 카드에 제목과 뱃지만 나온다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
 
 **레이아웃:**
 
