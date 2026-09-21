@@ -1,6 +1,6 @@
 ---
 title: "An empty array cost six builds"
-date: 2026-09-21
+date: 2026-09-21T15:49:51+09:00
 app: "daily-planner"
 tags: ["devlog", "appstore"]
 summary: "The first TestFlight build after adding iCloud sync died at code signing six times, each one three minutes in. Every cause came down to not telling 'off' apart from 'on with nothing attached'."

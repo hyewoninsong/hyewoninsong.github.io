@@ -1,6 +1,6 @@
 ---
 title: "A block put in the drawer drops into the drawer button"
-date: 2026-09-21
+date: 2026-09-21T14:11:25+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "Putting a block in the drawer used to make it vanish while a button appeared in the corner, with nothing connecting the two. Now a ghost of the block flies to the button and drops in, and taking it out rises from the same button and lands on the timeline. The haptic fires on arrival, not on the tap."

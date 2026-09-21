@@ -4,6 +4,7 @@ import BlogPostCard from '../../../../components/BlogPostCard.astro';
 import { getLangFromUrl, useTranslations } from '../../../../i18n/utils';
 import { getCollection } from 'astro:content';
 import { appKeyOf, blogAppResolver, isBlogAppKey, tagsWithoutApp } from '../../../../lib/blog-apps';
+import { byNewest } from '../../../../lib/blog-posts';
 
 export async function getStaticPaths() {
   const allPosts = await getCollection('blog');
@@ -16,7 +17,7 @@ export async function getStaticPaths() {
       tag,
       posts: langPosts
         .filter((post) => post.data.tags.includes(tag))
-        .sort((a, b) => b.data.date.getTime() - a.data.date.getTime()),
+        .sort(byNewest),
     },
   }));
 }

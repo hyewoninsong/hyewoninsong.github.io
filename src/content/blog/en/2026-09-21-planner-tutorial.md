@@ -1,6 +1,6 @@
 ---
 title: "A tutorial you do, not one you read"
-date: 2026-09-21
+date: 2026-09-21T12:09:38+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "The first-run tutorial is six follow-along steps: a finger demonstrates the gesture on the real timeline, and the step only advances when you actually perform it. No dimming, no spotlight, no Next button."

@@ -1,6 +1,7 @@
 import { getCollection } from 'astro:content';
 import { withHash } from './asset-hash';
 import type { Lang } from '../i18n/utils';
+import { byNewest } from './blog-posts';
 
 /**
  * 글이 **어느 앱을 만들다 나왔는지**. 블로그 frontmatter 의 `app` 값이 이 표의 `key` 다.
@@ -56,7 +57,7 @@ export const tagsWithoutApp = (data: { app?: string; tags?: string[] }): string[
   return (data.tags ?? []).filter((tag) => tag !== key);
 };
 
-type AppPost = { data: { app?: string; tags?: string[]; date: Date } };
+type AppPost = { id: string; data: { app?: string; tags?: string[]; date: Date } };
 
 /** 앱별 글 묶음. 글이 많은 앱부터, 같으면 이름 순. 앱이 없는 글(소식 등)은 빠진다. */
 export function groupPostsByApp<T extends AppPost>(posts: T[]): { key: string; posts: T[] }[] {
@@ -71,7 +72,7 @@ export function groupPostsByApp<T extends AppPost>(posts: T[]): { key: string; p
   return [...groups.entries()]
     .map(([key, list]) => ({
       key,
-      posts: [...list].sort((a, b) => b.data.date.getTime() - a.data.date.getTime()),
+      posts: [...list].sort(byNewest),
     }))
     .sort((a, b) => b.posts.length - a.posts.length || blogApp(a.key).name.localeCompare(blogApp(b.key).name));
 }
