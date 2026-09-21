@@ -1,12 +1,14 @@
 ---
-title: "All-day items as one strip above the timeline"
-date: 2026-09-21T21:00:00+09:00
+title: "We shipped an all-day strip and pulled it the same day"
+date: 2026-09-21T22:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
-summary: "'Groceries, sometime today' does not want a start time. The day planner now places a todo on a date only: one boolean on the model, one pinned strip under the date bar, and timeline math that never sees these items. Why optional minutes, a second entity and drawer tags lost."
+summary: "The day planner got an all-day strip — a todo on a date with no time — and lost it again hours later. What it was, and why a second place to park work is the wrong thing for a planner whose whole value is the timeline."
 ---
 
-The day planner can now hold a todo on a day without a time. A small `All-Day` strip sits directly under the date bar; its trailing `+` places a todo there as a chip. Before this, "groceries, sometime today" had to be forced onto some hour, where it rang alarms and joined overlap and push calculations, or go into the drawer, which forgets that the item belonged to today at all.
+The day planner got an **all-day strip** — a todo held on a date with no time — and it was reverted in full the same day. The app has no all-day items today. The sections below record what was built; the reason it went away is at the end.
+
+Here is what it was. The planner could hold a todo on a day without a time. A small `All-Day` strip sits directly under the date bar; its trailing `+` places a todo there as a chip. Before this, "groceries, sometime today" had to be forced onto some hour, where it rang alarms and joined overlap and push calculations, or go into the drawer, which forgets that the item belonged to today at all.
 
 ## The strip is pinned, the chips speak the block grammar
 
@@ -51,10 +53,38 @@ An accessibility identifier on the strip's root view overrode the identifier on 
 
 The day pager keeps neighbouring pages rendered, so `firstMatch` returned the `+` from an off-screen page at x = -353 and the tap failed with "cannot compute hit point". Pick the element whose x is on screen, the same rule the app's tests already use for the gesture layer.
 
-## What is left
+## 2026-09-21 — pulled it back out
 
-Past four items the strip folds into an `N more` chip. The threshold gets revisited once real days show how many all-day items actually pile up.
+Half a day after the strip shipped, it was removed. Not because of a bug — because of what this
+app is for.
+
+The planner has one value: it lays the day out on a timeline and makes you look at it. An all-day
+strip is a second place to park work that never touches the timeline, so it quietly lets you skip
+the only question the app asks — *when are you actually doing this?* Let chips pile up on the strip
+and the day becomes a list, and the app has no reason to exist. Work with no time already had a
+home: the drawer. The drawer does forget that an item belonged to today, but that is a reason to
+fix the drawer, not to add a second surface.
+
+The cost was real, too. Adding a query to a screen went from picking one of two filters to one of
+three (visible / on the timeline / on the strip), placing work went from one path to two (drag on
+empty space, or the strip's `+`), and alarm rules split by item shape. Any further feature doubles
+all three. The cheapest moment to undo it was immediately.
+
+The way to remove it is to revert the merged commit, not to delete by hand. All-day touched
+twenty-six files — model, store, menus, sheets, tutorial gating, the string catalog — and hand
+picking leaves a line behind every time. Only three spots that collided with work merged in the
+meantime were resolved manually.
+
+No data was touched. An item that had been made all-day comes back on the timeline at the minutes
+it was still carrying, usually 08:00. Keeping start and end minutes instead of clearing them is the
+design decision that paid off here. A field that once reached the iCloud record type cannot be
+deleted, but a field nobody reads does not affect syncing.
+
+The record stays. The decision log is append-only, so the decision that introduced all-day is
+marked reversed rather than deleted. If the need comes back, that design — one flag, outside the
+timeline math — is the starting point. The question to re-ask first is where it lives.
 
 ## History
 
 - 2026-09-21 — all-day items and the strip
+- 2026-09-21 — reverted in full the same day; no second surface that bypasses the timeline
