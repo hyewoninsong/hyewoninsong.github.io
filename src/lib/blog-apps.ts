@@ -29,6 +29,7 @@ export const BLOG_APPS: BlogAppMeta[] = [
   { key: 'musicnote', name: 'SuperMusicNote', appSlug: 'musicnote' },
   { key: 'superpdf', name: 'SuperPDF', appSlug: 'pdf' },
   { key: 'notequiz', name: 'SuperNoteQuiz' },
+  { key: 'supermath', name: 'SuperMathQuiz' },
   { key: 'supertimers', name: 'SuperTimers' },
 ];
 
