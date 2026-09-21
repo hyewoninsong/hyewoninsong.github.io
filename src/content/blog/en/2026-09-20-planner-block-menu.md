@@ -3,7 +3,7 @@ title: "A checkbox and a context menu on planner blocks"
 date: 2026-09-21
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
-summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and the menu now clears one block out of an overlap."
+summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
 ---
 
 The day planner we are building places pre-registered todos as blocks on a vertical timeline. Tapping the circle at the left of a block now completes it, and tapping a selected block once more opens a menu right under the finger. Before, a tap opened the edit sheet, which is the wrong weight for an app whose whole point is fixing the day quickly.
@@ -18,7 +18,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 |---|---|
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
-| Tap the selected block again | Context menu: edit, clear overlap, push back, pull up, swap, tomorrow, drawer, remove from schedule (regrouped once, see the 2026-09-21 section below) |
+| Tap the selected block again | Context menu: edit, push back, pull up, swap, tomorrow, drawer, remove from schedule (reworked twice, see the 2026-09-21 sections below) |
 | Hold 0.2 s then drag, or drag a selected block | Move, unchanged |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
@@ -63,7 +63,7 @@ VoiceOver can activate the block title to select it and reach the menu, but it c
 
 The planner never blocks overlaps. When a meeting runs long you drop a block on top of another and sort it out later. But every cleanup item moved several blocks at once: *push back from here* (me and everything after), *push later blocks back* (everything after me), *pull later blocks up* (everything after). There was no "move just this one until it stops overlapping" — and the first two open a sheet asking how many minutes. Minutes are not what you know; the end of the block underneath is.
 
-So the menu's push group now starts with **Push back clear of overlap** (since renamed *Clear overlap*, see below). It runs immediately, moves only the selected block, and lands it flush against the latest end among the blocks it currently overlaps. With nothing overlapping, the item is disabled — opening the menu tells you whether this block is overlapped at all.
+So the menu's push group started with **Push back clear of overlap** (later renamed *Clear overlap*, and later still removed from the menu altogether — last section; the item no longer exists). It runs immediately, moves only the selected block, and lands it flush against the latest end among the blocks it currently overlaps. With nothing overlapping, the item is disabled — opening the menu tells you whether this block is overlapped at all.
 
 Two things it deliberately does not do. It does not look for a free slot: if another block sits at the destination, it lands on top of it. Dodging makes the distance unpredictable — on a full day one tap would fly to the evening. Tap again and it steps past the new overlap. And it does not round to the snap grid: the target is the other block's end, not a 15-minute line, and rounding would leave an odd gap exactly where you want to see the overlap gone.
 
@@ -98,7 +98,7 @@ One rule fixed all three. **Group by outcome, make every top-level silhouette di
 | Group | Items | Icons |
 |---|---|---|
 | Edit | Edit… | pencil |
-| Move within today | Clear overlap · Push back ▸ · Pull later blocks up · Swap ▸ | two rectangles · ↓ · ↑ · ↕ |
+| Move within today | Clear overlap (*gone now — last section*) · Push back ▸ · Pull later blocks up · Swap ▸ | two rectangles · ↓ · ↑ · ↕ |
 | Take out of today | Move to tomorrow · Put in drawer | ↳ · tray |
 | Remove | Remove from schedule | trash |
 
@@ -106,9 +106,25 @@ One rule fixed all three. **Group by outcome, make every top-level silhouette di
 
 *Push back ▸* holds exactly two items, "From this block…" and "Later blocks only…", the names the sheet already uses for its modes, so nothing gets renamed between the menu and the sheet. *Swap ▸* holds "With previous" and "With next". The submenus carry no icons on purpose: trying to tell these apart by icon was the problem.
 
-*Push back clear of overlap* became *Clear overlap* and stays outside the push submenu. Its purpose is removing an overlap, not pushing, and it is the only move that runs without a sheet, so it keeps its one-tap spot. Its icon is the same metaphor the canvas uses for overlap hatching, two overlapping rectangles. The disabled subtitle stays.
+*Push back clear of overlap* became *Clear overlap* and stayed outside the push submenu — not for long, as the next section tells. Its purpose is removing an overlap, not pushing, and it is the only move that runs without a sheet, so it keeps its one-tap spot. Its icon is the same metaphor the canvas uses for overlap hatching, two overlapping rectangles. The disabled subtitle stays.
 
 Two alternatives lost. Keeping the structure and only leading each title with its subject does not add a tap, but leaves three identical arrows in a row. Swapping the three push icons for more distinct symbols fails because the difference between them is who moves, and no symbol says that. The submenus cost push and swap one extra tap; in return the top level drops from ten rows to eight, and the most common action, clearing an overlap, is still one tap.
+
+## 2026-09-21 — Clearing an overlap moved out of the menu and into the first row of the sheet
+
+*Clear overlap* did not last a day. Two things kept getting in the way. **You only learned the distance after tapping**: every other push in that menu opens a sheet that states the minutes and how many blocks will hit 24:00, while this one ran and left you to check. And **it went alone**: later blocks stay put, so clearing one overlap tends to create another one below, and you tap again. "You will tap it two or three times" was written down as an accepted cost when it was designed; in use it was the first thing you noticed.
+
+What you usually want when you see an overlap is "this one and everything after it, back". That is exactly what *Push back ▸ From this block…* does, and that sheet already has a place to ask. So the item is gone and the calculation moved into the sheet. When the blocks being pushed overlap something that stays put, the top preset is **Until clear of overlap**, and it is the default. When nothing overlaps, that row is **not there at all** — a greyed-out row in the default slot is something you have to read every time you open the sheet.
+
+![The push sheet opened on an overlapping block. The top row reads 25 minutes — the end of the block sitting on top of it. Below are the usual 15, 30 and 60](/blog/planner-block-menu/push-sheet-escape-row.png)
+
+The number is the same as before: flush against the end of what it overlaps, never rounded to the grid. Three things changed. Later blocks come along, keeping their spacing, so overlaps among the blocks being moved are left out of the calculation. You read the outcome before committing. And **the end of the day is no longer a reason to disable anything** — the sheet already says "N blocks will stop at 24:00 and stay overlapped" *before* you tap. What the previous section tried to do with a menu subtitle, the sheet was doing all along.
+
+![The menu without Clear overlap: moving within today is push, pull and swap](/blog/planner-block-menu/menu-seven-rows.png)
+
+The pure calculation changed shape too, so the number is not computed in two places. It used to answer "where should this go" (a new start minute); it now answers "how many minutes are needed", taking the blocks that move and the blocks that stay. It does not clamp a value that runs past midnight — clamping is exactly how a move that cannot clear the overlap got called a success last time.
+
+Something was lost: "shift this one and leave the rest" is gone. That is a drag now, or picking the minutes yourself in the sheet, and the tap count went from one to three. In exchange all three taps show you the result. Two paths to the same goal that can only be told apart by reading the small print — one moves this block, one moves everything after — cost more than the two extra taps.
 
 ## History
 
@@ -116,3 +132,4 @@ Two alternatives lost. Keeping the structure and only leading each title with it
 - 2026-09-21 — Added *Push back clear of overlap*: one block, flush against what it overlaps
 - 2026-09-21 — Dropped the half-move at the end of the day; disabled items now say why
 - 2026-09-21 — Regrouped the menu by outcome, moved push and swap into submenus, gave every top-level row a distinct icon
+- 2026-09-21 — Removed *Clear overlap* from the menu; the push sheet's first row, *Until clear of overlap*, does that job now
