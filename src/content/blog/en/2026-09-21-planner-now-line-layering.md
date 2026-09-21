@@ -60,9 +60,9 @@ The day you're looking at is marked by a black circle behind its cell in the dat
 
 The code said exactly that: per cell, "if selected, draw a circle." Changing the day deletes one circle and creates another. SwiftUI has a way to say those two are the same thing — `matchedGeometryEffect`. Give the disappearing and appearing views the same id and it interpolates the frames between them.
 
-![Three frames of the circle crossing from the 21st to the 22nd; in the middle frame it sits between the two dates](/blog/planner-now-line-layering/datebar-selection-slide.png)
+![Three frames of the circle crossing from the 21st to the 22nd; in the first it sits between the two dates](/blog/planner-now-line-layering/datebar-selection-slide.png)
 
-What's left is where the namespace lives. The week strip is a horizontal pager where **one week is one page**. A single namespace for the whole strip means that crossing a week boundary sends the circle flying to coordinates on a page that is offscreen, or not even rendered yet. So one week is its own view with its own namespace: within a week the circle slides, and across weeks it is quietly replaced while the page turns. Not stacking two animations on top of each other reads better.
+The circle lives in a cell the week strip and the month grid share, so the namespace is passed in by whoever wants the move: pass one and it slides, pass none and it appears and disappears as before — the month grid collapses the bar on tap anyway, so it kept the old behavior. What's left is where the namespace lives. The week strip is a horizontal pager where **one week is one page**. A single namespace for the whole strip means that crossing a week boundary sends the circle flying to coordinates on a page that is offscreen, or not even rendered yet. So one week is its own view with its own namespace: within a week the circle slides, and across weeks it is quietly replaced while the page turns. Not stacking two animations on top of each other reads better.
 
 ## History
 
