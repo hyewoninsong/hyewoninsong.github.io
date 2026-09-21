@@ -59,4 +59,4 @@ Settings faced the same question one level down — does this value follow the p
 
 ## What's left
 
-The code has shipped, but sync needs hands to finish: creating the iCloud container in the developer portal, then running once on a real device and **deploying the schema to production** in the CloudKit console. Skip the second one and development builds sync while TestFlight builds quietly don't, on identical code. This feature is full of failure modes that make no noise at all.
+The code has shipped, but sync needs hands to finish: creating the iCloud container in the developer portal and **attaching it to the App ID** (creating and attaching are separate actions, and skipping the second one kills the release build at code signing — which happened six times afterwards), then running once on a real device and **deploying the schema to production** in the CloudKit console. Skip the second one and development builds sync while TestFlight builds quietly don't, on identical code. This feature is full of failure modes that make no noise at all.
