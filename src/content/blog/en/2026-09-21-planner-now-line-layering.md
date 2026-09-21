@@ -1,6 +1,6 @@
 ---
 title: "The thing hiding the current time was the thing you were doing"
-date: 2026-09-21T11:14:15+09:00
+date: 2026-09-21T19:50:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "The now line sat behind whatever block was running. It moved above the blocks, and past blocks are now dimmed at a level that reads differently from done."
@@ -39,3 +39,32 @@ A throwaway UI test on the simulator did that: place one block two hours back, o
 ## Where it stands
 
 The past-hours overlay on the grid and the block alpha are two independent devices. If "past" ever needs to be defined in one place, they'll merge then; for now the grid dims itself and blocks dim themselves.
+
+## 2026-09-21 — The pill didn't reach the line, and the date bar's circle teleported
+
+With the line on top, two more things on the same screen stood out: something that should touch was floating, and something that should move was cutting.
+
+### The 12-hour format was hiding an 8pt gap
+
+The time pill starts 2pt from the left edge and is only as wide as its text; the line starts at the axis boundary, 48pt. Nothing ever said the two should meet — **the text length decided it**. In the default 12-hour format, "7:23 PM" is long enough that the pill's right edge passes 48pt, so it looked joined. Switch the setting to 24-hour and "19:23" ends around 40pt, leaving an 8pt gap.
+
+The fix is to stop letting the text set the width and tie it to the boundary instead: the pill now has a minimum width of `axis width − left inset`. Short text stretches the pill to exactly where the line begins; long text widens it past that on its own. Either way there is no gap.
+
+![Before, the pill's right edge floats away from the line; after, it lands exactly where the line starts](/blog/planner-now-line-layering/now-pill-gap.png)
+
+This is the kind of mismatch only a non-default setting shows. If every verification screenshot uses the defaults, it never appears — when a piece whose width follows its content has to meet a fixed boundary, shoot it once with the shortest possible value.
+
+### The selection circle was being redrawn, not moved
+
+The day you're looking at is marked by a black circle behind its cell in the date bar. Swipe the planner left or right and the circle does follow, but it vanishes here and appears there.
+
+The code said exactly that: per cell, "if selected, draw a circle." Changing the day deletes one circle and creates another. SwiftUI has a way to say those two are the same thing — `matchedGeometryEffect`. Give the disappearing and appearing views the same id and it interpolates the frames between them.
+
+![Three frames of the circle crossing from the 21st to the 22nd; in the middle frame it sits between the two dates](/blog/planner-now-line-layering/datebar-selection-slide.png)
+
+What's left is where the namespace lives. The week strip is a horizontal pager where **one week is one page**. A single namespace for the whole strip means that crossing a week boundary sends the circle flying to coordinates on a page that is offscreen, or not even rendered yet. So one week is its own view with its own namespace: within a week the circle slides, and across weeks it is quietly replaced while the page turns. Not stacking two animations on top of each other reads better.
+
+## History
+
+- 2026-09-21 — Moved the now line and pill above the blocks, and dimmed past blocks at a level that reads differently from done
+- 2026-09-21 — Closed the pill-to-line gap that only showed in 24-hour format, and made the date bar's selection circle slide between days
