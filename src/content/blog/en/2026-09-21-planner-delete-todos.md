@@ -1,6 +1,6 @@
 ---
 title: "Adding delete to an app that never deleted"
-date: 2026-09-21T08:04:28+09:00
+date: 2026-09-21T20:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "data"]
 summary: "Todos in the day planner could only be archived, never deleted. Watching typo todos pile up in the archive flipped the rule — one warning, no undo."
@@ -51,8 +51,48 @@ private struct DeleteRequest: Identifiable {
 
 Freezing the name and the count into strings when the question is asked means there is still something to render after the objects are gone. For the same reason the confirmation re-fetches its targets by id.
 
-The undo stack needed no clearing. Its entries capture id snapshots rather than model references, so an older entry pointing at a deleted todo resolves to nil and quietly does nothing — a design choice from months ago paying off here.
+The undo stack was left alone. Its entries capture id snapshots rather than model references, so an older entry pointing at a deleted todo resolves to nil and falls through. That much was true; reading "falls through" as "is safe" was the mistake — see the 2026-09-21 section below.
+
+## 2026-09-21 — an undo that quietly does nothing is a broken undo
+
+The paragraph above said a stale entry "resolves to nil and does nothing." True — but nobody asked why that was fine. It wasn't.
+
+Every inverse operation looks like this:
+
+```swift
+ctx.block(id: id)?.parkedAt = nil     // optional chaining passes when the block is gone
+```
+
+Deleting a todo cascades to every block it owns. At that moment every stack entry touching that todo — moved, completed, sent to the drawer, block deleted — points at nothing. The button stays enabled, because the stack is not empty. Tapping it consumes one step and changes nothing on screen. Five dead entries means five taps before one lands. What the user reads is simply: undo is broken.
+
+Worse, the dead entry moves to the redo stack. The redo of an "add todo" entry restores from a snapshot — so a permanently deleted todo could come back with one tap of the right arrow, right after a dialog promised it could not be undone.
+
+The fix removes the optional chaining. An inverse now reports **whether it changed anything**:
+
+```swift
+extension ModelContext {
+    func apply(block id: UUID, _ body: (TodoBlock) -> Void) -> Bool {
+        guard let block = block(id: id) else { return false }
+        body(block)
+        block.updatedAt = .now
+        return true
+    }
+}
+```
+
+The stack keeps popping until an entry applies, and drops the ones that don't — they never reach the other stack either. An enabled undo button now always undoes something, dead entries clean themselves up unseen, and a deleted todo stays deleted.
+
+One more trap showed up in grouped actions. "Applied if any step applied" was folded as `entries.reduce(false) { $0 || $1.undo(ctx) }` — and `||` short-circuits, so once the first step succeeds the rest never run at all. Loop, don't fold.
+
+The investigation started from a report that undo did nothing for the drawer. The drawer path turned out to be fine — six UI tests across park/unpark, undo/redo, today and other days all pass. The symptom was real, its cause was somewhere else entirely.
+
+One drawer-side gap did remain: undo sending a block back to the drawer gave no signal beyond the block disappearing. It now reuses the same "moved to the drawer" cue that parking shows. Not saying where something went reads as nothing happening.
 
 ## What is left
 
 Profiles still cannot be deleted; deleting one means deleting every todo inside it, which deserves its own decision. If anyone reports losing something by accident, the next step is an export-before-delete, not a trash can.
+
+## History
+
+- 2026-09-21 — permanent delete for todos (two entry points, one warning, no undo)
+- 2026-09-21 — that delete's leftovers in the undo stack are now skipped
