@@ -1,6 +1,6 @@
 ---
 title: "Adding delete to an app that never deleted"
-date: 2026-09-21T20:30:00+09:00
+date: 2026-09-21T21:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "data"]
 summary: "Todos in the day planner could only be archived, never deleted. Watching typo todos pile up in the archive flipped the rule — one warning, no undo."
@@ -88,6 +88,20 @@ The investigation started from a report that undo did nothing for the drawer. Th
 
 One drawer-side gap did remain: undo sending a block back to the drawer gave no signal beyond the block disappearing. It now reuses the same "moved to the drawer" cue that parking shows. Not saying where something went reads as nothing happening.
 
+## Undo flies the block too — but only if it was on screen
+
+Adding the cue raised the obvious next question. Parking from the menu sends a block-shaped ghost falling from its slot into the drawer button. Doing the same thing through undo showed only the label. Same outcome, different animation depending on how you got there.
+
+![Right after undo: the block-shaped ghost shrinks toward the drawer button at the bottom right, and the button icon switches to a tray with an arrow going into it](/blog/planner-delete-todos/undo-drawer-ghost.png)
+
+Two things stood in the way. First, **there is no frame to measure.** By the time undo finishes, the block is already in the drawer and off the timeline. The menu can hand over the block's screen rect just before parking; undo has no idea which block is about to move. So the order got inverted — the visible day's block ranges are captured *before* the undo runs, and whichever block turns up in the drawer afterwards hands its old range to the timeline to measure.
+
+The second is the interesting one. Undo deliberately does not move the view, so the block it just parked may be scrolled out of sight, or on another day entirely. Flying a ghost from there means a block bursting in from a screen edge the user never looked at. That does not say "it went from here to there" — it just startles.
+
+So **the ghost flies only when the departure point is on screen right now.** Off screen or another day, the animation is dropped and only the label remains. Both paths converge: landed or dropped, the button bounces once and says "moved to the drawer." Dropping it explicitly matters too — leaving the transfer to expire keeps the drawer button stuck on its arrow icon for three seconds while nothing happens.
+
+The opposite direction — undo pulling a block back *out* of the drawer — got no animation. The block reappearing on the timeline already answers the question.
+
 ## What is left
 
 Profiles still cannot be deleted; deleting one means deleting every todo inside it, which deserves its own decision. If anyone reports losing something by accident, the next step is an export-before-delete, not a trash can.
@@ -96,3 +110,4 @@ Profiles still cannot be deleted; deleting one means deleting every todo inside 
 
 - 2026-09-21 — permanent delete for todos (two entry points, one warning, no undo)
 - 2026-09-21 — that delete's leftovers in the undo stack are now skipped
+- 2026-09-21 — the drawer cue on undo became a full ghost flight (only when on screen)
