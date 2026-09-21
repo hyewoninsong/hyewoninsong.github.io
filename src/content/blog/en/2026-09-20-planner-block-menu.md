@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-21T17:55:40+09:00
+date: 2026-09-21T18:45:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -18,7 +18,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 |---|---|
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
-| Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below) |
+| Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below; the last of them gave the rows a naming rule, so these read *Pull Earlier* / *Push Later* now) |
 | Hold 0.2 s then drag, or drag a selected block | Move, unchanged |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
@@ -100,7 +100,7 @@ One rule fixed all three. **Group by outcome, make every top-level silhouette di
 | Edit | Edit… | pencil |
 | Move within today | Clear overlap (*gone — see below*) · Push back ▸ · Pull later blocks up (*gone — last section*) · Swap ▸ | two rectangles · ↓ · ↑ · ↕ |
 | Take out of today | Move to tomorrow · Put in drawer | ↳ · tray |
-| Remove | Remove from schedule | trash |
+| Remove | Remove from schedule (*now *Remove from Schedule* — last section*) | trash |
 
 ![Eight top-level rows, eight different shapes. One down arrow for pushing, one up arrow for pulling; push and swap open submenus behind the chevron](/blog/planner-block-menu/menu-regrouped.png)
 
@@ -209,6 +209,34 @@ Picking the most recently modified block instead was considered, but undo closur
 
 Drawer rows used to print the original date, time range and length on one line. But the date and time are decided again when you take the block out. What you need from a parked block is **what it is and how long it takes**, plus whatever the note says. So a row is now name, length and note (up to three lines).
 
+## 2026-09-21 — With no grammar for row names, a matched pair read as two different actions
+
+Six passes over this menu, and each row got its name whenever it was added. Opened in English, it does not read as if one person wrote it.
+
+| Row | What is off |
+|---|---|
+| `Move Earlier` / `Push Back` | The **pair** of direction rows, yet different verbs (Move / Push) and different axes (time *Earlier* / space *Back*) |
+| `Swap` | A bare verb — it never says what gets swapped |
+| `Put in drawer` · `Remove from schedule` | The first three are Title Case; these two are not |
+
+`Move Earlier` and `Push Back` were the worst of it. They open the same five scopes in opposite directions, so they should read as inverses of each other. In English they read as two unrelated actions. A section above says paired icons lie when they are not inverses; the words were doing the same thing.
+
+So the row names got a rule: **`[verb] + [object or direction]`**, Title Case in English, one gerund form in Korean, **a matched pair keeps the verb family and changes only the direction word**, and the suffix says what comes next — `…` for a sheet, `▸` for a submenu, nothing when the row acts in place.
+
+![The two directions now read as a Pull / Push pair, and every row follows the same capitalization](/blog/planner-block-menu/menu-english-grammar.png)
+
+Collapsing everything onto one verb (`Move Earlier` / `Move Later` / `Move to Drawer`) was the obvious alternative. It is grammatical, but three of six rows then open with the same word and the menu stops scanning. Naming them after the internal types (`ShiftSheet`, `ShiftScope`) would give `Shift Earlier` / `Shift Later` — tidy in the codebase, technical on screen. What a person reads should not be pinned to an identifier.
+
+### Renaming the key alone left Korean devices on the old wording
+
+The string catalog key changed with the row. The source, the English value and the UI test all carried the new wording, and the smoke test still failed with *the menu did not open*.
+
+The menu had opened. Only the last row of the accessibility dump was stale — because a `.xcstrings` entry stores **a value for the source language too**. Rename the key and that inner value keeps the old text, and a Korean device reads the value, not the key. The key itself is only a fallback for a key that is missing, so this is the exact mirror of the familiar "an untranslated key ships as Korean" trap: here the key is present, so no fallback runs.
+
+The two parity tests in place did not care. One checks that all five languages exist, the other that format specifiers match. There is now a third invariant: in every entry, the source-language value must equal its key, character for character.
+
+The other lesson is about failure messages. *The menu did not open* is the name of the line the assertion sits on, not what happened. Reading the accessibility dump in the result bundle first would have taken five minutes.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -218,3 +246,4 @@ Drawer rows used to print the original date, time range and length on one line. 
 - 2026-09-21 — Removed *Clear overlap* from the menu; the push sheet's first row, *Until clear of overlap*, does that job now
 - 2026-09-21 — Rebuilt moving as two directions × five scopes, drew the submenu icons by hand, and added *Move to yesterday*
 - 2026-09-21 — Removed *Move to yesterday* and *Move to tomorrow* so the drawer is the only way off a day; reschedules and undo now show the move
+- 2026-09-21 — Gave the rows one naming grammar (`Pull Earlier` ↔ `Push Later`), and caught the catalog trap where renaming a key leaves only Korean devices on the old wording
