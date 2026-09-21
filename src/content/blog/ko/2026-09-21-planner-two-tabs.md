@@ -1,7 +1,8 @@
 ---
 title: "탭 셋 중 둘이 같은 것을 보여주고 있었다"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "design", "swiftui"]
+app: "daily-planner"
+tags: ["devlog", "design", "swiftui"]
 summary: "하루 플래너의 홈 탭을 없애고 할일 탭에 합쳤다. 앱을 켜면 이제 플래너가 뜨고, 할일 목록의 한 줄이 잔디와 누적 시간까지 함께 보여 준다."
 ---
 

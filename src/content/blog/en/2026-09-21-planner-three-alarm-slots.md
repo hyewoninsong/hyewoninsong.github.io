@@ -1,7 +1,8 @@
 ---
 title: "One reminder became three alarm slots"
 date: 2026-09-21
-tags: ["daily-planner", "devlog", "swiftui", "alarmkit"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "alarmkit"]
 summary: "The single reminder option mixed up two different things — which time to anchor on, and how far ahead to fire. So 'ring at the start and at the end' could not be expressed at all."
 ---
 

@@ -1,32 +1,35 @@
 ---
+import type { ResolvedBlogApp } from '../lib/blog-apps';
+
 interface Props {
   title: string;
   date: Date;
   tags: string[];
   summary: string;
   href: string;
+  /** 어느 앱을 만들다 나온 글인지. 앱별 목록 안에서는 이미 아는 사실이라 넘기지 않는다. */
+  app?: ResolvedBlogApp | null;
 }
 
-const { title, date, tags, summary, href } = Astro.props;
+const { title, date, tags, summary, href, app = null } = Astro.props;
 const formattedDate = date.toLocaleDateString('en-CA');
 ---
 
 <a href={href} class="block group">
   <article class="border border-border rounded-xl bg-card shadow-sm p-6 transition-shadow hover:shadow-md">
-    <div class="flex items-center gap-2 mb-3">
-      <time datetime={formattedDate} class="text-xs text-muted-foreground tabular-nums">{formattedDate}</time>
-      {tags.length > 0 && (
-        <>
-          <span class="text-border text-xs">·</span>
-          <div class="flex gap-1.5 flex-wrap">
-            {tags.map((tag) => (
-              <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {tag}
-              </span>
-            ))}
-          </div>
-        </>
+    <div class="flex items-center gap-2 mb-3 flex-wrap">
+      {app && (
+        <span class="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary-light px-2 py-0.5 text-xs font-medium text-primary">
+          {app.icon && <img src={app.icon} alt="" aria-hidden="true" width="32" height="32" class="app-icon w-3.5 h-3.5" />}
+          {app.name}
+        </span>
       )}
+      <time datetime={formattedDate} class="text-xs text-muted-foreground tabular-nums">{formattedDate}</time>
+      {tags.map((tag) => (
+        <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {tag}
+        </span>
+      ))}
     </div>
     <h3 class="text-[15px] font-semibold text-text group-hover:text-primary transition-colors leading-snug mb-2">{title}</h3>
     <p class="text-sm text-text-sub leading-relaxed">{summary}</p>

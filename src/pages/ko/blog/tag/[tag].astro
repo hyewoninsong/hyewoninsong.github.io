@@ -3,16 +3,18 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import BlogPostCard from '../../../../components/BlogPostCard.astro';
 import { getLangFromUrl, useTranslations } from '../../../../i18n/utils';
 import { getCollection } from 'astro:content';
+import { appKeyOf, blogAppResolver, isBlogAppKey, tagsWithoutApp } from '../../../../lib/blog-apps';
 
 export async function getStaticPaths() {
   const allPosts = await getCollection('blog');
-  const koPosts = allPosts.filter((post) => post.id.startsWith('ko/'));
-  const allTags = [...new Set(koPosts.flatMap((post) => post.data.tags))];
+  const langPosts = allPosts.filter((post) => post.id.startsWith('ko/'));
+  // 앱은 /blog/app/<key> 가 맡는다 — 옛 글이 앱 슬러그를 태그로 달고 있어도 태그 페이지를 만들지 않는다.
+  const allTags = [...new Set(langPosts.flatMap((post) => post.data.tags))].filter((tag) => !isBlogAppKey(tag));
   return allTags.map((tag) => ({
     params: { tag },
     props: {
       tag,
-      posts: koPosts
+      posts: langPosts
         .filter((post) => post.data.tags.includes(tag))
         .sort((a, b) => b.data.date.getTime() - a.data.date.getTime()),
     },
@@ -22,10 +24,11 @@ export async function getStaticPaths() {
 const { tag, posts } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const resolve = await blogAppResolver(lang);
 ---
 
 <BaseLayout title={`#${tag} - ${t('blog.title')} - ${t('site.title')}`} lang={lang}>
-  <div class="max-w-2xl mx-auto px-6 py-24 md:py-36">
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
     <div class="text-center mb-16 md:mb-20">
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">#{tag}</h1>
       <a href="/ko/blog" class="text-sm text-text-sub hover:text-text transition">{t('blog.viewAll')} →</a>
@@ -33,14 +36,15 @@ const t = useTranslations(lang);
 
     <div class="grid gap-4">
       {posts.map((post) => {
-        const slug = post.id.replace('ko/', '');
+        const appKey = appKeyOf(post.data);
         return (
           <BlogPostCard
             title={post.data.title}
             date={post.data.date}
-            tags={post.data.tags}
+            tags={tagsWithoutApp(post.data)}
             summary={post.data.summary}
-            href={`/ko/blog/${slug}`}
+            href={`/ko/blog/${post.id.replace('ko/', '')}`}
+            app={appKey ? resolve(appKey) : null}
           />
         );
       })}

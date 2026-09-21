@@ -1,8 +1,9 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import BlogPostCard from '../../../components/BlogPostCard.astro';
-import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getLangFromUrl, useTranslations, postCountLabel } from '../../../i18n/utils';
 import { getCollection } from 'astro:content';
+import { appKeyOf, blogAppResolver, groupPostsByApp, isBlogAppKey, tagsWithoutApp } from '../../../lib/blog-apps';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -12,7 +13,11 @@ const posts = allPosts
   .filter((post) => post.id.startsWith('en/'))
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
-const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
+const resolve = await blogAppResolver(lang);
+/** 앱별 타일 — 글이 많은 앱부터. 앱이 붙지 않은 글(소식 등)은 아래 목록에만 나온다. */
+const appGroups = groupPostsByApp(posts).map((group) => ({ app: resolve(group.key), count: group.posts.length }));
+/** 앱은 태그가 아니라 위 타일에서 고른다 — 태그 줄에서는 앱 키를 뺀다. */
+const allTags = [...new Set(posts.flatMap((post) => post.data.tags))].filter((tag) => !isBlogAppKey(tag));
 ---
 
 <BaseLayout title={`${t('blog.title')} - ${t('site.title')}`} lang={lang}>
@@ -21,12 +26,30 @@ const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">{t('blog.title')}</h1>
     </div>
 
+    {appGroups.length > 0 && (
+      <section class="mb-12">
+        <h2 class="text-sm font-semibold text-text mb-3">{t('blog.byApp')}</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          {appGroups.map(({ app, count }) => (
+            <a href={app.href} class="flex items-center gap-3 border border-border rounded-xl bg-card px-4 py-3 transition-shadow hover:shadow-md">
+              {app.icon && (
+                <img src={app.icon} alt="" aria-hidden="true" width="128" height="128" class="app-icon w-9 h-9" />
+              )}
+              <span class="min-w-0">
+                <span class="block text-sm font-medium text-text truncate">{app.name}</span>
+                <span class="block text-xs text-text-sub">{postCountLabel(lang, count)}</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
     {allTags.length > 0 && (
-      <div class="flex flex-wrap items-center justify-center gap-2 mb-12">
+      <div class="flex gap-2 flex-wrap mb-10">
+        <a href="/en/blog" class="text-sm px-3 py-1 rounded-full bg-text text-white">{t('blog.allPosts')}</a>
         {allTags.map((tag) => (
-          <a href={`/en/blog/tag/${tag}`} class="text-sm px-3 py-1.5 rounded-full bg-gray-50 text-text-sub hover:bg-gray-100 transition">
-            {tag}
-          </a>
+          <a href={`/en/blog/tag/${tag}`} class="text-sm px-3 py-1 rounded-full border border-border text-text-sub hover:border-gray-400 transition">{tag}</a>
         ))}
       </div>
     )}
@@ -37,13 +60,15 @@ const allTags = [...new Set(posts.flatMap((post) => post.data.tags))];
       <div class="grid grid-cols-1 gap-4">
         {posts.map((post) => {
           const slug = post.id.replace('en/', '');
+          const appKey = appKeyOf(post.data);
           return (
             <BlogPostCard
               title={post.data.title}
               date={post.data.date}
-              tags={post.data.tags}
+              tags={tagsWithoutApp(post.data)}
               summary={post.data.summary}
               href={`/en/blog/${slug}`}
+              app={appKey ? resolve(appKey) : null}
             />
           );
         })}

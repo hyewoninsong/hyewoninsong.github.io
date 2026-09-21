@@ -1,7 +1,8 @@
 ---
 title: "플래너 블록에 체크박스와 컨텍스트 메뉴를 달았다"
 date: 2026-09-20
-tags: ["daily-planner", "devlog", "swiftui", "gesture"]
+app: "daily-planner"
+tags: ["devlog", "swiftui", "gesture"]
 summary: "블록을 탭하면 편집 시트가 뜨던 하루 플래너를, 체크박스 한 번과 컨텍스트 메뉴로 바꿨다. 그 과정에서 UIButton 메뉴가 드래그를 가로채는 문제와 세 번 싸웠다."
 ---
 

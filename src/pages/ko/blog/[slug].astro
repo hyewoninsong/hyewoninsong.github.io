@@ -2,6 +2,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getCollection, render } from 'astro:content';
+import { appKeyOf, blogAppResolver, tagsWithoutApp } from '../../../lib/blog-apps';
 
 export async function getStaticPaths() {
   const allPosts = await getCollection('blog');
@@ -19,6 +20,12 @@ const { Content } = await render(post);
 
 const formattedDate = post.data.date.toLocaleDateString('en-CA');
 
+/** 어느 앱을 만들다 나온 글인지 — 머리와 꼬리에서 그 앱의 다른 글로 잇는다. */
+const resolve = await blogAppResolver(lang);
+const appKey = appKeyOf(post.data);
+const app = appKey ? resolve(appKey) : null;
+const tags = tagsWithoutApp(post.data);
+
 // Get prev/next posts
 const allPosts = await getCollection('blog');
 const koPosts = allPosts
@@ -33,9 +40,15 @@ const nextPost = koPosts[currentIndex - 1];
   <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
     <!-- Header -->
     <div class="text-center mb-16 md:mb-20">
+      {app && (
+        <a href={app.href} class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-light px-3 py-1 text-xs font-medium text-primary mb-4 hover:border-primary/40 transition">
+          {app.icon && <img src={app.icon} alt="" aria-hidden="true" width="64" height="64" class="app-icon w-4 h-4" />}
+          {app.name}
+        </a>
+      )}
       <div class="flex items-center justify-center gap-3 text-xs text-text-sub mb-4">
         <time datetime={formattedDate}>{formattedDate}</time>
-        {post.data.tags.map((tag) => (
+        {tags.map((tag) => (
           <a href={`/ko/blog/tag/${tag}`} class="hover:text-text transition">#{tag}</a>
         ))}
       </div>
@@ -56,8 +69,14 @@ const nextPost = koPosts[currentIndex - 1];
       <Content />
     </div>
 
+    {app && (
+      <div class="mt-16 pt-8 border-t border-border text-sm">
+        <a href={app.href} class="text-primary hover:underline">{t('blog.moreFromApp')} — {app.name} →</a>
+      </div>
+    )}
+
     <!-- Navigation -->
-    <div class="mt-16 pt-8 border-t border-gray-100 flex justify-between text-sm">
+    <div class:list={['pt-8 border-t border-gray-100 flex justify-between text-sm', app ? 'mt-8' : 'mt-16']}>
       {prevPost ? (
         <a href={`/ko/blog/${prevPost.id.replace('ko/', '')}`} class="text-text-sub hover:text-text transition">
           ← {t('blog.prevPost')}
