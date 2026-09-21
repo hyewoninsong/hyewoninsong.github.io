@@ -170,12 +170,44 @@ The open question was the default when nothing overlaps and you are pulling. The
 
 ![The pull sheet opened on a block with an 08:00 block above it. The top row is the 2 h 55 min that closes the gap, and the confirm button reads "Move"](/blog/planner-block-menu/pull-sheet.png)
 
-The date group was one-sided too — *Move to tomorrow* with no *Move to yesterday*. Yesterday now sits above tomorrow; side by side, the two arrows explain each other.
+The date group was one-sided too — *Move to tomorrow* with no *Move to yesterday*. Yesterday now sits above tomorrow; side by side, the two arrows explain each other. (**Both rows are gone in the next section** — pairing them up did not fix what was actually wrong.)
 
 ### What it costs
 
 *Pull later blocks up* was one tap and is now three (direction, scope, confirm). The labels are long enough to widen the menu and wrap. In exchange all three taps show the result, and the same three taps reach the other nine combinations. Cutting the scopes to three (this one / earlier / later) was considered, but "everything after me, not me" and "me and everything after" are genuinely different jobs — clearing an overlap versus postponing the rest of the day.
 
+
+## 2026-09-21 — The two date rows are gone, and moves are shown instead of announced
+
+Adding *Move to yesterday* in the section above lasted less than a day. The two arrows do explain each other, but they also do the same thing: add or subtract a day and leave **the time untouched**, then clear the selection. Three things happen at once. The block vanishes from the screen you are looking at, it lands on that day at that time on top of whatever is already there, and you do not see it. Having two directions did not change the fact that neither shows you where the block went.
+
+The drawer was already doing the same job better. Park a block and it waits with its length, note and alarms intact; move to the day you want and take it out **in the middle of the screen you are looking at**. The moment you pick a slot is when you take it out, not when you put it away. So both rows are gone, and *Take off today* is a single row: *Put in drawer*. The toolbar's *Move all unfinished to tomorrow* stays — its target is the whole day, so no individual block lands in a surprise slot, and it asks for confirmation first.
+
+When "tomorrow, same time" really was what you wanted, it is now two steps: park, then take it out on tomorrow's page. Those two steps show you the slot, which is the bet.
+
+### Show the move, do not announce it
+
+Reschedules chosen from the menu used to change the model and stop there. Blocks teleported to their new slots in one frame. *Swap* was the worst case: two blocks change at once, so on screen you cannot tell a swap from both blocks disappearing and reappearing.
+
+Now the canvas blocks and the minimap bars slide to their new slots over 0.3 seconds, ease-in-out. Dragging is the exception — a dragged block has to follow the finger exactly, so its curve is turned off.
+
+One thing went wrong here. The obvious value to drive the animation was the rectangle already being handed to each block, but that rectangle's width comes from a `GeometryReader` measurement, which jumps from 0 to the real width on the first layout pass. `.animation(_:value:)` fires on *any* change of its value, so that jump is a trigger too — every time a day page appears, every block grows from zero width. Counting on "the first render is exempt" does not help: the view has already been drawn, and the same value jumps again on rotation or in Split View.
+
+The value now comes from **what the model says** — the block's start and end minute. If the width changed in the same update, it is interpolated along with everything else, so nothing that matters is lost and only the measurement jitter drops out.
+
+### Undo was happening off-screen
+
+Undo can revert a block on another day, or one you have scrolled past. The button responds, the screen does not. A single haptic is the whole signal, so you start wondering whether the tap registered and press again.
+
+Each history entry now carries **the id of the block it touched**. After undoing, the planner moves to that block's day, scrolls so the block is visible, and selects it. A grouped move takes the **earliest** block as its representative — seeing the head of the group is what tells you the whole run moved.
+
+Sometimes there is nowhere to go: the undo deleted the block (undoing a placement), parked it, it belongs to another profile, or the entry only ever touched a todo's name or colour. Those clear the selection, as before.
+
+Picking the most recently modified block instead was considered, but undo closures do not touch the modified timestamp consistently — the one that only changes a date does not. Capturing the id when the entry is recorded is exact.
+
+### The drawer rows dropped the date and time
+
+Drawer rows used to print the original date, time range and length on one line. But the date and time are decided again when you take the block out. What you need from a parked block is **what it is and how long it takes**, plus whatever the note says. So a row is now name, length and note (up to three lines).
 
 ## History
 
@@ -185,3 +217,4 @@ The date group was one-sided too — *Move to tomorrow* with no *Move to yesterd
 - 2026-09-21 — Regrouped the menu by outcome, moved push and swap into submenus, gave every top-level row a distinct icon
 - 2026-09-21 — Removed *Clear overlap* from the menu; the push sheet's first row, *Until clear of overlap*, does that job now
 - 2026-09-21 — Rebuilt moving as two directions × five scopes, drew the submenu icons by hand, and added *Move to yesterday*
+- 2026-09-21 — Removed *Move to yesterday* and *Move to tomorrow* so the drawer is the only way off a day; reschedules and undo now show the move
