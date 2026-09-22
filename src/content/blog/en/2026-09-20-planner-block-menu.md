@@ -475,7 +475,7 @@ What this wanted was not pushing. It was queuing.
 
 | Who | What happens |
 |---|---|
-| A companion that meets a standing block | Stops flush against its edge |
+| A companion that meets a block | Stops flush against its edge (the section below makes a **settled companion** a wall too) |
 | A companion that has met nothing yet | Keeps going |
 | A block it **already overlapped** when the drag started | Not a wall — it passes, and stops at the next one |
 | The block under your finger | Nothing stops it. Its only walls are the ends of the day |
@@ -640,6 +640,51 @@ show an unchanged block, and the test stayed green. At the top of this post, bac
 the same step let a `UIButton` menu hijack drags for the same reason. Twice is enough: the step
 now asserts that the selected block's own time label reads 11:00. A screenshot is evidence for a
 human to read later, not a verdict.
+## 2026-09-22 — We queued companions behind blocks, but not behind each other
+
+The section two above made companions stop at whatever they meet. Hatched overlaps still showed up on
+release — this time *inside* the group.
+
+Link a 10:00 block to a 12:00 block and drag both down. A standing block at 13:00 stops the 12:00
+one flush against it. The 10:00 one keeps coming and lands at 12:00 — exactly on top of the
+companion that just stopped. Same at the end of the day: the leading companion pins to 24:00 and
+the next one climbs on top of it. Neither pair overlapped when the drag started. Queuing outside
+the group and not inside it meant the bigger the group, the more cleanup came back.
+
+### The premise the exemption rested on was already gone
+
+Collision math excluded companions from each other's wall list. That shortcut had a reason: the
+group moves by the same number of minutes, so the gaps between members never change, and gaps that
+never change cannot collide. True — right up until that section made blocked companions stop.
+
+That change is exactly what broke the premise. The moment travel becomes uneven, the gaps change.
+The save path that re-added one delta got fixed then (end of that section); the exemption buried in
+the collision math did not.
+
+**A shortcut of the form "because A, we can skip B" has to be deleted when A is deleted.** All that
+survives in the code is the absence of B. A was something someone said out loud once, and grep does
+not find it. When you break an invariant, the dangerous sites are not the ones that *use* it — they
+are the ones that skipped work *trusting* it.
+
+### Settle from the front
+
+The fix is an ordering. Walk the wall calculation from the front of the direction of travel (latest
+block first when dragging down, earliest first when dragging up) and add each companion's settled
+range to the wall list for the ones behind it. What counts as a wall is unchanged: a neighbour you
+already overlapped at the start is not one, and neither is the block under your finger.
+
+If nothing is blocked, the result is identical to the minute — unchanged gaps never reach the new
+walls. Only the shape *after* something stops is different. As a bonus, companions now stack flush
+behind the wall, which turns a group drag into "snap several blocks to the end of that one."
+
+The cost is the one from that section: gaps inside the group shrink. This app does not remember
+relative positions, so that stays.
+
+### Watching the test fail first
+
+The new UI regression ran once against the old engine so the failure — two blocks at the same height
+on screen — was something we saw before it was something we fixed. Five cases cover the queueing on
+the pure-calculation side.
 
 ## History
 
@@ -658,3 +703,4 @@ human to read later, not a verdict.
 - 2026-09-22 — Group companions now stop at the first block they meet (anything they already overlapped, and the block you hold, pass through). Uneven travel means the save uses the preview placement, and the anchor keeps its chips through the drag
 - 2026-09-22 — The bottom-right corner splits by selection (trash + Put in Drawer / drawer), and editing shrank to a note-sized popover with a link into the todo editor. The drawer remembers what went in together. Caught the popover-anchor trap on views placed with `.offset`
 - 2026-09-22 — The resize handle's hit area moved inside the block, to the middle third, matching the drawn capsule; a judgement-only slack covers the error in the reconstructed pan start
+- 2026-09-22 — Made companions walls for each other so a group stops laying down overlaps of its own. The "we all move together so we cannot collide" exemption outlived the section that broke its premise
