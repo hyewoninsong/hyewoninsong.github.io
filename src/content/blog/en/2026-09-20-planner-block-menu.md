@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T19:30:00+09:00
+date: 2026-09-22T20:20:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -18,7 +18,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 |---|---|
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
-| Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below; the last of them gave the rows a naming rule, so these read *Pull Earlier* / *Push Later* now) |
+| Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below; the last of them gave the rows a naming rule, so these read *Pull Earlier* / *Push Later* now. The menu itself goes away in the first 2026-09-22 section, and tapping again opens an **edit popover** in the last one) |
 | Hold 0.2 s then drag, or drag a selected block | Move, unchanged (with a group chip on, everything before or after comes along; release over the drawer button to park — last section, 2026-09-22, where the context menu itself goes away) |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
@@ -293,7 +293,7 @@ With moving handled by the chips, the menu held edit, swap, drawer and remove. O
 | Move ▸ (ten rows) | Top/bottom chip toggle + body drag |
 | Swap Places ▸ | Removed — dragging already does that |
 | Move to Drawer | The drawer button is **always** there; drop a block on it. A group goes in whole |
-| Remove from Schedule | The editor already ends with *Delete this block* |
+| Remove from Schedule | The editor already ends with *Delete this block* (it comes back as a **trash button in the bottom-right corner** in the last section) |
 
 So a block has four gestures: checkbox = done, tap = select, tap again = edit, drag = move (grouped if a chip is on, into the drawer if released over the button). Nothing to read. The context menu, the transparent `UIButton` that presented it and its `require(toFail:)` acrobatics, the move sheet and swap all left the codebase — most of what the earlier sections of this post fought is gone.
 
@@ -319,7 +319,7 @@ The answer was in the accessibility dump XCUITest attaches when a query fails. T
 
 That left one failure, and only on **today's page**. Today scrolls so that "now" sits a third of the way down, which puts the block mid-screen; from there to the bottom-right drawer button the horizontal travel exceeds the vertical. On any other day 08:00 is at the top, so the drag is steeply vertical. The moment horizontal wins, the **date pager takes the gesture** and the day flips, so the drop happens on a page that does not hold that block and silently does nothing. When the target sits in a screen corner, the path is always diagonal — I had forgotten that. The pager is now locked while a block is being dragged.
 
-What was lost: delete is one tap longer (tap again → sheet → *Delete this block* → confirm), while the drawer became one gesture, so the quick way to clear a block is the drawer. There is no sheet for an exact "30 minutes"; the five-minute snap and the time pill do that job. The tutorial's *Block menu* step became *Open the editor*; steps for grouping and the drawer are still to come.
+What was lost: delete is one tap longer (tap again → sheet → *Delete this block* → confirm; the last section cuts it back to two), while the drawer became one gesture, so the quick way to clear a block is the drawer. There is no sheet for an exact "30 minutes"; the five-minute snap and the time pill do that job. The tutorial's *Block menu* step became *Open the editor*; steps for grouping and the drawer are still to come.
 
 ## 2026-09-22 — "These move together" is a line, not a border
 
@@ -513,6 +513,92 @@ What to hide during a drag is what your finger covers (the in-block time text mo
 beside the axis for exactly that reason). A control that explains what is happening right now is the
 opposite case. The chips stay.
 
+## 2026-09-22 — What you do to a block belongs in the corner, not inside the editor
+
+Even with four gestures on a block, deleting one still lived inside the edit sheet: tap again,
+scroll, find *Delete this block*, confirm. Four taps. And the only way into the drawer was a drag,
+so a 9 a.m. block had to be hauled across to the bottom-right corner.
+
+So the bottom-right corner now depends on selection.
+
+| State | Bottom-right |
+|---|---|
+| Nothing selected | One drawer button — tap to take something **out** |
+| A block selected | A red trash and *Put in Drawer*. With a group linked, **both apply to the whole group** |
+
+The two never share a button, because while you hold a block there is nothing to take out. The
+only question in hand is what to do with this one.
+
+The drop target is unchanged. Dragging a block selects it, so *Put in Drawer* is always the one
+showing mid-drag, and both states sit at the same right edge, so the drop coordinate never moves.
+One cost: with a block selected you cannot open the drawer from the corner. The toolbar's
+*Tidy ▸ Drawer* is the way in then.
+
+### The editing panel was covering what it edited
+
+With delete gone, the sheet held a note field and a pile of things a finger already does better.
+Time is a five-minute snap drag. Dates only move through the drawer. Done is the check band on the
+left. A full-screen sheet was coming up for one note field.
+
+It is a popover under the block now — 340 wide, two things in it: the todo's name and a note field.
+
+![Tapping a selected block opens a panel beneath it. The title row is a door to the todo editor; the one editable thing is the note. The corner shows the trash and Put in Drawer](/blog/planner-block-menu/block-edit-popover.png)
+
+The first build had the color dot and an editable title in that panel. Wrong picture: title and
+color belong to the **todo**, not the block, so editing them there changes every other day's block
+too. In a panel labelled "edit this block" the blast radius is invisible. The title row is a link
+into the todo editor now — it shows what this is and takes you where to change it.
+
+The losses are real. Alarms can no longer differ per block; a new block takes the default from
+Settings and that is that. Typing exact start and end times is gone, as are repeat placement and
+duplicate-to-tomorrow. Repeat was a literal copy rather than a rule, and with no door left to it,
+it came out of the code too.
+
+### Five blocks went in together and came out one at a time
+
+Dropping a linked group on the drawer button parked all five. The drawer then listed five separate
+rows. Undoing meant five taps and relinking. What went in as one came out as five — and the gaps
+went with it, since taking one out centers it on screen, so 9:00–10:00 and 11:00–11:30 landed on
+top of each other.
+
+The drawer now stores a **bundle mark**. Parking several at once stamps one id on all of them;
+taking them out clears it — a bundle only lives inside the drawer. The list shows one row per
+bundle: stacked color dots, "Reading and 2 more", the span from first start to last end, a count
+badge. Tapping it brings them all back with the gaps they went in with (pushed inside the day if
+the span overflows), and a swipe-delete takes the whole bundle.
+
+This is a different thing from the timeline's links, which are a roster frozen at the moment you
+press and released when selection changes. A drawer bundle has to stay frozen until it comes out,
+so it is stored. Grouping by timestamp was the other option — two unrelated blocks parked in the
+same second would fuse. A timestamp is not an identity.
+
+### A popover on a view placed with `.offset` opens at the top-left
+
+Attached to the block, the popover pointed at empty space near the midnight line while the block
+sat in the middle of the screen.
+
+Blocks here are placed with `.frame` plus `.offset`. `.offset` is a draw-time transform: it does
+not move the layout frame. Every block of the day is stacked at (0,0) as far as layout is
+concerned and only spreads out on screen. A popover anchors to that layout frame, not to what you
+see. `.contextMenu` and `matchedGeometryEffect` misfire behind `.offset` for the same reason.
+
+The fix is an invisible anchor that owns its place through layout. `.position`, unlike `.offset`,
+sets the child's layout position. Order matters: attach the popover **before** `.position`, because
+the view `.position` returns fills the whole proposal, which would make the anchor the entire
+parent.
+
+Width fooled me too. `frame(idealWidth:maxWidth:)` at 340 produced a popover about 190 wide — the
+contents are all flexible text, so an upper bound lets it shrink to the text. A pinned
+`frame(width:)` was the answer. Neither shows up in code review; both show up in a simulator
+screenshot.
+
+### The test messages hid the failures they were reporting
+
+Once the corner split by selection, "the drawer button does not exist" became a normal state. The
+UI tests read that button's label inside their failure messages. With the button gone, building the
+message threw first, so the real reason was replaced by "No matches found". They go through a
+helper now that returns "no drawer button (a block is selected)" instead.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -528,3 +614,4 @@ opposite case. The chips stay.
 - 2026-09-22 — Groups now show as a thread with a link button on every companion, so one block can be cut loose and rejoined; rejoining takes its current place as the baseline
 - 2026-09-22 — Connections became a roster of ids, so a moving group no longer picks up what it passes; link buttons appear on every block that day, and the direction chip has three states (thin outline / ring thickened by the fraction connected / filled). Minimap bars follow the drag live
 - 2026-09-22 — Group companions now stop at the first block they meet (anything they already overlapped, and the block you hold, pass through). Uneven travel means the save uses the preview placement, and the anchor keeps its chips through the drag
+- 2026-09-22 — The bottom-right corner splits by selection (trash + Put in Drawer / drawer), and editing shrank to a note-sized popover with a link into the todo editor. The drawer remembers what went in together. Caught the popover-anchor trap on views placed with `.offset`
