@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T13:40:00+09:00
+date: 2026-09-22T15:20:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -355,7 +355,101 @@ The tap recognizer only fires after the long press fails (`require(toFail:)` —
 
 A long press that starts on a link button now swallows the drag and, if the finger lifts on the same button, counts as a tap. Movement in between is discarded — this control is not draggable. The hit order is settled too: group chip → link button → resize band → body.
 
-The costs: the thread crosses the right side of the blocks in between (haloed, but a line is a line), and 34pt of each companion's right edge is reserved for the button, so titles truncate that much earlier.
+The costs: the thread crosses the right side of the blocks in between (haloed, but a line is a line), and 34pt of a block's right edge is reserved once it carries a button, so titles truncate that much earlier.
+
+## 2026-09-22 — Holding a roster instead of a direction
+
+A day of using the thread surfaced three complaints with one root: the app was storing
+*which direction is on*, not *what is connected*.
+
+A group was a chip direction (`this block and everything after`) plus a list of hand-cut
+exceptions, so the set of blocks that move together was recomputed **from the current order
+every time a drag began**. Convenient — and it meant the group's membership changed whenever
+the group moved.
+
+### The group quietly picked up whatever it passed
+
+Turn on the downward chip, drag the group up past an earlier block, and that block is now
+"after" — so **the next drag takes it along**. Nothing was pressed, and the group grew.
+
+Connections are now a **roster of ids**. Pressing a chip puts the ids of whatever stands in
+that direction *at that moment* into the roster, and the roster does not change after that,
+wherever the group goes. Nothing joins on its own; nothing leaves except by hand.
+
+Holding one thing two ways — a direction plus exceptions — always invents a third state.
+Holding it once does not.
+
+### Pick an anchor, connect anything
+
+Link buttons only appeared on blocks in the chip's direction, so "move this meeting and that
+walk together" meant turning on a whole direction and then cutting five things loose. The goal
+was to connect two; the hands were disconnecting five.
+
+Selecting a block now puts a link button on **every other block that day**. Press only what you
+want.
+
+![Selecting the team meeting puts a link button on the morning workout, the reading block and the walk. Nothing is connected yet, so the buttons and both chips are outlines](/blog/planner-block-menu/link-buttons-everywhere.png)
+
+The direction chips stay. "This block and everything after" is still the most common thing
+anyone wants, so a chip is the shortcut that presses that direction's buttons all at once —
+a bundle of buttons, not a mode.
+
+### A half-connected chip was drawing a full circle
+
+The old chip had two states. Turn on a direction, cut one block loose, and the chip still read
+as filled — claiming "everything that way" while meaning some of it. I had drawn a thread to
+show the state and left the chip lying about it.
+
+| Chip | Meaning | Tap |
+|---|---|---|
+| Filled circle | all of that direction is connected | disconnect all of it |
+| **Dashed outline** | some of it is connected | connect all of it |
+| Solid outline | none of it is connected | connect all of it |
+
+The dash was already on screen: a thread with a block cut out of it has a gap. **A gapped
+thread and a dashed ring are the same statement**, so there is no new symbol to learn.
+
+![The lower chip is dashed — only the reading block of the two below is connected. The thread runs from the chip to its filled button, and the walk's button is still an outline](/blog/planner-block-menu/chip-partial-dashed.png)
+
+A half-filled circle was tried: the chip holds a glyph of bars saying which way the group goes,
+and half of it would sit on white while half sits on black, which makes the glyph unreadable.
+A faded fill was tried too — "faint" disappears against arbitrary block colours, which is why
+chips and rings are drawn as background-coloured halos in the first place.
+
+One rule for the tap: **all of it means disconnect, anything else means connect.** The other
+direction is never touched.
+
+### With buttons everywhere, they covered the resize handle
+
+A link button's hit rect is 38pt — deliberately smaller than the chip's 44pt so it loses to the
+chip on short neighbours. Once buttons appeared on every block, the rect of the block directly
+below always covered the selected block's **bottom resize band**. On a packed day, grabbing the
+bottom edge to change a duration toggled a link instead.
+
+The fix is to clip the rect to its own block (`rect.intersection(blockFrame)`). A button is only
+live inside the block it belongs to; the overhang goes back to its rightful owner. The minimum
+30-minute block is 38pt tall, so almost nothing is lost.
+
+### The scrollbar only spoke after the drop
+
+A group drag moves blocks that are not on screen. Grab an evening block and the morning moves
+too, but the viewport holds one block. The only place the whole day is visible is the minimap
+scrollbar on the right — and its bars were drawn from the model, so they slid to their new
+places **after** the drop, exactly one moment too late to help decide where to drop.
+
+The bars now draw the same live ranges as the canvas blocks. Only the bar being dragged has its
+animation off (it has to track the finger); the rest keep the 0.3s curve. The overlap hatch
+follows the rule it already had — hold the old value while things slide, live during a drag.
+
+The point is that nothing is computed twice. The canvas already held "where each block is headed"
+keyed by id, and the minimap now gets that same dictionary. Two copies of one calculation always
+drift eventually.
+
+### What it costs
+
+Select a block and every other block that day reserves its right edge for a button, so titles
+truncate earlier. And tapping the right-hand middle of another block links it rather than
+selecting it — correct by the rules, surprising to a finger that meant to select.
 
 ## History
 
@@ -370,3 +464,4 @@ The costs: the thread crosses the right side of the blocks in between (haloed, b
 - 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
 - 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block; the group wall went back from "the whole group" to "the held block's day"
 - 2026-09-22 — Groups now show as a thread with a link button on every companion, so one block can be cut loose and rejoined; rejoining takes its current place as the baseline
+- 2026-09-22 — Connections became a roster of ids, so a moving group no longer picks up what it passes; link buttons appear on every block that day, and the direction chip has three states (filled / dashed / outline). Minimap bars follow the drag live
