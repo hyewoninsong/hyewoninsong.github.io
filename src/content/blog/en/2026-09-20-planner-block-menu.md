@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T23:30:00+09:00
+date: 2026-09-23T02:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -686,6 +686,53 @@ The new UI regression ran once against the old engine so the failure — two blo
 on screen — was something we saw before it was something we fixed. Five cases cover the queueing on
 the pure-calculation side.
 
+## 2026-09-23 — Typing a note squeezed the popover flat
+
+Tapping the note field in the edit popover brings up the keyboard. The popover did not step out
+of its way: it got **squeezed into what was left**, and the title row and *Done* disappeared.
+
+Sheets get a keyboard safe area and move themselves. Popovers do not — `UIPopoverPresentationController`
+compresses its content when the available area shrinks. The same root showed up without a keyboard:
+the plate hangs **below** its anchor (a block is nearly screen-wide, so there is no room beside it),
+so a block late in the day pushed the plate off the bottom of the screen, *Done* included.
+
+![Without any keyboard, the plate for a 3pm block runs off the bottom of the screen — the Done row is gone](/blog/planner-block-menu/popover-cut-off.png)
+
+### Re-presenting is not an option
+
+Three fixes looked possible: flip the direction so the plate sits above the block, dismiss and
+re-present it somewhere better, or move the anchor.
+
+The first two are closed. A popover **keeps the direction it picked when it appeared** — changing
+`arrowEdge` afterwards does nothing, and the keyboard arrives *after* the popover. Re-presenting is
+worse: toggling `isPresented` or swapping the source's `.id` **drops focus from the note field**, so
+the keyboard goes down with it. The repositioning the keyboard triggered would turn the keyboard off.
+
+That leaves the anchor. It is no longer pinned to the block: it rises until the whole plate fits.
+The floor is the top of the keyboard, or the bottom of the viewport when there is no keyboard. When
+the plate would cross that line, the anchor becomes a thin band at "floor − plate height", and the
+timeline scrolls the block being edited toward the top to make room — so the arrow usually still
+lands on its block.
+
+![While typing, the title row, the note and Done all stay above the keyboard, with the arrow still on the block](/blog/planner-block-menu/popover-above-keyboard.png)
+
+### Do not feed a measured height back in
+
+The plate reports its own height rather than carrying a hardcoded constant — and at first that
+pushed the plate to the very top of the screen, covering the block. It was a feedback loop: while
+the plate sat cut off, a 220pt plate measured **310pt**, and that number lifted the anchor by the
+same amount. A size taken after UIKit has kneaded the content into leftover space is not the real
+one. Only heights measured with the keyboard down count now (the largest of them), and once the
+no-keyboard floor stopped the plate from being clipped at all, the measurement became honest.
+
+The regression test raises a real keyboard and measures: every row of the plate above the keyboard's
+top edge, before and after typing.
+
+```swift
+let keyboardTop = app.keyboards.firstMatch.frame.minY
+XCTAssertLessThan(app.buttons["sheet.done"].frame.maxY, keyboardTop)
+```
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -704,3 +751,4 @@ the pure-calculation side.
 - 2026-09-22 — The bottom-right corner splits by selection (trash + Put in Drawer / drawer), and editing shrank to a note-sized popover with a link into the todo editor. The drawer remembers what went in together. Caught the popover-anchor trap on views placed with `.offset`
 - 2026-09-22 — The resize handle's hit area moved inside the block, to the middle third, matching the drawn capsule; a judgement-only slack covers the error in the reconstructed pan start
 - 2026-09-22 — Made companions walls for each other so a group stops laying down overlaps of its own. The "we all move together so we cannot collide" exemption outlived the section that broke its premise
+- 2026-09-23 — The edit popover now stands where the whole plate fits. Keyboards do not move popovers aside, they squeeze them, and re-presenting drops the text focus — the anchor is the only thing left to move
