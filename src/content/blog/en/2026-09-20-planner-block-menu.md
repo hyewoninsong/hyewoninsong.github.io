@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T01:30:00+09:00
+date: 2026-09-22T13:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -321,6 +321,42 @@ That left one failure, and only on **today's page**. Today scrolls so that "now"
 
 What was lost: delete is one tap longer (tap again → sheet → *Delete this block* → confirm), while the drawer became one gesture, so the quick way to clear a block is the drawer. There is no sheet for an exact "30 minutes"; the five-minute snap and the time pill do that job. The tutorial's *Block menu* step became *Open the editor*; steps for grouping and the drawer are still to come.
 
+## 2026-09-22 — "These move together" is a line, not a border
+
+A group chip drew a 1.5pt border around every block that would come along. The person using it said it plainly: "there's only a thin border — it doesn't read as connected."
+
+Fair. A border states *this block is in a state*; it cannot state *this block is tied to that one*. With the anchor near the top of the screen and its companions near the bottom, the only thing joining them was memory.
+
+So I drew a thread. It leaves the lit chip, runs down the same vertical line, and ends at a **link button** that now sits inside the right edge of every companion — filled when connected, outline only when cut, the same on/off grammar as the chip.
+
+![The thread leaves the lower chip of the selected block and lands on the link button inside the block below. Drag the body and thread and buttons follow](/blog/planner-block-menu/group-link-connected.png)
+
+### Drawing it behind the blocks made it disappear
+
+The first version put the thread *behind* the blocks, so it only showed in the gaps. Elegant — until the day is packed, and there are no gaps. The case where the connection is hardest to read is exactly the case where the line vanishes. It goes on top now, with the same contrast as the selection ring (a background-coloured halo under a primary line), so it reads over any block colour.
+
+That first version also ran the thread down to the bottom edge of the last block, where it crossed the whole block and petered out near the drawer button with nothing to mark *where* it connected. A thread has to show the point it attaches to. I added knots — and a knot, it turned out, was already the shape of a button.
+
+### If the knot is a button, you can drop one block
+
+The group had a hole in it: push everything later, except the dinner that cannot move. A chip is "this block and everything after" or nothing. When the old menu's *exclude* scope was removed, I called that case rare. It is not rare.
+
+Making the knot a button filled the hole for free. Tap it and that block leaves the thread — a gap opens in the line, the companion border goes, and it drops out of the group drag. Tap again and it rejoins.
+
+![The companion's link button after tapping it: the thread is gone and the button is an outline. Dragging the anchor now leaves this block where it is](/blog/planner-block-menu/group-link-unlinked.png)
+
+One decision was hiding in there. If the anchor moved 30 minutes down while a block was cut loose, where does that block go when it rejoins — back to the old spacing, or wherever it is now?
+
+Wherever it is now. Restoring the old gap would silently undo an arrangement the person just made, and — more to the point — **nothing has to be stored**. A group drag adds the same number of minutes to everyone, so a rejoined block simply takes the next delta from where it stands. Having no data structure for remembered offsets also makes the rule a single sentence: connected means it moves with you.
+
+### The 0.2 seconds where the button did nothing
+
+The tap recognizer only fires after the long press fails (`require(toFail:)` — the same structure fought over earlier in this post). Press a link button for longer than 0.2s and the long press wins, so the tap never arrives. A button-shaped thing that does nothing when you press it slowly is broken.
+
+A long press that starts on a link button now swallows the drag and, if the finger lifts on the same button, counts as a tap. Movement in between is discarded — this control is not draggable. The hit order is settled too: group chip → link button → resize band → body.
+
+The costs: the thread crosses the right side of the blocks in between (haloed, but a line is a line), and 34pt of each companion's right edge is reserved for the button, so titles truncate that much earlier.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -333,3 +369,4 @@ What was lost: delete is one tap longer (tap again → sheet → *Delete this bl
 - 2026-09-21 — Gave the rows one naming grammar (`Pull Earlier` ↔ `Push Later`), and caught the catalog trap where renaming a key leaves only Korean devices on the old wording
 - 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
 - 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block; the group wall went back from "the whole group" to "the held block's day"
+- 2026-09-22 — Groups now show as a thread with a link button on every companion, so one block can be cut loose and rejoined; rejoining takes its current place as the baseline
