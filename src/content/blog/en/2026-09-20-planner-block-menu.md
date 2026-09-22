@@ -299,7 +299,17 @@ So a block has four gestures: checkbox = done, tap = select, tap again = edit, d
 
 ![Right after dropping a block on the drawer button: it leaves the timeline, the button shows 1, and a short "moved to the drawer" note appears](/blog/planner-block-menu/drawer-drop.png)
 
-Details. In a group drag only the grabbed block snaps, to the grid and to the edges of blocks that stay put; the rest take the same offset, so the sheet's *until it meets the block before* and *until clear of overlap* are now magnets. The wall is the group's own ends: if any block would leave the day, the whole group stops, with the same resistance haptic a single drag has. The drawer button sits inside the bottom auto-scroll zone, so hovering over it used to scroll the page; while the finger is within the button's radius, auto-scroll pauses. Grouping applies only to moving and the drawer — applying it to edit or delete would remove five blocks without a confirmation.
+Details. In a group drag only the grabbed block snaps, to the grid and to the edges of blocks that stay put; the rest take the same offset, so the sheet's *until it meets the block before* and *until clear of overlap* are now magnets. The drawer button sits inside the bottom auto-scroll zone, so hovering over it used to scroll the page; while the finger is within the button's radius, auto-scroll pauses. Grouping applies only to moving and the drawer — applying it to edit or delete would remove five blocks without a confirmation.
+
+### A rule I invented broke on first use
+
+I made the group rigid: the wall was the group's own ends, so if any block would leave the day the whole group stopped. That way you never watch a group crumple against midnight. It felt clean.
+
+It broke immediately. "Turn both chips on, try to move everything down, and all you get is the blocked effect." Reproducing it showed the design working as written. With both chips on the group is the whole day, so the wall becomes **the end of the last block of that day**. An evening block ending at 22:00 leaves two hours of travel; 23:30 leaves thirty minutes; 24:00 leaves none. A drag where the finger moves and nothing follows, with only a resistance haptic, does not read as a rule. It reads as broken.
+
+The wall is now the grabbed block's day, nothing more. The block you hold always follows your finger, and only companions that would leave the day stop at 24:00, keeping their length. That is exactly what the old sheet did when it said "N blocks will stop at 24:00 and stay overlapped" — the hatch says the same thing now. Overlap is a normal state in this app, so there was no reason to hide it. A side effect: the preview and the save now run through the same function, so what you saw is what gets stored.
+
+The price of avoiding a crumple was a drag that would not follow the finger. Which of those is worse is not something the person building it gets to decide alone.
 
 ### The tests split down the middle
 
@@ -322,4 +332,4 @@ What was lost: delete is one tap longer (tap again → sheet → *Delete this bl
 - 2026-09-21 — Removed *Move to yesterday* and *Move to tomorrow* so the drawer is the only way off a day; reschedules and undo now show the move
 - 2026-09-21 — Gave the rows one naming grammar (`Pull Earlier` ↔ `Push Later`), and caught the catalog trap where renaming a key leaves only Korean devices on the old wording
 - 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
-- 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block
+- 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block; the group wall went back from "the whole group" to "the held block's day"
