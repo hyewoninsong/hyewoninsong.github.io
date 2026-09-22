@@ -1,6 +1,6 @@
 ---
 title: "Four places the app failed without telling anyone"
-date: 2026-09-22T22:10:00+09:00
+date: 2026-09-22T23:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "data", "swiftui"]
 summary: "A failed save, a failed alarm, and a fallback that wipes the store and starts over — none of it was recorded anywhere. Adding crash and event reporting meant stopping the simulator from inventing users, watching the verification fail a perfectly healthy app, and learning that without symbols a crash report is a column of addresses."
@@ -127,7 +127,47 @@ Adding the file isn't enough on its own. A test now reads the manifest out of th
 
 One recurring chore remains: recount after every dependency bump. An SDK that starts shipping a manifest makes our entry a duplicate; one that stops makes ours the only one. Either way, opening the app and counting takes two seconds.
 
+## 2026-09-22 — Fully instrumented, and still unable to answer the question
+
+Home screen widgets shipped, and the obvious question followed: **is anyone using them?** There was no data to answer with. Tapping a widget opened the app, the deep link quietly moved the date, and nothing was recorded. The instrumentation was all there; it just had nothing to say about the feature built last.
+
+Linking the reporting SDK into the extension looks like the fix, and it fails in three places. A widget process **lives for a few seconds** — events are batched before upload, so most of them die with the process. It breaks the rule that exactly one file knows about Firebase. And linking an SDK means the widget now needs **its own privacy manifest**, which is one more copy of the thing the section above just finished consolidating.
+
+So the app reports on the widget's behalf, and asks two separate questions:
+
+| Question | Answered when |
+|---|---|
+| Is it **on the home screen** | The app comes to the foreground and counts installed widgets |
+| Is it **being tapped** | A deep link opens the app |
+
+These are different problems. Installed but never tapped means the widget shows the wrong thing; never installed means nobody knows it exists. Collapse them into one number and you can never tell which.
+
+Counting has a trap worth closing up front: the identifier used to count installed widgets has to match the one the widget registers itself with, character for character. Keep a second copy in the app and the day someone renames a widget, the count silently becomes zero — and zero reads as "nobody uses it." That string now lives in one file both targets compile.
+
+## Declaring a field and actually filling it are different jobs
+
+While reviewing the crash context, one key turned out to be **defined and never written**: how many blocks are on the day currently on screen. Name and comment both present, no code setting it. Every crash report ever filed had that line blank.
+
+Nothing catches this. An unused enum case isn't even a warning. Filling it in, three more went alongside: how many days from today the visible date is, how many blocks were linked together, how many widgets are installed. Opening a timeline crash should tell you *which day, how many blocks, how many linked* before you start trying to reproduce.
+
+Two breadcrumbs joined them: which kind of drag just started (move, resize, group, create), and memory warnings. The second matters most — an app killed for memory pressure **files no crash report at all**. The memory warning logged just before it is the only trace left.
+
+## The line that assigned error codes was quietly wrong
+
+Non-fatal errors get a number each so the dashboard can separate them. The number came from a position in a list:
+
+```swift
+(list.firstIndex(of: self) ?? 0) + 1
+```
+
+Anything missing from that list falls through to `?? 0` and becomes **1** — already taken by "save failed." Add a new error kind, forget the list entry, and it merges into an unrelated error on the dashboard. Worse than looking broken: it looks like save failures went up.
+
+Adding three new kinds this session (a default-alarm setting that won't decode, an alarm sound preview that won't open, and a custom color list that won't decode — that last one **loses the colors permanently, because the next save overwrites with an empty list**) nearly walked straight into it. The enum is now iterable and a test checks that **every** kind has a distinct code, failing on the spot when one is missing from the list.
+
+The lesson from earlier in this post repeats one layer down: the instrument built to catch silent failures can fail silently too, and the only thing that stops it is a check that walks the whole set.
+
 ## History
 
 - 2026-09-21 — Added crash and event reporting, kept the simulator out of the numbers, wired dSYM upload into the release lane
 - 2026-09-22 — Filled the missing privacy manifest and settled on declaring only what the SDKs leave unsaid
+- 2026-09-22 — Moved widget metrics into the app, filled the crash context fields that were never written, and closed the error-code collision with a test
