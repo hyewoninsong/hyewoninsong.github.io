@@ -1,6 +1,6 @@
 ---
 title: "Four places the app failed without telling anyone"
-date: 2026-09-21T13:56:53+09:00
+date: 2026-09-22T22:10:00+09:00
 app: "daily-planner"
 tags: ["devlog", "data", "swiftui"]
 summary: "A failed save, a failed alarm, and a fallback that wipes the store and starts over — none of it was recorded anywhere. Adding crash and event reporting meant stopping the simulator from inventing users, watching the verification fail a perfectly healthy app, and learning that without symbols a crash report is a column of addresses."
@@ -102,3 +102,32 @@ Automation only covers builds from here on, so the last build's dSYM went up by 
 ## Where it stands
 
 Left to do: force one crash on a real device to clear the console's onboarding screen, and fill in the App Store privacy questionnaire. The wrapper builds and runs without the config file and says so in the log, so nobody cloning the repo hits a wall.
+
+## 2026-09-22 — Nothing in the app said what it collects
+
+Before filling in that privacy questionnaire, something else turned up: the app bundle had **no privacy manifest at all.**
+
+That file lists what data the app collects and why it uses the APIs Apple requires a stated reason for. Leaving it out does nothing visible — it isn't compiled, nothing references it, so the build passes, the tests pass, and the store upload goes through. It surfaces much later, as a warning or an audit. Same shape as the two mistakes above: **a silent gap is found by opening the artifact, not by reading logs.**
+
+So I opened it and counted. The built app contained seventeen manifests — Crashlytics, Installations, the Google utility bundles, the transport layer — each SDK declaring its own share. **The two analytics binaries had none.** The frameworks that actually gather and send the events ship without one.
+
+That splits the result in an odd way. Crash collection is declared by Crashlytics' own file; **event collection is declared nowhere**. The app's own manifest is the only place it can be.
+
+## Not declaring everything just to be safe
+
+The tempting move is to list crash data and diagnostics too, since you're editing the file anyway.
+
+It isn't safer. It creates a second source of truth for the same fact. When the SDK later revises its declaration, ours stays put, the two disagree, and that disagreement spreads to the App Store privacy labels and the privacy policy — with nobody able to say which one is true. So the rule is: **declare only what no SDK already declares.**
+
+That leaves three things. No tracking (no advertising identifier, so no tracking domains either); product interaction plus the app instance id that rides along with it, collected for analytics; and `UserDefaults` with reason code `CA92.1` — the app reading and writing its own settings, nobody else's.
+
+## Keeping it from happening again
+
+Adding the file isn't enough on its own. A test now reads the manifest out of the bundle, checks that it actually shipped, checks that the "no tracking" claim doesn't contradict the collected types, and then **scans the app source**: if the code starts using a required-reason API — file timestamps, disk space, boot time, active keyboards, `UserDefaults` — and the manifest has no line for it, the test fails right there.
+
+One recurring chore remains: recount after every dependency bump. An SDK that starts shipping a manifest makes our entry a duplicate; one that stops makes ours the only one. Either way, opening the app and counting takes two seconds.
+
+## History
+
+- 2026-09-21 — Added crash and event reporting, kept the simulator out of the numbers, wired dSYM upload into the release lane
+- 2026-09-22 — Filled the missing privacy manifest and settled on declaring only what the SDKs leave unsaid
