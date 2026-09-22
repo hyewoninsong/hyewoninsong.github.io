@@ -1,12 +1,14 @@
 ---
 title: "The color picker came out of its popover"
-date: 2026-09-21T07:34:30+09:00
+date: 2026-09-22T20:25:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
-summary: "Picking a todo color meant tapping a circle to open a popover. Now the palette is already there when the sheet opens — at the cost of the keyboard that used to come up with it."
+summary: "Picking a todo color meant tapping a circle to open a popover. We spread the palette across the sheet, then put it back behind the circle a day later. Color is not a value you set twice."
 ---
 
-In the day planner, creating or editing a todo now opens a sheet with the color palette already spread out under the name field. Before, you tapped the color circle to the left of the name and a popover appeared. Choosing a color is half of what this sheet does, and it was sitting behind a door.
+*(Reversed on 2026-09-22 — the last section, if you want the ending first.)*
+
+In the day planner, creating or editing a todo opened a sheet with the color palette already spread out under the name field. Before, you tapped the color circle to the left of the name and a popover appeared. Choosing a color is half of what this sheet does, and it was sitting behind a door.
 
 ## The door cost more than the room behind it
 
@@ -48,3 +50,32 @@ Reading the code does not catch this; a 10pt overflow raises no warning and show
 ## Where it stands
 
 The custom-color editor picks saturation and brightness by dragging, and it now lives inside a scrolling sheet, where a vertical drag would be taken by the scroll. The sheet's scroll is locked while that editor is open. That also puts the archive button out of reach for those few seconds, which seems like the right trade.
+
+## 2026-09-22 — Back behind the circle, one day later
+
+This post's premise was that choosing a color is half of what the sheet does. A day of use said
+otherwise: color is set **once**, when the todo is created, and almost never changed. Meanwhile the
+palette filled the sheet, so opening it to fix a name put four rows of swatches in front of you
+first — and paying for that had already cost the name field its keyboard.
+
+Color selection went back into a popover behind the circle. The panel itself is unchanged; a thin
+wrapper gives it a 360 width and a closing checkmark.
+
+![Tap the circle and the panel opens there, header and last row intact](/blog/planner-color-picker/popover-again.png)
+
+The squeeze trap above is still real. This time we avoided it by **removing the need for the
+workaround rather than restoring it**: the sheet keeps a single `.large` detent instead of dropping
+back to `.medium`. In a tall sheet the circle sits at the top with 700pt below it, so a 440pt panel
+simply fits. There is still no "grow the detent, wait 380 ms, then present".
+
+The name field gets its keyboard back too — with the palette behind a door there is nothing for it
+to cover. The cost this post accepted disappeared along with the decision that created it.
+
+The other reason was the block editor shrinking to a small popover: the same panel would have had
+to open from two places. That one ended up not touching color at all and linking to the todo editor
+instead, so this sheet is the single place color is chosen.
+
+## History
+
+- 2026-09-21 — Moved color selection out of its popover and spread it across the sheet, dropping the name field's auto-focus. Measured and fixed the clipped first row of the "In use" strip (a height that left out the ring outset)
+- 2026-09-22 — Reversed it: color selection is back in a popover behind the circle. Avoided the squeeze by keeping a single `.large` detent rather than restoring the workaround, and auto-focus returned
