@@ -1,0 +1,92 @@
+---
+/**
+ * SuperPlanner 소개(영문) — 아직 개발 중이라 스샷이 없다. `hero`·`tabs`·`shots` 를 비워 둔다.
+ * 캡처가 나오면 ko 쪽과 같은 자리를 같이 채운다.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AppPage, { type Copy } from '../../../components/AppPage.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getEntry } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const app = (await getEntry('apps', 'en/planner'))!;
+
+const copy: Copy = {
+  tagline: 'A planner you draw on the day itself',
+  summary: 'Instead of piling tasks into a list, you decide where in the day each one goes — and drag it when the day goes differently.',
+  closing: ['Your plans and history move only inside your own iCloud account.', 'There is no account to create and no sign-in screen.'],
+  sections: [
+    {
+      label: 'Plan',
+      title: 'Drag an empty stretch and that is when it happens',
+      lead: 'Writing something down and deciding when to do it are two different jobs, and a list only ever does the first. Here you drag across an empty stretch of the day and that stretch becomes the time for it.',
+      steps: [
+        ['Drag a range', 'The span is drawn as you hold and pull. Starts land on the hour or the half hour, so you never pass through a screen that asks for a time.'],
+        ['Release to pick', 'Letting go brings up the tasks you already keep. The one you pick lands in that span and is selected right away.'],
+        ['Or make one there', 'A task that is not on the list yet can be created at the top of the same sheet and placed immediately, without a trip to the task tab.'],
+      ],
+    },
+    {
+      label: 'Adjust',
+      title: 'When the day goes differently, you drag',
+      lead: 'Few days run to plan, and the real cost is retyping times every time one does not. A block moves when you drag it and stretches when you grab its edge — that is the whole grammar for fixing a day.',
+      points: [
+        'Edges land on five-minute steps and snap to the boundaries of neighbouring blocks, so you are not working out the exact minute.',
+        'Overlapping is allowed and nothing is asked about it. Only the overlapping stretch is hatched, and untangling it stays your call.',
+        'Dragging to the edge of the screen scrolls the day, and a block squashes against midnight so you feel the wall before you push past it.',
+        'Anything you do comes back from the undo button in the bottom left, fifty steps deep.',
+        'The scrollbar on the right is the whole day drawn small — grab it and you see how the hours off screen are laid out.',
+      ],
+    },
+    {
+      label: 'Shift',
+      title: 'When one thing slips, everything after it does too',
+      lead: 'A meeting runs half an hour long and the rest of the day moves with it. Dragging blocks one at a time is how the order gets scrambled. Select a block, tap the chip below it, and everything after it is linked into one run you drag once.',
+      points: [
+        'The upper chip links everything before the block, the lower one everything after. The chip fills in proportion to how much of that direction is already linked.',
+        'Anything that should stay put is unlinked with the button on its own block, so the rest still moves.',
+        'A linked block that runs into something standing still stops against it — a run never leaves new overlaps in its wake.',
+        'Ten blocks moved, one undo.',
+      ],
+    },
+    {
+      label: 'Drawer',
+      title: 'What you did not get to does not have to be deleted',
+      lead: 'Deleting an unfinished block takes the record with it; leaving it in place buries tomorrow. Drag it onto the drawer in the bottom right and it leaves the timeline with everything about it intact.',
+      points: [
+        'Its note and its alarms are kept. Only the history drops it, so a task you skipped is not counted as one you did.',
+        'Blocks parked together stay one row in the drawer, and they come back out with the spacing they went in with.',
+        'They come back to the middle of whatever day you are looking at. There is no case where it cannot find room and gives up.',
+        'Relaying the whole day, or pushing just the unfinished blocks to tomorrow, lives in one Organize menu in the toolbar.',
+      ],
+    },
+    {
+      label: 'Track',
+      title: 'The record writes itself',
+      lead: 'Knowing what you actually spent the week on normally means logging it a second time, next to the plan. Here the blocks are the record, and the task tab is where they add up.',
+      points: [
+        'Three tiles at the top: what you finished today, the hours this week, and how many days in a row you have planned anything.',
+        'The contribution grid switches between days, weeks and months. Tapping a cell jumps straight to that day in the planner.',
+        'Opening one task shows its hours this week, this month, this year and all time, a calendar of the days it ran, and the notes you left.',
+        'A task you have stopped doing is archived — it leaves the list and its past stays readable.',
+      ],
+    },
+    {
+      label: 'Profiles',
+      title: 'Work and study do not share a timeline',
+      lead: 'Put the job and everything else on one timeline and neither is legible. Profiles split them: the screen only ever shows the tasks and blocks of the profile you are in.',
+      points: [
+        'Each profile keeps its own tasks and its own history. You can have up to ten.',
+        'Which profile is open is remembered per device, so one can stay on work while another stays on study.',
+        'Alarms are three slots per block — a reminder, the start, the end — each with its own sound. Pick which device rings and the same alarm does not go off on all of them.',
+        'History follows the iCloud account already signed in on the device. There is no account to make for this app and no sign-in screen.',
+      ],
+    },
+  ],
+};
+---
+
+<BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
+  <AppPage lang={lang} slug="planner" app={app} copy={copy} />
+</BaseLayout>

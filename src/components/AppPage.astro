@@ -20,14 +20,17 @@ export interface Section {
   /** 라벨 + 설명 쌍 (드래그 섹션) */
   steps?: PerDevice<[string, string][]>;
   points?: PerDevice<string[]>;
-  shots: { iphone: Shot[]; ipad: Shot[] };
+  /** 없으면 글만 있는 섹션 — 캡처를 아직 안 찍은 앱(개발 중)이다. 찍히면 그때 채운다. */
+  shots?: { iphone: Shot[]; ipad: Shot[] };
 }
 
 export interface Copy {
   tagline: string;
   summary: string;
-  hero: { iphone: string; ipad: string };
-  tabs: { iphone: string; ipad: string };
+  /** 히어로 스샷의 대체 텍스트. 없으면 헤더 아래 스샷 자리를 통째로 뺀다. */
+  hero?: { iphone: string; ipad: string };
+  /** 기기 탭 라벨. 없으면 탭 줄도 iPad 문장·스샷도 안 그린다 — iPhone 만 있는 앱. */
+  tabs?: { iphone: string; ipad: string };
   sections: Section[];
   closing: [string, string];
 }
@@ -77,7 +80,7 @@ const icon = app.data.icon ? withHash(app.data.icon) : null;
 const img = (d: Device, file: string) =>
   withHash(d === 'ipad' ? `/apps/${slug}/${lang}/ipad/${file}.png` : `/apps/${slug}/${lang}/${file}.png`);
 
-const devices: Device[] = ['iphone', 'ipad'];
+const devices: Device[] = copy.tabs ? ['iphone', 'ipad'] : ['iphone'];
 const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
 ---
 
@@ -297,10 +300,12 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
         </div>
       )}
 
-      <div class="device-tabs" role="tablist" aria-label="Device">
-        <button type="button" role="tab" data-device-tab="iphone" aria-selected="true">{copy.tabs.iphone}</button>
-        <button type="button" role="tab" data-device-tab="ipad" aria-selected="false">{copy.tabs.ipad}</button>
-      </div>
+      {copy.tabs && (
+        <div class="device-tabs" role="tablist" aria-label="Device">
+          <button type="button" role="tab" data-device-tab="iphone" aria-selected="true">{copy.tabs.iphone}</button>
+          <button type="button" role="tab" data-device-tab="ipad" aria-selected="false">{copy.tabs.ipad}</button>
+        </div>
+      )}
 
       {app.data.appStoreUrl && (
         <div>
@@ -313,25 +318,29 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
     </div>
 
     <!-- ── Intro screenshot ── -->
-    <div class="flex justify-center mb-28 animate-reveal delay-1">
-      <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" {...dim('iphone')} />
-      {ipadShot === 'frame' ? (
-        <div class="only-ipad shot-frame w-full max-w-[760px]">
-          <img src={img('ipad', 'hero')} alt={copy.hero.ipad} {...dim('ipad')} loading="lazy" />
-        </div>
-      ) : (
-        <img src={img('ipad', 'hero')} alt={copy.hero.ipad} class="only-ipad screenshot screenshot-flat w-full max-w-[420px]" {...dim('ipad')} loading="lazy" />
-      )}
-    </div>
+    {copy.hero && (
+      <div class="flex justify-center mb-28 animate-reveal delay-1">
+        <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" {...dim('iphone')} />
+        {ipadShot === 'frame' ? (
+          <div class="only-ipad shot-frame w-full max-w-[760px]">
+            <img src={img('ipad', 'hero')} alt={copy.hero.ipad} {...dim('ipad')} loading="lazy" />
+          </div>
+        ) : (
+          <img src={img('ipad', 'hero')} alt={copy.hero.ipad} class="only-ipad screenshot screenshot-flat w-full max-w-[420px]" {...dim('ipad')} loading="lazy" />
+        )}
+      </div>
+    )}
 
   </div>
 
   {copy.sections.map((s, i) => {
     const alt = i % 2 === 1;
+    /* 스샷이 없으면 좌우 두 단이 아니라 한 단이다 — 빈 단을 남기면 섹션이 반쯤 지워진 것으로 읽힌다. */
+    const shots = s.shots;
     return (
       <section class:list={['py-24 px-6 border-t border-border', alt && 'bg-bg-alt']}>
-        <div class:list={['max-w-5xl mx-auto flex flex-col items-center gap-16', alt ? 'md:flex-row-reverse' : 'md:flex-row']}>
-          <div class="flex-1 min-w-0 animate-reveal">
+        <div class:list={['mx-auto flex flex-col items-center gap-16', shots ? ['max-w-5xl', alt ? 'md:flex-row-reverse' : 'md:flex-row'] : 'max-w-3xl']}>
+          <div class="flex-1 min-w-0 w-full animate-reveal">
             <span class="section-label">{s.label}</span>
             {devices.map((d) => {
               const steps = s.steps ? pick(s.steps, d) : undefined;
@@ -354,12 +363,13 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
               );
             })}
           </div>
+          {shots && (
           <div class="flex-1 min-w-0 w-full animate-reveal delay-1">
             {devices.map((d) => {
-              const shots = s.shots[d];
+              const row = shots[d];
               return (
-                <div class:list={[`only-${d}`, 'shot-row', shots.length === 1 && 'single']}>
-                  {shots.map((sh) => (
+                <div class:list={[`only-${d}`, 'shot-row', row.length === 1 && 'single']}>
+                  {row.map((sh) => (
                     d === 'ipad'
                       ? (ipadShot === 'frame'
                           ? <div class="shot-frame w-full max-w-[480px]"><img src={img(d, sh.file)} alt={sh.alt} {...dim(d)} loading="lazy" /></div>
@@ -370,6 +380,7 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
               );
             })}
           </div>
+          )}
         </div>
       </section>
     );
@@ -423,8 +434,10 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
 
   tabs.forEach(b => b.addEventListener('click', () => select(b.dataset.deviceTab || 'iphone')));
 
-  let initial = 'iphone';
-  if (location.hash === '#ipad') initial = 'ipad';
-  else { try { initial = localStorage.getItem(storeKey) || 'iphone'; } catch {} }
-  if (initial === 'ipad') select('ipad', false);
+  if (tabs.length > 0) {
+    let initial = 'iphone';
+    if (location.hash === '#ipad') initial = 'ipad';
+    else { try { initial = localStorage.getItem(storeKey) || 'iphone'; } catch {} }
+    if (initial === 'ipad') select('ipad', false);
+  }
 </script>
