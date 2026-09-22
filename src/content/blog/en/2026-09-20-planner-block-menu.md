@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T20:20:00+09:00
+date: 2026-09-22T23:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -599,6 +599,48 @@ UI tests read that button's label inside their failure messages. With the button
 message threw first, so the real reason was replaced by "No matches found". They go through a
 helper now that returns "no drawer button (a block is selected)" instead.
 
+## 2026-09-22 — The handle was much bigger than it looked
+
+"I grabbed it to move it and it resized" kept coming up. The reason was plain once we looked:
+the handle drawn at the block's bottom edge was **half the block's width**, while the area that
+actually accepted a resize was the **full width**, plus **20pt outside** the edge. What you saw
+and what you could grab were different things.
+
+On a 30-minute block it was worse — the band was a third of the block's height plus that 20pt,
+so most of a 40pt block was handle. And the 20pt outside sat on top of the **block below**: on a
+packed day, grabbing the top of one block stretched the one above it.
+
+So the hit rectangle moved **inside** the block, to the **middle third** of its width, with a
+height of one third clamped to 14–33pt and nothing outside the edge. The drawn capsule shrank to
+that same third, so **what you see is what you grab**. One function returns the rectangle, and
+both the drawing and the hit test read it. Resizing now means aiming for the middle — miss it and
+you simply move the block, which is a cheap mistake.
+
+### What the 20pt of slack had been hiding
+
+Narrowing the band exposed something else. Pressing the handle and dragging **immediately** did
+nothing but scroll; holding past 0.2 seconds and then dragging worked fine.
+
+A pan recognizer only asks whether it may begin **after** the finger passes the ~10pt threshold,
+so its coordinate is already moved. We reconstruct the start as `location - translation` and test
+that against the band. But the scroll view holds the touch briefly before handing it over, and
+that first stretch is missing from `translation` — the reconstructed point sits 10–15pt past where
+the finger actually landed. The 20pt outside had been absorbing that error; without it, the point
+fell clean outside a 14pt band.
+
+The fix is 12pt of vertical slack applied **only** when judging a reconstructed start — never to
+the drawing, never to the long-press path, which knows the real starting point. Every narrow hit
+area now comes with a question: is this band thicker than the pan threshold?
+
+### The same test passed quietly again
+
+We missed the regression at first because the smoke test's resize step dragged and then only
+**attached a screenshot** — no assertion. The gesture could fail completely, the screenshot would
+show an unchanged block, and the test stayed green. At the top of this post, back on 2026-09-20,
+the same step let a `UIButton` menu hijack drags for the same reason. Twice is enough: the step
+now asserts that the selected block's own time label reads 11:00. A screenshot is evidence for a
+human to read later, not a verdict.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -615,3 +657,4 @@ helper now that returns "no drawer button (a block is selected)" instead.
 - 2026-09-22 — Connections became a roster of ids, so a moving group no longer picks up what it passes; link buttons appear on every block that day, and the direction chip has three states (thin outline / ring thickened by the fraction connected / filled). Minimap bars follow the drag live
 - 2026-09-22 — Group companions now stop at the first block they meet (anything they already overlapped, and the block you hold, pass through). Uneven travel means the save uses the preview placement, and the anchor keeps its chips through the drag
 - 2026-09-22 — The bottom-right corner splits by selection (trash + Put in Drawer / drawer), and editing shrank to a note-sized popover with a link into the todo editor. The drawer remembers what went in together. Caught the popover-anchor trap on views placed with `.offset`
+- 2026-09-22 — The resize handle's hit area moved inside the block, to the middle third, matching the drawn capsule; a judgement-only slack covers the error in the reconstructed pan start
