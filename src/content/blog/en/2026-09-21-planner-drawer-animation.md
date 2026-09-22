@@ -1,6 +1,6 @@
 ---
 title: "A block put in the drawer drops into the drawer button"
-date: 2026-09-21T14:11:25+09:00
+date: 2026-09-23T00:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "Putting a block in the drawer used to make it vanish while a button appeared in the corner, with nothing connecting the two. Now a ghost of the block flies to the button and drops in, and taking it out rises from the same button and lands on the timeline. The haptic fires on arrival, not on the tap."
@@ -10,13 +10,13 @@ Putting a block in the drawer now lifts it off the timeline, carries it to the d
 
 ## Nothing connected the vanishing and the appearing
 
-The drawer parks a block off the timeline. Choose "Put in drawer" from the block menu and the block leaves the timeline; a button with a count badge stands in the bottom right whenever the drawer is not empty. Correct, but it was two separate pictures. The block **disappears**, a button **appears**, and nothing on screen said these were the same event.
+The drawer parks a block off the timeline. Drag a block onto the button in the bottom right, or tap "Put in drawer" on a selected block, and it leaves the timeline; a button with a count badge stands in the bottom right whenever the drawer is not empty. Correct, but it was two separate pictures. The block **disappears**, a button **appears**, and nothing on screen said these were the same event.
 
 Taking out was the same. Tap a row in the drawer sheet and the sheet slides away, but the block is **already** sitting on the timeline behind it. It never felt like it came out of anywhere.
 
 ## Into the button and out of it
 
-One ghost does the work: a view with the block's color, glyph and title that flies between the timeline slot and the button in 0.55 seconds.
+A ghost does the work: a view with the block's color, glyph and title that flies between the timeline slot and the button in 0.55 seconds. Taking out a **bundle** — blocks that went in together — flies one ghost per block (see 2026-09-23 below).
 
 | | Starts | Path | Ends |
 |---|---|---|---|
@@ -57,6 +57,24 @@ One slip on the label: raising it above the button with `alignmentGuide(.top)` i
 
 Putting the first block in overlaps the button's appearance with the flight. It reads as the button standing up to receive it, so it stays.
 
+## 2026-09-23 — A bundle flies as a bundle
+
+A row in the drawer is not one block; it is everything that went in together. Drop three linked blocks on the drawer button and they become one row, and tapping that row brings all three back with the gaps they had. The animation, though, still flew **one** ghost. Only the head rode it; the rest were already sitting on the timeline the moment the sheet slid away. That reads as "it was always there" rather than "it came out" — and showing where something went is the whole job of the effect.
+
+Now there is one ghost per block. They rise from the button 0.08 seconds apart (0.32 at most) and scatter to their own slots. While any of them is in the air, **every** block of the bundle stays hidden. Hiding only the head meant the others sat down next to a ghost that was still flying.
+
+![The timeline is empty and two block-shaped ghosts rise out of the drawer button, each heading for a different slot](/blog/planner-drawer-animation/bundle-in-flight.png)
+
+The stagger exists because they all start from the same point. Released together, the first frames overlap exactly and read as a single ghost; 0.08 seconds apart is enough to read as a stream. The animation runs longer by that amount, and the landing haptic fires once for the whole bundle.
+
+Two alternatives lost. One ghost with a "×3" badge landing on the head's slot: the gaps are the value of a bundle, and that version keeps them out of the animation entirely. One ghost ferrying blocks one at a time: five blocks would take three seconds, and the drawer is a path people use often.
+
+The gaps themselves were already correct — the head goes to the chosen slot and the rest follow by their original start-time offsets, and a bundle that would run past midnight is pushed up whole rather than squeezed. What looked broken was the picture, not the data. Two tests now hold it: a unit test for a three-block bundle with uneven gaps, and a UI test that links two blocks in the running app, drawers them, takes them out and compares the on-screen gap in points.
+
+One side fix: a UI test that only failed at night. It placed a block at "now + 170pt", which at 23:40 is past the end of the day's content (1920pt), so the long press landed outside the layer. Re-run in the afternoon it passes, which makes it look flaky. Coordinates derived from the clock have to hold at **both ends of the day**.
+
+
 ## History
 
 - 2026-09-21 — Ghost flight both ways, arrival label, haptic moved to arrival.
+- 2026-09-23 — One ghost per block in a bundle; the whole bundle stays hidden until they land.
