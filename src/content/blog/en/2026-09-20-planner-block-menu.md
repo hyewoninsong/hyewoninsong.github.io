@@ -19,7 +19,7 @@ Todo apps mostly agree on the answer: a context menu where the block is. The new
 | Tap the checkbox at the left | Toggle done, regardless of selection |
 | Tap an unselected block | Select it |
 | Tap the selected block again | Context menu: edit, move earlier ▸, push back ▸, swap ▸, yesterday, tomorrow, drawer, remove from schedule (reworked three times, see the 2026-09-21 sections below; the last of them gave the rows a naming rule, so these read *Pull Earlier* / *Push Later* now) |
-| Hold 0.2 s then drag, or drag a selected block | Move, unchanged (drag one of the chips on the selected block's right side and everything before or after comes along; tap it for the sheet — last section, 2026-09-22) |
+| Hold 0.2 s then drag, or drag a selected block | Move, unchanged (with a group chip on, everything before or after comes along; release over the drawer button to park — last section, 2026-09-22, where the context menu itself goes away) |
 
 ![A block completed from the checkbox. Strikethrough and the faded color are the done look; the checkbox is the control that flips it](/blog/planner-block-menu/checkbox-done.png)
 
@@ -265,33 +265,51 @@ Hiding the hatch during the move and restoring it on arrival was the obvious alt
 
 The timeline canvas and the minimap each hold one of these and follow the same rule. Settled screenshots cannot catch timing like this, so the rule was pulled out as a plain type and pinned with unit tests: the old value holds while the block slides, it updates after the landing, and a drag updates at once.
 
-## 2026-09-22 — Ten rows and a sheet, replaced by dragging one chip (which must not sit on an edge)
+## 2026-09-22 — The context menu is gone: four gestures on a block are enough
 
 Eight rounds of menu work made the move group precise, and just as deep. Pushing this block and everything after it back by thirty minutes took six taps: select, tap again for the menu, *Push Later ▸*, *This and all later…*, *30 min* in the sheet, *Push*. Four of the six are places where you read and choose. The feedback was short: too deep, too much reading, why not icons or a gesture.
 
-A move decides three things: which way, how far, and what comes along. The menu asks all three in words. The drag that already existed answers the first two with one finger; the only thing it could not do was *what comes along*. A drag always moved one block, and there was no gesture for several, so the menu had to carry everything.
+A move decides three things: which way, how far, and what comes along. The menu asks all three in words. The drag that already existed answers the first two with one finger; the only thing it could not do was *what comes along*.
 
-So the selected block now carries two small chips. Drag one and this block plus **everything after it** slides the same distance; drag the other and **everything before it** comes along. Release and it applies — no sheet. Direction is the finger, distance is the finger plus snapping, and scope is which chip you grabbed. Six taps became one tap and one drag.
+### The chip moved three times
 
-The first build put the chips on the block's top-right and bottom-right **corners** — top means before, bottom means after, position is meaning. The first screenshot drew an immediate objection: "that looks like a resize handle; moving on it would feel wrong." It would. The resize handles already live on the block's top and bottom edges, and anything straddling those edges reads as "pull this edge". Two kinds of handle on one edge cannot be told apart until you drag. So the chips moved off the edges to the **middle of the block's right side**, side by side: left chip for everything before, right chip for everything after. Away from the edges they read as buttons on the block, and since the finger decides the direction anyway, the chip never needed to encode up or down.
+The first build put **drag handles** on the block's top-right and bottom-right corners: grab the bottom one and everything after comes along. The first screenshot drew an immediate objection — "that looks like a resize handle; moving on it would feel wrong." It would. The resize handles already live on those edges.
 
-![The selected middle block shows two chips side by side at mid-height on the right. The three bars in a chip: the wide one is this block, the short pair are the blocks that come along](/blog/planner-block-menu/group-chips-selected.png)
+The second build moved the chips to the middle of the right side, side by side, drag to move and tap for a sheet. Off the edges they no longer read as handles, but now they had lost the top/bottom meaning. "Top and bottom is better. Put them back where they were, but instead of press-and-drag, **tapping selects this block plus everything on that side**, visibly grouped. Drag in that state and they all move. A toggle, so it can be turned off."
 
-![After dragging the right chip: the grabbed block moved an hour later and the block after it moved the same amount. The block before stayed put](/blog/planner-block-menu/group-chips-after-drag.png)
+That was the answer. My objection to toggles had been that you have to read which mode is on; when every grouped block wears a ring, the state is on screen. And a tap is a different grammar from a drag, so the chip can sit on the same edge as the resize handle without confusion. Seeing what will travel before you drag comes for free.
 
-Something that looks like a button should answer a tap. Tapping a chip opens the move sheet for that scope, and the sheet gained a *Pull Earlier / Push Later* segment at the top. Drag for roughly, tap and pick for exactly thirty minutes — both start from the same spot. The segment defaults to whichever direction clears an overlap sooner: back if the block rides the tail of the one before, forward if it sits on the head of the one after, back when nothing overlaps.
+![The middle block is selected and its bottom chip is on: the chip is filled and the block after it has a thin ring. Dragging the body now moves both](/blog/planner-block-menu/group-chips-selected.png)
 
-![The sheet a chip opens: the direction segment on top, the same distance list below](/blog/planner-block-menu/group-chip-sheet.png)
+![After the drag: the grabbed block and the one after it moved the same amount; the block before stayed put](/blog/planner-block-menu/group-chips-after-drag.png)
 
-A chip appears only when there is something in that direction. The first block of the day has no left chip; the last has no right chip, so the chip itself says "there is something this way". The glyph speaks the same language as the submenu icons: bars are blocks, the wide bar is the one you grabbed, the short ones follow.
+### And then the menu had nothing left to do
 
-The sheet's two smart presets became magnets. Only the grabbed block snaps — to the grid and to the edges of blocks that stay put — and the rest take the same offset. *Until it meets the block before* is now the grabbed block's start catching on the previous block's end, and *Until clear of overlap* is it catching on the end of whatever it overlaps. Blocks that travel together keep their spacing, so they are not magnet candidates for each other.
+With moving handled by the chips, the menu held edit, swap, drawer and remove. One more step: "Swap can go. Keep the drawer button at the bottom right at all times and drag blocks onto it. Edit opens when you tap the selected block again. Then the context menu is not needed."
 
-The wall is different from the sheet's. The sheet's push pins each block that would cross midnight to 24:00 individually and leaves them overlapping. In a live drag that would show the group crumpling against the wall in real time. So the group's own ends are the wall: if any block would leave the day, the whole group stops, and the blocked distance feeds the same resistance haptic and squash a single-block drag already had.
+| Menu row | Where it went |
+|---|---|
+| Edit… | **Tap the selected block again** |
+| Move ▸ (ten rows) | Top/bottom chip toggle + body drag |
+| Swap Places ▸ | Removed — dragging already does that |
+| Move to Drawer | The drawer button is **always** there; drop a block on it. A group goes in whole |
+| Remove from Schedule | The editor already ends with *Delete this block* |
 
-Several alternatives lost. Up and down arrow buttons on the selected block, one snap unit per tap, take six taps for thirty minutes at a five-minute snap, and a scope toggle is a mode you have to read. Ripple editing from the time ruler — grab the gap between blocks and everything below moves — has a clean mental model but starts without a selection, so it is harder to find than a chip. A two-finger drag is hardest to find and cannot tell before from after. The scrollbar lane on the right is 22 pt wide and already owned by scrub and jump, and cutting a gutter between the blocks and the lane would let a bracket show what travels together, at the price of every block losing eight percent of its width. Five chips, one per menu scope, do not fit in a row, and the two "excluding this one" scopes are rare enough to stay in the menu.
+So a block has four gestures: checkbox = done, tap = select, tap again = edit, drag = move (grouped if a chip is on, into the drawer if released over the button). Nothing to read. The context menu, the transparent `UIButton` that presented it and its `require(toFail:)` acrobatics, the move sheet and swap all left the codebase — most of what the earlier sections of this post fought is gone.
 
-The menu went from ten rows to three. *Pull Earlier ▸* and *Push Later ▸* folded into one *Move ▸* with *This One Only*, *All Earlier*, *All Later* under it; the two "including this one" scopes went to the chips and the direction went into the sheet. The reschedule event now records whether a move came from a drag or a sheet. A tutorial step for the chips is still to do.
+![Right after dropping a block on the drawer button: it leaves the timeline, the button shows 1, and a short "moved to the drawer" note appears](/blog/planner-block-menu/drawer-drop.png)
+
+Details. In a group drag only the grabbed block snaps, to the grid and to the edges of blocks that stay put; the rest take the same offset, so the sheet's *until it meets the block before* and *until clear of overlap* are now magnets. The wall is the group's own ends: if any block would leave the day, the whole group stops, with the same resistance haptic a single drag has. The drawer button sits inside the bottom auto-scroll zone, so hovering over it used to scroll the page; while the finger is within the button's radius, auto-scroll pauses. Grouping applies only to moving and the drawer — applying it to edit or delete would remove five blocks without a confirmation.
+
+### The tests split down the middle
+
+Five of the eight drawer UI tests failed, alternating. Neighbouring tests with identical setup passed, and the failing set changed every run, so it looked like machine-load flakiness. The failures all read "no row in the drawer sheet", which naturally means "the drop did not work" — so I fixed the drop hit test. Five still failed.
+
+The answer was in the accessibility dump XCUITest attaches when a query fails. The drawer button was there, labelled **"drawer · 1"**. The park had worked; the *next* tap had not. The button's frame was 48pt instead of 44 — it was still growing. After a park the button springs once and a "moved to the drawer" note sits above it for 1.8 seconds, and the test waited 1.2 before tapping. That 1.2 < 1.8 was the whole bug. The thing to wait for was not a duration but the note being gone.
+
+That left one failure, and only on **today's page**. Today scrolls so that "now" sits a third of the way down, which puts the block mid-screen; from there to the bottom-right drawer button the horizontal travel exceeds the vertical. On any other day 08:00 is at the top, so the drag is steeply vertical. The moment horizontal wins, the **date pager takes the gesture** and the day flips, so the drop happens on a page that does not hold that block and silently does nothing. When the target sits in a screen corner, the path is always diagonal — I had forgotten that. The pager is now locked while a block is being dragged.
+
+What was lost: delete is one tap longer (tap again → sheet → *Delete this block* → confirm), while the drawer became one gesture, so the quick way to clear a block is the drawer. There is no sheet for an exact "30 minutes"; the five-minute snap and the time pill do that job. The tutorial's *Block menu* step became *Open the editor*; steps for grouping and the drawer are still to come.
 
 ## History
 
@@ -304,4 +322,4 @@ The menu went from ten rows to three. *Pull Earlier ▸* and *Push Later ▸* fo
 - 2026-09-21 — Removed *Move to yesterday* and *Move to tomorrow* so the drawer is the only way off a day; reschedules and undo now show the move
 - 2026-09-21 — Gave the rows one naming grammar (`Pull Earlier` ↔ `Push Later`), and caught the catalog trap where renaming a key leaves only Korean devices on the old wording
 - 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
-- 2026-09-22 — Two group chips at mid-height on the selected block (first on the corners, moved once they read as resize handles) turn "move everything before or after" from six taps into one tap and one drag; tapping a chip opens the sheet, and the menu shrank to *Move ▸* with three rows
+- 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block
