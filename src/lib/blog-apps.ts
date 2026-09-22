@@ -27,9 +27,10 @@ export const BLOG_APPS: BlogAppMeta[] = [
   { key: 'timetable', name: 'SuperTimetable', appSlug: 'timetable' },
   { key: 'superfont', name: 'SuperFont', appSlug: 'superfont' },
   { key: 'daily-planner', name: 'SuperPlanner', appSlug: 'planner' },
-  { key: 'musicnote', name: 'SuperMusicNote', appSlug: 'musicnote' },
   { key: 'superpdf', name: 'SuperPDF', appSlug: 'pdf' },
-  { key: 'notequiz', name: 'SuperNoteQuiz' },
+  // 앱 저장소가 `NoteQuiz` 라 글의 키는 `notequiz` 인데 제품명은 SuperMusicNote 이고
+  // apps 컬렉션의 slug 는 `musicnote` 다 — 키 하나가 셋을 이어 준다.
+  { key: 'notequiz', name: 'SuperMusicNote', appSlug: 'musicnote' },
   { key: 'supermath', name: 'SuperMathQuiz' },
   { key: 'supertimers', name: 'SuperTimers' },
 ];
