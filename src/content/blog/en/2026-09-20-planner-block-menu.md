@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T15:20:00+09:00
+date: 2026-09-22T16:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -402,19 +402,31 @@ show the state and left the chip lying about it.
 
 | Chip | Meaning | Tap |
 |---|---|---|
+| Thin outline | none of it is connected | connect all of it |
+| **Ring thickened that far round** | some of it is connected | connect all of it |
 | Filled circle | all of that direction is connected | disconnect all of it |
-| **Dashed outline** | some of it is connected | connect all of it |
-| Solid outline | none of it is connected | connect all of it |
 
-The dash was already on screen: a thread with a block cut out of it has a gap. **A gapped
-thread and a dashed ring are the same statement**, so there is no new symbol to learn.
+The first attempt got this wrong. Partial was a **dashed** ring: a thread with a block cut out
+of it has a gap, so a gapped thread and a dashed ring say the same thing, and there is no new
+symbol to learn. The reply was immediate — a dashed ring for *some* next to a solid ring for
+*none* does not read.
 
-![The lower chip is dashed — only the reading block of the two below is connected. The thread runs from the chip to its filled button, and the walk's button is still an outline](/blog/planner-block-menu/chip-partial-dashed.png)
+The metaphor was right and **the ink was backwards**. A dash carries less ink than a solid line,
+so the state with fewer connections looked heavier, and reading the three states meant flipping
+the order in your head every time. A metaphor does not beat what the eye reads first.
+
+So the three went onto one axis: the ring thickens clockwise from twelve o'clock by the fraction
+that is connected. The ink now grows monotonically — and it says **how many of how many** as a
+bonus. One of two is half a turn.
+
+![The lower chip's ring is thick for half its circumference — only the reading block of the two below is connected. The thread runs from the chip to its filled button, and the walk's button is still an outline](/blog/planner-block-menu/chip-partial-arc.png)
 
 A half-filled circle was tried: the chip holds a glyph of bars saying which way the group goes,
-and half of it would sit on white while half sits on black, which makes the glyph unreadable.
-A faded fill was tried too — "faint" disappears against arbitrary block colours, which is why
-chips and rings are drawn as background-coloured halos in the first place.
+and half of it would sit on white while half sits on black, which makes the glyph unreadable —
+which is why the state rides on the *ring*. A faded fill was tried too: "faint" disappears
+against arbitrary block colours, which is why chips and rings are drawn as background-coloured
+halos in the first place. A plain thick ring, with no fraction, gets the ink order right but
+has to be learned; for the same money, an arc that states the proportion is worth more.
 
 One rule for the tap: **all of it means disconnect, anything else means connect.** The other
 direction is never touched.
@@ -464,4 +476,4 @@ selecting it — correct by the rules, surprising to a finger that meant to sele
 - 2026-09-21 — Took undo's screen movement back out, and made the overlap hatch wait until the blocks land
 - 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block; the group wall went back from "the whole group" to "the held block's day"
 - 2026-09-22 — Groups now show as a thread with a link button on every companion, so one block can be cut loose and rejoined; rejoining takes its current place as the baseline
-- 2026-09-22 — Connections became a roster of ids, so a moving group no longer picks up what it passes; link buttons appear on every block that day, and the direction chip has three states (filled / dashed / outline). Minimap bars follow the drag live
+- 2026-09-22 — Connections became a roster of ids, so a moving group no longer picks up what it passes; link buttons appear on every block that day, and the direction chip has three states (thin outline / ring thickened by the fraction connected / filled). Minimap bars follow the drag live
