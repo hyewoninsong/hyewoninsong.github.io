@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-22T16:40:00+09:00
+date: 2026-09-22T19:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -307,7 +307,7 @@ I made the group rigid: the wall was the group's own ends, so if any block would
 
 It broke immediately. "Turn both chips on, try to move everything down, and all you get is the blocked effect." Reproducing it showed the design working as written. With both chips on the group is the whole day, so the wall becomes **the end of the last block of that day**. An evening block ending at 22:00 leaves two hours of travel; 23:30 leaves thirty minutes; 24:00 leaves none. A drag where the finger moves and nothing follows, with only a resistance haptic, does not read as a rule. It reads as broken.
 
-The wall is now the grabbed block's day, nothing more. The block you hold always follows your finger, and only companions that would leave the day stop at 24:00, keeping their length. That is exactly what the old sheet did when it said "N blocks will stop at 24:00 and stay overlapped" — the hatch says the same thing now. Overlap is a normal state in this app, so there was no reason to hide it. A side effect: the preview and the save now run through the same function, so what you saw is what gets stored.
+The wall is now the grabbed block's day, nothing more. The block you hold always follows your finger, and only companions that would leave the day stop at 24:00, keeping their length (companions get one more wall later — see the last section). That is exactly what the old sheet did when it said "N blocks will stop at 24:00 and stay overlapped" — the hatch says the same thing now. Overlap is a normal state in this app, so there was no reason to hide it. A side effect: the preview and the save now run through the same function, so what you saw is what gets stored.
 
 The price of avoiding a crumple was a drag that would not follow the finger. Which of those is worse is not something the person building it gets to decide alone.
 
@@ -347,7 +347,7 @@ Making the knot a button filled the hole for free. Tap it and that block leaves 
 
 One decision was hiding in there. If the anchor moved 30 minutes down while a block was cut loose, where does that block go when it rejoins — back to the old spacing, or wherever it is now?
 
-Wherever it is now. Restoring the old gap would silently undo an arrangement the person just made, and — more to the point — **nothing has to be stored**. A group drag adds the same number of minutes to everyone, so a rejoined block simply takes the next delta from where it stands. Having no data structure for remembered offsets also makes the rule a single sentence: connected means it moves with you.
+Wherever it is now. Restoring the old gap would silently undo an arrangement the person just made, and — more to the point — **nothing has to be stored**. A group drag moves everyone by the same amount (until a companion meets something — last section), so a rejoined block simply takes the next move from where it stands. Having no data structure for remembered offsets also makes the rule a single sentence: connected means it moves with you.
 
 ### The 0.2 seconds where the button did nothing
 
@@ -463,6 +463,56 @@ Select a block and every other block that day reserves its right edge for a butt
 truncate earlier. And tapping the right-hand middle of another block links it rather than
 selecting it — correct by the rules, surprising to a finger that meant to select.
 
+## 2026-09-22 — Companions were walking straight through other blocks
+
+Drag a group down and every companion moved by the same number of minutes. The only walls were
+the two ends of the day, so companions passed straight over whatever was standing in their way.
+Let go and there are three or four hatched overlaps on screen — overlaps nobody chose, laid down
+by the group on its way past. Even in an app where overlap is legal, an overlap you did not make
+by hand is one you have to undo by hand.
+
+What this wanted was not pushing. It was queuing.
+
+| Who | What happens |
+|---|---|
+| A companion that meets a standing block | Stops flush against its edge |
+| A companion that has met nothing yet | Keeps going |
+| A block it **already overlapped** when the drag started | Not a wall — it passes, and stops at the next one |
+| The block under your finger | Nothing stops it. Its only walls are the ends of the day |
+
+The two exceptions matter as much as the rule. If a companion that starts overlapped treats that
+neighbour as a wall, the block snaps *backwards* the moment you touch it — and dragging is how you
+resolve an overlap in the first place. And the block in your hand has to be exactly where your
+finger is, because that block is how you check the rule with your eyes.
+
+The options that lost: **pushing** what you meet moves blocks you never touched, which breaks the
+rule from the section above that only linked blocks move. **Stopping the whole group** when one
+member is blocked is a mistake this post already made once, at the end of the day, and already
+reverted.
+
+### Uneven travel broke the save
+
+The group drag stored its result as "add one delta to everything." The screen was now placing each
+block separately, so adding the same minutes again on release pushed the blocked companion straight
+through its wall. Preview and commit sharing one calculation is a rule this app keeps relearning;
+this time it broke because the *shape* of the result changed. The drag's own placement is what gets
+stored now, and the delta only carries direction and telemetry.
+
+The cost: gaps inside a group shrink when one companion stops and another does not. That matches
+the rule that reconnecting takes the current position as the baseline — this app does not remember
+relative positions.
+
+### Only the anchor's chip disappeared mid-drag
+
+Chips were hidden while dragging, on the theory that a crowded spot under the finger is messy. But
+the thread starts at that chip. Grab a group and the chip vanished, so the thread came out of empty
+space, and dropping made the chip reappear with a blink. The one thing you most want to see while
+things move — which block is the anchor — was the thing being hidden.
+
+What to hide during a drag is what your finger covers (the in-block time text moved out to a pill
+beside the axis for exactly that reason). A control that explains what is happening right now is the
+opposite case. The chips stay.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -477,3 +527,4 @@ selecting it — correct by the rules, surprising to a finger that meant to sele
 - 2026-09-22 — Group chips (tap to toggle, then drag the body), tap-again-to-edit and drag-onto-the-drawer replaced the context menu, the move sheet and swap. Four gestures on a block; the group wall went back from "the whole group" to "the held block's day"
 - 2026-09-22 — Groups now show as a thread with a link button on every companion, so one block can be cut loose and rejoined; rejoining takes its current place as the baseline
 - 2026-09-22 — Connections became a roster of ids, so a moving group no longer picks up what it passes; link buttons appear on every block that day, and the direction chip has three states (thin outline / ring thickened by the fraction connected / filled). Minimap bars follow the drag live
+- 2026-09-22 — Group companions now stop at the first block they meet (anything they already overlapped, and the block you hold, pass through). Uneven travel means the save uses the preview placement, and the anchor keeps its chips through the drag
