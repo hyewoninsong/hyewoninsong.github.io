@@ -716,6 +716,11 @@ lands on its block.
 
 ![While typing, the title row, the note and Done all stay above the keyboard, with the arrow still on the block](/blog/planner-block-menu/popover-above-keyboard.png)
 
+Having fought for that space, the plate turned out to be mostly empty. Its height is fixed by what
+fits above the keyboard, so the note field should be spending it, not the gaps. Row spacing dropped
+from the sheet's 36pt to 16pt and the note took the difference: it opens four lines tall and grows
+to seven. The plate's total height barely moved, so none of the keyboard math changed.
+
 ### Do not feed a measured height back in
 
 The plate reports its own height rather than carrying a hardcoded constant — and at first that
