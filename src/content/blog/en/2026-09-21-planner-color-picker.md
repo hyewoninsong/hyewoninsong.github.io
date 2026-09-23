@@ -1,6 +1,6 @@
 ---
 title: "The color picker came out of its popover"
-date: 2026-09-22T20:25:00+09:00
+date: 2026-09-24
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "Picking a todo color meant tapping a circle to open a popover. We spread the palette across the sheet, then put it back behind the circle a day later. Color is not a value you set twice."
@@ -75,7 +75,35 @@ The other reason was the block editor shrinking to a small popover: the same pan
 to open from two places. That one ended up not touching color at all and linking to the todo editor
 instead, so this sheet is the single place color is chosen.
 
+## 2026-09-24 — The twenty colors inside now match SuperTimetable
+
+The panel stays where it is; this time its **contents** changed. The twenty default colors are now
+exactly the palette SuperTimetable picked the day before. Both apps sit on the same home screen, and
+a subject and a todo should share the same red and the same blue.
+
+![The default tab: the top two rows are the iOS system palette, the bottom two are pastels in the same columns](/blog/planner-color-picker/palette-timetable-match.png)
+
+The old set was twelve iOS system colors (teal, indigo and brown included) plus eight pastels of our
+own. Same count, but the same hue had different values in the two apps, and the pastels were not
+paired with the solid colors. The new set is **ten solid + ten pastel**: in the five-column grid, the
+top two rows are the iOS system palette from red to gray, the bottom two are pastels in the same hue
+order, so **a column is a hue**. Light red under red, light blue under blue.
+
+SuperTimetable's one exception came along with the values: system yellow (`#FFCC00`) has a luminance
+of 0.64, so its title flips to charcoal, the only solid color that does. Darkening it until white
+text reads turns it mustard, so it stays as is. The luminance rule itself did not change, and a test
+now pins "yellow charcoal, the other nine white, every pastel charcoal".
+
+The cost is three colors gone from the default tab. A todo that already uses teal or brown stores its
+hex directly, so it **keeps that color**; it only disappears from the palette, and the custom tab can
+bring it back.
+
+The two apps are not coupled. The values are equal, but a shared package for twenty literals across
+two repositories and a widget target is not worth it. When SuperTimetable changes again, a person
+carries the values over.
+
 ## History
 
 - 2026-09-21 — Moved color selection out of its popover and spread it across the sheet, dropping the name field's auto-focus. Measured and fixed the clipped first row of the "In use" strip (a height that left out the ring outset)
 - 2026-09-22 — Reversed it: color selection is back in a popover behind the circle. Avoided the squeeze by keeping a single `.large` detent rather than restoring the workaround, and auto-focus returned
+- 2026-09-24 — Replaced the twenty defaults with SuperTimetable's palette: ten solid + ten pastels by hue, yellow the only charcoal title, todos on the removed colors unchanged
