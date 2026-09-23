@@ -178,7 +178,7 @@ The type problem showed up later than the naming one. Booleans were going out as
 
 Reading the catalog end to end also showed what was missing. For a planner the questions are: do people plan the day itself or ahead of time — placements and check-offs now carry a `past`/`today`/`tomorrow`/`this_week`/`later` bucket; of yesterday's plan, how much got checked — the launch event now sends yesterday's block count and done count together, the one ratio that says whether the app moves a day at all; and which route people take to change the date — week strip, swipe, month grid, today button, drawer, widget. The date-navigation function now takes the route as an argument with no default, because a default nobody overrides is a dimension with one value. One user property (tutorial done) had been declared and never written — the same lesson as two days ago, a layer down.
 
-The registration spec (33 dimensions, 25 metrics) lives in the repo as a file, and a change that sends a new key edits that file too. Old names were not registered as legacy: two days of TestFlight data, and `count` would be unreadable even if it were.
+The registration spec (28 dimensions — 23 event-scoped, 5 user-scoped — and 25 metrics) lives in the repo as a file, and a change that sends a new key edits that file too. Old names were not registered as legacy: two days of TestFlight data, and `count` would be unreadable even if it were.
 
 ## History
 
