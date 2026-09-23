@@ -4,8 +4,10 @@ slug: "timetable"
 icon: "/apps/timetable/icon.png"
 summary: "손으로 그리는 시간표. 드래그로 그리고, 홈 화면에서 보고, 종이에 붙이세요. 계정도 로그인도 없습니다."
 platforms:
-  iphone: "in-review"
-  ipad: "in-review"
+  iphone: "released"
+  ipad: "released"
+appStoreUrl: "https://apps.apple.com/app/id6760938147"
+releaseDate: 2026-09-22
 order: 1
 ---
 

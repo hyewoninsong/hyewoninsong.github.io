@@ -9,6 +9,7 @@
   "status.released": "출시",
   "status.review": "심사중",
   "status.dev": "개발중",
+  "status.releasedOn": "{date} 출시",
   "blog.title": "개발 블로그",
   "blog.allPosts": "전체",
   "blog.noPosts": "아직 작성된 글이 없습니다.",

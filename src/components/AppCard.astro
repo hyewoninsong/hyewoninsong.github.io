@@ -1,7 +1,7 @@
 ---
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
 import { withHash } from '../lib/asset-hash';
-import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../lib/platform-status';
+import { statusBadgeClass, statusLabelKey, releaseLine, type PlatformStatus } from '../lib/platform-status';
 
 interface Props {
   title: string;
@@ -14,10 +14,12 @@ interface Props {
     mac?: PlatformStatus;
     android?: PlatformStatus;
   };
+  /** 출시일 (`.md` frontmatter 의 `releaseDate`). 있으면 뱃지 아래 한 줄이 붙는다. */
+  releaseDate?: Date;
   href: string;
 }
 
-const { title, summary, icon, platforms = {}, href } = Astro.props;
+const { title, summary, icon, platforms = {}, releaseDate, href } = Astro.props;
 const iconSrc = icon ? withHash(icon) : null;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -82,6 +84,10 @@ const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
             {statusLabel(platforms.android!)}
           </span>
         </div>
+      )}
+
+      {releaseDate && (
+        <p class="text-xs text-text-sub">{releaseLine(releaseDate, lang, t)}</p>
       )}
       </div>
     </div>

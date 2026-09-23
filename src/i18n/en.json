@@ -9,6 +9,7 @@
   "status.released": "Released",
   "status.review": "In Review",
   "status.dev": "In Development",
+  "status.releasedOn": "Released {date}",
   "blog.title": "Dev Blog",
   "blog.allPosts": "All",
   "blog.noPosts": "No posts yet.",
