@@ -38,4 +38,4 @@ I first thought this was a new bug and fixed it myself. Then I found an open PR 
 
 ## Where it stands
 
-The installed checkout is still on the old branch. Moving it to main waits until the other session's uncommitted work there is sorted out. Until then, the check above runs before every deploy.
+The installed checkout is still on the old branch. Moving it to main waits until the other session's uncommitted work there is sorted out. Until then, the check above runs before every deploy. It bit once more while writing this post: the blog checker loads from the same checkout, and it passed a date without a time, a rule main had already added. The whole folder was behind, not just the deploy scripts.
