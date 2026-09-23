@@ -1,6 +1,6 @@
 ---
 title: "A bug I fixed yesterday came back unchanged"
-date: 2026-09-24
+date: 2026-09-24T00:57:00+09:00
 app: "superfont"
 tags: ["devlog", "appstore"]
 summary: "The deploy status showed another app's build as SuperFont's. That collision had been fixed the day before. The fix was in the repo, but the folder the deploy scripts actually run from was eight commits behind it."
