@@ -1,6 +1,6 @@
 ---
 title: "Four places the app failed without telling anyone"
-date: 2026-09-22T23:40:00+09:00
+date: 2026-09-23T19:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "data", "swiftui"]
 summary: "A failed save, a failed alarm, and a fallback that wipes the store and starts over — none of it was recorded anywhere. Adding crash and event reporting meant stopping the simulator from inventing users, watching the verification fail a perfectly healthy app, and learning that without symbols a crash report is a column of addresses."
@@ -166,8 +166,23 @@ Adding three new kinds this session (a default-alarm setting that won't decode, 
 
 The lesson from earlier in this post repeats one layer down: the instrument built to catch silent failures can fail silently too, and the only thing that stops it is a check that walks the whole set.
 
+## 2026-09-23 — Every event arrived, and none of it could become a table
+
+Two days after switching collection on, I went to register parameters as custom dimensions so the console could show which rescheduling tool people actually use. The catalog turned out to be unreadable there. GA4 registers a dimension by **parameter name alone** — it does not know which event sent it — and this app had `count` meaning four different things: todos archived, todos deleted, blocks moved, alarms fired. Registered, that is one column holding the sum of four distributions, and nothing splits it back apart. Every such key got a context prefix (`archived_count`, `deleted_count`, `reschedule_count`, `fired_count`); a key is shared between events only when the meaning is identical, and a test holds the list of those with the reason for each.
+
+## A flag sent as 0 or 1 cannot be sliced
+
+The type problem showed up later than the naming one. Booleans were going out as integers, and the console records an integer as a *numeric* parameter: registrable as a metric you sum, not as a text dimension you break a report by. `completed`, `archived` and `tutorial_done` were all in that state, and DebugView shows them perfectly. The rule is now one line — **anything you slice by is a string, anything you add up is an integer** — with flags as `"true"`/`"false"`, hours as `"09"` so they sort, and a suffix convention (`_count`, `_min`, `_offset` are integers, everything else is text) that a test applies to the whole catalog. One key that did two jobs (`minutes` meant a shift amount on push and a keep-gaps 0/1 on reflow) was split rather than renamed.
+
+## The thing worth counting was not being counted
+
+Reading the catalog end to end also showed what was missing. For a planner the questions are: do people plan the day itself or ahead of time — placements and check-offs now carry a `past`/`today`/`tomorrow`/`this_week`/`later` bucket; of yesterday's plan, how much got checked — the launch event now sends yesterday's block count and done count together, the one ratio that says whether the app moves a day at all; and which route people take to change the date — week strip, swipe, month grid, today button, drawer, widget. The date-navigation function now takes the route as an argument with no default, because a default nobody overrides is a dimension with one value. One user property (tutorial done) had been declared and never written — the same lesson as two days ago, a layer down.
+
+The registration spec (33 dimensions, 25 metrics) lives in the repo as a file, and a change that sends a new key edits that file too. Old names were not registered as legacy: two days of TestFlight data, and `count` would be unreadable even if it were.
+
 ## History
 
 - 2026-09-21 — Added crash and event reporting, kept the simulator out of the numbers, wired dSYM upload into the release lane
 - 2026-09-22 — Filled the missing privacy manifest and settled on declaring only what the SDKs leave unsaid
 - 2026-09-22 — Moved widget metrics into the app, filled the crash context fields that were never written, and closed the error-code collision with a test
+- 2026-09-23 — Renamed and retyped parameters for the console (prefixes, flags as strings) and started counting same-day vs. ahead planning, plan vs. done, and date-navigation routes
