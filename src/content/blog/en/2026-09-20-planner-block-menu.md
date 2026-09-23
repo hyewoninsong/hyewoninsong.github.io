@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-23T02:40:00+09:00
+date: 2026-09-23T12:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -738,6 +738,35 @@ let keyboardTop = app.keyboards.firstMatch.frame.minY
 XCTAssertLessThan(app.buttons["sheet.done"].frame.maxY, keyboardTop)
 ```
 
+## 2026-09-23 — Three hours of block, one line of note
+
+Having given the popover's space to the note, the note was still a single line **on the timeline
+itself**. One line regardless of block height: a three-hour block sat more than half empty while its
+note was cut off with an ellipsis, and a note with line breaks showed only its first line. Notes
+accept 500 characters, and the one place a block shows them was not using the room it had.
+
+Now the block's height decides. The padding and one title line come off the top, what is left is
+divided by the height of one note line, and that number (rounded down) is the line limit — zero means
+the note is not drawn at all, because with room for a single line the title comes first. An hour-long
+block fits about four lines; a 30-minute one still shows the title alone.
+
+![A 9:00–12:00 block showing a three-line note with its line breaks intact](/blog/planner-block-menu/note-fills-block.png)
+
+### Do not approximate line height as 1.19×
+
+It is tempting to take "leftover height ÷ line height" with line height estimated as font size × 1.19.
+That clips the last line in half the day an accessibility text size or the font changes — and only in
+certain height ranges. Asking the font that actually draws the text
+(`UIFont.systemFont(ofSize:).lineHeight`) is exact and free.
+
+Letting the text overflow and clipping the block was the other option, but a half-cut last line with
+no ellipsis reads as a note that simply ended there.
+
+If the code that counts lines and the code that draws them drift apart, the last line goes missing
+quietly — so the block's text padding, spacing and font sizes moved out of inline numbers into one
+set of constants. The test measures what matters: that the counted lines actually fit, padding plus
+title plus lines × line height staying inside the block, from 38pt up to 400pt.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -757,3 +786,4 @@ XCTAssertLessThan(app.buttons["sheet.done"].frame.maxY, keyboardTop)
 - 2026-09-22 — The resize handle's hit area moved inside the block, to the middle third, matching the drawn capsule; a judgement-only slack covers the error in the reconstructed pan start
 - 2026-09-22 — Made companions walls for each other so a group stops laying down overlaps of its own. The "we all move together so we cannot collide" exemption outlived the section that broke its premise
 - 2026-09-23 — The edit popover now stands where the whole plate fits. Keyboards do not move popovers aside, they squeeze them, and re-presenting drops the text focus — the anchor is the only thing left to move
+- 2026-09-23 — Block notes now use as many lines as the block's height allows (padding and title off the top, divided by line height; zero means title only), with line height asked of the font instead of approximated
