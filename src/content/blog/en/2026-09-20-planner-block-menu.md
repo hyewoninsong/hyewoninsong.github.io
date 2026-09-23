@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-23T20:10:00+09:00
+date: 2026-09-24T15:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -824,6 +824,51 @@ One test tripped on the change: it found timeline blocks by "text without an ide
 name in the composer's top row matched too, so "the block is not covered" compared the plate against
 itself. The composer's name now carries its own identifier.
 
+## 2026-09-24 — What you set while dragging is the break, not the start time
+
+While dragging a block the only readout was the start–end capsule by the axis. But what you are actually
+judging is how much rest sits before the block and how much room is left after it. At 80pt per hour,
+15 and 20 minutes are 7pt apart — not readable by eye — and the magnetic snap only speaks when things
+touch. Every other gap was mental arithmetic.
+
+Now, while you drag, a dashed vertical ruler stands between the held block and its nearest neighbour above
+and below, with a capsule in the middle: `15 min`, `1 h 30 min`. The ruler lives in the same coordinate space
+as the blocks, so its length *is* the time.
+
+![While dragging, the ruler shows 2 h 15 min to the block above and 1 h 15 min to the block below](/blog/planner-block-menu/drag-gap-move.png)
+
+| Drag | Where the ruler appears |
+|---|---|
+| Move, group move, drag-to-create | Above and below |
+| Top handle | Above only |
+| Bottom handle | Below only |
+
+Resizing hides the far side because that gap does not change; a number that never moves only blurs the one
+that does.
+
+![Dragging the bottom handle shows only the 1 h gap below](/blog/planner-block-menu/drag-gap-resize.png)
+
+Neighbours are every other block **at its live position** — group companions included, since a companion
+that hits a wall changes its distance to the held block. Overlapping blocks are not neighbours, and a
+touching one (0 min) is not drawn: the hatch already says "overlap" and the snap already says "touching".
+Neither is midnight — that is a wall, not an event, and the wall has its own haptic.
+
+What lost:
+
+- **Appending to the time capsule** (`9:00–10:00 · 15 before · 40 after`). Half the screen width, and you
+  have to work out which side each number belongs to. The ruler sits in the gap it measures.
+- **Always on.** The day becomes a forest of rulers. The gap matters while you decide; afterwards the
+  space between blocks is the gap.
+- **Negative gaps for overlaps.** That is the hatch's job.
+
+One cost accepted: when the gap is shorter than the capsule (about 12 minutes) the capsule overlaps the
+neighbour a little. Moving it aside would lose "which gap is this number", so it stays put — the ruler
+hides behind it and only the number remains.
+
+Screenshots could not verify this: a drag is synchronous until the finger lifts, so a test cannot capture
+mid-gesture. The two images above come from a background thread taking the screenshot while the test held
+the finger down for three seconds.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -846,3 +891,4 @@ itself. The composer's name now carries its own identifier.
 - 2026-09-23 — Block notes now use as many lines as the block's height allows (padding and title off the top, divided by line height; zero means title only), with line height asked of the font instead of approximated
 - 2026-09-23 — Dragging a handle now moves the blocks linked on that side by as much as the edge moved, stopping where a body drag would
 - 2026-09-23 — Note editing moved from a 340pt popover to a full-width composer docked on the keyboard (focused on open, save at bottom right, tap outside also saves); the popover anchor math is gone
+- 2026-09-24 — Dragging shows the free time to the nearest block above and below as a dashed ruler with a minute capsule: moving edges only, neighbours at their live positions, nothing for overlaps, 0 min or midnight
