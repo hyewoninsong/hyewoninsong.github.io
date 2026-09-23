@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-23T13:08:00+09:00
+date: 2026-09-23T20:10:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -688,6 +688,8 @@ the pure-calculation side.
 
 ## 2026-09-23 — Typing a note squeezed the popover flat
 
+> The anchor math in this section was removed the same evening — the popover itself became a composer docked on the keyboard (see "The note field moved onto the keyboard" below). How popovers treat keyboards is still true, so it stays.
+
 Tapping the note field in the edit popover brings up the keyboard. The popover did not step out
 of its way: it got **squeezed into what was left**, and the title row and *Done* disappeared.
 
@@ -788,6 +790,40 @@ What lost:
 
 The snap targets exclude the blocks being pushed; otherwise the edge would chase its own companion.
 
+## 2026-09-23 — The note field moved onto the keyboard
+
+Keeping the popover above the keyboard worked, but the popover was simply narrow: 340pt minus border,
+arrow and card padding leaves short lines. And you had to tap the note field once more before the
+keyboard came up — two taps before a single letter.
+
+The model now is a chat app's composer. Tapping a selected block again:
+
+| What | How |
+|---|---|
+| On open | The note field is focused; the keyboard comes up with it |
+| Plate | A full-width card docked on the keyboard's top edge |
+| Top row | Color dot + todo name + `›`, a link into the todo editor |
+| Note field | Starts at one line, grows to six |
+| Save | Round arrow button, bottom right |
+| Tap outside | Saves and closes |
+| The block | Scrolled up so it stays visible above the plate |
+
+![Tapping the block again docks a full-width composer on the keyboard; the 3pm block is lifted above it](/blog/planner-block-menu/memo-composer-keyboard.png)
+
+No geometry puts the plate above the keyboard anymore. The composer is one overlay on the planner, and
+the overlay respects the keyboard safe area, so SwiftUI places it. The height feedback, the ceiling and
+the lifted anchor band from the section above are gone, tests included.
+
+What lost:
+
+- **A wider popover.** It still hangs below the block, still gets squeezed, still needs two taps.
+- **A half sheet.** It covers the block being edited and grows or shifts with the keyboard.
+- **Tap outside = discard.** Chat composers keep the draft when you tap away. The app keeps no drafts, so the only way to keep text is to save it — every way of closing saves.
+
+One test tripped on the change: it found timeline blocks by "text without an identifier", and the todo
+name in the composer's top row matched too, so "the block is not covered" compared the plate against
+itself. The composer's name now carries its own identifier.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -809,3 +845,4 @@ The snap targets exclude the blocks being pushed; otherwise the edge would chase
 - 2026-09-23 — The edit popover now stands where the whole plate fits. Keyboards do not move popovers aside, they squeeze them, and re-presenting drops the text focus — the anchor is the only thing left to move
 - 2026-09-23 — Block notes now use as many lines as the block's height allows (padding and title off the top, divided by line height; zero means title only), with line height asked of the font instead of approximated
 - 2026-09-23 — Dragging a handle now moves the blocks linked on that side by as much as the edge moved, stopping where a body drag would
+- 2026-09-23 — Note editing moved from a 340pt popover to a full-width composer docked on the keyboard (focused on open, save at bottom right, tap outside also saves); the popover anchor math is gone
