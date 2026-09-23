@@ -66,6 +66,20 @@ So we added one case to the contract test that was already scanning for stray `p
 
 It rides on the existing rule that every new event must register a sample value, so new events get their names checked for free.
 
+## We registered the old names too
+
+Registration happened the same day: 13 dimensions and 12 metrics — six of which are the names we had just thrown away (`context`, `step`, `source`, `from`, `to`, `count`).
+
+Renaming does not delete what was already collected under the old name; it only removes your way of reading it. Registration binds to a name, so registering the old ones makes the pre-rename window show up in reports again. The app no longer sends those keys, so nothing new can mix in. Each one carries `legacy` and a date in its description, and `count` carries a warning that its window blends two meanings and its sum and average should not be trusted.
+
+The same logic killed our "not worth registering" list. A parameter you do not care about today still leaves **a hole for that entire period** the day you do care. The free tier allows 50 of each, so there was nothing to save.
+
+## Where the login gets blocked
+
+We registered through the Admin API rather than by clicking, and got stopped once. Asking gcloud for Analytics permissions lands on Google's **"Access blocked"** screen: gcloud's default OAuth client is not verified for sensitive scopes like Analytics. Retrying does not help.
+
+The way around it is a service account. Create one in the project, then invite it as an Editor from the Analytics property's own **access management** — no consent screen involved. The point is that the permission is granted on the Analytics side, not the Cloud side.
+
 ## Where it stands
 
-The names are settled; registration happens once this build reaches real devices. The candidate list is written down — as dimensions: error type, failure point, wizard step, entry route, install-blocked reason; as metrics: family counts and the numerator and denominator of the blocked ratio. The free tier allows 50 of each, so it is worth registering everything plausible up front. A metric that does not apply retroactively is a number you simply do not have until you start counting.
+Names and registration are both done, and the next build on real devices starts filling the new names. A metric that does not apply retroactively is a number you simply do not have until you start counting.
