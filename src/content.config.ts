@@ -31,6 +31,8 @@ const apps = defineCollection({
     }).default({}),
     order: z.number().default(0),
     appStoreUrl: z.string().optional(),
+    /** 출시일 — 있으면 카드와 상세 상단에 "2026년 9월 22일 출시" 한 줄이 붙는다. 없으면 뱃지만 나온다. */
+    releaseDate: z.coerce.date().optional(),
     /** 상세 페이지를 아직 안 쓴 앱 — 본문 대신 "준비 중" 안내만 나온다. */
     comingSoon: z.boolean().default(false),
   }),

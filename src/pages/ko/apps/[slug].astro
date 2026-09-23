@@ -3,7 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
 import { getCollection, render } from 'astro:content';
 import { withHash } from '../../../lib/asset-hash';
-import { statusBadgeClass, statusLabelKey, type PlatformStatus } from '../../../lib/platform-status';
+import { statusBadgeClass, statusLabelKey, releaseLine, type PlatformStatus } from '../../../lib/platform-status';
 import AppDevlog from '../../../components/AppDevlog.astro';
 
 export async function getStaticPaths() {
@@ -83,6 +83,10 @@ const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
               {statusLabel(platforms.android!)}
             </span>
           </div>
+        )}
+
+        {app.data.releaseDate && (
+          <p class="text-xs text-text-sub">{releaseLine(app.data.releaseDate, lang, t)}</p>
         )}
       </div>
 

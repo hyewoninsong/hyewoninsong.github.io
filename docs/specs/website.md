@@ -76,8 +76,8 @@
 
 ```
 src/i18n/
-├── ko.json    # { "nav.about": "회사 소개", "nav.apps": "앱", "status.released": "출시", "status.review": "심사중", "status.dev": "개발중", ... }
-└── en.json    # { "nav.about": "About", "nav.apps": "Apps", "status.released": "Released", "status.review": "In Review", "status.dev": "In Development", ... }
+├── ko.json    # { "nav.about": "회사 소개", "nav.apps": "앱", "status.released": "출시", "status.review": "심사중", "status.dev": "개발중", "status.releasedOn": "{date} 출시", ... }
+└── en.json    # { "nav.about": "About", "nav.apps": "Apps", "status.released": "Released", "status.review": "In Review", "status.dev": "In Development", "status.releasedOn": "Released {date}", ... }
 ```
 
 **콘텐츠 관리:** md 파일을 언어별로 분리하여 작성
@@ -173,8 +173,10 @@ slug: "timetable"
 icon: "/apps/timetable/icon.png"   # public/ 경로 — 카드와 상세 상단에 그려진다 (없으면 제목만)
 summary: "한 눈에 보는 나만의 시간표"
 platforms:              # 기기별로 따로 — 뱃지가 이 값 하나로 그려진다
-  iphone: "in-review"   # "released" | "in-review" | "in-development"
-  ipad: "in-review"
+  iphone: "released"    # "released" | "in-review" | "in-development"
+  ipad: "released"
+appStoreUrl: "https://apps.apple.com/app/id6760938147"   # 나라 없는 형태 — 방문자의 스토어로 리다이렉트된다
+releaseDate: 2026-09-22 # 있으면 카드와 상세 상단에 "2026년 9월 22일 출시" 한 줄이 붙는다
 order: 1                # 목록 정렬 순서
 comingSoon: false       # true 면 상세 페이지 본문 대신 "준비중" 안내만 나온다
 ---
@@ -189,14 +191,19 @@ slug: "timetable"
 icon: "/apps/timetable/icon.png"
 summary: "Your schedule at a glance"
 platforms:
-  iphone: "in-review"
-  ipad: "in-review"
+  iphone: "released"
+  ipad: "released"
+appStoreUrl: "https://apps.apple.com/app/id6760938147"
+releaseDate: 2026-09-22
 order: 1
 ---
 ```
 
 상태 문자열은 `src/lib/platform-status.ts` 한 곳에서 뱃지 색과 i18n 키로 바뀐다 — 상태를 더하려면
 그 파일과 `src/i18n/{ko,en}.json`, `src/content.config.ts` 의 enum 셋을 같이 고친다.
+출시일 문장도 같은 파일의 `releaseLine()` 하나를 거친다. 어순(한국어는 날짜 뒤, 영어는 앞)은
+`status.releasedOn` 의 `{date}` 자리가 정하고, 날짜는 UTC 로 찍는다 — frontmatter 의 `2026-09-22` 가
+UTC 자정으로 파싱되기 때문에 현지 시간대로 찍으면 하루 밀린다.
 
 #### 4.2.1 앱 목록 페이지 (/ko/apps, /en/apps)
 
@@ -209,7 +216,7 @@ order: 1
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
 
-> **현재 상태 (2026-09-20):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 심사중, 상세 페이지 있음)와 SuperMusicNote·SuperPlanner·SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. 나머지 둘(SuperMusicNote·SuperPDF)은 아이콘·스샷이 아직 없어 카드에 제목과 뱃지만 나온다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
+> **현재 상태 (2026-09-23):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 2026-09-22 App Store 출시, 상세 페이지 있음)와 SuperMusicNote·SuperPlanner·SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. 나머지 둘(SuperMusicNote·SuperPDF)은 아이콘·스샷이 아직 없어 카드에 제목과 뱃지만 나온다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
 
 **레이아웃:**
 
