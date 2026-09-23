@@ -1,7 +1,8 @@
 ---
 /**
- * SuperPlanner 소개(영문) — 아직 개발 중이라 스샷이 없다. `hero`·`tabs`·`shots` 를 비워 둔다.
- * 캡처가 나오면 ko 쪽과 같은 자리를 같이 채운다.
+ * SuperPlanner page. Screenshots are the raw captures from the app repo's capture lane
+ * (`scripts/appstore-capture.sh`), copied by `web-app-page/scripts/collect-shots.sh` into
+ * `public/apps/planner/{ko,en}/` and `…/ipad/`. iPad captures are portrait → `ipadShot="plain"`, 720×960.
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import AppPage, { type Copy } from '../../../components/AppPage.astro';
@@ -15,6 +16,8 @@ const app = (await getEntry('apps', 'en/planner'))!;
 const copy: Copy = {
   tagline: 'A planner you draw on the day itself',
   summary: 'Instead of piling tasks into a list, you decide where in the day each one goes — and drag it when the day goes differently.',
+  hero: { iphone: 'SuperPlanner day timeline (iPhone)', ipad: 'SuperPlanner day timeline (iPad)' },
+  tabs: { iphone: 'iPhone', ipad: 'iPad' },
   closing: ['Your plans and history move only inside your own iCloud account.', 'There is no account to create and no sign-in screen.'],
   sections: [
     {
@@ -26,6 +29,13 @@ const copy: Copy = {
         ['Release to pick', 'Letting go brings up the tasks you already keep. The one you pick lands in that span and is selected right away.'],
         ['Or make one there', 'A task that is not on the list yet can be created at the top of the same sheet and placed immediately, without a trip to the task tab.'],
       ],
+      shots: {
+        iphone: [
+          { file: 'drag-create', alt: 'Dragging across an empty stretch to draw a new block' },
+          { file: 'todo-picker', alt: 'The task picker that comes up when you let go' },
+        ],
+        ipad: [{ file: 'hero', alt: 'The day timeline on iPad' }],
+      },
     },
     {
       label: 'Adjust',
@@ -38,6 +48,10 @@ const copy: Copy = {
         'Anything you do comes back from the undo button in the bottom left, fifty steps deep.',
         'The scrollbar on the right is the whole day drawn small — grab it and you see how the hours off screen are laid out.',
       ],
+      shots: {
+        iphone: [{ file: 'move-drag', alt: 'A block held mid-drag on its way to a new time' }],
+        ipad: [{ file: 'group-link', alt: 'A selected block on iPad, with its link chips and resize handle' }],
+      },
     },
     {
       label: 'Shift',
@@ -49,6 +63,28 @@ const copy: Copy = {
         'A linked block that runs into something standing still stops against it — a run never leaves new overlaps in its wake.',
         'Ten blocks moved, one undo.',
       ],
+      shots: {
+        iphone: [
+          { file: 'group-link', alt: 'The lower chip tapped: every block after it is linked into one run' },
+          { file: 'group-drag', alt: 'The linked run held mid-drag, all of it moving together' },
+        ],
+        ipad: [{ file: 'group-drag', alt: 'A linked run held mid-drag on iPad' }],
+      },
+    },
+    {
+      label: 'Note',
+      title: 'The same task, but the note belongs to that day',
+      lead: 'One task placed on many days needs something different written on each of them. Tap a selected block once more and a composer docks above the keyboard; what you write there stays with that block only.',
+      points: [
+        'The keyboard comes up the moment the composer opens. There is no second tap into a note field.',
+        'Tapping outside closes it and still saves. There is no path that throws away what you typed.',
+        'The top line of the composer is a link to the task itself, for when you want to change its name or colour.',
+        'Notes show inside the block under the title — the taller the block, the more lines you see.',
+      ],
+      shots: {
+        iphone: [{ file: 'memo', alt: 'The note composer docked above the keyboard' }],
+        ipad: [{ file: 'memo', alt: 'The note composer docked above the keyboard on iPad' }],
+      },
     },
     {
       label: 'Drawer',
@@ -60,17 +96,31 @@ const copy: Copy = {
         'They come back to the middle of whatever day you are looking at. There is no case where it cannot find room and gives up.',
         'Relaying the whole day, or pushing just the unfinished blocks to tomorrow, lives in one Organize menu in the toolbar.',
       ],
+      shots: {
+        iphone: [{ file: 'drawer', alt: 'The drawer sheet: one row for a bundle parked together, one for a single block' }],
+        ipad: [{ file: 'drawer', alt: 'The drawer sheet on iPad' }],
+      },
     },
     {
       label: 'Track',
       title: 'The record writes itself',
-      lead: 'Knowing what you actually spent the week on normally means logging it a second time, next to the plan. Here the blocks are the record, and the task tab is where they add up.',
+      lead: 'Knowing what you actually spent the week on normally means logging it a second time, next to the plan. Here the blocks are the record, and the task tab adds them up, task by task.',
       points: [
-        'Three tiles at the top: what you finished today, the hours this week, and how many days in a row you have planned anything.',
-        'The contribution grid switches between days, weeks and months. Tapping a cell jumps straight to that day in the planner.',
+        'Every row in the task list carries a one-line contribution strip and the hours it has accumulated. The strip switches between days, weeks and months from the sort menu.',
         'Opening one task shows its hours this week, this month, this year and all time, a calendar of the days it ran, and the notes you left.',
+        'Tapping a cell in the grid jumps straight to that day in the planner.',
         'A task you have stopped doing is archived — it leaves the list and its past stays readable.',
       ],
+      shots: {
+        iphone: [
+          { file: 'todo-list', alt: 'The task tab: a contribution strip and total hours on every row' },
+          { file: 'todo-detail', alt: 'One task opened: period tiles and the calendar of days it ran' },
+        ],
+        ipad: [
+          { file: 'todo-list', alt: 'The task tab on iPad' },
+          { file: 'todo-detail', alt: 'A task detail on iPad' },
+        ],
+      },
     },
     {
       label: 'Profiles',
@@ -79,14 +129,45 @@ const copy: Copy = {
       points: [
         'Each profile keeps its own tasks and its own history. You can have up to ten.',
         'Which profile is open is remembered per device, so one can stay on work while another stays on study.',
-        'Alarms are three slots per block — a reminder, the start, the end — each with its own sound. Pick which device rings and the same alarm does not go off on all of them.',
+        'Set the alarms once in Settings — a reminder, the start, the end, each with its own sound — and every new block takes them. Pick which device rings and the same alarm does not go off on all of them.',
         'History follows the iCloud account already signed in on the device. There is no account to make for this app and no sign-in screen.',
       ],
+      shots: {
+        iphone: [{ file: 'profiles', alt: 'The profile sheet: switching between personal, work and home' }],
+        ipad: [{ file: 'profiles', alt: 'The profile sheet on iPad' }],
+      },
+    },
+    {
+      label: 'View',
+      title: 'The calendar unfolds, and the night goes dark',
+      lead: 'Pull the date strip down and the week opens into a month. Days with something planned carry a dot, so the empty ones show up on one screen.',
+      points: [
+        'You can pick a date with the month open, and folding it back leaves you on that week.',
+        'Dark mode follows the system setting. Block colours are tuned so the same colour still reads the same on a dark ground.',
+        'Two Home Screen widgets — what is on now and what is next, and one task\'s contribution grid — update without opening the app.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'month', alt: 'The date strip pulled open into a month' },
+          { file: 'dark', alt: 'The day timeline in dark mode' },
+        ],
+        ipad: [
+          { file: 'month', alt: 'The date strip opened into a month on iPad' },
+          { file: 'dark', alt: 'The day timeline in dark mode on iPad' },
+        ],
+      },
     },
   ],
 };
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
-  <AppPage lang={lang} slug="planner" app={app} copy={copy} />
+  <AppPage
+    lang={lang}
+    slug="planner"
+    app={app}
+    copy={copy}
+    ipadShot="plain"
+    shotSize={{ iphone: [720, 1564], ipad: [720, 960] }}
+  />
 </BaseLayout>
