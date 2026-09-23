@@ -1,6 +1,6 @@
 ---
 title: "The thing hiding the current time was the thing you were doing"
-date: 2026-09-21T19:50:00+09:00
+date: 2026-09-23T11:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "The now line sat behind whatever block was running. It moved above the blocks, and past blocks are now dimmed at a level that reads differently from done."
@@ -64,7 +64,53 @@ The code said exactly that: per cell, "if selected, draw a circle." Changing the
 
 The circle lives in a cell the week strip and the month grid share, so the namespace is passed in by whoever wants the move: pass one and it slides, pass none and it appears and disappears as before — the month grid collapses the bar on tap anyway, so it kept the old behavior. What's left is where the namespace lives. The week strip is a horizontal pager where **one week is one page**. A single namespace for the whole strip means that crossing a week boundary sends the circle flying to coordinates on a page that is offscreen, or not even rendered yet. So one week is its own view with its own namespace: within a week the circle slides, and across weeks it is quietly replaced while the page turns. Not stacking two animations on top of each other reads better.
 
+## 2026-09-23 — A column of circles was stacking in no particular order
+
+The planner lets you link blocks and move them as a bundle. Pick one block and a link circle
+appears on the right edge of every other block that day; the picked one gets a direction chip
+on its top and bottom edge. The chip **straddles** the edge, so half of it sits inside the
+neighbouring block.
+
+With two 30-minute blocks back to back, that is exactly where the chip and the neighbour's link
+button overlap — and the neighbour's button was winning. The circle that tells you which block
+you picked was hidden behind a circle that appears on every block.
+
+![Two adjacent blocks: the upper block's link button covers the chip of the lower, selected one](/blog/planner-now-line-layering/link-chip-before.png)
+
+Overlapping buttons had no order either. The buttons were drawn by the thread that connects
+them, and there is one thread per direction — two views. The lower bundle lands on top of the
+upper one as a whole, and inside one direction the drawing order was "nearest to the anchor
+first," which puts the lower circle above the upper one. The chip, meanwhile, was an overlay on
+the block, so it lived a layer below the buttons.
+
+Taps went the other way: the gesture layer tests the chip first, then link buttons, then the
+resize band, then the body. What you pressed and what you saw followed different orders.
+
+So the rule is now one line: **controls in a vertical column stack by position — whatever is
+higher is drawn higher.** The buttons moved out of the thread into a single layer (circles in
+separate views cannot interleave by z), with z as the inverse of y. The selected block sits
+above that layer so nothing covers its chip, and the hit rectangles are ordered the same way —
+when they overlap, the one higher on screen takes the tap.
+
+![The same spot: the selected block's chip now sits whole on top of the neighbour's link button](/blog/planner-now-line-layering/link-chip-after.png)
+
+Lifting the chip out of the block and drawing it above the buttons was the alternative. But the
+chip belongs with the block's fill state and selection ring, and it has to dim with the block
+when that block is done or in the past — the level this post settled on above. Splitting a view
+for something one layer solves is not worth it. Dropping the whole button layer below the
+blocks is worse: on a packed day there is no gap between blocks, so the thread disappears.
+
+The stacking order is now written down in one place: grid → blocks → threads → link buttons →
+selected block → create ghost → now line → tutorial demo → edit anchor → gestures. The move this
+post opens with — the now line going above the blocks — is now a line you read instead of a
+declaration order you count.
+
+One consequence: with overlapping blocks the selected one can cover a neighbour's link button.
+That button is clipped to its own block anyway, so only the overlap is hidden, and picking a
+different anchor brings it back.
+
 ## History
 
 - 2026-09-21 — Moved the now line and pill above the blocks, and dimmed past blocks at a level that reads differently from done
 - 2026-09-21 — Closed the pill-to-line gap that only showed in 24-hour format, and made the date bar's selection circle slide between days
+- 2026-09-23 — Collected the link buttons into one layer so the higher one draws on top, and lifted the selected block's chip above them
