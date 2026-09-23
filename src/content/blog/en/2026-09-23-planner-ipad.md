@@ -10,9 +10,9 @@ The planner now works on iPad: portrait, landscape, half of a Split View, and tw
 
 ## Measure first — it mostly already worked
 
-We started by putting the app on an iPad simulator and running through it: place a block, open the edit popover, open the todo picker and the drawer, visit the todo tab and a detail page, rotate. Everything worked.
+We started by putting the app on an iPad simulator and running through it: place a block, open the note composer, open the todo picker and the drawer, visit the todo tab and a detail page, rotate. Everything worked.
 
-The reason is that nothing in the code ever asked what device it was on. Block width has always been "viewport width minus the hour axis and the scrollbar lane"; the week strip is seven cells in an `HStack`; the month grid and the contribution graph read their container width. Sheets became centered form sheets on their own, and the popover still attached under its block.
+The reason is that nothing in the code ever asked what device it was on. Block width has always been "viewport width minus the hour axis and the scrollbar lane"; the week strip is seven cells in an `HStack`; the month grid and the contribution graph read their container width. Sheets became centered form sheets on their own, and the note composer docked above the keyboard as on iPhone.
 
 ![The planner in landscape on iPad — blocks fill the window](/blog/planner-ipad/landscape-planner.png)
 
