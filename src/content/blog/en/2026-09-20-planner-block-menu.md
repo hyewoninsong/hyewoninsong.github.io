@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-23T12:30:00+09:00
+date: 2026-09-23T13:08:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -767,6 +767,27 @@ quietly — so the block's text padding, spacing and font sizes moved out of inl
 set of constants. The test measures what matters: that the counted lines actually fit, padding plus
 title plus lines × line height staying inside the block, from 38pt up to 400pt.
 
+## 2026-09-23 — Stretching a block now pushes what is linked to it
+
+Linked blocks used to follow only when you dragged the anchor's body. Stretch its bottom edge by half
+an hour and the linked block below stayed put, so the anchor grew right over it and you had to drag
+the group down a second time.
+
+Now dragging a handle moves **the linked blocks on that side** by exactly as much as the edge moved:
+the bottom handle pushes or pulls what is linked after it, the top handle what is linked before it.
+Blocks linked on the other side stay where they are. Where they stop is not a new rule — it is the
+same calculation a body drag uses: companions stop at the first block (or already-stopped companion)
+in their way and pin to midnight at the day's end, while the edge itself only stops at the day's end.
+Letting go saves exactly what the screen showed, and one undo brings everything back.
+
+What lost:
+
+- **Moving every linked block.** Stretching the bottom would pull blocks linked above down onto the anchor.
+- **Pushing only when growing.** Grow, then shrink back, and the gap would only ever widen.
+- **Stopping the edge when a companion is blocked.** We already reversed that rule for body drags — what is under your finger follows your finger.
+
+The snap targets exclude the blocks being pushed; otherwise the edge would chase its own companion.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -787,3 +808,4 @@ title plus lines × line height staying inside the block, from 38pt up to 400pt.
 - 2026-09-22 — Made companions walls for each other so a group stops laying down overlaps of its own. The "we all move together so we cannot collide" exemption outlived the section that broke its premise
 - 2026-09-23 — The edit popover now stands where the whole plate fits. Keyboards do not move popovers aside, they squeeze them, and re-presenting drops the text focus — the anchor is the only thing left to move
 - 2026-09-23 — Block notes now use as many lines as the block's height allows (padding and title off the top, divided by line height; zero means title only), with line height asked of the font instead of approximated
+- 2026-09-23 — Dragging a handle now moves the blocks linked on that side by as much as the edge moved, stopping where a body drag would
