@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import AppPage, { type Copy } from '../../../components/AppPage.astro';
+import { getLangFromUrl, useTranslations } from '../../../i18n/utils';
+import { getEntry } from 'astro:content';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const app = (await getEntry('apps', 'en/musicnote'))!;
+
+const copy: Copy = {
+  tagline: 'Practice until the staff reads',
+  summary: 'A position you used to count up from do becomes one you read on sight.',
+  hero: {
+    iphone: 'The moment a ledger-line A is answered — the answer graded green, the clock stopped (iPhone)',
+    ipad: 'The moment a ledger-line A is answered — the answer graded green, the clock stopped (iPad)',
+  },
+  tabs: { iphone: 'iPhone', ipad: 'iPad' },
+  closing: ['Records and accounts stay on the device.', 'No sign-in, and nothing goes to a server.'],
+  sections: [
+    {
+      label: 'Range',
+      title: 'A range narrow enough to finish',
+      lead: 'Practice that starts too wide goes stale within a week. Treble and bass switch on and off separately, and each clef you keep on gets its own reach.',
+      points: [
+        'Only the clef you actually need stays on, so you drill that one and nothing else.',
+        'How far the ledger lines reach is settled in two steps, one ledger line or three, so notes you are not ready for stay out.',
+        'The range you picked is drawn on a staff before you start, so you see how wide the session is.',
+        'A clef you switch off keeps its range for next time, so you are not re-picking it every day.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'setup', alt: 'The Test tab, with the clefs you turned on and their range drawn on a staff' },
+          { file: 'range', alt: 'The range sheet — switch a clef on and pick how far the ledger lines reach' },
+        ],
+        ipad: [
+          { file: 'setup', alt: 'The Test tab on iPad, with the chosen range drawn on a staff' },
+          { file: 'range', alt: 'The range sheet on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Stages',
+      title: 'Five stages, one hint less each time',
+      lead: 'Handed a bare staff on day one, most people quit within the week. Instead of choosing a practice style, you pick where you are on one ladder.',
+      steps: [
+        ['Watch first', 'The first two stages show and never ask, so you learn the counting path instead of learning by being wrong.'],
+        ['Fewer hints', 'After that the same notes are asked with fewer hints each stage: the whole ladder, then only the do you count from. Today you answer what you watched yesterday.'],
+        ['Labelled path', 'The counting path is labelled with a note name at every step, so you are never guessing where to start or how far to go.'],
+        ['One note', 'The last stage leaves one note and nothing else, so whether you are ready shows up on the spot.'],
+      ],
+      shots: {
+        iphone: [
+          { file: 'stages', alt: 'The stage sheet — five stages in one column, from watching to answering with no hints' },
+          { file: 'ladder-hint', alt: 'A question with the ladder hint drawn from do, each step labelled with its note name' },
+        ],
+        ipad: [
+          { file: 'stages', alt: 'The stage sheet on iPad' },
+          { file: 'ladder-hint', alt: 'A question with the ladder hint on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Session',
+      title: 'A session as long as you decide',
+      lead: 'A session with no end is hard to start, and finishing one never shows up anywhere.',
+      points: [
+        'Pick 10, 20, 30, 40 or 50 questions, so a round is only as long as the time you have today.',
+        'On days you would rather not count, the last choice runs until you stop.',
+        'A wrong answer costs no progress and the note stays up. The right answer is never spelled out, so you read it again instead of copying it down.',
+        'Clear the target and the round closes itself with the record saved, so you never have to pick a stopping point.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'session-length', alt: 'The session length sheet — from 10 questions to no limit' },
+          { file: 'hero', alt: 'The moment a question is answered — graded green, clock stopped' },
+        ],
+        ipad: [
+          { file: 'session-length', alt: 'The session length sheet on iPad' },
+          { file: 'hero', alt: 'A question answered on iPad' },
+        ],
+      },
+    },
+    {
+      label: 'Stats',
+      title: 'A score that goes note by note',
+      lead: 'One accuracy figure does not tell you what to work on. The Stats tab speaks in single notes.',
+      points: [
+        'Positions are coloured on a staff map, so a weak register shows up in the shape you actually read.',
+        "Tap a position and that note's last five questions and time trend appear right below it.",
+        'The cutoffs behind the colours are printed on screen, so you are not reading a shade by guesswork.',
+        'Only your last twenty sessions count, so something you could not read months ago is not still scoring you.',
+      ],
+      shots: {
+        iphone: [{ file: 'stats-map', alt: 'The staff map coloured green, orange and red per position, with the selected note\'s last five questions below' }],
+        ipad: [{ file: 'stats-map', alt: 'The staff map and a selected note\'s report on iPad' }],
+      },
+    },
+    {
+      label: 'Records',
+      title: 'One row per session',
+      lead: 'Whether you are getting faster is not something you can feel. The Records tab leaves one row per session.',
+      points: [
+        'Each session leaves one row — how many you got on the first try, how long it took — so it compares to the last one on sight.',
+        'Open the row and the per-question times are there, so you can see which note ate the session.',
+        'Only first-try answers count toward the average, so a note you missed and fixed is not scored as fluent.',
+        'Records are kept per name, so several people on one device do not end up in one history.',
+      ],
+      shots: {
+        iphone: [
+          { file: 'sessions', alt: 'The Records tab — date, types, first-try score and time on each row' },
+          { file: 'session-detail', alt: "One session's summary and the time each question took" },
+          { file: 'save-account', alt: 'The sheet that asks whose record a finished session belongs to' },
+        ],
+        ipad: [
+          { file: 'sessions', alt: 'The Records tab on iPad' },
+          { file: 'session-detail', alt: "A session's summary and per-question times on iPad" },
+          { file: 'save-account', alt: 'The save-to-account sheet on iPad' },
+        ],
+      },
+    },
+  ],
+};
+---
+
+<BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
+  <AppPage
+    lang={lang}
+    slug="musicnote"
+    app={app}
+    copy={copy}
+    ipadShot="plain"
+    shotSize={{ iphone: [720, 1564], ipad: [720, 960] }}
+  />
+</BaseLayout>
