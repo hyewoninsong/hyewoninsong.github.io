@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-24T15:30:00+09:00
+date: 2026-09-24T21:00:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -801,7 +801,7 @@ The model now is a chat app's composer. Tapping a selected block again:
 | What | How |
 |---|---|
 | On open | The note field is focused; the keyboard comes up with it |
-| Plate | A full-width card docked on the keyboard's top edge |
+| Plate | A full-width card above the keyboard — docked to its top edge at first, then lifted off it a day later (see 2026-09-24 below) |
 | Top row | Color dot + todo name + `›`, a link into the todo editor |
 | Note field | Starts at one line, grows to six |
 | Save | Round arrow button, bottom right |
@@ -831,8 +831,8 @@ judging is how much rest sits before the block and how much room is left after i
 15 and 20 minutes are 7pt apart — not readable by eye — and the magnetic snap only speaks when things
 touch. Every other gap was mental arithmetic.
 
-Now, while you drag, a dashed vertical ruler stands between the held block and its nearest neighbour above
-and below, with a capsule in the middle: `15 min`, `1 h 30 min`. The ruler lives in the same coordinate space
+Now a dashed vertical ruler stands between the held block and its nearest neighbour above
+and below, with a capsule in the middle: `15 min`, `1 h 30 min`. (At first only while dragging; the same evening it became permanent on the selected block — next section.) The ruler lives in the same coordinate space
 as the blocks, so its length *is* the time.
 
 ![While dragging, the ruler shows 2 h 15 min to the block above and 1 h 15 min to the block below](/blog/planner-block-menu/drag-gap-move.png)
@@ -857,8 +857,8 @@ What lost:
 
 - **Appending to the time capsule** (`9:00–10:00 · 15 before · 40 after`). Half the screen width, and you
   have to work out which side each number belongs to. The ruler sits in the gap it measures.
-- **Always on.** The day becomes a forest of rulers. The gap matters while you decide; afterwards the
-  space between blocks is the gap.
+- **Always on, for every block.** The day becomes a forest of rulers. The gap matters while you decide; afterwards the
+  space between blocks is the gap. (One selected block is a different matter — next section.)
 - **Negative gaps for overlaps.** That is the hatch's job.
 
 One cost accepted: when the gap is shorter than the capsule (about 12 minutes) the capsule overlaps the
@@ -868,6 +868,51 @@ hides behind it and only the number remains.
 Screenshots could not verify this: a drag is synchronous until the finger lifts, so a test cannot capture
 mid-gesture. The two images above come from a background thread taking the screenshot while the test held
 the finger down for three seconds.
+
+## 2026-09-24 — Select and you see everything; grab and only what changes stays
+
+On a device the same time was written in two places, two ways. Select a block and a small monospaced
+`11:00 – 12:30` sat at the right end of the title row; start dragging and it vanished while a capsule
+appeared over the time axis. Same value, different place the moment a finger lands, so the eye looks twice.
+The gap ruler above had the same problem: it only appeared while dragging, so to see how much room a block
+had you first had to grab it.
+
+Both are now permanent on the selected block. The capsule over the time axis is the only place the time is
+written — it appears on selection and follows the drag in the same spot, same shape; the in-block text is
+gone. The ruler measures both sides while the block is merely selected, and narrows to the moving edges once
+you drag, as in the table above.
+
+![Selecting a block is enough: the time capsule sits over the axis and a dashed ruler shows 1 h 30 min to the block above](/blog/planner-block-menu/selected-pill-and-gap.png)
+
+| State | Time capsule | Gap ruler |
+|---|---|---|
+| Selected | Over the axis | Above and below |
+| Body or group drag | Same spot | Above and below |
+| Handle drag | Same spot | The held edge only |
+
+The capsule won because in-block text is under the finger during a drag — the reason the capsule was put on
+the axis in the first place. "Always on" was rejected above for every block; one selected block adds one or
+two rulers, not a forest.
+
+### The composer came off the keyboard
+
+The note composer from 2026-09-23 had rounded top corners and sat flush on the keyboard's top edge. Modelled
+on a chat app, but flush against the grey keyboard the white plate read as **part of the keyboard**. The same
+chat app's current composer is a card with four rounded corners floating a little above the keys.
+
+So: four rounded corners, 12pt off the keyboard and off both screen edges, shadow on all sides, and no more
+stretching the plate's bottom into the safe area. Content, opening, closing and saving are unchanged.
+
+![The note card floats above the keyboard with all four corners rounded; the block being edited stays visible above it](/blog/planner-block-menu/memo-card-floating.png)
+
+A bigger shadow alone did not do it — as long as the bottom edge touches the keyboard they read as one
+object. The gap is what says "floating".
+
+### Minimap names for 30-minute blocks
+
+While scrubbing the minimap the lane widens and each bar shows its name, except 30-minute bars, which are
+about 11pt on a phone against a 13pt threshold. The threshold is 10pt now, and thin bars centre the name
+vertically instead of top-left; bars do not clip text, so a point of overhang still reads.
 
 ## History
 
@@ -892,3 +937,4 @@ the finger down for three seconds.
 - 2026-09-23 — Dragging a handle now moves the blocks linked on that side by as much as the edge moved, stopping where a body drag would
 - 2026-09-23 — Note editing moved from a 340pt popover to a full-width composer docked on the keyboard (focused on open, save at bottom right, tap outside also saves); the popover anchor math is gone
 - 2026-09-24 — Dragging shows the free time to the nearest block above and below as a dashed ruler with a minute capsule: moving edges only, neighbours at their live positions, nothing for overlaps, 0 min or midnight
+- 2026-09-24 — The time is written once, as the capsule over the axis (in-block text removed); the capsule and the gap ruler now stay on the selected block; the note composer floats 12pt above the keyboard with four rounded corners; minimap names reach 30-minute bars
