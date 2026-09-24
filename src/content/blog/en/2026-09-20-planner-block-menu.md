@@ -967,6 +967,37 @@ two linked blocks that touch put two identical capsules on the same spot (they r
 shorter than a capsule (16pt, about 12 minutes) overlaps two capsules by half — the ruler says what that gap
 is.
 
+## 2026-09-24 — Only blocks with a note lost their title early
+
+When a long block scrolls past, its title sticks to the top of what is still visible and rides down —
+inside the block, so it leaves when the block does. That had been true from the start. Then notes got
+several lines (the 23 September section above) and the rule broke, but only on blocks that had a note:
+a three-hour block with four lines of note lost its title before half of it had scrolled by.
+
+What sticks is not the title but the **title-plus-note bundle**, and the bundle can only ride down until
+it hits the block's bottom edge. Four lines of note make a tall bundle, so it hits early. A block with no
+note keeps its title until that one line reaches the bottom; a block with a note gives it up four lines
+sooner. The rule said the title comes first — and while scrolling, the note was pushing it out.
+
+The note's line count is now taken from the **height of the block still on screen**: the part scrolled
+above the viewport comes off the block height before the same division (padding and one title line off,
+divided by a note line's height). Scrolling up trims the note a line at a time — the trailing `…` that
+`lineLimit` adds is the "there is more" mark — and once the note is at zero lines the title alone rides to
+the bottom edge. The title's font size still comes from the full block height; picking it from the
+visible height would make the title grow and shrink as you scroll.
+
+Because the bundle now always fits the visible height, the sticking arithmetic was left alone — count the
+lines correctly and the point where the bundle hits the bottom moves down to one title line by itself.
+The test measures that premise: hidden height from 0 to the full block in 2pt steps, the line count never
+increasing and padding plus title plus lines × line height never exceeding what is visible.
+
+Three options lost. Sticking only the title and leaving the note in place sends the note off the top while
+the title rides down **over** it — the same words twice inside one block. Riding the bundle down and
+clipping the note at the viewport leaves a half-visible line with no ellipsis, which reads as a note that
+ended there (the reason `clipped()` lost on 23 September). Hiding the note entirely while scrolling makes
+four lines vanish the moment one is cut off. The cost we took is that lines drop in steps, one per line
+height (about 15pt); between steps the bundle rides down intact.
+
 ## 2026-09-24 — Start and end were there, but not the length
 
 How long a selected block was, you had to work out from the start and end capsules. A 30-minute block
@@ -1031,4 +1062,5 @@ and end capsules already have with the hour labels.
 - 2026-09-24 — Dragging shows the free time to the nearest block above and below as a dashed ruler with a minute capsule: moving edges only, neighbours at their live positions, nothing for overlaps, 0 min or midnight
 - 2026-09-24 — The time is written once, as the capsule over the axis (in-block text removed); the capsule and the gap ruler now stay on the selected block; the note composer floats 12pt above the keyboard with four rounded corners; minimap names reach 30-minute bars
 - 2026-09-24 — The time capsule became two capsules inside the axis so it no longer hides the title; linked companions carry capsules and gap rulers (shared gaps drawn once); a pan on a linked block is a group drag with no press
+- 2026-09-24 — A block scrolled partly off the top counts its note lines from the height still visible, so the note is trimmed a line at a time and the title stays until the block has passed; the title font still follows the full block height
 - 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing; the length capsule alone is sticky so it stays on screen for blocks taller than the viewport
