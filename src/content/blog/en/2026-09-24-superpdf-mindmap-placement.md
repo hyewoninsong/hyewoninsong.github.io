@@ -1,6 +1,6 @@
 ---
 title: "An underline made on an earlier page was landing at the end of the map"
-date: 2026-09-24T23:50:00+09:00
+date: 2026-09-25T09:00:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "New underline nodes now slot into their siblings in book order instead of at the end, without touching anything you reordered by hand. Keyboard commands, a + handle on the selected node and edge auto-scroll came with it, plus a fix for sort orders assigned from count."
@@ -84,8 +84,39 @@ An experiment first: Myungjo and Gothic justified paragraphs, blurred, JPEG-comp
 
 994 unit tests pass. On device: underline then drag the new node immediately, pull past the edges to feel the resistance, crop a table from a scanned book.
 
+## 2026-09-25 — The map scrolls vertically
+
+Yesterday's pan bounds stopped you losing the map, but the canvas still drifted wherever the finger went. An outline reads top to bottom; a vertical drag that slides a little sideways makes the rows look misaligned. The canvas is now a vertical scroller.
+
+### One axis at a time, horizontal only when it overflows
+
+| Drag | Result |
+|---|---|
+| Vertical | Scrolls, even when the map is shorter than the pane; rubber-bands at the end |
+| Horizontal | Scrolls only when the map is wider than the pane; otherwise nothing |
+| Diagonal | Locks to the larger axis within the first 6pt and stays there until release |
+| Release | Slides with the throw and stops at the bounds |
+
+It is the grammar of a `UIScrollView` list with `isDirectionalLockEnabled` and `alwaysBounceVertical`. An axis that fits the pane is pinned to its centre, so a zoom change, a rotation or a restored position all snap the map back to the middle with one clamp.
+
+![The node area is a rounded region one shade darker than the pane; the fit-to-screen button sits in the bottom toolbar](/blog/superpdf-mindmap-placement/map-region.png)
+
+The node area now has a floor: the pane is white, the area one shade darker, so "this is the map" is visible in light and dark. It lives in content coordinates and moves with the nodes; it is left out of image export.
+
+### Fit to screen
+
+There was no way back after zooming and scrolling around. Double-tap the empty background, tap the toolbar button, or press ⌘0 and the whole map fits the pane. The scale is the smaller of "fits" and 1: a two-node map is not enlarged three times, and it never drops below 0.3 where text is unreadable.
+
+### Colour menu in node colours
+
+![The colour submenu shows a filled circle in each node colour, with a checkmark on the current one](/blog/superpdf-mindmap-placement/color-menu.png)
+
+The colour menu used emoji circles, which do not match the node colours. Tinting `Image(systemName: "circle.fill")` does not work here: the context menu is a `UIMenu`, and `UIMenu` tints every symbol image the same colour. Colour survives only as an `.alwaysOriginal` bitmap, so the swatches are rendered from the node colours, and the items are `Toggle`s so the current colour gets a checkmark.
+
+Replacing the canvas with a `UIScrollView` lost because node drag, the root drop zone and pinch anchoring all live in the current coordinate system; the lock and the inertia were a few pure functions. Horizontal rubber-banding when nothing overflows lost because it contradicts "only when it overflows". A bounce after the slide lost because the rubber band already says "end".
+
 ## History
 
 - 2026-09-24 — book-order insert, keyboard, + handle, edge auto-scroll, sortOrder fix
 - 2026-09-24 (evening) — outline layout, drag without selection, rubber-band pan bounds, crop nodes shipped, page-OCR spacing
-
+- 2026-09-25 — axis lock, horizontal only on overflow, inertia, fit to screen, node-area floor, colour swatches
