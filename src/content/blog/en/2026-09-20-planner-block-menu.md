@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-24T21:00:00+09:00
+date: 2026-09-24T23:00:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -877,16 +877,17 @@ appeared over the time axis. Same value, different place the moment a finger lan
 The gap ruler above had the same problem: it only appeared while dragging, so to see how much room a block
 had you first had to grab it.
 
-Both are now permanent on the selected block. The capsule over the time axis is the only place the time is
+Both are now permanent on the selected block. The capsule by the time axis is the only place the time is
 written — it appears on selection and follows the drag in the same spot, same shape; the in-block text is
-gone. The ruler measures both sides while the block is merely selected, and narrows to the moving edges once
+gone. (At this point it was one `10:15 — 12:40` capsule hanging over the block's top-left corner. It covered
+the title, and later the same day it became two capsules inside the axis — next section.) The ruler measures both sides while the block is merely selected, and narrows to the moving edges once
 you drag, as in the table above.
 
 ![Selecting a block is enough: the time capsule sits over the axis and a dashed ruler shows 1 h 30 min to the block above](/blog/planner-block-menu/selected-pill-and-gap.png)
 
 | State | Time capsule | Gap ruler |
 |---|---|---|
-| Selected | Over the axis | Above and below |
+| Selected | Inside the axis, at the top and bottom edges | Above and below |
 | Body or group drag | Same spot | Above and below |
 | Handle drag | Same spot | The held edge only |
 
@@ -914,6 +915,58 @@ While scrubbing the minimap the lane widens and each bar shows its name, except 
 about 11pt on a phone against a 13pt threshold. The threshold is 10pt now, and thin bars centre the name
 vertically instead of top-left; bars do not clip text, so a point of overhang still reads.
 
+## 2026-09-24 — The capsule hid the title, and a group was only half of one thing
+
+A TestFlight build showed the capsule from the previous section was itself the problem. `10:15 — 12:40` is
+twice as wide as the 48pt time axis, so it spilled over the block — exactly onto the checkbox and the title
+row. Select a block and its name disappears. The cost we had waved through as "already true while dragging"
+became a cost you see every time.
+
+The capsule is now **two capsules inside the axis**: the start capsule centred on the block's top edge, the
+end capsule on its bottom edge, same size and inset as the "now" capsule. The fill is the block's colour and
+the text its title colour, so you can tell whose time it is at a glance. A block shorter than two capsules
+pushes them apart around its middle, and neither leaves the day.
+
+![Select a block and the start and end capsules sit inside the axis at its top and bottom edges; the title stays visible](/blog/planner-block-menu/pills-on-axis.png)
+
+Three alternatives lost. Lifting the capsule above the block covers the neighbour above and leaves the
+screen when the block is at the top of the viewport. Pushing the block's content down by the capsule's
+height leaves a 15- or 30-minute block with no title at all. Widening the axis to fit one 110pt capsule
+makes the axis a third of the timeline. Calendar apps write the time inside the axis while you drag for a
+reason.
+
+### Linked blocks get capsules and rulers too
+
+The same screenshot showed something else: linked companions had neither a capsule nor a gap ruler. When
+you move a group you want to know where the whole group starts and ends and how much room it has, and only
+the anchor was talking.
+
+Companions now carry the same capsules, and the ruler measures the anchor and every companion — during a
+drag, at their live positions. The anchor keeps the "moving edges only" rule; companions move whole, so both
+edges. One calculation had to change: the anchor's gap below and the companion's gap above are the **same
+gap**, and drawing it from both sides stacks two rulers with smeared labels. The gap calculation now takes
+all subjects at once and folds shared gaps into one set. Zero is still not drawn.
+
+![Three linked blocks each carry start and end capsules, and the gaps between them read 1 h 20 min and 30 min exactly once](/blog/planner-block-menu/linked-pills-and-gaps.png)
+
+### A linked block drags without the press
+
+The last one was the hand. A selected block moves the moment you drag it (see 2026-09-22), but a companion
+in the same group still needed the 0.2-second press. Companions already look selected — the ring, the
+thread — so to the user it read as "why won't this one grab".
+
+The gesture layer's pan test now consults the linked list as well as the selection. A pan that starts on a
+linked block opens as that block's move, and as in the 2026-09-23 section the anchor passes to it on grab,
+so it is a group drag. The vertical-only rule and the pager's claim on horizontal swipes are unchanged.
+
+![Dragging the linked Beta without pressing brings Alpha and Gamma along, and Beta, now the anchor, wears the chips](/blog/planner-block-menu/linked-pan-moves-group.png)
+
+The cost is scrolling: a finger that meant to scroll over a large companion moves the group instead, as it
+already did over the selected block — scroll from empty space or an unselected block. On the capsule side,
+two linked blocks that touch put two identical capsules on the same spot (they read as one), and a gap
+shorter than a capsule (16pt, about 12 minutes) overlaps two capsules by half — the ruler says what that gap
+is.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -938,3 +991,4 @@ vertically instead of top-left; bars do not clip text, so a point of overhang st
 - 2026-09-23 — Note editing moved from a 340pt popover to a full-width composer docked on the keyboard (focused on open, save at bottom right, tap outside also saves); the popover anchor math is gone
 - 2026-09-24 — Dragging shows the free time to the nearest block above and below as a dashed ruler with a minute capsule: moving edges only, neighbours at their live positions, nothing for overlaps, 0 min or midnight
 - 2026-09-24 — The time is written once, as the capsule over the axis (in-block text removed); the capsule and the gap ruler now stay on the selected block; the note composer floats 12pt above the keyboard with four rounded corners; minimap names reach 30-minute bars
+- 2026-09-24 — The time capsule became two capsules inside the axis so it no longer hides the title; linked companions carry capsules and gap rulers (shared gaps drawn once); a pan on a linked block is a group drag with no press
