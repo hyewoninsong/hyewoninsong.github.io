@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-24T23:30:00+09:00
+date: 2026-09-24T23:40:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -998,6 +998,45 @@ ended there (the reason `clipped()` lost on 23 September). Hiding the note entir
 four lines vanish the moment one is cut off. The cost we took is that lines drop in steps, one per line
 height (about 15pt); between steps the bundle rides down intact.
 
+## 2026-09-24 — Start and end were there, but not the length
+
+How long a selected block was, you had to work out from the start and end capsules. A 30-minute block
+reads at a glance because the two capsules touch; a two- or three-hour block puts the numbers far apart on
+screen and it becomes arithmetic. Worse while resizing: the gap ruler measures the **free time** to the
+neighbour, not this block, so there was nowhere to read "how long is it now".
+
+A third capsule now sits **midway between** the start and end capsules: `1 hr 30 min`, the same wording the
+gap ruler uses. Same block colour, same title colour, same size, so one block's numbers read as a single
+column inside the axis: start, length, end.
+
+![Selecting a 90-minute block puts 9:00 AM · 1 hr 30 min · 10:30 AM in a column inside the axis](/blog/planner-block-menu/duration-pill-90min.png)
+
+It appears only when three capsules fit without touching. At 80pt per hour the shortest block, 30
+minutes, still fits all three; only a block pinned at the edge of the day, whose capsules were already
+spread apart, goes without — there the start and end touch and the length reads itself. While a handle is
+dragged the capsule shows the preview length, so it doubles as the gauge for resizing to a target.
+
+One more thing turned up. With the three capsules pinned to the block's top, middle and bottom, a block
+taller than the screen (about eight hours) never shows all three at once — the top of it shows only the
+start, the bottom only the end, and a block taller than two screens has stretches with no capsule at all.
+An 11-and-a-half-hour block confirmed it. So **the length capsule alone is sticky, like the title**: it sits
+at the middle of the part of the block that is on screen, so a long block carries `11 hr 30 min` next to
+its title wherever you scroll. The start and end stay put. They are points, and a `9:30` pinned to the top
+of the screen would read as "the visible top edge is 9:30", which is a lie.
+
+![Even a 30-minute block fits 12:30 PM · 30 min · 1:00 PM without overlap](/blog/planner-block-menu/duration-pill-30min.png)
+
+Other spots lost. Writing it into the start capsule (`9:00 · 1 hr 30 min`) makes that capsule twice the
+axis width and covers the first letters of the title — the very reason the single capsule was split in two.
+Inside the block, next to the title, the finger hides it and short blocks have no room. Styling it like the
+gap ruler's material capsule blurs which number is the block and which is the gap; this one belongs to the
+block, so it wears the block's colour.
+
+The accepted cost is width: `1 hr 30 min` is wider than the 48pt axis and runs about 10pt into the block —
+vertically centred, so it never touches the title row, and the 12-hour capsules already do the same. When
+the "now" capsule crosses the middle of a selected block the two overlap, the same relationship the start
+and end capsules already have with the hour labels.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -1024,3 +1063,4 @@ height (about 15pt); between steps the bundle rides down intact.
 - 2026-09-24 — The time is written once, as the capsule over the axis (in-block text removed); the capsule and the gap ruler now stay on the selected block; the note composer floats 12pt above the keyboard with four rounded corners; minimap names reach 30-minute bars
 - 2026-09-24 — The time capsule became two capsules inside the axis so it no longer hides the title; linked companions carry capsules and gap rulers (shared gaps drawn once); a pan on a linked block is a group drag with no press
 - 2026-09-24 — A block scrolled partly off the top counts its note lines from the height still visible, so the note is trimmed a line at a time and the title stays until the block has passed; the title font still follows the full block height
+- 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing; the length capsule alone is sticky so it stays on screen for blocks taller than the viewport
