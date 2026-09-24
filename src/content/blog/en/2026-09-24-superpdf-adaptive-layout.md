@@ -1,6 +1,6 @@
 ---
 title: "Folding a three-column workspace into two, then one, by window size"
-date: 2026-09-24T21:30:00+09:00
+date: 2026-09-24T22:45:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "The PDF list, the PDF and the mind map sat in three fixed columns. Now iPad portrait stacks PDF over map, iPhone shows one pane at a time, and the list is an overlay instead of a column. Rotating used to push map nodes off screen; that is fixed too."
@@ -49,3 +49,22 @@ The fix is one `onChange(of: geometry.size)`: add half the size delta to the off
 ## What is left
 
 The old "collapse map" button set the split ratio to 1.0 and produced a negative frame width warning; collapse is its own state now. Divider dragging also compounded the cumulative translation on every event and moved faster than the finger; fixed. An iPhone drawer and a pinned list column for very wide windows are on the list to try.
+
+## 2026-09-24 — Two iPhone bugs: an overflowing toolbar and the iOS 26 back swipe
+
+The single-pane layout went to TestFlight and two reports came back the same evening. Switching to highlighter mode shifted the PDF to the right and clipped its right edge, and dragging a finger in that state drew nothing. It looked like one bug; it was two.
+
+**The shift was the toolbar.** In highlighter mode the bottom bar shows the two mode buttons, four colours, two styles and undo/redo on one row, and the fixed frames add up to 530pt. That fits an iPad pane and overflows an iPhone's 377pt. A SwiftUI child can refuse the proposed width, and the width it takes becomes the width of its parent stack. The whole PDF pane grew to 530pt, the `PDFView` inside it too, and the page stayed at the scale fitted for 393pt, centered in the wider view: a blank strip on the left, the right edge off screen. The clue was in the user's screenshot: the toolbar's right end was cut off as well, which a scroll offset would never do.
+
+The toolbar now uses `ViewThatFits`: one row when it fits, otherwise modes and undo/redo on the first row and colours and styles on the second. The compact pane is also pinned to the window size, so any future overflow gets clipped instead of pushing the pane. The home screen had the same mechanism the same day: a `.fill` thumbnail with only `frame(height:)` let landscape PDFs push their card past the screen. The image is now bound to the card with `Color.clear.frame(height:).overlay`, landscape pages shown whole and portrait pages filled from the top.
+
+**The missing highlight was iOS 26.** On an iPhone simulator, long-press then drag to the right popped back to the home screen instead of drawing. iOS 26 has two back-swipe recognizers on a navigation controller: the old edge pan, `interactivePopGestureRecognizer`, and a new one, `interactiveContentPopGestureRecognizer`, that pops from a rightward drag anywhere in the content. The code that disables back-swipe in highlighter mode only disabled the first. On this screen a horizontal drag is the interaction — highlighting, panning a zoomed page, dragging the map canvas — so the content pan is now disabled whenever the workspace is on screen. The edge pan is still disabled only in highlighter mode, so swiping back from the edge in reading mode works as before.
+
+![iPhone highlighter mode. The toolbar folded to two rows, one line of text is highlighted yellow, and the "Node added to map · View" toast is showing.](/blog/superpdf-adaptive-layout/iphone-highlight-toolbar.png)
+
+The capture test drags right with `press(forDuration:thenDragTo:)` in highlighter mode and asserts the app is still in the workspace, undo is enabled and the toast appeared; it repeats the drag on the map pane and checks the screenshot hash changed. A new system recognizer is invisible in code review. You have to drag.
+
+## History
+
+- 2026-09-24 — Folded three columns into two, then one, by window size; map offset fixed on rotation.
+- 2026-09-24 (evening) — iPhone highlighter-mode toolbar overflow and the iOS 26 content back swipe.
