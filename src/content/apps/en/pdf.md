@@ -1,5 +1,5 @@
 ---
-title: "SuperPDF"
+title: "MindPDF"
 slug: "pdf"
 icon: "/apps/pdf/icon.png"
 summary: "In development for iPhone. The introduction is on its way."
