@@ -985,6 +985,14 @@ minutes, still fits all three; only a block pinned at the edge of the day, whose
 spread apart, goes without — there the start and end touch and the length reads itself. While a handle is
 dragged the capsule shows the preview length, so it doubles as the gauge for resizing to a target.
 
+One more thing turned up. With the three capsules pinned to the block's top, middle and bottom, a block
+taller than the screen (about eight hours) never shows all three at once — the top of it shows only the
+start, the bottom only the end, and a block taller than two screens has stretches with no capsule at all.
+An 11-and-a-half-hour block confirmed it. So **the length capsule alone is sticky, like the title**: it sits
+at the middle of the part of the block that is on screen, so a long block carries `11 hr 30 min` next to
+its title wherever you scroll. The start and end stay put. They are points, and a `9:30` pinned to the top
+of the screen would read as "the visible top edge is 9:30", which is a lie.
+
 ![Even a 30-minute block fits 12:30 PM · 30 min · 1:00 PM without overlap](/blog/planner-block-menu/duration-pill-30min.png)
 
 Other spots lost. Writing it into the start capsule (`9:00 · 1 hr 30 min`) makes that capsule twice the
@@ -1023,4 +1031,4 @@ and end capsules already have with the hour labels.
 - 2026-09-24 — Dragging shows the free time to the nearest block above and below as a dashed ruler with a minute capsule: moving edges only, neighbours at their live positions, nothing for overlaps, 0 min or midnight
 - 2026-09-24 — The time is written once, as the capsule over the axis (in-block text removed); the capsule and the gap ruler now stay on the selected block; the note composer floats 12pt above the keyboard with four rounded corners; minimap names reach 30-minute bars
 - 2026-09-24 — The time capsule became two capsules inside the axis so it no longer hides the title; linked companions carry capsules and gap rulers (shared gaps drawn once); a pan on a linked block is a group drag with no press
-- 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing
+- 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing; the length capsule alone is sticky so it stays on screen for blocks taller than the viewport
