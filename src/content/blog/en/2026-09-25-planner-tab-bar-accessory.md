@@ -12,7 +12,7 @@ Daily Planner had two layers of glass at the bottom: the system tab bar, and abo
 
 ![The capsule above the tab bar: undo and redo on the left, the drawer on the right](/blog/planner-tab-bar-accessory/accessory-idle.png)
 
-iOS 26's `tabViewBottomAccessory` is the slot the Music app uses for its mini player — a glass capsule sitting on the tab bar, sharing its safe area. We moved the existing controls in unchanged. At first it was enabled only on the planner tab, but on a device the tab bar shrank to a centered capsule when switching to the todos tab — the system stretches the tab bar to full width only on tabs that have an accessory. So it is on for both tabs; the todos tab keeps just undo and redo (todo edits are undoable too, and that tab never had an undo button before). The system draws the glass, so the buttons are just glyphs.
+iOS 26's `tabViewBottomAccessory` is the slot the Music app uses for its mini player — a glass capsule sitting on the tab bar, sharing its safe area. We moved the existing controls in unchanged. At first it was enabled only on the planner tab, but on a device the tab bar shrank to a centered capsule when switching to the todos tab — the system stretches the tab bar to full width only on tabs that have an accessory. So it is on for both tabs. On the todos tab the capsule holds undo and redo on the left (todo edits are undoable too, and that tab never had an undo button before) and a new-todo `+` on the right — moved down from the top bar, which is now just `…`. One rule: the right end is the tab's primary action. The system draws the glass, so the buttons are just glyphs.
 
 | State | Left | Middle | Right |
 |---|---|---|---|
