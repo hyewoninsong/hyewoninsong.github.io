@@ -34,4 +34,6 @@ The same pass found that the compositor was ignoring the `opacity` value used fo
 
 ## What's left
 
-The new listings go out with the next version. One iPad capture still fails a drag-endpoint assertion even though the screenshot it produces is correct.
+The new listings go out with the next version.
+
+One iPad capture had been failing a drag-endpoint assertion for a week. We first called the screenshot fine, but it wasn't. The 2:30 endpoint was below the fold, so the drag stopped at the screen edge and made a block that ended at 2:20. The capture now scrolls the grid by a measured amount first, and requires the endpoint to be outside the 100pt auto-scroll band. The recaptured card is live on the store.
