@@ -1,12 +1,12 @@
 ---
 title: "After the icon went vivid, the app's colors looked dull"
-date: 2026-09-25T13:20:00+09:00
+date: 2026-09-25T18:30:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "The ten default schedule colors now match the iOS system palette. Only yellow gave up its white title, and that is why 'just a bit darker' was never an option. Two days later the pastels lost their appeal, so the twenty stayed and six recommended sets were added as pages."
+summary: "The ten default schedule colors now match the iOS system palette. Only yellow gave up its white title, and that is why 'just a bit darker' was never an option. Two days later six recommended sets were added as pages, and that evening the tab shrank back to one page: ten bold plus ten mist."
 ---
 
-SuperTimetable's schedule blocks pick from ten bold colors and ten pastels (since September 25, six recommended sets follow them as pages — see the last section). This morning the app icon was redrawn with iOS system colors, and next to it the same red, yellow and blue inside the app looked one step muddier. The ten bold colors now use the icon's values, and the pastels were re-picked one step richer.
+SuperTimetable's schedule blocks pick from twenty colors in the basic tab. On September 23 that was ten bold and ten pastels; since the evening of September 25 it is ten bold and ten mist. The eighty-color detour in between is in the last two sections. This morning the app icon was redrawn with iOS system colors, and next to it the same red, yellow and blue inside the app looked one step muddier. The ten bold colors now use the icon's values, and the pastels were re-picked one step richer.
 
 ## The dullness was the white title, not the saturation
 
@@ -70,7 +70,16 @@ The lesson: a second set in the pastels' lightness band will collapse into the p
 
 One more from the capture probe: it compared the first swatch's x across pages using page one's first swatch as the reference, which happened to wear the selection ring — about 5pt of extra frame. All three pages reported a 5pt offset that did not exist. Never take a selected element's frame as the baseline.
 
+## 2026-09-25 evening — Back from eighty colors to twenty
+
+Half a day after adding the six sets, the basic tab went back to a single page: the ten bold colors on top and the ten mist colors below. Pastel, vivid, candy, deep, dusty and night are gone. Columns still pair by hue. With one page the page dots disappear, but their row keeps its height so the grid does not jump when switching tabs.
+
+In the morning the pastels stayed because saved schedules and store screenshots reference their hex values. That cost is now accepted. Schedules store the hex, so blocks painted with a removed color keep it, and the "in use" strip at the top of the popover still offers it. Store screenshots pick colors by index, so the light row now points at mist, and the store shows pastels the app no longer has until the next capture.
+
+Mist sits at lightness 0.92 and chroma 0.045, much lighter than the pastels, so all ten take a charcoal title. The paging code stays: the page count is read from the palette, so adding sets back is one page and two caption keys. Analytics color names narrow to `basic_N` and `mist_N`.
+
 ## History
 
 - 2026-09-23 — bold ten to iOS system colors, pastels re-picked, yellow alone with dark text.
 - 2026-09-25 — twenty kept, basic tab paged, six recommended sets of ten (same hues, L/C only). "Bright" collided with a pastel hex → candy. Captions per set the same afternoon.
+- 2026-09-25 evening — basic tab reduced to ten bold + ten mist on one page; pastels and the other five sets removed.
