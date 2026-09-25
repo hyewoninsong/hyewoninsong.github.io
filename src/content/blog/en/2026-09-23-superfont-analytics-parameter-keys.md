@@ -1,6 +1,6 @@
 ---
 title: "One name was counting two different things"
-date: 2026-09-23
+date: 2026-09-26T03:25:06+09:00
 app: "superfont"
 tags: ["devlog", "data"]
 summary: "Before registering SuperFont's install-funnel metrics, we found that an analytics parameter key is not a field inside its event — it is a single app-wide name. Registration is not retroactive, and a mixed metric cannot be un-mixed."
@@ -83,3 +83,24 @@ The way around it is a service account. Create one in the project, then invite i
 ## Where it stands
 
 Names and registration are both done, and the next build on real devices starts filling the new names. A metric that does not apply retroactively is a number you simply do not have until you start counting.
+
+## 2026-09-26 — A funnel only splits on a dimension every step carries
+
+A pre-release cross-check found every one of the 24 parameters the app sends already registered. What was missing was not a registration but an answer.
+
+The number we wanted was "of the people who came in through Google Fonts, how many finished installing?" So `wizard_source` rode on the wizard's start and step events. In the funnel exploration, though, the start split by route and the end did not. GA4 segments a funnel only by a dimension **every step** has — and the events that actually say "installed" (profile opened, Safari took it, Settings registered it) are emitted by the install session, a different object with no idea which route it was serving. We had read "put it on every step" as "put it on the wizard's step events."
+
+The same check turned up a side door: the single-font reinstall sheet calls the install session directly, without the wizard. Its events surfaced in the middle of the funnel with no start and no route, and its "Open Settings" button logged nothing at all.
+
+The fix: the session takes the flow name and stamps it on all four of its events; the install-guide screen's three events read the same value. The two sheets ride the same key with new values, `reinstall_sheet` and `remove_sheet` — same meaning, same key, one segment. A new `install_route` key, renaming to `flow`, and folding the sheet into the wizard were all considered and dropped; each solved a measurement problem somewhere else.
+
+The rule went into the contract test again: ten install-flow event names are pinned, and any of them missing `wizard_source` fails the build.
+
+Two more while we were there. The "came back from Safari with nothing" event now carries elapsed seconds — 130 s is a server timeout, 4 s is someone who never tapped Allow, and until now those were one number. And the app got its first user property: the count of currently installed profiles bucketed into `0` / `1` / `2_5` / `6_plus`. Without one, "retention of people who completed at least one install" is not a segment you can build, no matter how many events you have.
+
+The three new keys were registered and read back the same day, and the registration spec now lives as a file in the app repo.
+
+## History
+
+- 2026-09-23 — parameter keys are an app-wide namespace; fix names before registering, register the old ones as legacy
+- 2026-09-26 — the route axis on every install-flow event, side doors on the same axis, first user property
