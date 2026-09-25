@@ -54,13 +54,13 @@ Two days in, the ten pastels still felt off. The first instinct was to re-pick t
 
 The sets are not split by hue. All ten reuse the bold row's OKLCH hues (red, orange, yellow, green, mint, sky, blue, purple, pink, gray) and differ only in lightness and chroma: vivid (L 0.74 / C 0.19), candy (0.80 / 0.16), deep (0.52 / 0.15), dusty (0.68 / 0.065), mist (0.92 / 0.045), night (0.40 / 0.085). Whatever page you are on, the same column is the same family, so "a red, but calmer" is one swipe away in the first column. Yellow and orange turn olive and brown when they darken, so those two get a lightness bump of 0.03–0.14 per set; anything outside sRGB loses chroma only.
 
-![The deep and dusty page. Picking the deep red puts the ring on it and recolors the edit sheet header behind the popover.](/blog/timetable-palette-ios-system/page-deep-dusty.png)
+![The deep and dusty page, each set captioned. Picking the deep red puts the ring on it and recolors the edit sheet header behind the popover.](/blog/timetable-palette-ios-system/page-deep-dusty.png)
 
-### Two sets per page, no set names
+### Two sets per page, one name per set
 
 A page is fixed at five columns by four rows; the custom tab uses the same shape and the popover height comes from it. A set is ten colors, two rows, so one set per page would leave the bottom half empty every time. Two sets per page it is: the top two rows are one set, the bottom two another — the same grammar the first page already has with bold on top and pastel below.
 
-Captions naming the sets lost: there is no room for a caption row, and the first page has never labeled its bold and pastel rows either. The names live only in analytics, to count which sets people actually use. The dot row counts only the group you are looking at — four dots on basic, the custom page count on custom — rather than one long row that repeats what the segmented control already says.
+Set names were left out at first — no room for a caption row, and the first page had never labeled bold and pastel either. On a device, though, six sets that share every hue and differ only in lightness read as "which two rows are these again." The same afternoon each set got a one-line caption: Bold, Pastel, Vivid, Candy, Deep, Dusty, Mist, Night. "No room" had mistaken a pinned height for a fixed one; the popover height follows its content, so it grew by the two caption rows (52pt), and the caption height itself is pinned at 18pt so fonts cannot wobble the page. The first page's bold and pastel rows got captions too, so no page is the exception. The dot row still counts only the group you are looking at — four dots on basic, the custom page count on custom.
 
 ### One draft set produced the exact same hex as a pastel
 
@@ -73,4 +73,4 @@ One more from the capture probe: it compared the first swatch's x across pages u
 ## History
 
 - 2026-09-23 — bold ten to iOS system colors, pastels re-picked, yellow alone with dark text.
-- 2026-09-25 — twenty kept, basic tab paged, six recommended sets of ten (same hues, L/C only). "Bright" collided with a pastel hex → candy.
+- 2026-09-25 — twenty kept, basic tab paged, six recommended sets of ten (same hues, L/C only). "Bright" collided with a pastel hex → candy. Captions per set the same afternoon.
