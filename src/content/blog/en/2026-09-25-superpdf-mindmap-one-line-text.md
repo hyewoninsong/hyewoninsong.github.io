@@ -1,6 +1,6 @@
 ---
 title: "Mind map titles went to one line — and every title got cut off"
-date: 2026-09-25T17:40:00+09:00
+date: 2026-09-26T01:30:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "Node titles used to wrap across two or three lines. Now they stay on one line, growing the node up to 480pt before truncating. The first build shipped truncated every title at around ten characters — wrapping had been hiding a width-math bug that one line finally exposed. The same evening the one-line rule was reversed: nodes are now one screen-wide column and titles wrap inside it."
@@ -40,7 +40,9 @@ The afternoon's "one line, 480pt cap" lasted a few hours. An underline in a real
 
 ### One node, one column
 
-Every node is the pane width minus 16pt gutters, whatever its depth or kind. Children still sit on the row below, indented 28pt, so depth 1 overflows the right edge by 28pt and depth 2 by 56pt. That overflow is the horizontal scroll. On release the canvas snaps to the **left edge of the nearest depth**: snapped to depth 2, its nodes fill the screen and the parents are tucked 28pt off the left.
+*(Changed the next day — since 2026-09-26 node width shrinks 28pt per depth, the map no longer overflows sideways, and the column snapping and depth pill below are gone. See the last section.)*
+
+Every node was the pane width minus 16pt gutters, whatever its depth or kind. Children still sat on the row below, indented 28pt, so depth 1 overflowed the right edge by 28pt and depth 2 by 56pt. That overflow was the horizontal scroll. On release the canvas snaps to the **left edge of the nearest depth**: snapped to depth 2, its nodes fill the screen and the parents are tucked 28pt off the left.
 
 | Action | Result |
 |---|---|
@@ -70,7 +72,36 @@ This time a unit test caught it, because the test does what the afternoon said i
 
 Checked on the iPhone simulator: a three-line quote unclipped, a short drag snapping to 3/3, a fling back to 1/3. Not yet checked: how a 160pt-wide column reads in the narrow map pane next to a PDF on iPad.
 
+## 2026-09-26 — Snapping is out; the map reads like notes
+
+After a day of use the request was simple: most of the time the map should read like a page of notes, and only look like nodes while editing. You reopen the map to re-read your underlines, and every sentence was in a bordered card with connectors, children clipped off the right edge behind a horizontal scroll. Cards help when you edit. They get in the way when you read.
+
+**The map now opens in reading mode.** No cards, no L-shaped connectors, no grey map panel, no `+` handle. Each sentence gets a thin colour bar in its node colour, its indent, and the PDF badge at the end; tapping still jumps to the page. An "Edit" button in the floating toolbar brings the cards, connectors, `+` and drag back and turns into "Done". Double-tapping a title to edit it, or creating the first node on an empty map, switches to edit mode without asking.
+
+![Reading mode: sentences stacked with indents and yellow, green and blue colour bars, no cards or connectors.](/blog/superpdf-mindmap-one-line-text/reading-mode.png)
+
+![The same map in edit mode: coloured cards, L-shaped connectors, and + and Done buttons at the bottom.](/blog/superpdf-mindmap-one-line-text/edit-mode.png)
+
+### Width shrinks with depth so nothing leaves the screen
+
+Put the two screenshots side by side and not a single glyph moves. That is the point: both modes share one layout; only background, border, shadow and connectors toggle. The layout engine does not know which mode it is in.
+
+That meant giving up yesterday's "every node is the same width", where children stuck out 28pt per depth and snapping managed the overflow. Notes cannot run off the page, so **node width = column width − depth × 28pt**. Every node ends at the same right edge, the map never overflows horizontally, and column snapping, one-column swipes and the depth pill all became pointless and were removed. The canvas rule "horizontal only when there is overflow" stays, so at 1× the map only scrolls vertically; zoomed in it pans freely.
+
+Shrinking width per depth needs a floor, so there is now a **depth cap**. It started at three levels under the root (chapter → highlight → note). One regression test caught the flaw: PDFs with a table of contents get two chapter levels ("1 → 1.2"), so highlight nodes already sit at depth 3 and could not take a note. The cap is four. The narrowest node is the column minus 112pt — 258pt on an iPhone, still a readable line. The cap applies at input only: no `+` on depth-4 nodes, and a drag counts the height of the subtree it carries, refusing to offer a drop that would go deeper (no indicator, release returns it). Undo is never blocked. Nodes stored deeper than that from before the cap are pulled up once when the project opens, as siblings right after their depth-4 ancestor, in reading order.
+
+### What lost
+
+Separate layouts per mode (reading with shrunk widths, editing with yesterday's columns and snapping) lost because the toggle would jolt every node and two layouts would need maintaining. Keeping deep nodes and merely clamping their indent lost because "visible depth = real depth" would break and the drag rules would stop making sense; flattening won. Keeping type icons in reading mode lost because an icon per line reads as a list, not notes — colour stayed, because colour-coded underlines are how this app is used. Long-press as the only way into edit mode lost on discoverability; the toolbar toggle is the default, double-tap and the menu are shortcuts.
+
+Quote text also moved from 12pt to 15pt and chapter titles to 17pt bold. 12pt fit a label inside a card; it was too small for a sentence you re-read.
+
+### Where it stands
+
+Reading mode is a **presentation state, not a data lock** — the first version locked structure and thirty existing view-model tests failed at once, so the lock stayed with colour grouping only and reading mode just hides the drag gesture and the `+` handle. How narrow a depth-4 node gets in the slim map pane next to a PDF on iPad is not yet checked on a device.
+
 ## History
 
 - 2026-09-25 (afternoon) — one-line titles, 480pt cap, 6pt spacing, the truncation incident
 - 2026-09-25 (evening) — one screen-wide column per node, engine line breaking with one Text per line, depth snapping and indicator
+- 2026-09-26 — reading mode by default, cards only behind an Edit toggle; width shrinks per depth so snapping and the pill are gone; depth cap of four and one-time flattening on load
