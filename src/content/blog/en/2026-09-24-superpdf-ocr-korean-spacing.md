@@ -1,6 +1,6 @@
 ---
 title: "Recovering the spaces OCR dropped from glyph positions"
-date: 2026-09-25T09:30:00+09:00
+date: 2026-09-25T14:00:00+09:00
 app: "superpdf"
 tags: ["devlog", "data"]
 summary: "Quotes from underlined scans came out as one long run of Korean syllables. Half the spaces were dropped by Vision; the other half we deleted ourselves. The string is wrong, but the glyph boxes are still right."
@@ -37,27 +37,28 @@ The reflow is a pure function, so the table above is pinned with hand-built boxe
 
 The 0.32 threshold is tuned for body text. Handwriting or extreme tracking will be the first place to revisit it. Spacing that only context can decide is left to a language model.
 
-## 2026-09-25 — the phone splits Latin letters too, and the Mac never showed it
+## 2026-09-25 — the splitter was PDFKit Live Text, not Vision
 
-The same bug came back from an iPhone running the fixed build, this time with the file and a screenshot. Map quotes read "o m m a n d , 델 타 압 축 등" and "U n i t y P h y s i c s , E n t i t i e s": every glyph spaced, Latin included, and the real space in "Unity Physics" indistinguishable from the rest.
+The same bug came back from an iPhone running the fixed build, this time with the file and a screenshot. Map quotes read "o m m a n d , 델 타 압 축 등" and "U n i t y P h y s i c s , E n t i t i e s": every glyph spaced, Latin included.
 
 ![Map nodes whose quotes are spaced after every character, Korean and Latin alike](/blog/superpdf-ocr-korean-spacing/map-split-quotes.png)
 
-The same PDF rendered the same way on the Mac (3x, capped at 2048px) through the same `VNRecognizeTextRequest` settings comes back correctly spaced, whether the whole page or just the dragged strip. Forcing Japanese or Chinese recognises nothing, so it is not a language misdetect. Nothing in the app applies tracking or joins characters with spaces. That leaves one explanation: the phone's Vision model tokenises this text per glyph. The simulator test that "runs real Vision" runs the Mac's model, so it never said anything about the device.
+The same PDF through the same Vision settings on the Mac came back correctly spaced, and nothing in the app joins characters with spaces. In the morning I concluded the phone's Vision model tokenises per glyph and shipped a string-level join. The premise that the simulator runs the Mac's Vision was right; the conclusion was wrong.
 
-The geometry story needs a correction as well. On the Mac, `boundingBox(for:)` returns boxes that are uniform slices of the line box: zero gap inside a word, about 0.2em where a space is. The boxes echo Vision's own spacing rather than measuring the glyphs. Yesterday's reflow passed on the Mac because the string was already right, and did nothing on the phone because the string was wrong.
+What corrected it was a diagnostics sheet in the app: a temporary export-menu item that recognises the current page with six request variants and prints raw strings, glyph boxes and post-processed text. On the phone, Vision was clean in all six. But the report header said "text layer: 301 characters" on a page the file has zero text for.
 
-| From the phone's Vision | Now |
+Since iOS 16, `PDFView` runs Live Text OCR in place on image pages as you interact with them, with no public switch, and the resulting text layer positions every glyph separately, so `PDFSelection.string` comes back per-glyph spaced. The app had correctly judged the file as scanned when opening it, but when a highlight was drawn it asked the **on-screen document** whether the page had text. By then Live Text had added a layer, so it took the text-page path and stored that string. Our own OCR never ran. The Mac experiment read `page.string` without a view, so it never saw Live Text either.
+
+| Source | Example |
 |---|---|
-| o m m a n d , 델 타 압 축 등 | ommand, 델타압축등 |
-| U n i t y P h y s i c s , E n t i t i e s | UnityPhysics, Entities |
-| 나 는 학교 에 간다 | unchanged |
+| PDFKit Live Text selection string | o m m a n d , 델 타 압 축 등 |
+| Our Vision OCR, same page, same phone | Command, 델타 압축 등 필수 기능을 모두 |
 
-A line now counts as character-split when it has four or more letter or digit tokens and all of them are single characters, in any script. Such lines drop their spaces; letters join unless the boxes show a clearly wider gap, and punctuation follows a fixed rule (space after commas and periods, none inside brackets or between digits). Quotes already saved are repaired once when the file opens, along with nodes that used the quote as their title; hand-edited quotes are left alone.
+Three fixes. Scanned files ignore the text layer and always take the OCR paths; a text document does too when the selected string is character-split. Stored split quotes are replaced with the intersecting OCR lines as pages finish, or on file open from the cache, so word spaces come back. The morning's string join stays only as the last resort where no OCR lines exist.
 
-Word spaces are still lost. To get them back I need the phone's actual strings and boxes, and no device was attached this time. The wider lesson: Vision, Speech and CoreML in the simulator are the Mac's models. Post-processing of model output should start from device output, and when it cannot, say so and keep only rules that are harmless under both.
+Two lessons. The on-screen `PDFDocument` is not the file: decide "has text" from a separately opened document or a stored flag, and treat on-screen strings as possibly Live Text. And do not diagnose a device-only symptom before you have device data; one temporary diagnostics sheet ended two days of guessing.
 
 ## History
 
 - 2026-09-24 — removed the space-deleting rule, recovered word boundaries from glyph boxes
-- 2026-09-25 — confirmed the phone splits Latin too; join split lines without boxes, repair stored quotes
+- 2026-09-25 — traced the split quotes to PDFKit Live Text text layers with an on-device diagnostics sheet; scanned files now take OCR paths only, stored quotes refilled from OCR lines
