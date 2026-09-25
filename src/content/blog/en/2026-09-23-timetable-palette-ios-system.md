@@ -1,12 +1,12 @@
 ---
 title: "After the icon went vivid, the app's colors looked dull"
-date: 2026-09-23
+date: 2026-09-25T13:20:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "The ten default schedule colors now match the iOS system palette. Only yellow gave up its white title, and that is why 'just a bit darker' was never an option."
+summary: "The ten default schedule colors now match the iOS system palette. Only yellow gave up its white title, and that is why 'just a bit darker' was never an option. Two days later the pastels lost their appeal, so the twenty stayed and six recommended sets were added as pages."
 ---
 
-SuperTimetable's schedule blocks pick from ten bold colors and ten pastels. This morning the app icon was redrawn with iOS system colors, and next to it the same red, yellow and blue inside the app looked one step muddier. The ten bold colors now use the icon's values, and the pastels were re-picked one step richer.
+SuperTimetable's schedule blocks pick from ten bold colors and ten pastels (since September 25, six recommended sets follow them as pages — see the last section). This morning the app icon was redrawn with iOS system colors, and next to it the same red, yellow and blue inside the app looked one step muddier. The ten bold colors now use the icon's values, and the pastels were re-picked one step richer.
 
 ## The dullness was the white title, not the saturation
 
@@ -46,6 +46,31 @@ Two weeks ago the icon was tied to the app palette; this morning that tie was cu
 
 The contract test changed from "all ten bold colors take white titles" to "only yellow takes charcoal." Next time the colors move, that exception list is the first thing that breaks.
 
+## 2026-09-25 — The pastels did not grow on us, so we added six sets instead of replacing them
+
+Two days in, the ten pastels still felt off. The first instinct was to re-pick them, but those ten are already referenced by hex in saved schedules and store screenshots; change them and a user's chosen color silently disappears from the palette. So the twenty stayed exactly as they are, the basic tab got pages, and six recommended sets of ten went behind them. One page of twenty became four pages of eighty, with four dots underneath.
+
+![The six sets on light and dark ground. Every column keeps its hue; only lightness and chroma change per set.](/blog/timetable-palette-ios-system/six-sets.png)
+
+The sets are not split by hue. All ten reuse the bold row's OKLCH hues (red, orange, yellow, green, mint, sky, blue, purple, pink, gray) and differ only in lightness and chroma: vivid (L 0.74 / C 0.19), candy (0.80 / 0.16), deep (0.52 / 0.15), dusty (0.68 / 0.065), mist (0.92 / 0.045), night (0.40 / 0.085). Whatever page you are on, the same column is the same family, so "a red, but calmer" is one swipe away in the first column. Yellow and orange turn olive and brown when they darken, so those two get a lightness bump of 0.03–0.14 per set; anything outside sRGB loses chroma only.
+
+![The deep and dusty page. Picking the deep red puts the ring on it and recolors the edit sheet header behind the popover.](/blog/timetable-palette-ios-system/page-deep-dusty.png)
+
+### Two sets per page, no set names
+
+A page is fixed at five columns by four rows; the custom tab uses the same shape and the popover height comes from it. A set is ten colors, two rows, so one set per page would leave the bottom half empty every time. Two sets per page it is: the top two rows are one set, the bottom two another — the same grammar the first page already has with bold on top and pastel below.
+
+Captions naming the sets lost: there is no room for a caption row, and the first page has never labeled its bold and pastel rows either. The names live only in analytics, to count which sets people actually use. The dot row counts only the group you are looking at — four dots on basic, the custom page count on custom — rather than one long row that repeats what the segmented control already says.
+
+### One draft set produced the exact same hex as a pastel
+
+One of the first six was "bright," L 0.82 / C 0.13, meant to sit just richer than the pastels (L 0.85 / C 0.12). Its orange came out as `#FFBF85` — byte for byte the pastel orange. At that lightness orange hits the sRGB gamut wall first, and both profiles get clamped to the same chroma. Two swatches sharing a hex means two selection rings and an ambiguous "which page holds this color."
+
+The lesson: a second set in the pastels' lightness band will collapse into the pastels at the gamut edge. Bright was dropped for a richer candy (L 0.80 / C 0.16), and both the palette script and the contract test now insist that all eighty hexes are distinct.
+
+One more from the capture probe: it compared the first swatch's x across pages using page one's first swatch as the reference, which happened to wear the selection ring — about 5pt of extra frame. All three pages reported a 5pt offset that did not exist. Never take a selected element's frame as the baseline.
+
 ## History
 
 - 2026-09-23 — bold ten to iOS system colors, pastels re-picked, yellow alone with dark text.
+- 2026-09-25 — twenty kept, basic tab paged, six recommended sets of ten (same hues, L/C only). "Bright" collided with a pastel hex → candy.
