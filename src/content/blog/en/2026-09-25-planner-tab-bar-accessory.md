@@ -1,12 +1,12 @@
 ---
 title: "The button row floating over the tab bar moved into the tab bar"
-date: 2026-09-25T00:40:00+09:00
+date: 2026-09-27T21:00:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
 summary: "Daily Planner's undo and drawer buttons are now an iOS 26 tab bar accessory instead of a second glass layer over the timeline, and the top bar went from four buttons to three. Plus the collapsing tab bar we designed for and then measured out."
 ---
 
-Daily Planner had two layers of glass at the bottom: the system tab bar, and above it a row of round glass buttons — undo, redo, drawer — floating over the timeline and covering the last hours of the day. Those buttons now live in **one capsule** attached to the tab bar, and the timeline ends above it with nothing on top. The top bar is down to `Today`, the tidy menu, and the profile avatar.
+Daily Planner had two layers of glass at the bottom: the system tab bar, and above it a row of round glass buttons — undo, redo, drawer — floating over the timeline and covering the last hours of the day. Those buttons moved into **one capsule** attached to the tab bar, and the timeline ended above it with nothing on top. The top bar dropped to `Today`, the tidy menu, and the profile avatar. (Two days later the tab bar itself went away and the capsule split again — see the update below.)
 
 ## Same buttons, system surface
 
@@ -52,6 +52,21 @@ We removed the modifier and the `inline` branch; leaving it in would keep a prom
 
 Making the tab bar actually collapse means moving the vertical scroll outward and the date paging inward, which gives up the per-day scroll position the app keeps today. Whether that trade is worth it is a separate decision.
 
+## Update, 2026-09-27 — the tab bar itself went away, and the capsule split in two
+
+The capsule didn't last long. Once the todos tab dropped its stats and kept only the list (a separate post from Sept 26), it wasn't a screen people opened several times a day — placing a block happens by dragging an empty spot on the timeline, not from the todos tab. But being a tab meant it still claimed a full bottom row at the same weight as the planner, and because the accessory had to be on for both tabs to keep the tab bar from shrinking (see "Same buttons, system surface" above), undo/redo and `+` sat there on the todos tab too, uninvited.
+
+So the tab bar is gone. The app is a single planner screen now; the todo list opens as a sheet from a `checklist` button in the top-right corner. With no tabs, there is nothing for `tabViewBottomAccessory` to attach to — no tab bar, no accessory. The bottom buttons went back to floating glass capsules, but this time there are **two** instead of one: undo/redo on the left, drawer or delete-and-park on the right (selection state decides which), and an empty middle where the timeline shows through — like a chat app's input bar, sitting in `safeAreaInset(edge: .bottom)` with the timeline scrolling underneath it.
+
+![Undo capsule on the left, drawer capsule on the right, empty middle showing the timeline](/blog/planner-tab-bar-accessory/floating-capsules.png)
+
+This is almost exactly the shape the Sept 25 change rejected as "not the iOS 26 idiom." Back then a floating capsule looked out of place next to a system tab bar. Now there is no tab bar to look out of place next to — the idiom didn't get broken, its anchor disappeared.
+
+One bug rode along. The right capsule grows leftward as it swaps from one button (drawer, 44pt) to two (trash and put-in-drawer, 92pt). The put-in-drawer button reported its own frame via `onGeometryChange`, but that callback only fires when the view's own size changes — not when an ancestor's layout does. So the reported frame stayed pinned to where the button sat when the capsule was still narrow: 48pt left of its real position, exactly one trash slot plus the gap between them. Dragging a block onto that stale target silently missed — the block just moved to that time slot instead of parking. The fix: measure from the container that is always present and changes size — the right capsule itself — and always treat its trailing edge as the target, regardless of which button currently occupies it.
+
+The collapsing-tab-bar question from "The collapsing tab bar never came" is moot now too — there's no tab bar left to collapse.
+
 ## History
 
 - 2026-09-25 — floating row into the tab bar accessory, top trailing four to three, collapsing tab bar measured out
+- 2026-09-27 — the tab bar itself is gone, so is the accessory; bottom controls float again, split into two capsules with an empty middle; fixed a pitfall where a swapped button's self-reported drop-target frame stayed stale
