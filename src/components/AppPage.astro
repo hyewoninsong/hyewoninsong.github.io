@@ -65,6 +65,7 @@ const {
 const t = useTranslations(lang);
 const platforms = app.data.platforms ?? {};
 const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
+const hasAndroid = !!platforms.android;
 
 const badgeClass = statusBadgeClass;
 const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
@@ -297,6 +298,21 @@ const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
               </span>
             )}
           </div>
+        </div>
+      )}
+
+      {hasAndroid && (
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <span class="flex items-center gap-1 text-xs text-text-sub shrink-0">
+            <!-- Android icon (same path as AppCard) -->
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+              <path d="M17.523 15.341a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m-11.046 0a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m11.405-6.022l1.969-3.411a.41.41 0 00-.149-.559.41.41 0 00-.559.149l-1.994 3.454A11.774 11.774 0 0012 8.098c-1.73 0-3.364.393-4.799 1.084L5.207 5.698a.41.41 0 00-.559-.149.41.41 0 00-.149.559l1.969 3.411C3.945 10.878 2.5 13.239 2.5 15.898h19c0-2.659-1.445-5.02-3.618-6.579z"/>
+            </svg>
+            Android
+          </span>
+          <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.android!)]}>
+            {statusLabel(platforms.android!)}
+          </span>
         </div>
       )}
 

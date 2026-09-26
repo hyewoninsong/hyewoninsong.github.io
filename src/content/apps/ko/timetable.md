@@ -6,6 +6,7 @@ summary: "손으로 그리는 시간표. 드래그로 그리고, 홈 화면에�
 platforms:
   iphone: "released"
   ipad: "released"
+  android: "in-development"
 appStoreUrl: "https://apps.apple.com/app/id6760938147"
 releaseDate: 2026-09-22
 order: 1
@@ -22,3 +23,5 @@ order: 1
 - 학기별·가족 구성원별로 여러 시간표
 
 시간표는 기기 안에만 저장됩니다. 계정도, 로그인도 없습니다.
+
+안드로이드 버전을 만들고 있습니다. 같은 그리드, 같은 손맛에 Material 3 를 입힙니다.

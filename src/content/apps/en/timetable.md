@@ -6,6 +6,7 @@ summary: "A timetable you draw by hand. Drag to draw it, glance at it on your Ho
 platforms:
   iphone: "released"
   ipad: "released"
+  android: "in-development"
 appStoreUrl: "https://apps.apple.com/app/id6760938147"
 releaseDate: 2026-09-22
 order: 1
@@ -22,3 +23,5 @@ Put the week already in your head straight onto the screen. Drag across an empty
 - Separate timetables for each semester and each person at home
 
 Your timetables stay on the device. No account, no sign-in.
+
+An Android version is in development — the same grid and the same feel, dressed in Material 3.
