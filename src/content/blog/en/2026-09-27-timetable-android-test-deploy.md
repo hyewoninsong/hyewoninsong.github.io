@@ -1,6 +1,6 @@
 ---
 title: "One-line Android test builds, like TestFlight — except the first one"
-date: 2026-09-27T02:30:00+09:00
+date: 2026-09-27T02:40:00+09:00
 app: "timetable"
 tags: ["devlog", "android"]
 summary: "iOS builds reach TestFlight with one command; Android builds were being copied by hand. Two fastlane lanes now ship to Play internal testing and Firebase. Both walls we hit were console settings, not code."
@@ -35,6 +35,10 @@ We reused a service account that already existed for GA4 admin work. Its GA4 edi
 - **`Google Play Android Developer API has not been used in project N`.** Project N is the project that owns the service account, not the app's Firebase project. The service account got a 403 when it tried to enable the API itself, so the project owner had to enable it.
 - **`Package not found`.** The Play Developer API only accepts uploads for an app that already has a build on Play. The first AAB has to be uploaded by hand in the console, and Play App Signing is set up at that moment. App Store Connect has no equivalent step.
 
+## One more on the first real run
+
+After the manual first upload, the lane read build 1 from the internal track, then stopped with `Cannot provide both apk(s) and aab`. fastlane's `gradle` action hands over every artifact in the build output folder. That included an APK left over from an earlier signing check. Adding `skip_upload_apk: true` to the Play lane made it upload only the AAB.
+
 ## Where it stands
 
-The lanes and the skill are ready, and signed builds are verified. The next step is one manual first upload. After that, builds 2, 3 and onward should go out with one command, and the next deploy will confirm it.
+Build 2 went to internal testing with one command, and its version code was picked automatically. Firebase permissions are still pending, which is fine while Play is the main channel.
