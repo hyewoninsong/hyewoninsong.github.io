@@ -1,6 +1,6 @@
 ---
 title: "One-line Android test builds, like TestFlight — except the first one"
-date: 2026-09-27T03:00:00+09:00
+date: 2026-09-27T03:30:00+09:00
 app: "timetable"
 tags: ["devlog", "android"]
 summary: "iOS builds reach TestFlight with one command; Android builds were being copied by hand. Two fastlane lanes now ship to Play internal testing and Firebase. Both walls we hit were console settings, not code."
@@ -43,7 +43,7 @@ After the manual first upload, the lane read build 1 from the internal track, th
 
 The upload takes a minute, but a new build can take a long time to appear in testers' Play Store. A brand-new app's first releases get reviewed, and store propagation adds more delay. Firebase App Distribution has no review. When the upload finishes, the invite goes out and testers install the APK. Quick fix-and-check builds now go to Firebase. Builds where the store install flow matters go to Play.
 
-Setup takes four console stops, reusing the same service account:
+The original plan was four console stops, reusing the same service account. The table covers the case where the service account and the Firebase project differ. We later merged them into one project, which made the first two rows unnecessary:
 
 | Where | What |
 |---|---|
@@ -54,6 +54,14 @@ Setup takes four console stops, reusing the same service account:
 
 The second row is the same trap as with Play. Permissions are checked in the project that invited the account. API usage is billed to the project that owns it, so the API has to be enabled there, and only the owner can do that.
 
+## One package name, one Firebase project
+
+Step three failed. The Firebase console said the project did not exist or we lacked access. The Android app had been registered in March under a different account's Firebase project, while iOS used the project that owns the service account. We registered Android in the iOS project and changed the package name to match the iOS bundle ID, `com.hyewoninsong.supertimetable`. The cost: a package name that has had a build uploaded to Play belongs to that Play app forever. The old Play app is abandoned, and the new one needs a manual first upload again. Before launch was the cheapest moment to pay that cost. Only `applicationId` changed. The Kotlin `namespace` stayed.
+
+## A missing group returns a bare 404
+
+The first Firebase run uploaded fine (`RELEASE_CREATED`), then the distribute call returned `404 Requested entity was not found`. The `testers` group did not exist yet. The lane now lists groups before building and fails with a clear message. The group and the testers were created through the API, since the console hides the Android tabs while the iOS app is selected.
+
 ## Where it stands
 
-Build 2 went to internal testing with one command, and its version code was picked automatically. The first Firebase run follows once the four console steps are done.
+Firebase works end to end. Build 2 went out to four testers by email. Play needs the new app created and one manual upload, after which both lanes are one command.
