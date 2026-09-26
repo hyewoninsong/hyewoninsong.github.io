@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-09-26T01:20:00+09:00
+date: 2026-09-26T14:30:00+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -42,3 +42,21 @@ A simulator recording never shows the viewer's island, so the collision only app
 ## Where it stands
 
 All seven previews are on the 1.0.1 version page; the Spanish and French videos serve both regional stores. When the UI changes, one recording per language and one render command rebuild the whole set.
+
+## 2026-09-26 — Once it shipped, there were black lines above and below
+
+On the store page the video had a thin black line along its top and bottom edges. The screenshots next to it did not. Our file, Apple's generated poster image (886×1920) and the stream Apple actually serves (332×720) all have white top and bottom rows, so the lines were not in our pixels.
+
+It is the aspect ratio. The only accepted 6.9-inch preview size is 886×1920, while screenshots are 1320×2868. The ratios differ by a hair, 0.4615 against 0.4603. The store fits the video by width into a card shaped like the screenshots, and at 886 wide that card is 1925 tall, so 2.5px of player background show above and below a 1920-tall video. The player background is black. On a white video that is a visible hairline.
+
+![The video placed in a card of the screenshot ratio: white ground (left) shows black lines top and bottom, black ground (right) merges with the card](/blog/timetable-promo-video/store-card-letterbox.png)
+
+The height cannot change and painting our own edges black only thickens the line. The fix is the ground colour. On a black ground the letterbox disappears into the card, which reverses the "same white ground as the screenshot cards" rule above. The headline is now white, the caption grey, the highlighter band a little stronger, and the phone floats without a shadow, the way Apple's own previews look. One black video card next to white screenshot cards is an accepted trade-off.
+
+The poster frame moved too. The still shown before playback was the 22-second mark, the prettiest scene, with the whole week turned lime. But a poster is a cover, and viewers expect the opening. Second zero is a blurred intro with no caption yet, so the poster is now 1.5 seconds in, when the first caption has landed and the screen is sharp.
+
+![Poster frame: before, the batch-recolour result at 22 seconds (left); now, the completed first scene at 1.5 seconds (right)](/blog/timetable-promo-video/poster-before-after.png)
+
+Neither change can reach the live 1.0.1 listing. Once a version is on sale, even a request that only changes the poster time code is rejected as not acceptable for the current resource state. The next version inherits the old previews, so the upload script gained a mode that deletes them and uploads the new set.
+
+Both were missed for the same reason: we checked the file and the processing state, never the video inside a store card. Now a frame goes into an 886×1925 black card before upload, and the poster is chosen before release.
