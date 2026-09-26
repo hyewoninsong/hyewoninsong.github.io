@@ -1,6 +1,6 @@
 ---
 title: "Two of three tabs were showing the same thing"
-date: 2026-09-25T00:30:00+09:00
+date: 2026-09-26T19:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "design", "swiftui"]
 summary: "The daily planner folded its Home tab into Todos, then removed that summary entirely, then cut the four layers left above the list — segment, search, edit, avatar — down to one title row. Plus the pitfall: a title menu does not attach to a large title."
@@ -68,7 +68,7 @@ Even without the summary, opening the Todos tab still put the list far away. Fou
 
 So the chrome is now one row.
 
-![One title row, then the list. The title is the profile name with a chevron; on the right, add and more](/blog/planner-two-tabs/title-row.png)
+![One title row, then the list. The title is the profile name with a chevron; on the right, add and more — as of Sep 25. The profile moved back to a top-right avatar the next day](/blog/planner-two-tabs/title-row.png)
 
 | Was | Now |
 |---|---|
@@ -76,7 +76,7 @@ So the chrome is now one row.
 | Search field | Only from 8 todos up, and as a bottom magnifier button (iOS 26's minimized search), not a layer above the list |
 | `Edit` | `Select` inside the `…` menu |
 | Sort · strip granularity | Same `…` menu |
-| Profile avatar | The title itself. The title already was the profile name; the avatar next to it was the same profile twice. Tap the chevron to switch or manage |
+| Profile avatar | The title itself. The title already was the profile name; the avatar next to it was the same profile twice. Tap the chevron to switch or manage — **reversed a day later**, see the Sep 26 section |
 | Large title | Inline |
 
 Select mode follows Photos: the title becomes `N selected`, the tab bar goes away, and `Archive` and the trash stand in its place as a bottom bar. Row strips stay during selection — a row that changes shape per mode makes the list jump on every switch.
@@ -103,9 +103,24 @@ A UI test's screenshot caught it. Code review can't, and neither can a capture t
 
 The line above about the screen "already having an `Active | Archived` segment" is history now. No segment, no summary — a title row and the list.
 
+## 2026-09-26 — the profile went back to a top-right avatar
+
+The title menu lasted a day. The menu itself was fine; the problem was that picking a profile worked differently per tab. On the Planner tab you tap the avatar in the top-right and a profile sheet opens. On the Todos tab you tapped the name in the title, got a menu, and either switched inside it or went on to the sheet via `Manage Profiles…`. Same profile, two grammars, so a hand trained on one tab fumbles on the other.
+
+So Todos now matches Planner: the same avatar button sits next to `…`, and it opens the same sheet. The title menu and its switch picker are gone, and the title is simply `Todos` again.
+
+![Top-right of the Todos tab: the more button, then the same profile avatar the Planner tab has; the title reads Todos](/blog/planner-two-tabs/avatar-both-tabs.png)
+
+Keeping the profile name as the title and adding the avatar back is exactly the duplicate that was removed on Sep 25, so no. Matching Planner to the title menu instead would put two grammars on one title, since Planner's title is already the week/month toggle. An avatar that opens a menu rather than the sheet would be the same glyph doing different things per tab, which is not unification either.
+
+Two costs: the Todos tab no longer shows the profile name as text (same as Planner, the avatar's initial and color are the profile), and switching went from one tap to two. The archived screen has no avatar — nobody switches profiles from there.
+
+The `toolbarTitleMenu` pitfall above still stands. This app just no longer has a title menu.
+
 ## History
 
 - 2026-09-20 — three tabs merged into two, summary moved to the top of Todos
 - 2026-09-21 — three of the four collapsed stats cards and the row expander removed
 - 2026-09-23 — summary removed entirely; stats are the row strip and the detail screen
 - 2026-09-25 — segment, always-on search, edit and avatar gone; chrome is one title row. `toolbarTitleMenu` doesn't attach to large titles
+- 2026-09-26 — title menu removed; the profile is a top-right avatar on both tabs. The title is `Todos`
