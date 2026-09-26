@@ -1,6 +1,6 @@
 ---
 title: "One-line Android test builds, like TestFlight — except the first one"
-date: 2026-09-27T02:40:00+09:00
+date: 2026-09-27T03:00:00+09:00
 app: "timetable"
 tags: ["devlog", "android"]
 summary: "iOS builds reach TestFlight with one command; Android builds were being copied by hand. Two fastlane lanes now ship to Play internal testing and Firebase. Both walls we hit were console settings, not code."
@@ -39,6 +39,21 @@ We reused a service account that already existed for GA4 admin work. Its GA4 edi
 
 After the manual first upload, the lane read build 1 from the internal track, then stopped with `Cannot provide both apk(s) and aab`. fastlane's `gradle` action hands over every artifact in the build output folder. That included an APK left over from an earlier signing check. Adding `skip_upload_apk: true` to the Play lane made it upload only the AAB.
 
+## Play is slow, so Firebase handles quick checks
+
+The upload takes a minute, but a new build can take a long time to appear in testers' Play Store. A brand-new app's first releases get reviewed, and store propagation adds more delay. Firebase App Distribution has no review. When the upload finishes, the invite goes out and testers install the APK. Quick fix-and-check builds now go to Firebase. Builds where the store install flow matters go to Play.
+
+Setup takes four console stops, reusing the same service account:
+
+| Where | What |
+|---|---|
+| The app's Firebase project, Cloud IAM | Add the service account with the `Firebase App Distribution Admin` role |
+| The project that **owns** the service account, API Library | Enable `Firebase App Distribution API` |
+| Firebase console, App Distribution | Click Get started for the Android app once |
+| App Distribution, Testers & Groups | Create a group with the alias `testers` and add emails |
+
+The second row is the same trap as with Play. Permissions are checked in the project that invited the account. API usage is billed to the project that owns it, so the API has to be enabled there, and only the owner can do that.
+
 ## Where it stands
 
-Build 2 went to internal testing with one command, and its version code was picked automatically. Firebase permissions are still pending, which is fine while Play is the main channel.
+Build 2 went to internal testing with one command, and its version code was picked automatically. The first Firebase run follows once the four console steps are done.
