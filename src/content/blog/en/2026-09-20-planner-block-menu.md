@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-24T23:40:00+09:00
+date: 2026-09-27T17:00:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -295,7 +295,7 @@ With moving handled by the chips, the menu held edit, swap, drawer and remove. O
 | Move to Drawer | The drawer button is **always** there; drop a block on it. A group goes in whole |
 | Remove from Schedule | The editor already ends with *Delete this block* (it comes back as a **trash button in the bottom-right corner** in the last section) |
 
-So a block has four gestures: checkbox = done, tap = select, tap again = edit, drag = move (grouped if a chip is on, into the drawer if released over the button). Nothing to read. The context menu, the transparent `UIButton` that presented it and its `require(toFail:)` acrobatics, the move sheet and swap all left the codebase — most of what the earlier sections of this post fought is gone.
+So a block has four gestures: checkbox = done, tap = select, tap again = edit (since 2026-09-27, tap again deselects — see the last section), drag = move (grouped if a chip is on, into the drawer if released over the button). Nothing to read. The context menu, the transparent `UIButton` that presented it and its `require(toFail:)` acrobatics, the move sheet and swap all left the codebase — most of what the earlier sections of this post fought is gone.
 
 ![Right after dropping a block on the drawer button: it leaves the timeline, the button shows 1, and a short "moved to the drawer" note appears](/blog/planner-block-menu/drawer-drop.png)
 
@@ -1037,6 +1037,32 @@ vertically centred, so it never touches the title row, and the 12-hour capsules 
 the "now" capsule crosses the middle of a selected block the two overlap, the same relationship the start
 and end capsules already have with the hour labels.
 
+## 2026-09-27 — Tapping a selected block now deselects it
+
+The only way to let go of a selected block was to tap empty space, and a full day has none on screen. Tapping the selected block again opened the note composer and the keyboard — so "let go" turned into "start writing". Now tap selects and tap again deselects.
+
+The note moved to the bottom-right capsule, which already held the actions for whatever is selected. It is now **note · delete · drawer**. The drawer slot stays at the right edge, so the drop target for dragging a block into the drawer did not move. The note belongs to the one block you picked; delete and drawer still apply to the whole linked group.
+
+![Selecting a block shows a dashed line with a grey length capsule between its start and end, and note, delete and drawer buttons at the bottom right](/blog/planner-block-menu/selection-memo-button.png)
+
+Two alternatives lost: keep tap-again for notes (no way to deselect on a full day), or put a note button inside the block (blocks carry only the checkbox and group chips). The cost is one more step to a note. The first-run tutorial now taps the block, then hands the demo finger to the note button.
+
+This also reverses the previous section. The length capsule was painted in the block's colour so it would not read as a gap; in use, length and free time are both "how long", and they read faster as one shape. The start and end capsules are now joined by a **dashed line** with the length in a **grey capsule** — the same parts as the gap ruler. Position tells them apart: the length sits inside the time axis, gaps sit between blocks.
+
+The todo list got top tabs, **Active | Archived**, sharing one screen, one row layout and one menu. Archived todos used to live behind a row at the end of the list, without the contribution strip or sorting.
+
+### "The menu does nothing" — it did, you just could not see it
+
+A report said the day/week/month switch in the list menu did nothing. Running the old code in the simulator showed the checkmark moving and the strip redrawing. With only a few days of history, though, week and month both render as "one filled cell on the right", and the number under it was an all-time total, so nothing visible changed.
+
+![Before: weekly view shows one cell and an all-time total, identical to monthly](/blog/planner-block-menu/strip-weekly-before.png)
+
+The caption now names the span and totals it — `Last 14 weeks · 1 hr 40 min` — so switching units always changes the text.
+
+![After: the caption under the strip names the span and its total](/blog/planner-block-menu/strip-weekly-after.png)
+
+A display that shows its mode only through shape collapses when data is thin. Mode switches now get checked with near-empty data, screenshots side by side, looking for a difference in text.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -1064,3 +1090,4 @@ and end capsules already have with the hour labels.
 - 2026-09-24 — The time capsule became two capsules inside the axis so it no longer hides the title; linked companions carry capsules and gap rulers (shared gaps drawn once); a pan on a linked block is a group drag with no press
 - 2026-09-24 — A block scrolled partly off the top counts its note lines from the height still visible, so the note is trimmed a line at a time and the title stays until the block has passed; the title font still follows the full block height
 - 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing; the length capsule alone is sticky so it stays on screen for blocks taller than the viewport
+- 2026-09-27 — Tapping a selected block deselects it; notes open from a note button in the bottom capsule. The length capsule became a dashed line with a grey capsule, like the gap ruler (reversing 09-24). The todo list got Active | Archived tabs, and the strip caption now names its span and total
