@@ -1,16 +1,18 @@
 ---
 title: "A tutorial you do, not one you read"
-date: 2026-09-21T12:09:38+09:00
+date: 2026-09-27T19:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
-summary: "The first-run tutorial is six follow-along steps: a finger demonstrates the gesture on the real timeline, and the step only advances when you actually perform it. No dimming, no spotlight, no Next button."
+summary: "The first-run tutorial is follow-along: a finger demonstrates on the real timeline, and a step only advances when you actually do it. It started with six steps and was rebuilt as eight that follow a first real day, plus a timeline lock."
 ---
 
 Open the day planner for the first time and a small card slides in under the date bar. Tap Start and the card says "press and hold an empty spot, then drag down", while on the timeline below a finger presses an empty slot and drags a dashed block open, over and over. Place a block for real and the card moves on. The app has no visible button for placing a todo: the only way is a long-press drag on empty space, and block actions live in a menu you get by tapping a selected block again. New users got stuck on "how do I add one".
 
 ![The welcome card floats under the date bar; the timeline stays live](/blog/planner-tutorial/welcome-card.png)
 
-## Six steps, each unlocked by the real action
+## Each step unlocked by the real action
+
+These were the original six steps. There are eight now (see the September 27 section below).
 
 | Step | What the card asks | What advances it |
 |---|---|---|
@@ -35,7 +37,7 @@ A few onboarding slides would have been cheapest. But the two gestures that matt
 
 A dimmed screen with a spotlight cutout makes "here" obvious, but asking for a real gesture through the hole means handling touches inside and outside it separately, and this screen is a horizontal pager inside a vertical scroll view, so the dimming layer fights both. So there is no overlay at all. "Here" is a pulsing outline the demo draws on the real target, and the timeline stays fully interactive throughout.
 
-Unrelated controls are locked during the action steps instead: day navigation, the tidy-up menu, settings, profiles, the drawer, redo, and undo until the last step, because an undo during step one would delete the block step two points at. Timeline gestures are never locked, so if you delete the block from its menu you can place another and carry on.
+Unrelated controls are locked during the action steps instead: day navigation, settings, profiles, the drawer, undo and redo, because an undo during step one would delete the block step two points at. (Undo used to unlock for a final undo step; that step is gone, so it stays locked.) Timeline gestures are never locked, so if you delete the block from its menu you can place another and carry on.
 
 ## What changed in the port
 
@@ -43,4 +45,38 @@ This came over from the timetable app, which has nine steps. Duplicate, delete a
 
 One thing tripped on the way. The timetable app re-plans the demo inside its repeat loop, but a SwiftUI `task` closure captures the values it started with, so reading fresh data inside the loop returns stale data. The fix was to key the task on the blocks, the selection and, for the place step, the scroll position, so any change restarts the loop with current values.
 
-The tutorial can be replayed from Settings. New gestures will not join it on their own: each new step needs an event, a demo scene and strings in five languages.
+The tutorial can be replayed from Settings. New gestures will not join it on their own: each new step needs an event, a demo scene and strings in eight languages.
+
+## 2026-09-27 — From handling one block to a first real day
+
+Walking through the six steps again, they only taught how to handle **one** block. Linking blocks and moving them together, the thing that sets this planner apart, was missing; step one said "pick a todo" when a first-time user has none; and the todo list never came up. The tutorial now follows a first real day:
+
+| Step | What advances it |
+|---|---|
+| 1 Unlock | Tap the lock at the bottom left |
+| 2 Create and place | Drag empty space, create a new todo in the sheet |
+| 3 Place one more | Do it again |
+| 4 Link | Select a block, tap the link button on the other |
+| 5 Move together | Drag the group so it actually moves |
+| 6 Add a note | Save a non-empty note (opening the editor is not enough) |
+| 7 View history | Open a todo from the list |
+| 8 Archive | Archive it |
+
+Resize and complete are gone: the handle and the circle explain themselves. The link demo taps a block to select it, then taps the nearest unlinked block's link button; the move demo slides ghost copies of both blocks the same distance. Steps 7 and 8 happen inside the todo list sheet, so the same coach card also appears at the bottom of the sheet.
+
+## A lock, so a day you are only reading does not move
+
+Selected and linked blocks drag without a long press, which meant a block could follow your finger while you were just scrolling and ticking things off. A lock now sits next to undo and redo. Locked, only scrolling and the completion checkbox work; touching a block shakes the lock with a warning haptic so it does not read as broken.
+
+![The unlock step: the card points at the lock, and a finger demonstrates tapping it](/blog/planner-tutorial/unlock-step.png)
+
+It lost to a settings toggle (too far for a switch you flip while reading), to "locked but still selectable" (buttons that appear but do nothing), to silence (reads as a bug), and to syncing via iCloud (locking the iPad would block editing on the iPhone). The lock stays per device.
+
+## A per-device value leaks into the next run
+
+The tutorial starts locked and gives the lock back if you skip before unlocking. At first it remembered "I locked it" only in memory. The group-drag UI tests then all failed with "picker never opened": the unit-test host app, launched without test arguments, had run the first-run tutorial, locked the timeline, and left it in `UserDefaults`, which the UI tests' reset argument does not touch. The same root caused a real bug: kill the app while locked and the next tutorial treats the lock as yours and never releases it. The flag now lives on disk, test and capture launches start unlocked, and a UI test walks all eight steps on the simulator.
+
+## History
+
+- 2026-09-21 — six-step follow-along tutorial
+- 2026-09-27 — rebuilt as eight first-day steps, timeline lock
