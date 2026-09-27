@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-27T17:00:00+09:00
+date: 2026-09-27T18:30:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -403,7 +403,7 @@ show the state and left the chip lying about it.
 | Chip | Meaning | Tap |
 |---|---|---|
 | Thin outline | none of it is connected | connect all of it |
-| **Ring thickened that far round** | some of it is connected | connect all of it |
+| **Faintly filled circle** (at first, a ring thickened that far round) | some of it is connected | connect all of it |
 | Filled circle | all of that direction is connected | disconnect all of it |
 
 The first attempt got this wrong. Partial was a **dashed** ring: a thread with a block cut out
@@ -417,13 +417,13 @@ the order in your head every time. A metaphor does not beat what the eye reads f
 
 So the three went onto one axis: the ring thickens clockwise from twelve o'clock by the fraction
 that is connected. The ink now grows monotonically — and it says **how many of how many** as a
-bonus. One of two is half a turn.
+bonus. One of two is half a turn. (On 09-27 the arc gave way to a faint fill — see the last section.)
 
 ![The lower chip's ring is thick for half its circumference — only the reading block of the two below is connected. The thread runs from the chip to its filled button, and the walk's button is still an outline](/blog/planner-block-menu/chip-partial-arc.png)
 
 A half-filled circle was tried: the chip holds a glyph of bars saying which way the group goes,
 and half of it would sit on white while half sits on black, which makes the glyph unreadable —
-which is why the state rides on the *ring*. A faded fill was tried too: "faint" disappears
+which is why the state rides on the *ring*. A faded fill was ruled out at the time too: "faint" seemed to disappear
 against arbitrary block colours, which is why chips and rings are drawn as background-coloured
 halos in the first place. A plain thick ring, with no fraction, gets the ink order right but
 has to be learned; for the same money, an arc that states the proportion is worth more.
@@ -1063,6 +1063,14 @@ The caption now names the span and totals it — `Last 14 weeks · 1 hr 40 min` 
 
 A display that shows its mode only through shape collapses when data is thin. Mode switches now get checked with near-empty data, screenshots side by side, looking for a difference in text.
 
+## 2026-09-27 — The chip doesn't need to count
+
+The partial state of the group chip is now a **faintly filled circle** instead of an arc. Thin outline (none) → faint fill (some) → solid (all). The ink still grows one way; the only thing gone is the fraction.
+
+The fraction was never used. Tapping the chip connects everything unless everything is already connected — a quarter and three quarters lead to the same result. And on a 26 pt circle, half a turn and two thirds of a turn look the same.
+
+The fill is not system grey, which reads as *disabled* on iOS. It is the chip's own ink (black in light mode, white in dark) at 28%, so a faint chip tapped once becomes the same ink, solid — it reads as "finish filling it". The old objection that a faint fill gets lost against block colours no longer holds: the chip now sits on an opaque, shadowed disc, so the fill lies on the chip's own background, not on the block. An indeterminate dash lost because the chip already carries a direction glyph. If you want to know which blocks are left, the companion rings and link buttons already show each one.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -1091,3 +1099,4 @@ A display that shows its mode only through shape collapses when data is thin. Mo
 - 2026-09-24 — A block scrolled partly off the top counts its note lines from the height still visible, so the note is trimmed a line at a time and the title stays until the block has passed; the title font still follows the full block height
 - 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing; the length capsule alone is sticky so it stays on screen for blocks taller than the viewport
 - 2026-09-27 — Tapping a selected block deselects it; notes open from a note button in the bottom capsule. The length capsule became a dashed line with a grey capsule, like the gap ruler (reversing 09-24). The todo list got Active | Archived tabs, and the strip caption now names its span and total
+- 2026-09-27 — The group chip's partial state became a faint fill in the chip's own ink instead of a proportional arc. The tap never depended on the fraction; grey was avoided because it reads as disabled
