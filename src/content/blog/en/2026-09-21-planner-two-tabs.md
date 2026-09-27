@@ -1,6 +1,6 @@
 ---
 title: "Two of three tabs were showing the same thing"
-date: 2026-09-26T19:30:00+09:00
+date: 2026-09-27T22:00:00+09:00
 app: "daily-planner"
 tags: ["devlog", "design", "swiftui"]
 summary: "The daily planner folded its Home tab into Todos, then removed that summary entirely, then cut the four layers left above the list — segment, search, edit, avatar — down to one title row. Plus the pitfall: a title menu does not attach to a large title."
@@ -24,7 +24,7 @@ The row's subtitle went away. "Last Sep 20 · 1 total" was saying what the strip
 
 ## One scroll, not a segmented control
 
-Splitting the tab with a `Summary | List` control is the obvious move, but the screen had an `Active | Archived` segment at the time (it is gone now — see the Sep 25 section). Stack two and you have to read which axis you are on every time.
+Splitting the tab with a `Summary | List` control is the obvious move, but the screen had an `Active | Archived` segment at the time (removed on Sep 25, back on Sep 27 as a floating tab — see the last section). Stack two and you have to read which axis you are on every time.
 
 Keeping three tabs and just reordering them would fix the launch tap and leave the duplication intact. Dropping Home and moving stats into each todo's detail screen would leave nowhere for the profile-wide numbers — streak, completion rate, the day-of-week heatmap.
 
@@ -101,7 +101,7 @@ The fix was an inline title with a `Menu` placed as the `principal` toolbar item
 
 A UI test's screenshot caught it. Code review can't, and neither can a capture taken after scrolling or on an inline screen: a title-menu change has to be checked on an **unscrolled large-title** screenshot.
 
-The line above about the screen "already having an `Active | Archived` segment" is history now. No segment, no summary — a title row and the list.
+The line above about the screen "already having an `Active | Archived` segment" was history for a while. The summary is still gone, but `Active | Archived` came back on Sep 27 in a new shape — see the last section.
 
 ## 2026-09-26 — the profile went back to a top-right avatar
 
@@ -117,6 +117,26 @@ Two costs: the Todos tab no longer shows the profile name as text (same as Plann
 
 The `toolbarTitleMenu` pitfall above still stands. This app just no longer has a title menu.
 
+## 2026-09-27 — Archived is a tab again, floating under the title
+
+Pushing Archived to an end-of-list row lasted two days. The list had become a sheet opened from the planner, and archived todos needed to look exactly like active ones — same rows, same contribution strip, same menu. A separate pushed screen drifts. So `Active | Archived` came back as a filter on one screen, first as a system segment in the title slot to keep the chrome to one row.
+
+That slot was cramped: a small segment squeezed between close, `…` and `+`, and the title `Todos` was gone. The model is the iOS 26 App Store charts screen — `Free | Paid` floats as a glass capsule **below** the navigation bar and the list blurs as it scrolls under it.
+
+![The Todos sheet: a full-width glass capsule tab under the title, pill on Active](/blog/planner-two-tabs/floating-tab-active.png)
+
+One capsule split in half; the selected pill slides across. The title is `Todos` again. In select mode the tab hides — selection happens within one scope.
+
+![Archived selected: the pill moved right, rows unchanged](/blog/planner-two-tabs/floating-tab-archived.png)
+
+What lost:
+
+- **Keep the title-slot segment** — one row of chrome, but a small target and no screen name.
+- **`safeAreaInset(edge: .top)`** — same position, but not tied to the scroll edge effect, so the list is cut off at the tab instead of blurring under it. iOS 26's `safeAreaBar(edge: .top)` treats the view as part of the bar.
+- **A system `Picker(.segmented)` with glass on top** — the segment draws its own gray track, so the glass shows two plates. Two buttons and a `matchedGeometryEffect` pill instead, on `glassEffect(.regular.interactive(), in: Capsule())`.
+
+The cost is the one we cut on Sep 25: two rows of chrome, the first row 44pt lower. Accepted this time — the one-row chrome followed from "don't put occasional things in permanent places," and switching scopes stopped being occasional. UI tests can no longer find the tab through `segmentedControls`; each half has an accessibility id.
+
 ## History
 
 - 2026-09-20 — three tabs merged into two, summary moved to the top of Todos
@@ -124,3 +144,4 @@ The `toolbarTitleMenu` pitfall above still stands. This app just no longer has a
 - 2026-09-23 — summary removed entirely; stats are the row strip and the detail screen
 - 2026-09-25 — segment, always-on search, edit and avatar gone; chrome is one title row. `toolbarTitleMenu` doesn't attach to large titles
 - 2026-09-26 — title menu removed; the profile is a top-right avatar on both tabs. The title is `Todos`
+- 2026-09-27 — `Active | Archived` back as tabs on one screen, a glass capsule floating under the title (`safeAreaBar`)
