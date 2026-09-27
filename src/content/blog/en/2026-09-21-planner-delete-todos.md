@@ -1,6 +1,6 @@
 ---
 title: "Adding delete to an app that never deleted"
-date: 2026-09-21T21:40:00+09:00
+date: 2026-09-27T20:00:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "data"]
 summary: "Todos in the day planner could only be archived, never deleted. Watching typo todos pile up in the archive flipped the rule — one warning, no undo."
@@ -102,12 +102,32 @@ So **the ghost flies only when the departure point is on screen right now.** Off
 
 The opposite direction — undo pulling a block back *out* of the drawer — got no animation. The block reappearing on the timeline already answers the question.
 
+## 2026-09-27 — Profiles get archived, not deleted
+
+This post originally ended with "profiles still cannot be deleted." That decision came due, and the answer was not delete.
+
+The real problem was the combination with the limit. You can have ten profiles. With no way to remove one, anyone who filled all ten could neither create another nor clear out an old one — a ratchet that only turned one way.
+
+So profiles now follow the same grammar as todos. Swipe a profile row and `Archive` sits next to `Edit`. Archiving keeps every todo, block, and bit of history, but takes the profile out of the list and the switcher and moves it to an `Archived` section at the bottom, where a single `Restore` button brings it back. Because it is reversible, there is no confirmation.
+
+| Situation | Behavior |
+|---|---|
+| The limit of 10 | Counts **active** profiles only; archiving frees a slot |
+| Restoring with 10 active | The button is disabled: "archive one first" |
+| The last remaining profile | `Archive` does not appear |
+| Archiving the profile you are viewing | Switches to the first active profile |
+
+Blocks in an archived profile do not ring alarms — an alarm for something you cannot see anywhere is an alarm you cannot find to turn off. Restoring re-arms them.
+
+What lost: counting archived profiles toward the limit (the ratchet stays), allowing restore past the limit (the limit stops meaning anything), and auto-archiving the least-used profile on restore (saves a tap, but a profile you did not choose disappears). And if two devices archive different profiles and sync leaves none active, the app restores the first one on launch.
+
 ## What is left
 
-Profiles still cannot be deleted; deleting one means deleting every todo inside it, which deserves its own decision. If anyone reports losing something by accident, the next step is an export-before-delete, not a trash can.
+There is still no profile delete — archive fills that role. Devices running an older version do not know about the archive flag and keep showing archived profiles until updated.
 
 ## History
 
 - 2026-09-21 — permanent delete for todos (two entry points, one warning, no undo)
 - 2026-09-21 — that delete's leftovers in the undo stack are now skipped
 - 2026-09-21 — the drawer cue on undo became a full ghost flight (only when on screen)
+- 2026-09-27 — profile archive and restore (archived profiles don't count toward the limit)
