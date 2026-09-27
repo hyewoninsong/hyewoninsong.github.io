@@ -22,12 +22,12 @@ Tapping one opens the paywall, and **the feature you just tapped is listed first
 |---|---|---|
 | Timetables | 1 | Many (add, duplicate, import) |
 | Alarms | — | Weekly alarm before each class |
-| Colors | 20-color palette | Custom colors |
+| Colors | 20-color palette + 1 custom color | Unlimited custom colors |
 | Editing, sharing, printing, widgets | All | All |
 
 ## Why these three, and why not a 7-day trial
 
-Students start a new timetable every semester, which makes that the most natural moment to pay. Alarms help every single week. Sharing stays free, and without a watermark, because a timetable image sent to a friend is the app's best ad. Widgets stay free because they're what keeps people using the app day to day.
+Students start a new timetable every semester, which makes that the most natural moment to pay. Alarms help every single week. Custom colors get a free taste: one sample color is already in the Custom tab, ready to edit, and the second one opens the paywall. Sharing stays free, and without a watermark, because a timetable image sent to a friend is the app's best ad. Widgets stay free because they're what keeps people using the app day to day.
 
 We considered a full 7-day trial followed by a paywall. It doesn't fit this app's rhythm. The need for a second timetable arrives months later, and a weekly alarm rings only once per class in 7 days. The rule we settled on: **gates only block creating new things.** Existing timetables, alarms, and colors are never locked or deleted, even after a refund.
 
