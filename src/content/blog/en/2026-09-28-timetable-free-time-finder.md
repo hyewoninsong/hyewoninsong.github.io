@@ -72,13 +72,17 @@ The limit: if a friend builds a new term's timetable or duplicates one before se
 
 ## Past midnight — the options moved into the same collapsing panel as print and share
 
-After the evening and night revisions, the screen still had two different grammars, one on top and one below. The people chips sat at the top, and so did "Minimum length" in its own spot next to them — but only the minimum-length control had a label. The chip row was floating without a name.
+After the evening and night revisions, the screen still had two different grammars, one on top and one below. Minimum length sat in its own spot near the top, and Edit and Share were separate buttons in the toolbar.
 
-First, a "Timetables" label went in front of the chip row. Then the minimum-length row came off the top entirely and moved into the same collapsing panel already used by the print and share sheets — same handle, same curve, starts collapsed.
+First, the minimum-length row came off the top entirely and moved into the same collapsing panel already used by the print and share sheets — same handle, same curve, starts collapsed.
 
-The collapsed handle doesn't say "Options." It shows the current values: "08:00–20:00 · 30 min+". Expanded, it's three rows — minimum length, start time, end time — plus a range shortcut row. Tapping start or end opens an inline hour wheel below the row, styled like the display settings sheet.
+Edit also moved, from the toolbar into the front of the people chip row. Tapping Edit is what puts a remove badge on every chip, so the button now sits right next to what it removes. The toolbar is left with only close and the grid/list toggle.
 
-![Options panel expanded, showing minimum length, start time 08:00, end time 20:00](/blog/timetable-free-time-finder/options-panel-expanded.png)
+Share came down from the toolbar too, as a full-width "Share" CTA at the bottom of the options panel. It stays visible even when the panel is collapsed — the same spot the print and share sheets already use for it.
+
+The collapsed handle doesn't say "Options." It shows the current values: "08:00–20:00 · 30 min+". Expanded, it's three rows — minimum length, start time, end time — a range shortcut row, then the Share button below them. Tapping start or end opens an inline hour wheel below the row, styled like the display settings sheet.
+
+![Options panel expanded, showing minimum length, start time 08:00, end time 20:00, and the Share button at the bottom](/blog/timetable-free-time-finder/options-panel-expanded.png)
 
 ![Start time row tapped open, with an hour wheel below it](/blog/timetable-free-time-finder/start-hour-wheel.png)
 
@@ -97,4 +101,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-28 — Find Free Time, first version
 - 2026-09-28 evening — comparing with any number of friends is free
 - 2026-09-28 night — same file twice: own imports get fresh IDs, friend timetables overwrite by source ID
-- 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, chip row labeled
+- 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit moved to the chip row, Share became a full-width CTA at the bottom of the panel
