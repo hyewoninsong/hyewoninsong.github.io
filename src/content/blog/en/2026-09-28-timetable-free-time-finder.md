@@ -1,0 +1,43 @@
+---
+title: "Receiving a friend's timetable no longer adds a timetable"
+date: 2026-09-28T13:00:00+09:00
+app: "timetable"
+tags: ["devlog", "design", "swiftui"]
+summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
+---
+
+Open a timetable file a friend sent you, and the app now lays it over yours and paints only the hours when everyone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head.
+
+## Only two things get painted
+
+| Cell | Look |
+|---|---|
+| Everyone free (30 min or longer) | Green block with its length |
+| Someone busy | Light gray |
+| Gaps shorter than 30 min | Left blank |
+
+Who is busy only shows up when you tap a gray cell. Tap a green block and a card shows the day, time, and length, with a Copy button for the group chat. Turn a person's chip off to see the hours that work without them.
+
+![A green free block selected, with a card showing the day, time, length and 'all free'](/blog/timetable-free-time-finder/free-slot-selected.png)
+
+A list view sorts the gaps longest first. Tap a row to copy it, or use Copy All.
+
+![Free slots listed from longest to shortest](/blog/timetable-free-time-finder/free-slot-list.png)
+
+## A friend's timetable is not your timetable
+
+Shared timetable files used to land in your timetable list. Since this month a second timetable needs Premium, so receiving a friend's file that way would open the paywall right away. That breaks the one thing this feature depends on: the second person using it.
+
+Friend timetables now live apart. They don't show up in your list, you can't edit them, and they don't count toward any limit. The app only stores the day, start and end of each busy hour. The Send button in Find Free Time drops class names and notes. It also tags the file, so the receiving app opens straight into the comparison and asks whether to send a timetable back.
+
+## Where the paywall sits
+
+- **All free.** Spreads fastest, but gives no new reason to pay.
+- **All Premium.** The friend who receives the file can't use it.
+- **One friend free, a second one needs Premium.** This is what we picked. Matching three or more people is where doing it by hand hurts most.
+
+Receiving and sending are always free. If a free user gets a new file while already comparing with someone, the new friend is switched on and the others are switched off, so the person who just received the file can try it immediately.
+
+## Where it stands
+
+The iPad layout and a real two-device file exchange are still to be checked.
