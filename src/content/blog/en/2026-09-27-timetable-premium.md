@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-09-28T09:00:00+09:00
+date: 2026-09-29T12:00:00+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, and custom colors. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -29,7 +29,7 @@ Tapping one opens the paywall, and **the feature you just tapped is listed first
 
 Students start a new timetable every semester, which makes that the most natural moment to pay. Alarms help every single week. Sharing stays free, and without a watermark, because a timetable image sent to a friend is the app's best ad. Widgets stay free because they're what keeps people using the app day to day.
 
-We considered a full 7-day trial followed by a paywall. It doesn't fit this app's rhythm. The need for a second timetable arrives months later, and a weekly alarm rings only once per class in 7 days. The rule we settled on: **gates only block creating new things.** Existing timetables and alarms are never locked or deleted, even after a refund. The one exception is custom colors: after a refund the whole Custom tab dims and can't be picked from, though nothing is deleted and events keep their colors.
+We considered a full 7-day trial followed by a paywall. It doesn't fit this app's rhythm. The need for a second timetable arrives months later, and a weekly alarm rings only once per class in 7 days. The rule we settled on: **gates only block creating new things.** Existing timetables and alarms are never locked or deleted, even after a refund. The one exception is custom colors: after a refund the whole Custom tab dims and can't be picked from, and events using a custom color switch to the nearest basic color (a rule changed on 2026-09-29, below).
 
 ## Existing users keep everything
 
@@ -65,7 +65,26 @@ The first version used a glass card. Over a grid of bright class blocks, the red
 
 Two testing notes. UI tests can't dismiss the system rating sheet (it's a remote view), so captures use a debug-only flag that skips it. And "days opened" accumulates on test simulators too, so the feature is off in capture, UI-test, and unit-test runs.
 
+## 2026-09-29 — Custom colors now fall back to the nearest basic color
+
+We reversed the "events keep their colors" rule above. The Custom tab was locked, but the "In use" strip at the top of the style picker wasn't, since it only shows styles the timetable already uses. That let a custom color, once it got in, spread to other events through the strip. Now any custom color left with a free user becomes **the closest of the 20 basic colors**. Imported timetables are converted before they're added, and saved timetables are converted once the user is confirmed free.
+
+![Twelve custom colors and the basic color each one becomes: dark colors go to the bold row, pale ones to the mist row](/blog/timetable-premium/color-mapping-examples.png)
+
+**Only after "confirmed free".** The conversion can't be undone, so the app doesn't act on its cached "purchased" flag. StoreKit has to report no entitlement, and the `AppTransaction` pre-paywall check has to reach a verdict. If the device is offline, nothing changes. This protects two people: an existing user on the first launch after the update, before the check has come back, and a buyer who opens the app in airplane mode. A refund arriving through `Transaction.updates` triggers the conversion right away. We decided against restoring the original colors when someone buys again. Refund-then-rebuy is rare, and supporting it would have meant another field in the save file.
+
+**"Nearest" took two fixes.** Plain OKLab distance turned dark green `#2e7d32` gray and black blue. The basic palette has only two lightness layers, 10 bold and 10 very pale colors, so lightness differences dominated the distance. Counting the lightness difference at half weight fixed that.
+
+![Original, full lightness weight, half weight: dark green goes from gray to green, black from blue to gray](/blog/timetable-premium/color-lightness-fix.png)
+
+Three colors still landed on gray: `#1b5e20`, `#004d40`, and `#9fa8da`. They're clearly colored to the eye, so a second rule now drops the gray candidates whenever the source chroma is above 0.06.
+
+![Original, first-rule result (gray), with grays excluded: green, mint, and sky](/blog/timetable-premium/color-gray-fix.png)
+
+The 0.06 threshold is set for brown. `#795548` sits at 0.053 and still goes to gray, which reads better than orange since there's no brown in the palette. Burnt orange going to red and mid-light pastels going to the bold row were left alone, because any further change to the formula moves other borderline colors. One new constraint: changing the basic palette values now repaints free users' old basic-colored events too.
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
 - 2026-09-28 — app goes free, 7-day trial reconsidered and shelved, thank-you card + review request
+- 2026-09-29 — custom colors fall back to the nearest basic color once confirmed free; mapping fixed twice
