@@ -51,7 +51,7 @@ As a paid download, too few people installed the app. Ranking in App Store searc
 
 We looked at tightening the gates again and still passed on "everything for 7 days, then pay". Day 8, when your own timetable stops opening, is exactly when one-star reviews get written. The free tier stays as it is.
 
-What was missing was the ask itself: **the app had never requested a review.** Now, once you've opened the app on three different days and have at least five events, opening it bursts a little confetti and shows a thank-you card. 2.5 seconds later the system rating sheet (`requestReview`) appears. At most once per version, and never within 90 days of the last time.
+What was missing was the ask itself: **the app had never requested a review.** Now, once you've opened the app on three different days and have at least five events, opening it bursts a little confetti and shows a thank-you card. 2.5 seconds later the system rating sheet (`requestReview`) appears. It appears twice in total: on day 3 and on day 30. The app can't tell whether someone already rated it, so a per-version rule would have kept thanking people who already did.
 
 ![An opaque white card with a heart, "Thanks for sticking with us", and a single button](/blog/timetable-premium/review-card-solid.png)
 
@@ -68,4 +68,4 @@ Two testing notes. UI tests can't dismiss the system rating sheet (it's a remote
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
-- 2026-09-28 — app goes free, 7-day trial reconsidered and shelved, thank-you card + review request
+- 2026-09-28 — app goes free, 7-day trial reconsidered and shelved, thank-you card + review request (twice ever: day 3 and day 30)
