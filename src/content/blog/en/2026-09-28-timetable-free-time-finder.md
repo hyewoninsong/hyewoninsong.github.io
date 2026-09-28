@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-28T17:00:00+09:00
+date: 2026-09-28T23:00:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
@@ -55,6 +55,27 @@ The group case is where doing it by hand hurts most, and it is also where files 
 
 So the lock on friend chips is gone, along with the group free time card on the paywall. The existing reasons to pay (more than one timetable, alarms, custom colors) carry that on their own. The only limit left is the same for everyone: up to ten saved friends. A newly received friend is switched on, and everyone else stays as they were, so each file that comes in adds one more person to the comparison.
 
+## Later that night — receiving the same file twice
+
+A file can come in two ways, so it matters what happens the second time. The two paths do opposite things.
+
+| Received as | Same file again |
+|---|---|
+| Add as my timetable | Adds another copy |
+| Add to free time comparison | Replaces that friend's entry |
+
+Importing as your own gives the timetable and every event in it a fresh ID. That fix came from a bug report earlier this month: alarms are keyed by event ID, so an imported timetable that kept the file's IDs shared alarm slots with the original, and one timetable's alarms erased the other's. Existing files that already collided are repaired once at launch.
+
+Friend timetables go the other way. They carry the sender's timetable ID as their source. When a file from the same source arrives, it overwrites the busy hours in place. A name you gave the chip stays, and the chip is switched back on. Nobody wants "Jun" and "Jun 2" after a friend changes one class.
+
+The limit: if a friend builds a new term's timetable or duplicates one before sending, it is a new source and shows up as a second chip. Remove the old one in Edit. Grouping by sender instead would merge a school and a tutoring timetable from the same person, which is worse.
+
 ## Where it stands
 
 The iPad layout and a real two-device file exchange are still to be checked.
+
+## History
+
+- 2026-09-28 — Find Free Time, first version
+- 2026-09-28 evening — comparing with any number of friends is free
+- 2026-09-28 night — same file twice: own imports get fresh IDs, friend timetables overwrite by source ID
