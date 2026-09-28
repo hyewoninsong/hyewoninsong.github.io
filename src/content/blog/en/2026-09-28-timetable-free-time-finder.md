@@ -12,8 +12,8 @@ Open a timetable file a friend sent you, and the app now lays it over yours and 
 
 | Cell | Look |
 |---|---|
-| Everyone free (30 min or longer) | Green block with its length |
-| Someone busy | Gray, darker the more people are busy (changed that night) |
+| Everyone free (30 min or longer) | Green block with its length (orange since that night) |
+| Someone busy | Light gray (green shades since that night) |
 | Gaps shorter than 30 min | Left blank |
 
 Who is busy only shows up when you tap a gray cell. Tap a green block and a card shows the day, time, and length, with a Copy button for the group chat. Turn a person's chip off to see the hours that work without them.
@@ -55,19 +55,19 @@ The group case is where doing it by hand hurts most, and it is also where files 
 
 So the lock on friend chips is gone, along with the group free time card on the paywall. The existing reasons to pay (more than one timetable, alarms, custom colors) carry that on their own. The only limit left is the same for everyone: up to ten saved friends (later that night: ten timetables in total, yours included). A newly received friend is switched on, and everyone else stays as they were, so each file that comes in adds one more person to the comparison.
 
-## That night — busy hours get darker with every person who is busy
+## That night — busy hours turn a deeper green with every busy person, free hours turn orange
 
 A single gray made "one of five is busy" look the same as "all five are busy". With a group, the useful answer is often "this works if one person moves something", and a flat gray hid it. Busy hours are now shaded by how many people are busy, with as many steps as people switched on.
 
-![The darkest band on Monday selected, with the card listing everyone who is busy](/blog/timetable-free-time-finder/busy-band-selected.png)
+![The deepest green band on Monday selected, with the card listing everyone who is busy; shared free time in orange](/blog/timetable-free-time-finder/busy-band-selected.png)
 
-The first idea was light green layers. Green already means "everyone free" on this screen, so the darkest green would have meant the opposite of the green blocks. Gray keeps green to one meaning.
+The colors moved twice. Green used to mean "everyone free", so we tried gray shades first. But a chip that is switched on already shows a green dot. So green now means people, their busy hours stacking up, and the shared free blocks moved to orange. Blue was out because the timetable grid uses it for editing, and gray blended into the lightest green. One color, one meaning.
 
-Instead of stacking translucent blocks (opacity doesn't add up evenly, and block edges show through), the app merges each person's busy hours, cuts the day wherever someone starts or stops being busy, and counts. The outer shape stays one rounded block with shaded bands inside. The shade is the label color at increasing opacity, so dark mode brightens instead.
+Instead of stacking translucent blocks (opacity doesn't add up evenly, and edges show through), the app merges each person's busy hours, cuts the day wherever someone starts or stops being busy, and counts. Each stretch is its own rounded block with the same gap and corners as the free blocks. Square bands inside one block looked harsh.
 
-![Dark mode, busier bands are lighter gray](/blog/timetable-free-time-finder/busy-heat-dark.png)
+![Dark mode, busier stretches are brighter green](/blog/timetable-free-time-finder/busy-heat-dark.png)
 
-Taps work per band now. Tap one and the card splits the group: who is busy, who is free, in that exact stretch.
+Taps work per stretch now. Tap one and the card splits the group: who is busy, who is free, in that exact stretch.
 
 The comparison is capped at ten timetables including your own, for both new friend files and adding another of your timetables. A friend re-sending their timetable still just updates their chip.
 
