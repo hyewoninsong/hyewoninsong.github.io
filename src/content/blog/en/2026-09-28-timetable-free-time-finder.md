@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-28T13:00:00+09:00
+date: 2026-09-28T16:00:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
@@ -37,6 +37,17 @@ Friend timetables now live apart. They don't show up in your list, you can't edi
 - **One friend free, a second one needs Premium.** This is what we picked. Matching three or more people is where doing it by hand hurts most.
 
 Receiving and sending are always free. If a free user gets a new file while already comparing with someone, the new friend is switched on and the others are switched off, so the person who just received the file can try it immediately.
+
+## Later the same day — fixes from real use
+
+- Block lengths read like clock times ("5:50"). They now show a localized interval split over two lines ("5h / 50m"), and copied slots include the length.
+- The "Me" chip was a timetable picker while every other chip was a toggle. It is now a toggle too. You can add more of your own timetables from `+`, and Edit puts a remove badge on every chip.
+
+![Edit mode with a remove badge on each chip](/blog/timetable-free-time-finder/compare-edit-mode.png)
+
+- The Share button assumed you meant "send my timetable". It now asks: send one of your timetables, or export the current comparison as an image or PDF.
+
+![Share menu: send a timetable or export free time](/blog/timetable-free-time-finder/share-choice.png)
 
 ## Where it stands
 
