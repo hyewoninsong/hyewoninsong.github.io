@@ -74,7 +74,7 @@ The limit: if a friend builds a new term's timetable or duplicates one before se
 
 A single gray made "one of five is busy" look the same as "all five are busy". With a group, the useful answer is often "this works if one person moves something", and a flat gray hid it. Busy hours are now shaded by how many people are busy, with as many steps as people switched on.
 
-![The deepest green band on Monday selected, with the card listing everyone who is busy; shared free time in orange](/blog/timetable-free-time-finder/busy-band-selected.png)
+![The deepest green band on Monday selected, with a tag for each busy person in the card; shared free time in orange](/blog/timetable-free-time-finder/busy-band-selected.png)
 
 The colors moved twice. Green used to mean "everyone free", so we tried gray shades first. But a chip that is switched on already shows a green dot. So green now means people, their busy hours stacking up, and the shared free blocks moved to orange. Blue was out because the timetable grid uses it for editing, and gray blended into the lightest green. One color, one meaning.
 
@@ -82,7 +82,7 @@ Instead of stacking translucent blocks (opacity doesn't add up evenly, and edges
 
 ![Dark mode, busier stretches are brighter green](/blog/timetable-free-time-finder/busy-heat-dark.png)
 
-Taps work per stretch now. Tap one and the card splits the group: who is busy, who is free, in that exact stretch.
+Taps work per stretch now. Tap one and the card lists the timetables in that exact stretch as tags. A sentence like "Minji, Junho busy, you free" made you hunt for names; tags show how many and who at a glance, and anyone without a tag is free.
 
 The comparison is capped at ten timetables including your own, for both new friend files and adding another of your timetables. A friend re-sending their timetable still just updates their chip.
 
