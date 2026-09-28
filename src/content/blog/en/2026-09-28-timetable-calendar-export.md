@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-09-28T12:21:00+09:00
+date: 2026-09-28T15:43:00+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -40,6 +40,15 @@ Since iOS 17, calendar access comes in two levels. Write-only is the lighter ask
 
 We haven't yet confirmed on a real device whether a Google account rejects calendar creation. Skipping holidays and every-other-week classes are not in yet. The feature is free.
 
+## 2026-09-28 — Marking the events we add
+
+The first version kept its "remove only what the app added" promise with event IDs remembered on the device. Reinstalling the app loses that record, and calendar sync can change event IDs. Events we couldn't find were skipped without telling anyone.
+
+Now every event carries a marker in its `url` field: a deep link back to the timetable. `EKEvent` has no app metadata field, and notes are the user's space. Tapping the link in Calendar opens the timetable. Removal finds events by marker first and stored ID second, and says how many it couldn't find. If the device record is gone, opening the sheet rebuilds it from the markers. In that case the app removes only its own series and leaves the calendar itself alone.
+
+When the timetable changes after an export, the app doesn't rewrite the calendar on its own. That would silently undo edits made in Calendar, like a skipped class or a per-event alert. It stores a fingerprint of what it exported and shows "Your timetable changed after this export" until you export again.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
+- 2026-09-28 — markers for finding and removing events, record recovery, change notice
