@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-28T23:30:00+09:00
+date: 2026-09-29T00:40:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
@@ -86,6 +86,38 @@ Taps work per stretch now. Tap one and the card lists the timetables in that exa
 
 The comparison is capped at ten timetables including your own, for both new friend files and adding another of your timetables. A friend re-sending their timetable still just updates their chip.
 
+## Past midnight — the options moved into the same collapsing panel as print and share
+
+After the evening and night revisions, the screen still had two different grammars, one on top and one below. Minimum length sat in its own spot near the top, and Edit and Share were separate buttons in the toolbar.
+
+First, the minimum-length row came off the top entirely and moved into the same collapsing panel already used by the print and share sheets — same handle, same curve, starts collapsed.
+
+Edit also moved, from the toolbar to the right end of the people chip row. The chip row itself scrolls horizontally, but Edit sits outside that scroll, pinned in place, so it stays visible no matter how many chips there are — the way Edit/Done sits at the end of an iOS list row. The toolbar is left with only close and the grid/list toggle.
+
+Share came down from the toolbar too, as a full-width "Share" CTA at the bottom of the options panel. It stays visible even when the panel is collapsed — the same spot the print and share sheets already use for it.
+
+The collapsed handle doesn't say "Options." It shows the current values: "08:00–20:00 · 30 min+". Expanded, it's three rows — minimum length, start time, end time — a range shortcut row, then the Share button below them. Tapping start or end opens an inline hour wheel below the row, styled like the display settings sheet.
+
+![Options panel expanded, showing minimum length, start time 08:00, end time 20:00, and the Share button at the bottom](/blog/timetable-free-time-finder/options-panel-expanded.png)
+
+![Start time row tapped open, with an hour wheel below it](/blog/timetable-free-time-finder/start-hour-wheel.png)
+
+Start and end default to the base timetable's (the first "me" chip) display range. Manual changes live only on this screen — nothing is saved. Pull the end time before the start time, and the display settings sheet would show a red strikethrough and block saving. Here the other side just moves one hour instead, so an invalid state never exists in the first place — there's nothing to delete or save, it's a view-only range.
+
+The range shortcut row is computed from the current range: "Widen range" appears when someone's schedule falls outside it, "Match mine" when the range differs from the base timetable's. Narrow the range by hand, and "Widen" still works — it recalculates from whatever range is showing now.
+
+Two other layouts lost. Keeping the controls on top would crowd the same row as the people chips, which are the thing being compared; top for who, bottom for how to filter reads better. A separate settings sheet means a round trip every time a value changes, with no way to see the grid update live. The print and share sheets had already solved this with a collapsing panel, so this reused that grammar instead of inventing a third one.
+
 ## Where it stands
 
 The iPad layout and a real two-device file exchange are still to be checked.
+
+
+
+## History
+
+- 2026-09-28 — Find Free Time, first version
+- 2026-09-28 evening — comparing with any number of friends is free
+- 2026-09-28 night — same file twice: own imports get fresh IDs, friend timetables overwrite by source ID
+- 2026-09-28 near midnight — busy hours shade green by how many are busy, shared free time in orange, per-segment tags, 10 comparison chips including your own
+- 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit pinned to the right end of the chip row (outside the scroll), Share became a full-width CTA at the bottom of the panel
