@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-29T18:00:00+09:00
+date: 2026-09-29T22:00:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -130,6 +130,24 @@ Moving the color logic surfaced a bug in how adjacent stretches get merged. On F
 
 A screenshot caught it: the block's shading read "two people," but the card only tagged one. The fix compares the actual *set* of free people, not just the count, before merging adjacent stretches — same count, different person, no merge. That case is now a unit test.
 
+(That fix didn't last the day. Once the single shading strip became nested layers, the rule itself stopped being needed — see below.)
+
+## 2026-09-29, later — the single strip became nested layers
+
+The "split when the free set changes" fix from the day before had another problem. A single strip attaches one number to one stretch. If a 2-hour stretch where two people are free has a 30-minute stretch in the middle where all four are free, that 30 minutes forced the rule to cut the range into three pieces — 2-free, 4-free, 2-free again. Each fragment read as short on its own, and the more useful fact — "these two hours have at least two people free the whole time" — disappeared from the screen.
+
+So the strip became layers. Layer N is "the continuous run where N or more people are free." An outer layer (2 people) always contains its inner layers (4 people) — an inner layer existing at all implies the outer condition holds for that same stretch, so the containment is guaranteed, not just usual. Each layer inward is inset roughly 3pt on both sides, so the outer layer reads as a frame around the inner ones.
+
+![A three-person comparison grid — an outer pale-green band frames a darker inner block like a border](/blog/timetable-free-time-finder/free-nested-layers-grid.png)
+
+Layers shorter than the minimum length (the options panel value, 30 minutes by default) aren't drawn at all. Because of the containment property, whenever an inner layer survives that cutoff, the outer layer wrapping it is at least as long and survives too — a short inner layer never disappears leaving a bare outer sliver behind.
+
+People can change within an outer layer over time, so the card now shows two tag styles: solid green for someone free the whole stretch, outlined for someone free only part of it. The copy header lists only the people free throughout, and drops the header line entirely when nobody qualifies.
+
+![A card for tapping the outer layer on Wednesday 08:00–20:00 — all three tags (me, Minji, Junho) are outlined only](/blog/timetable-free-time-finder/free-outer-layer-card.png)
+
+The "split segments when the free set changes" fix from the section just above is no longer needed. That fix existed because a single strip attached one number to a stretch, and it needed to stop counts from surviving a merge when the actual people had changed. A layer now only tests a headcount condition ("N or more"), not a specific set of people — and who changes within it is exactly what the solid/outlined tags already show. There's nothing left for a merge rule to protect against.
+
 ## Where it stands
 
 The iPad layout and a real two-device file exchange are still to be checked.
@@ -144,3 +162,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-28 near midnight — busy hours shade green by how many are busy, shared free time in orange, per-segment tags, 10 comparison chips including your own
 - 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit pinned to the right end of the chip row (outside the scroll), Share became a full-width CTA at the bottom of the panel
 - 2026-09-29 — flipped the color back: only free hours shaded green, busy hours left blank, a Copy button on every block, merge logic fixed to compare the free set instead of the free count
+- 2026-09-29, later — single shading strip became nested layers (N-or-more-free runs contained within each other), layers under the minimum length aren't drawn, cards show solid/outlined tags for whole-stretch vs. partial people, the previous fix for merging by free set became unnecessary
