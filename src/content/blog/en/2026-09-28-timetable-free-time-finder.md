@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-28T16:00:00+09:00
+date: 2026-09-28T17:00:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
@@ -34,9 +34,9 @@ Friend timetables now live apart. They don't show up in your list, you can't edi
 
 - **All free.** Spreads fastest, but gives no new reason to pay.
 - **All Premium.** The friend who receives the file can't use it.
-- **One friend free, a second one needs Premium.** This is what we picked. Matching three or more people is where doing it by hand hurts most.
+- **One friend free, a second one needs Premium.** This is what we first picked. Matching three or more people is where doing it by hand hurts most.
 
-Receiving and sending are always free. If a free user gets a new file while already comparing with someone, the new friend is switched on and the others are switched off, so the person who just received the file can try it immediately.
+That evening we dropped it and made everything free. See below.
 
 ## Later the same day — fixes from real use
 
@@ -48,6 +48,12 @@ Receiving and sending are always free. If a free user gets a new file while alre
 - The Share button assumed you meant "send my timetable". It now asks: send one of your timetables, or export the current comparison as an image or PDF.
 
 ![Share menu: send a timetable or export free time](/blog/timetable-free-time-finder/share-choice.png)
+
+## That evening — comparing with any number of friends is free
+
+The group case is where doing it by hand hurts most, and it is also where files travel the most. Four teammates matching a meeting time pass the file three times, often to people who have never opened the app. Putting the paywall there cuts the feature off exactly where it would spread.
+
+So the lock on friend chips is gone, along with the group free time card on the paywall. The existing reasons to pay (more than one timetable, alarms, custom colors) carry that on their own. The only limit left is the same for everyone: up to ten saved friends. A newly received friend is switched on, and everyone else stays as they were, so each file that comes in adds one more person to the comparison.
 
 ## Where it stands
 
