@@ -1,22 +1,24 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-29T00:40:00+09:00
+date: 2026-09-29T18:00:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days."
 ---
 
-Open a timetable file a friend sent you, and the app now lays it over yours and paints only the hours when everyone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head.
+Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
 
-## Only two things get painted
+## Only two things get painted (first version)
 
 | Cell | Look |
 |---|---|
-| Everyone free (30 min or longer) | Green block with its length (orange since that night) |
-| Someone busy | Light gray (green shades since that night) |
+| Everyone free (30 min or longer) | Green block with its length |
+| Someone busy | Light gray |
 | Gaps shorter than 30 min | Left blank |
 
 Who is busy only shows up when you tap a gray cell. Tap a green block and a card shows the day, time, and length, with a Copy button for the group chat. Turn a person's chip off to see the hours that work without them.
+
+(This section describes the first version. The color rule changes twice more — busy hours shaded green late that night, then flipped back to shading only free hours the next day. Follow the history at the bottom for the order.)
 
 ![A green free block selected, with a card showing the day, time, length and 'all free'](/blog/timetable-free-time-finder/free-slot-selected.png)
 
@@ -108,6 +110,26 @@ The range shortcut row is computed from the current range: "Widen range" appears
 
 Two other layouts lost. Keeping the controls on top would crowd the same row as the people chips, which are the thing being compared; top for who, bottom for how to filter reads better. A separate settings sheet means a round trip every time a value changes, with no way to see the grid update live. The print and share sheets had already solved this with a collapsing panel, so this reused that grammar instead of inventing a third one.
 
+## 2026-09-29 — flipped the color back: only free hours get painted, busy hours stay blank
+
+The rule from the night before was "busy hours shade green by how many are busy, shared free time in orange." A day of real use showed the same mismatch as before, just moved. What people are looking for is free time, but the screen's darkest shading pointed at busy time. Reading a pale orange cell as "mostly free" meant inverting what orange meant ("one or two people short") every time.
+
+So it flipped again. Now only cells where at least one person is free get painted green, shading darker with each additional free person, opaque with a length label when everyone is free. Cells where everyone is busy are left as bare grid — the app's ground color. One color, one meaning: green now means "free," full stop. The chip dots went back to green too.
+
+![A three-person comparison grid. Darker green means more people free; fully busy cells are left blank](/blog/timetable-free-time-finder/free-only-heat-grid.png)
+
+Taps still only land on green cells. Tapping one shows the timetables free for that entire stretch as tags, and now every card also has its own Copy button — no need to go to the list view to copy one slot.
+
+![A Saturday block where all three are free, tapped open to a card with three tags and a Copy button](/blog/timetable-free-time-finder/free-block-card-all-three.png)
+
+### Same free count, different people — merging needed the actual set, not the count
+
+Moving the color logic surfaced a bug in how adjacent stretches get merged. On Friday, 12:50–13:00 had me and Minji free; 13:00–17:05 had Minji and Junho free. Both were "two free," so the count matched, and the merge logic joined them into one block. But a card for that merged block is supposed to list only the people free for the *entire* range — and across the full 4h15m, only Minji was free the whole time, so the tag list showed just her name.
+
+![The merged Friday 12:50–17:05 block with only a Minji tag in the card — the bug state, where the shading said two people but the card said one](/blog/timetable-free-time-finder/free-block-merge-bug.png)
+
+A screenshot caught it: the block's shading read "two people," but the card only tagged one. The fix compares the actual *set* of free people, not just the count, before merging adjacent stretches — same count, different person, no merge. That case is now a unit test.
+
 ## Where it stands
 
 The iPad layout and a real two-device file exchange are still to be checked.
@@ -121,3 +143,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-28 night — same file twice: own imports get fresh IDs, friend timetables overwrite by source ID
 - 2026-09-28 near midnight — busy hours shade green by how many are busy, shared free time in orange, per-segment tags, 10 comparison chips including your own
 - 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit pinned to the right end of the chip row (outside the scroll), Share became a full-width CTA at the bottom of the panel
+- 2026-09-29 — flipped the color back: only free hours shaded green, busy hours left blank, a Copy button on every block, merge logic fixed to compare the free set instead of the free count
