@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-09-27T23:57:00+09:00
+date: 2026-09-28T09:00:00+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, and custom colors. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -44,3 +44,28 @@ We considered a full 7-day trial followed by a paywall. It doesn't fit this app'
 ## Where it stands
 
 The code is ready. What's left is creating the product and setting the price in App Store Connect. The first in-app purchase goes through review together with a new app version.
+
+## 2026-09-28 — The app goes free, and we say thank you
+
+As a paid download, too few people installed the app. Ranking in App Store search takes installs and ratings, and the price tag was blocking both. From 1.1.0 the app itself is free, and Premium is the only thing you pay for.
+
+We looked at tightening the gates again and still passed on "everything for 7 days, then pay". Day 8, when your own timetable stops opening, is exactly when one-star reviews get written. The free tier stays as it is.
+
+What was missing was the ask itself: **the app had never requested a review.** Now, once you've opened the app on three different days and have at least five events, opening it bursts a little confetti and shows a thank-you card. 2.5 seconds later the system rating sheet (`requestReview`) appears. At most once per version, and never within 90 days of the last time.
+
+![An opaque white card with a heart, "Thanks for sticking with us", and a single button](/blog/timetable-premium/review-card-solid.png)
+
+- **Not right after adding an event.** The edit sheet opens at that moment and would cover the card. On launch there's no sheet.
+- **No "Do you like the app?" filter.** Sending only happy users to the rating sheet is a custom review prompt, which guideline 5.6.1 forbids. The card only says thanks.
+- **Not the rating sheet alone.** iOS shows it at most three times a year and never tells the app whether it appeared, so the card has to make sense on its own.
+
+The first version used a glass card. Over a grid of bright class blocks, the red behind it bled through and the body text vanished, so the card now has an opaque background and a shadow.
+
+![The same card in glass: the red block behind it bleeds through](/blog/timetable-premium/review-card-glass.png)
+
+Two testing notes. UI tests can't dismiss the system rating sheet (it's a remote view), so captures use a debug-only flag that skips it. And "days opened" accumulates on test simulators too, so the feature is off in capture, UI-test, and unit-test runs.
+
+## History
+
+- 2026-09-27 — one-time Premium, what stays free, existing users unlocked
+- 2026-09-28 — app goes free, 7-day trial reconsidered and shelved, thank-you card + review request
