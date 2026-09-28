@@ -76,7 +76,7 @@ After the evening and night revisions, the screen still had two different gramma
 
 First, the minimum-length row came off the top entirely and moved into the same collapsing panel already used by the print and share sheets — same handle, same curve, starts collapsed.
 
-Edit also moved, from the toolbar into the front of the people chip row. Tapping Edit is what puts a remove badge on every chip, so the button now sits right next to what it removes. The toolbar is left with only close and the grid/list toggle.
+Edit also moved, from the toolbar to the right end of the people chip row. The chip row itself scrolls horizontally, but Edit sits outside that scroll, pinned in place, so it stays visible no matter how many chips there are — the way Edit/Done sits at the end of an iOS list row. The toolbar is left with only close and the grid/list toggle.
 
 Share came down from the toolbar too, as a full-width "Share" CTA at the bottom of the options panel. It stays visible even when the panel is collapsed — the same spot the print and share sheets already use for it.
 
@@ -101,4 +101,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-28 — Find Free Time, first version
 - 2026-09-28 evening — comparing with any number of friends is free
 - 2026-09-28 night — same file twice: own imports get fresh IDs, friend timetables overwrite by source ID
-- 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit moved to the chip row, Share became a full-width CTA at the bottom of the panel
+- 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit pinned to the right end of the chip row (outside the scroll), Share became a full-width CTA at the bottom of the panel
