@@ -1,0 +1,45 @@
+---
+title: "Ten App Store screenshots that read as one picture"
+date: 2026-09-29T04:00:00+09:00
+app: "timetable"
+tags: ["devlog", "appstore", "design"]
+summary: "SuperTimetable's new App Store screenshots: a three-card panorama of 3D bars taken from the app icon, then seven feature cards whose background keeps running between the phones. How the seams line up, and why the drag shot had two guide lines."
+---
+
+Swipe through SuperTimetable's App Store screenshots and you now scroll across one long picture instead of ten separate cards. The first three set the mood; the next seven show the features.
+
+## The first three cards are one image cut in three
+
+The idea came from a streaming app whose first three screenshots are a single illustration split across cards, so objects cross from one card into the next.
+
+We already had the material: the app icon's five colored bars and the gray dots above them. We built them as glossy 3D slabs in SceneKit, rendered one 3960×2868 image, and cut it into three 1320-wide cards.
+
+![The first three cards — the icon's bars, in 3D, crossing the card edges](/blog/timetable-appstore-screenshots/panorama-three-cards.png)
+
+The first render washed orange out into yellow; the lighting had to come down by almost half. A floor plane for shadows went too, since its far edge showed up as a gray band.
+
+## The feature cards had to continue it
+
+The seven feature cards keep their one-feature layout: a caption, a big headline, a phone bleeding off the bottom. They gained two things: the same bars and dots in the background, and a highlighter band under the key word of each headline, one icon color per card.
+
+Scattering bars per card looked fine one at a time but broke the flow next to the panorama. So the seven backgrounds are now one 9240px strip, sliced. The only free space is a thin band above the caption and the 230px corridor between neighbouring phones. A diagonal bar across that corridor hides both ends behind the phones and shows only its middle.
+
+![Feature cards — bars cross the corridor between phones and continue on the next card](/blog/timetable-appstore-screenshots/cards-continuous-background.png)
+
+## Perspective cameras don't meet at the seams
+
+One wide perspective camera would need a horizontal field of view above 110°, which stretches the bars at the ends. Moving a perspective camera card by card draws a seam-crossing bar from two viewpoints, and it misaligns by close to 20px. An orthographic camera has no perspective, so any cut matches pixel for pixel, and at this size the missing perspective is hard to notice.
+
+We also tried carrying a bar from the panorama into card four. One side was perspective and the other orthographic, so the angles never matched, and we left that edge empty.
+
+## Why the drag shot showed two guide lines
+
+The "Just drag" card captures a block mid-move. Guide lines appear when an edge snaps to another event, and the shot showed one above and one below the block. That muddles the point: the top edge lined up with a neighbor.
+
+When you move an event, it also snaps to its own original start and end, so you can drop it back easily. The capture moved the block sideways at the same time of day, so both edges snapped to where it came from. The app keeps that behavior. The capture now drops the block an hour earlier: its top meets the 13:00 boundary and its bottom touches nothing.
+
+![Before and after — two guide lines became one](/blog/timetable-appstore-screenshots/drag-guide-line-before-after.png)
+
+## Where it stands
+
+All ten cards exist in eight languages, and every locale now shows its own app screens instead of borrowing the English ones. Version 1.1.0 is in review and its screenshots are locked, so the new set goes up with the next version.
