@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-28T23:00:00+09:00
+date: 2026-09-29T00:40:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints only the hours you're all free. Keeping friends out of your own timetable list is most of the design."
@@ -70,6 +70,24 @@ Friend timetables go the other way. They carry the sender's timetable ID as thei
 
 The limit: if a friend builds a new term's timetable or duplicates one before sending, it is a new source and shows up as a second chip. Remove the old one in Edit. Grouping by sender instead would merge a school and a tutoring timetable from the same person, which is worse.
 
+## Past midnight — the options moved into the same collapsing panel as print and share
+
+After the evening and night revisions, the screen still had two different grammars, one on top and one below. The people chips sat at the top, and so did "Minimum length" in its own spot next to them — but only the minimum-length control had a label. The chip row was floating without a name.
+
+First, a "Timetables" label went in front of the chip row. Then the minimum-length row came off the top entirely and moved into the same collapsing panel already used by the print and share sheets — same handle, same curve, starts collapsed.
+
+The collapsed handle doesn't say "Options." It shows the current values: "08:00–20:00 · 30 min+". Expanded, it's three rows — minimum length, start time, end time — plus a range shortcut row. Tapping start or end opens an inline hour wheel below the row, styled like the display settings sheet.
+
+![Options panel expanded, showing minimum length, start time 08:00, end time 20:00](/blog/timetable-free-time-finder/options-panel-expanded.png)
+
+![Start time row tapped open, with an hour wheel below it](/blog/timetable-free-time-finder/start-hour-wheel.png)
+
+Start and end default to the base timetable's (the first "me" chip) display range. Manual changes live only on this screen — nothing is saved. Pull the end time before the start time, and the display settings sheet would show a red strikethrough and block saving. Here the other side just moves one hour instead, so an invalid state never exists in the first place — there's nothing to delete or save, it's a view-only range.
+
+The range shortcut row is computed from the current range: "Widen range" appears when someone's schedule falls outside it, "Match mine" when the range differs from the base timetable's. Narrow the range by hand, and "Widen" still works — it recalculates from whatever range is showing now.
+
+Two other layouts lost. Keeping the controls on top would crowd the same row as the people chips, which are the thing being compared; top for who, bottom for how to filter reads better. A separate settings sheet means a round trip every time a value changes, with no way to see the grid update live. The print and share sheets had already solved this with a collapsing panel, so this reused that grammar instead of inventing a third one.
+
 ## Where it stands
 
 The iPad layout and a real two-device file exchange are still to be checked.
@@ -79,3 +97,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-28 — Find Free Time, first version
 - 2026-09-28 evening — comparing with any number of friends is free
 - 2026-09-28 night — same file twice: own imports get fresh IDs, friend timetables overwrite by source ID
+- 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, chip row labeled
