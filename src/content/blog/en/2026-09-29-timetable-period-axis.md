@@ -10,7 +10,7 @@ School timetables are read as "Period 2", not "10:00". New timetables now start 
 
 ## You set the periods; the rows stack at equal height
 
-A new period timetable opens straight into the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. Drag periods or set exact start and end times (see the evening update below), add or remove periods — the only rule is that each period starts after the previous one ends.
+A new period timetable opens the display sheet, where a "Periods" row takes the place of the time range and leads to the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. Drag periods or set exact start and end times (see the evening update below), add or remove periods — the only rule is that each period starts after the previous one ends.
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
@@ -60,7 +60,7 @@ Three things made it hard. Seven periods meant fourteen time fields, while a rea
 
 **What lost.** The first proposal was a rule form (first start, length, break, count, lunch) that generates all periods at once. Tapping visible blocks won: it's the same grammar as the rest of the grid, and with rippling, the rule form's shortcut is only a few taps away.
 
-**Days on first setup.** Time-based timetables open a display sheet with days right after creation. Period timetables showed the period editor instead, which skipped days entirely. The first period editor now has the same days card at the top, shared with the display sheet. Later edits show periods only.
+**Days on first setup.** Time-based timetables open a display sheet with days right after creation. Period timetables showed the period editor instead, which skipped days entirely. The first period editor got the same days card at the top — reverted in the evening update.
 
 ## Update, Sep 29 evening — a tall scrolling timeline, and a card only when you pick a period
 
@@ -72,6 +72,10 @@ Four requests: make the timeline tall and scrollable, show the card only when a 
 
 **Scrolling vs. dragging, split by selection.** Unselected blocks only take a tap, so swiping over them scrolls. Only the selected block carries a `DragGesture(minimumDistance: 0)`, so a touch that starts on it drags immediately. The alternative, a drag on every block via `simultaneousGesture`, would turn one swipe into both a scroll and a move. The cost: tap once before dragging an unselected period. When the card appears and shrinks the viewport, the timeline scrolls so the selected block stays visible.
 
+**Days go back to the display sheet.** Period timetables now open the same display sheet as time-based ones right after creation. Where the start and end times would be, a "Periods 7 · 09:00–16:40 ›" row opens the period editor, which now edits periods only. A days card on top would just shorten the tall timeline.
+
+![Display sheet — under the days card, a Periods section with a "7 · 09:00–16:40 ›" row](/blog/timetable-period-axis/display-sheet-period-row.png)
+
 Still missing: auto-scroll while dragging a block past the edge.
 
 ## History
@@ -79,4 +83,4 @@ Still missing: auto-scroll while dragging a block past the edge.
 - Sep 29, early — period axis introduced
 - Sep 29, morning — axis previews in the type picker, drag-to-edit periods, unlock zoom
 - Sep 29, afternoon — wide timeline with a tap-to-edit card, later periods shift along, days on first setup
-- Sep 29, evening — tall scrolling timeline, drag only the selected block, card on selection with start/end times
+- Sep 29, evening — tall scrolling timeline, drag only the selected block, card on selection with start/end times, first setup via the display sheet
