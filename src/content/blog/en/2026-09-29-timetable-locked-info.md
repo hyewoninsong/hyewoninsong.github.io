@@ -1,9 +1,9 @@
 ---
 title: "Tapping a class on a locked timetable now shows its notes"
-date: 2026-09-29T14:33:47+09:00
+date: 2026-09-29T14:39:06+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "SuperTimetable opens locked, so most of the time you are just looking. Tapping a class used to show only its start and end time. Now a card slides up with its color, title, weekday, alerts, and notes."
+summary: "SuperTimetable opens locked, so most of the time you are just looking. Tapping a class used to show only its start and end time. Now a card slides up with its color, title, day and time, alerts, and notes."
 ---
 
 SuperTimetable opens a timetable locked so you can't drag a class by accident, which means most of your time in the app is spent looking at a locked grid. Until now, tapping a class there only lifted the block and showed its start and end time. To read the note you wrote or check when the alert fires, you had to unlock and open the editor.
@@ -14,7 +14,8 @@ Tap a class while locked and a glass card rises from the bottom of the screen, i
 
 | Row | What it shows |
 |---|---|
-| Top | Color dot · title · weekday on the right |
+| Top | Color dot · title |
+| Second | Weekday and start–end time ("Monday · 9:00 – 10:00") |
 | Alerts | One line per alert that's on, e.g. "15 minutes before" and the sound |
 | Notes | The whole note, scrolling inside its box when it's long |
 
