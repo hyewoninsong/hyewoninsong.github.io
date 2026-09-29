@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T17:45:45+09:00
+date: 2026-09-29T19:01:21+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -76,7 +76,7 @@ Four requests: make the timeline tall and scrollable, show the card only when a 
 
 ![Display sheet — under the days card, a Periods section with a "7 · 09:00–16:40 ›" row](/blog/timetable-period-axis/display-sheet-period-row.png)
 
-Still missing: auto-scroll while dragging a block past the edge.
+At this point dragging to the edge didn't auto-scroll yet — the midnight update below adds it.
 
 ## Update, Sep 29 night — shared images, prints and list previews in period rows
 
@@ -110,6 +110,22 @@ Move the start and the end follows, keeping how many periods the event spans. It
 
 Times are still stored as real clock times. If you don't touch the wheel, nothing changes, so imported events that don't line up with period boundaries stay exactly as they are. The 30-minute minimum is dropped for period timetables, since a period can be as short as five minutes. We also considered a row of period chips (too many periods to fit, and range-by-tapping is guesswork) and a single row with a period-count stepper (you couldn't pick the end directly). Along the way we fixed a draft box that jumped far down the grid when you changed the time in the new-event sheet. That path was handing real times to a grid that draws in virtual period hours.
 
+## Update, Sep 29 midnight — the whole day in a minimap, and auto-scroll at the edges
+
+Dragging period 3 down would suddenly stop. Later periods were being pushed along, and the last one had hit midnight — far below the screen, so from where your finger was there was no visible reason. Dragging to the screen edge didn't scroll either.
+
+**A minimap of the whole day.** The scrollbar is now a minimap, the same one our planner app uses: the track runs from 00:00 at the top to midnight at the bottom, periods are blue bars, and an outlined box marks what's on screen. Tap to jump, drag to scrub; while scrubbing, the lane widens and shows period names.
+
+![Scrubbing the minimap — the lane widens with P1–P7 labels; the outlined box marks the visible range](/blog/timetable-period-axis/period-minimap-scrub.png)
+
+The track spans the full day, not the scroll range, because the question it answers is "why did it stop?" — and the answer is midnight. The bars move live as you drag, and when the last period reaches midnight a blue wall lights up at the bottom of the track (the top, if the first period hits 00:00). We skipped a "can't move further" message; text popping up on every drag is noise.
+
+**Auto-scroll.** Hold your finger within 48pt of the top or bottom edge while moving or resizing a period and the timeline scrolls, faster the deeper you go.
+
+![Dragging period 3 and holding at the bottom edge — the timeline has scrolled to the evening and the minimap shows the wall at midnight](/blog/timetable-period-axis/period-drag-autoscroll-wall.png)
+
+The catch: a drag gesture only reports when the finger moves, so a finger resting at the edge would leave the block behind while the content scrolled. The drag value is now computed from the finger's on-screen height plus the scroll offset, so gesture events and auto-scroll ticks share one formula. During a drag the timeline's range also extends down to midnight so auto-scroll can reach the wall.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -119,3 +135,4 @@ Times are still stored as real clock times. If you don't touch the wheel, nothin
 - Sep 29, night — shared images, prints and list previews in period rows
 - Sep 29, late night — rename any period (default "P1, P2…")
 - Sep 29, later evening — the edit sheet picks start and end periods
+- Sep 29, midnight — whole-day minimap, midnight wall, edge auto-scroll while dragging
