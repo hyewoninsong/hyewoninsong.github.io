@@ -28,6 +28,7 @@
 │   │   └── 개별 앱 상세 (/ko/apps/[slug])
 │   └── 개발 블로그 (/ko/blog)
 │       ├── 글 목록 (날짜순)
+│       ├── 앱별 글 (/ko/blog/app/[app])
 │       ├── 태그 필터 (/ko/blog/tag/[tag])
 │       └── 개별 글 (/ko/blog/[slug])
 │
@@ -38,6 +39,7 @@
     │   └── App detail (/en/apps/[slug])
     └── Dev Blog (/en/blog)
         ├── Post list (by date)
+        ├── Posts by app (/en/blog/app/[app])
         ├── Tag filter (/en/blog/tag/[tag])
         └── Post detail (/en/blog/[slug])
 ```
@@ -216,7 +218,7 @@ UTC 자정으로 파싱되기 때문에 현지 시간대로 찍으면 하루 밀
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
 
-> **현재 상태 (2026-09-23):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 2026-09-22 App Store 출시, 상세 페이지 있음)와 SuperMusicNote·SuperPlanner·SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. SuperTimetable 아이콘(`/apps/timetable/icon.png`)은 2026-09-23 에 앱 쪽 아이콘 재제작(그림자 제거·iOS 시스템색·둥근 모서리)에 맞춰 `SuperTimetable.icon` 번들에서 다시 합성했다. 나머지 둘(SuperMusicNote·SuperPDF)은 아이콘·스샷이 아직 없어 카드에 제목과 뱃지만 나온다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
+> **현재 상태 (2026-09-29):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 2026-09-22 App Store 출시, 상세 페이지 있음), SuperMusicNote·SuperPlanner(iPhone·iPad 개발중, 전용 상세 페이지 `musicnote.astro`·`planner.astro` 가 있고 2026-09-24 에 스크린샷을 넣었다), SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperTimetable 은 2026-09-26 부터 Android 개발중 뱃지도 단다 (`platforms.android: "in-development"`). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. SuperTimetable 아이콘(`/apps/timetable/icon.png`)은 2026-09-23 에 앱 쪽 아이콘 재제작(그림자 제거·iOS 시스템색·둥근 모서리)에 맞춰 `SuperTimetable.icon` 번들에서 다시 합성했다. 다섯 앱 모두 아이콘(`/apps/<slug>/icon.png`)이 있고, 스샷이 아직 없는 것은 SuperPDF 하나다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 지금 있는 것은 SuperFont 의 둘과 SuperTimetable 의 `privacy` 이고, 앱에 묶이지 않은 `/{lang}/support/` · `/{lang}/privacy/` 가 따로 있다. 앱 상세 페이지 맨 아래에는 그 앱의 블로그 글 최근 셋이 "개발 기록" 으로 붙는다 (`AppDevlog.astro`, §4.3.4). 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다.
 
 **레이아웃:**
 
@@ -244,6 +246,8 @@ UTC 자정으로 파싱되기 때문에 현지 시간대로 찍으면 하루 밀
 
 **콘텐츠 작성 방식:** `src/content/blog/ko/`, `src/content/blog/en/` 폴더 안에 글마다 `.md` 파일 추가. 블로그 글은 선택적 번역 — 한국어만 작성해도 되고, 양쪽 모두 작성해도 됨.
 
+> **현재 상태 (2026-09-29):** 글은 ko·en 각 55편이고 지금은 전부 양쪽 언어로 있다. 대부분 앱 저장소의 devlog 세션이 올리고 하루에 여러 편이 올라온다 — 그래서 `date` 는 날짜만이 아니라 **한국 시각까지** 적는다 (`2026-09-29T20:47:41+09:00`). 목록 순서는 그 시각의 내림차순이고(`src/lib/blog-posts.ts` 의 `byNewest`), 화면에는 한국 날짜(YYYY-MM-DD)만 나온다. frontmatter 의 `app` 은 그 글이 어느 앱을 만들다 나왔는지로, `src/lib/blog-apps.ts` 의 `BLOG_APPS` 키다 (`timetable` · `superfont` · `daily-planner` · `superpdf` · `notequiz` · `supermath` · `supertimers`). 앱 저장소의 슬러그라 apps 컬렉션의 `slug` 와 다를 수 있다 (`daily-planner` → `planner`, `notequiz` → `musicnote`). 앱과 무관한 글은 `app` 을 비운다. 본문 이미지는 `public/blog/<주제>/<이름>.png` 에 두고 본문에서 `/blog/<주제>/<이름>.png` 로 쓴다. `thumbnail` 은 스키마에 남아 있지만 쓰는 글이 없다. 파일 이름 형식, 이미지 파일이 실제로 있는지, ko/en 짝의 `date`·`app` 이 같은지는 `tests/blog-content.test.mjs` 가 본다 (`node --test "tests/**/*.test.mjs"`).
+
 ```
 src/content/blog/
 ├── ko/
@@ -260,10 +264,11 @@ src/content/blog/
 ```yaml
 ---
 title: "시간표 앱 개발기 - SwiftUI로 커스텀 그리드 만들기"
-date: 2025-06-15
+date: 2025-06-15T21:30:00+09:00           # 한국 시각까지 — 같은 날 글의 순서를 정한다
+app: "timetable"                          # 선택 — src/lib/blog-apps.ts 의 키
 tags: ["시간표", "SwiftUI", "개발일지"]
 summary: "시간표 앱의 커스텀 그리드 뷰를 SwiftUI로 구현한 과정을 공유합니다."
-thumbnail: "./images/timetable-grid.png"   # 선택
+thumbnail: "/blog/timetable-grid/grid.png"   # 선택 — public/ 기준 경로
 ---
 ```
 
@@ -272,10 +277,11 @@ thumbnail: "./images/timetable-grid.png"   # 선택
 ```yaml
 ---
 title: "Building a Timetable App - Custom Grid with SwiftUI"
-date: 2025-06-15
+date: 2025-06-15T21:30:00+09:00
+app: "timetable"
 tags: ["Timetable", "SwiftUI", "Dev Log"]
 summary: "How we built a custom grid view for the timetable app using SwiftUI."
-thumbnail: "./images/timetable-grid.png"
+thumbnail: "/blog/timetable-grid/grid.png"
 ---
 ```
 
@@ -286,6 +292,8 @@ thumbnail: "./images/timetable-grid.png"
 - 각 항목: 제목 + 작성일 + 태그 목록 + 요약 + 썸네일(선택)
 - 페이지네이션 또는 무한 스크롤 (초기에는 페이지네이션 권장)
 - 상단 또는 사이드바에 태그 필터 UI
+
+> **현재 상태 (2026-09-29):** 페이지네이션은 아직 없다 — 그 언어의 글 전부를 한 페이지에 최신순으로 낸다. 글 목록 위에 "앱별" 카드(아이콘 · 앱 이름 · 글 수)가 먼저 오고, 그 아래 태그, 글 카드 순이다. 앱 키와 같은 태그는 태그 목록과 카드의 태그에서 빼고 앱 뱃지로 대신 보인다. 아래 레이아웃 그림은 초기 기획안이다.
 
 **레이아웃 (PC):**
 
@@ -321,6 +329,14 @@ thumbnail: "./images/timetable-grid.png"
 - 이미지 삽입 지원
 - 상단: 제목, 작성일, 태그
 - 하단: 이전 글 / 다음 글 네비게이션
+
+#### 4.3.4 앱별 글 페이지 (/ko/blog/app/[app], /en/blog/app/[app])
+
+- `app` 값이 같은 글만 모아 동일한 목록 레이아웃으로 표시 (최신순)
+- 상단: 앱 아이콘 + 앱 이름 + 글 수, 앱 소개 페이지 링크(apps 컬렉션에 그 앱이 있을 때) + "전체 보기" 링크
+- 경로의 `[app]` 은 블로그 키다 (`/ko/blog/app/daily-planner`) — apps 의 slug 가 아니다
+- `BLOG_APPS` 표에 없는 키의 글도 빠지지 않는다. 키가 그대로 이름으로 나온다
+- 앱 상세 페이지의 "개발 기록" (`AppDevlog.astro`) 은 같은 기준으로 최근 세 편만 걸고 나머지는 이 페이지로 보낸다
 
 -----
 
@@ -369,70 +385,86 @@ thumbnail: "./images/timetable-grid.png"
 ## 7. 프로젝트 디렉토리 구조 (Astro)
 
 ```
-hyewon-insong-website/
+hyewoninsong.com/
 ├── src/
+│   ├── content.config.ts      # Content Collections 스키마 정의 (about · apps · blog)
 │   ├── content/
-│   │   ├── config.ts          # Content Collections 스키마 정의
 │   │   ├── about/
 │   │   │   ├── ko.md          # 한국어 회사 소개
 │   │   │   └── en.md          # English about
 │   │   ├── apps/
 │   │   │   ├── ko/            # 한국어 앱 소개
 │   │   │   │   ├── timetable.md
-│   │   │   │   └── fontbox.md
-│   │   │   └── en/            # English app descriptions
-│   │   │       ├── timetable.md
-│   │   │       └── fontbox.md
+│   │   │   │   ├── superfont.md
+│   │   │   │   ├── musicnote.md
+│   │   │   │   ├── planner.md
+│   │   │   │   └── pdf.md
+│   │   │   └── en/            # English app descriptions (같은 다섯 파일)
 │   │   └── blog/
 │   │       ├── ko/            # 한국어 블로그
-│   │       │   └── 2025-xx-xx-title.md
+│   │       │   └── YYYY-MM-DD-title.md
 │   │       └── en/            # English blog
-│   │           └── 2025-xx-xx-title.md
+│   │           └── YYYY-MM-DD-title.md
+│   ├── _archive/              # 라우팅에서 뺀 앱의 페이지·md (mathmaster · notequiz · supertimers)
 │   ├── i18n/
 │   │   ├── ko.json            # 한국어 UI 문자열
 │   │   ├── en.json            # English UI strings
 │   │   └── utils.ts           # i18n 헬퍼 함수 (getLangFromUrl, useTranslations 등)
+│   ├── lib/
+│   │   ├── asset-hash.ts      # 정적 파일 경로에 내용 해시를 붙인다
+│   │   ├── blog-apps.ts       # 블로그 `app` 키 ↔ 앱 이름 · apps slug
+│   │   ├── blog-posts.ts      # 글 순서(최신순)와 날짜 표기
+│   │   └── platform-status.ts # 플랫폼 뱃지 · 출시일 문구
 │   ├── layouts/
-│   │   ├── BaseLayout.astro   # 공통 레이아웃 (헤더, 푸터, lang 속성)
-│   │   ├── MarkdownLayout.astro
-│   │   └── BlogPost.astro
+│   │   └── BaseLayout.astro   # 공통 레이아웃 (헤더, 푸터, lang 속성)
 │   ├── pages/
 │   │   ├── index.astro        # 루트: 브라우저 언어 감지 → /ko 또는 /en 리다이렉트
 │   │   ├── ko/
 │   │   │   ├── index.astro    # 한국어 랜딩
 │   │   │   ├── about.astro
+│   │   │   ├── support.astro
+│   │   │   ├── privacy.astro
 │   │   │   ├── apps/
 │   │   │   │   ├── index.astro
-│   │   │   │   └── [slug].astro
+│   │   │   │   ├── [slug].astro       # md 본문을 그대로 싣는 공용 상세 (pdf)
+│   │   │   │   ├── timetable.astro    # AppPage.astro 를 쓰는 전용 상세
+│   │   │   │   ├── superfont.astro
+│   │   │   │   ├── musicnote.astro
+│   │   │   │   ├── planner.astro
+│   │   │   │   ├── timetable/
+│   │   │   │   │   └── privacy.astro
+│   │   │   │   └── superfont/
+│   │   │   │       ├── support.astro
+│   │   │   │       └── privacy.astro
 │   │   │   └── blog/
 │   │   │       ├── index.astro
 │   │   │       ├── [slug].astro
+│   │   │       ├── app/
+│   │   │       │   └── [app].astro
 │   │   │       └── tag/
 │   │   │           └── [tag].astro
-│   │   └── en/
-│   │       ├── index.astro    # English landing
-│   │       ├── about.astro
-│   │       ├── apps/
-│   │       │   ├── index.astro
-│   │       │   └── [slug].astro
-│   │       └── blog/
-│   │           ├── index.astro
-│   │           ├── [slug].astro
-│   │           └── tag/
-│   │               └── [tag].astro
+│   │   └── en/                # ko/ 와 같은 구조
 │   ├── components/
 │   │   ├── Header.astro
 │   │   ├── Footer.astro
 │   │   ├── LanguageSwitcher.astro  # 언어 전환 버튼 컴포넌트
 │   │   ├── AppCard.astro
-│   │   ├── BlogPostCard.astro
-│   │   ├── TagList.astro
-│   │   └── Pagination.astro
+│   │   ├── AppPage.astro      # 전용 앱 상세 페이지 템플릿
+│   │   ├── AppDevlog.astro    # 앱 상세 아래 "개발 기록" (최근 글 셋)
+│   │   └── BlogPostCard.astro
 │   └── styles/
 │       └── global.css
 ├── public/
-│   ├── images/                # 정적 이미지 (로고, 파비콘 등)
+│   ├── apps/<slug>/           # 앱 아이콘 · 스크린샷
+│   ├── blog/<주제>/           # 블로그 본문 이미지
+│   ├── CNAME
+│   ├── robots.txt
+│   ├── favicon.ico
 │   └── favicon.svg
+├── tests/
+│   └── blog-content.test.mjs  # 블로그 파일 이름 · 이미지 경로 · ko/en 짝 검사
+├── docs/                      # plans · specs · references
+├── .github/workflows/deploy.yml
 ├── astro.config.mjs           # i18n 설정 포함
 ├── package.json
 └── tsconfig.json
@@ -456,7 +488,7 @@ hyewon-insong-website/
 
 1. `src/content/apps/ko/new-app.md` 파일 생성 (한국어)
 1. `src/content/apps/en/new-app.md` 파일 생성 (영어) — 동일한 slug 사용
-1. frontmatter에 title, status, icon, summary 작성 (각 언어로)
+1. frontmatter에 title, slug, icon, summary, platforms, order 작성 (각 언어로)
 1. 본문에 앱 설명 및 스크린샷 작성
 1. push → 자동 빌드 및 배포
 
@@ -464,8 +496,8 @@ hyewon-insong-website/
 
 1. `src/content/blog/ko/YYYY-MM-DD-title.md` 파일 생성 (한국어)
 1. (선택) `src/content/blog/en/YYYY-MM-DD-title.md` 파일 생성 (영어 번역)
-1. frontmatter에 title, date, tags, summary 작성
-1. 본문 작성 (이미지, 코드 블록 자유롭게 사용)
+1. frontmatter에 title, date(한국 시각까지), app, tags, summary 작성 — 새 앱의 첫 글이면 `src/lib/blog-apps.ts` 의 `BLOG_APPS` 에 한 줄 추가
+1. 본문 작성 (이미지, 코드 블록 자유롭게 사용) — 이미지는 `public/blog/<주제>/` 에 두고 `/blog/<주제>/<이름>.png` 로 참조
 1. push → 자동 빌드 및 배포
 
 -----
