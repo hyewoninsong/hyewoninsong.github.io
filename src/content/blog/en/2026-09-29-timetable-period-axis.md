@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T16:47:49+09:00
+date: 2026-09-29T17:02:15+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -28,7 +28,7 @@ The same mapping keeps events attached when you edit periods: shift Period 2 to 
 
 ## What's next
 
-Shared images, printing and widgets still draw a clock-time axis. They're correct, just not in period rows yet.
+Widgets still draw a clock-time axis. They're correct, just not in period rows yet. (Shared images, printing and list previews switched to period rows later that night — see below.)
 
 ## Update, Sep 29 — periods you drag like events
 
@@ -78,9 +78,24 @@ Four requests: make the timeline tall and scrollable, show the card only when a 
 
 Still missing: auto-scroll while dragging a block past the edge.
 
+## Update, Sep 29 night — shared images, prints and list previews in period rows
+
+The grid showed periods, but the image you share, the page you print and the preview card in the timetable list still used a 9 · 10 · 11 o'clock axis. Those are exactly what goes to classmates or onto a classroom wall.
+
+![Shared image — Periods 1–7 as equal rows, each labeled with its name plus start and end time](/blog/timetable-period-axis/share-image-period-light.png)
+
+All three now match the grid: equal-height rows, period name with start and end time on the axis, in whatever time format you pick on the share or print sheet.
+
+![Dark, 12-hour shared image — period labels read "9:00 AM", "1:50 PM"](/blog/timetable-period-axis/share-image-period-dark12.png)
+
+It was one change, not three: all of them render through the same offscreen canvas. That canvas gets the same trick as the grid — events move to virtual hours before drawing, so each period is a 60pt row and block layout, overlap hatching and alarm badges are untouched. Only the axis labels are new. The one trap was print sizing, which computed the canvas aspect ratio from "end hour − start hour" and would have sized a 7-row canvas as 8 hours. It now asks the canvas for its row count.
+
+Widgets still use clock time; they draw separately.
+
 ## History
 
 - Sep 29, early — period axis introduced
 - Sep 29, morning — axis previews in the type picker, drag-to-edit periods, unlock zoom
 - Sep 29, afternoon — wide timeline with a tap-to-edit card, later periods shift along, days on first setup
 - Sep 29, evening — tall scrolling timeline, drag only the selected block, card on selection with start/end times, first setup via the display sheet
+- Sep 29, night — shared images, prints and list previews in period rows
