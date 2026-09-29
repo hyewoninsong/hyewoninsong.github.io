@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T03:04:38+09:00
+date: 2026-09-29T10:45:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -10,7 +10,7 @@ School timetables are read as "Period 2", not "10:00". New timetables now start 
 
 ## You set the periods; the rows stack at equal height
 
-A new period timetable opens straight into the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. Change any start or end time, add or remove periods — the only rule is that each period starts after the previous one ends.
+A new period timetable opens straight into the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. Drag periods or type exact times (see the update below), add or remove periods — the only rule is that each period starts after the previous one ends.
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
@@ -29,3 +29,27 @@ The same mapping keeps events attached when you edit periods: shift Period 2 to 
 ## What's next
 
 Shared images, printing and widgets still draw a clock-time axis. They're correct, just not in period rows yet.
+
+## Update, Sep 29 — periods you drag like events
+
+Early feedback: the time-or-period choice was text only, unlocked period rows were too short to drag comfortably, and setting fourteen times with wheels was tedious.
+
+![New timetable sheet — two "vertical axis" cards, one with clock ticks, one with Period 1–3 rows; period is selected](/blog/timetable-period-axis/new-timetable-kind-cards.png)
+
+**The choice now shows the axis.** New timetables open in a small sheet with a name field and two radio cards. Each card draws a miniature of the real grid axis with one event on it — off the ticks for clock time, flush with a row for periods.
+
+![Period editor — a vertical day timeline with seven period blocks on the left, the seventh selected and stretched to 17:15; start and end fields on the right](/blog/timetable-period-axis/period-editor-drag.png)
+
+**The period editor is one day column.** Drag a block's middle to move it, its top or bottom edge to change its start or end. Drags snap to 5 minutes and stop at the neighboring periods, so a drag can never reorder or overlap them. Exact times are still on the right. The timeline doesn't scroll (scrolling and dragging would fight over the same finger), and its scale is frozen while you drag so the block stays under your finger.
+
+![Unlocked period grid — rows 1.5x taller than when locked](/blog/timetable-period-axis/unlocked-period-rows.png)
+
+**Unlocking zooms period rows too**, 72pt to 108pt on iPhone, while snapping stays at whole periods.
+
+One bug on the way: blocks selected but wouldn't drag. A tap gesture attached inside a drag gesture claimed the touch first. A single `DragGesture(minimumDistance: 0)` now handles both.
+
+## History
+
+- Sep 29, early — period axis introduced
+- Sep 29, morning — axis previews in the type picker, drag-to-edit periods, unlock zoom
+
