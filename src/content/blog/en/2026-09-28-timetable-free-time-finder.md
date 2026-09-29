@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-29T22:00:00+09:00
+date: 2026-09-29T23:30:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -98,7 +98,7 @@ Edit also moved, from the toolbar to the right end of the people chip row. The c
 
 Share came down from the toolbar too, as a full-width "Share" CTA at the bottom of the options panel. It stays visible even when the panel is collapsed — the same spot the print and share sheets already use for it.
 
-The collapsed handle doesn't say "Options." It shows the current values: "08:00–20:00 · 30 min+". Expanded, it's three rows — minimum length, start time, end time — a range shortcut row, then the Share button below them. Tapping start or end opens an inline hour wheel below the row, styled like the display settings sheet.
+The collapsed handle doesn't say "Options." It shows the current values: "08:00–20:00 · 30 min+". Expanded, it's three rows — minimum length, start time, end time — a range shortcut row, then the Share button below them. Tapping start or end opens an inline hour wheel below the row, styled like the display settings sheet. (That night minimum length moved back up, into a filter row under the chips — see the last section.)
 
 ![Options panel expanded, showing minimum length, start time 08:00, end time 20:00, and the Share button at the bottom](/blog/timetable-free-time-finder/options-panel-expanded.png)
 
@@ -148,6 +148,28 @@ People can change within an outer layer over time, so the card now shows two tag
 
 The "split segments when the free set changes" fix from the section just above is no longer needed. That fix existed because a single strip attached one number to a stretch, and it needed to stop counts from surviving a merge when the actual people had changed. A layer now only tests a headcount condition ("N or more"), not a specific set of people — and who changes within it is exactly what the solid/outlined tags already show. There's nothing left for a merge rule to protect against.
 
+## 2026-09-29, night — pick the condition first, paint yes or no
+
+Layers made you read "how many are free" from shades of green. But people planning a meetup start from a condition: "at least three of us, for an hour." Answering that on the layered grid meant hunting for the third layer and measuring it.
+
+So the condition moved to the top. Right under the people chips there are now two dropdowns: "30 min or longer" and "Everyone" (or "N+ people", from one less than the number switched on down to one). Minimum length came back out of the collapsing panel, which now holds only the hour range, time format and appearance.
+
+The grid uses two colors. Stretches that pass the filter are green with their length; stretches where someone is free but the filter isn't met are gray; hours when everyone is busy stay blank. The nested greens are gone.
+
+![Filter dropdowns under the chips set to 30 min and 2+ people; passing stretches in green, the rest of the free time in gray, and a Saturday card listing who is free](/blog/timetable-free-time-finder/filter-row-two-plus.png)
+
+We kept the gray instead of hiding it: it shows where loosening the filter would open up time. The list, Copy All and the shared image follow the same filter, so the grid and the list never disagree.
+
+Copying now says who can make it, per stretch:
+
+```
+Sat 08:00–20:00 (12 hr)
+Free: Minji·Junho
+Partly: Me
+```
+
+"Partly" exists because inside an "N or more" stretch the free people can change hour to hour. Empty lines are dropped.
+
 ## Where it stands
 
 The iPad layout and a real two-device file exchange are still to be checked.
@@ -163,3 +185,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-29 past midnight — minimum length moved into a collapsing panel like print/share, Edit pinned to the right end of the chip row (outside the scroll), Share became a full-width CTA at the bottom of the panel
 - 2026-09-29 — flipped the color back: only free hours shaded green, busy hours left blank, a Copy button on every block, merge logic fixed to compare the free set instead of the free count
 - 2026-09-29, later — single shading strip became nested layers (N-or-more-free runs contained within each other), layers under the minimum length aren't drawn, cards show solid/outlined tags for whole-stretch vs. partial people, the previous fix for merging by free set became unnecessary
+- 2026-09-29, night — filter row under the chips (minimum length, people), passing = green and the rest of the free time = gray instead of layers, copy lists free / partly / busy per stretch
