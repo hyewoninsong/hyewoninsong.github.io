@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T19:01:21+09:00
+date: 2026-09-29T20:02:13+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -36,7 +36,7 @@ Early feedback: the time-or-period choice was text only, unlocked period rows we
 
 ![New timetable sheet — two "vertical axis" cards, one with clock ticks, one with Period 1–3 rows; period is selected](/blog/timetable-period-axis/new-timetable-kind-cards.png)
 
-**The choice now shows the axis.** New timetables open in a small sheet with a name field and two radio cards. Each card draws a miniature of the real grid axis with one event on it — off the ticks for clock time, flush with a row for periods.
+**The choice now shows the axis.** New timetables open in a small sheet with a name field and two radio cards. Each card draws a miniature of the real grid axis with one event on it — off the ticks for clock time, flush with a row for periods. (These miniatures were later replaced by drawn icons — see the update at the end.)
 
 ![Period editor — a vertical day timeline with seven period blocks on the left, the seventh selected and stretched to 17:15; start and end fields on the right](/blog/timetable-period-axis/period-editor-drag.png)
 
@@ -126,6 +126,16 @@ The track spans the full day, not the scroll range, because the question it answ
 
 The catch: a drag gesture only reports when the finger moves, so a finger resting at the edge would leave the block behind while the content scrolled. The drag value is now computed from the finger's on-screen height plus the scroll offset, so gesture events and auto-scroll ticks share one formula. During a drag the timeline's range also extends down to midnight so auto-scroll can reach the wall.
 
+## Update, Sep 29 — icons instead of axis miniatures
+
+We looked at the type-card drawings again. The axis miniatures were accurate but busy — too many lines for a glance. They're now drawn icons instead. Time: a rounded frame, a ruler axis (hour ticks, half-hour ticks) with faint hour guide lines, and a block straddling one of them. Period: three equal-height rows numbered 1, 2, 3, with a block that fits exactly in row 2. Same "does it snap to a cell" story, told in a simpler drawing; the one-line caption under each card now carries the real times and period names.
+
+![Time and period icons, light and dark, selected and unselected](/blog/timetable-period-axis/kind-icons-set.png)
+
+![New timetable sheet — the period card with a 1-2-3 row icon](/blog/timetable-period-axis/new-timetable-kind-icons.png)
+
+One catch on the way: the unselected card paints in `secondaryLabel`, which has alpha. Painting each stroke with that color made overlaps — a guide line crossing the block, the frame meeting the axis — visibly darker than the rest of the drawing (caught on a simulator capture). The fix draws the `Canvas` opaque black first, uses that as a mask, and fills once with `.fill(.foreground)`; overlapping strokes stop stacking into a darker patch. And since the period icon needs digits, it's drawn in code rather than shipped as an SVG asset — asset catalog SVG doesn't render `<text>`. The 64×64 SVG files stay as the source of truth, mirrored by hand into the `Canvas` code.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -136,3 +146,4 @@ The catch: a drag gesture only reports when the finger moves, so a finger restin
 - Sep 29, late night — rename any period (default "P1, P2…")
 - Sep 29, later evening — the edit sheet picks start and end periods
 - Sep 29, midnight — whole-day minimap, midnight wall, edge auto-scroll while dragging
+- Sep 29, night (later) — type cards switched from axis miniatures to drawn icons, mask fix for overlap darkening
