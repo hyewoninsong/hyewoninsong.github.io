@@ -1,16 +1,16 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-09-29T12:00:00+09:00
+date: 2026-09-30T02:54:00+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
-summary: "One purchase unlocks multiple timetables, alarms, and custom colors. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
+summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
 ---
 
 The timetable app now has a one-time Premium unlock. Making, editing, and sharing a timetable stays free. Only a second timetable, alarms, and self-made colors sit behind the purchase.
 
 ## A locked feature turns into the paywall when you tap it
 
-Locked controls aren't grayed out. They stay where they are and swap their icon for a lock: the alert row shows "None" with a lock, and the same goes for "New Timetable" and the `+` in the style picker.
+Locked controls aren't grayed out (calendar export is the one exception, see 2026-09-30 below). They stay where they are and swap their icon for a lock: the alert row shows "None" with a lock, and the same goes for "New Timetable" and the `+` in the style picker.
 
 ![The alert row shows None and a lock instead of a menu](/blog/timetable-premium/alarm-locked.png)
 
@@ -23,6 +23,7 @@ Tapping one opens the paywall, and **the feature you just tapped is listed first
 | Timetables | 1 | Many (add, duplicate, import) |
 | Alarms | — | Weekly alarm before each class |
 | Colors | 20-color palette | Custom colors |
+| Calendar export (from 2026-09-30) | Picking the range and calendar | Exporting to Apple Calendar or .ics |
 | Editing, sharing, printing, widgets | All | All |
 
 ## Why these three, and why not a 7-day trial
@@ -83,8 +84,29 @@ Three colors still landed on gray: `#1b5e20`, `#004d40`, and `#9fa8da`. They're 
 
 The 0.06 threshold is set for brown. `#795548` sits at 0.053 and still goes to gray, which reads better than orange since there's no brown in the palette. Burnt orange going to red and mid-light pastels going to the bold row were left alone, because any further change to the formula moves other borderline colors. One new constraint: changing the basic palette values now repaints free users' old basic-colored events too.
 
+## 2026-09-30 — Calendar export moves to Premium, and this time the buttons are grayed out
+
+Calendar export shipped free two days ago; it's now part of Premium. Someone putting a whole semester into their calendar has already decided to stick with the app, which is exactly the moment the gates above aim for.
+
+The shape differs from the other gates. The sheet still opens, and you can still pick the date range and the target calendar. Only the two bottom buttons, "Add to Apple Calendar" and "Share as .ics", are grayed out. It's the first exception to the "don't gray out" rule: picking a range and calendar is a preview of what you'd be buying, and only the final tap needs to be held back. Buy, and both buttons come alive in the same sheet. Removing an earlier export from your calendar stays unlocked, since we only block creating new things.
+
+### We moved the unlock button once
+
+The first version put an "Unlock Premium" capsule right above the two disabled buttons.
+
+![First layout: an unlock capsule of the same shape wedged above the two disabled buttons](/blog/timetable-premium/calendar-export-unlock-between-ctas.png)
+
+Three capsules of the same shape, with the strongest one being the purchase, made the sheet read like a paywall. The explanation came after the button, and you only learned the feature was locked after filling everything in. So the unlock moved to the top, as a single row in a "Premium" card, the same shape as the Premium row in Settings, with the reason underneath. You know it's locked the moment the sheet opens, and the bottom looks the same before and after buying.
+
+![Current layout: an unlock row at the top, the two bottom buttons grayed out](/blog/timetable-premium/calendar-export-unlock-top.png)
+
+The unlock row opens the paywall with calendar export listed first.
+
+![Paywall opened from the calendar sheet, with calendar export first](/blog/timetable-premium/paywall-calendar-first.png)
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
 - 2026-09-28 — app goes free, 7-day trial reconsidered and shelved, thank-you card + review request
 - 2026-09-29 — custom colors fall back to the nearest basic color once confirmed free; mapping fixed twice
+- 2026-09-30 — calendar export moves to Premium; disabled-button exception; unlock moved to a top card

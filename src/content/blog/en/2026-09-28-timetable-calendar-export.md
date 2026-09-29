@@ -38,7 +38,7 @@ Since iOS 17, calendar access comes in two levels. Write-only is the lighter ask
 
 ## Where it stands
 
-We haven't yet confirmed on a real device whether a Google account rejects calendar creation. Skipping holidays and every-other-week classes are not in yet. The feature is free.
+We haven't yet confirmed on a real device whether a Google account rejects calendar creation. Skipping holidays and every-other-week classes are not in yet. It shipped free and moved to Premium on 2026-09-30.
 
 ## 2026-09-28 — Marking the events we add
 
