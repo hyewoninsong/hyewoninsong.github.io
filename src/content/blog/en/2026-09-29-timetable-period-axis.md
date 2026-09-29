@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T10:45:00+09:00
+date: 2026-09-29T15:40:12+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -40,7 +40,7 @@ Early feedback: the time-or-period choice was text only, unlocked period rows we
 
 ![Period editor — a vertical day timeline with seven period blocks on the left, the seventh selected and stretched to 17:15; start and end fields on the right](/blog/timetable-period-axis/period-editor-drag.png)
 
-**The period editor is one day column.** Drag a block's middle to move it, its top or bottom edge to change its start or end. Drags snap to 5 minutes and stop at the neighboring periods, so a drag can never reorder or overlap them. Exact times are still on the right. The timeline doesn't scroll (scrolling and dragging would fight over the same finger), and its scale is frozen while you drag so the block stays under your finger.
+**The period editor is one day column.** Drag a block's middle to move it, its top or bottom edge to change its start or end. Drags snap to 5 minutes and, in this version, stopped at the neighboring periods (the afternoon update makes later periods shift instead), so a drag can never reorder or overlap them. Exact times were on the right — that list is gone as of the afternoon update. The timeline doesn't scroll (scrolling and dragging would fight over the same finger), and its scale is frozen while you drag so the block stays under your finger.
 
 ![Unlocked period grid — rows 1.5x taller than when locked](/blog/timetable-period-axis/unlocked-period-rows.png)
 
@@ -48,8 +48,22 @@ Early feedback: the time-or-period choice was text only, unlocked period rows we
 
 One bug on the way: blocks selected but wouldn't drag. A tap gesture attached inside a drag gesture claimed the touch first. A single `DragGesture(minimumDistance: 0)` now handles both.
 
+## Update, Sep 29 afternoon — tap a period to edit it; later periods follow
+
+The feedback on the morning version was blunt: setting periods was too hard, and the first period screen should also ask for days.
+
+Three things made it hard. Seven periods meant fourteen time fields, while a real school day is a few rules ("9:00 start, 50-minute classes, 10-minute breaks"). Editing one period got blocked by its neighbors. And the timeline was 140pt wide, too narrow for labels.
+
+**Wide timeline, one period at a time.** The per-period list is gone. The timeline spans the sheet, so every block reads "Period 2 · 10:00–10:50 · 50 min". Tap a block and the card below edits just that period: start time, length (− 50 min +), and the break after it (− 10 min +), in 5-minute steps. The card keeps the same height whether or not anything is selected, so the timeline above never rescales.
+
+**Later periods shift along, keeping their breaks.** Lengthen Period 2 by ten minutes and Periods 3–7 move ten minutes later. Dragging follows the same rule: moving a block moves it and everything after it, and stretching its bottom edge pushes the rest down. Edits stop only at the previous period's end and at midnight. Only the top-edge drag stays local, so a period you didn't touch never moves earlier.
+
+**What lost.** The first proposal was a rule form (first start, length, break, count, lunch) that generates all periods at once. Tapping visible blocks won: it's the same grammar as the rest of the grid, and with rippling, the rule form's shortcut is only a few taps away.
+
+**Days on first setup.** Time-based timetables open a display sheet with days right after creation. Period timetables showed the period editor instead, which skipped days entirely. The first period editor now has the same days card at the top, shared with the display sheet. Later edits show periods only.
+
 ## History
 
 - Sep 29, early — period axis introduced
 - Sep 29, morning — axis previews in the type picker, drag-to-edit periods, unlock zoom
-
+- Sep 29, afternoon — wide timeline with a tap-to-edit card, later periods shift along, days on first setup
