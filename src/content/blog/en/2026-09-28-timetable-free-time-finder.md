@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-30T00:36:00+09:00
+date: 2026-09-30T01:18:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
@@ -193,6 +193,20 @@ The colors changed once more. Last night's yes/no split buried "only one person 
 
 The darkest shade is tied to the filter you picked, so changing the condition changes what "best" looks like. More people than the filter asks for doesn't get darker. Filling busy hours with gray makes the whole grid read as decided, and lighter greens are tappable too — those are the cells where you want to know who to talk into it.
 
+## 2026-09-30, early morning — pick your own timetable by preview, and see lists as titles
+
+Once sending used preview cards, adding went the other way: "Add My Timetable" under `+` was still a submenu of bare names. Now it opens the same picker as sending — only timetables not yet in the comparison, swipe through, tap Add. If the people limit is already reached, you hear it before the picker opens, not after you've chosen.
+
+![Add My Timetable — the same preview cards as the send sheet, a list-view button top right, Add at the bottom](/blog/timetable-free-time-finder/add-own-cards.png)
+
+Cards get slow once you have five or six timetables. The timetable list and both pickers now have a view toggle in the top-right corner: cards or titles. The icon shows what you'll switch to. It's one setting shared by all three screens, so you never have to remember which screen looks which way.
+
+![The timetable list as titles — one name per row, a check on the one you're viewing](/blog/timetable-free-time-finder/list-titles.png)
+
+The title list keeps the card rules: tap to open, long-press to duplicate, and in edit mode drag to reorder while delete stays the single bottom button with a confirmation. No red minus, no swipe-to-delete — switching the view shouldn't add a second way to delete.
+
+One testing trap: passing the setting as a launch argument (`-timetableListStyle cards`) puts it in UserDefaults' argument domain, which wins over anything the app writes. The toggle looked broken; it was the test.
+
 ## Where it stands
 
 The iPad layout, a real two-device file exchange and whether the request link is tappable in each messenger are still to be checked.
@@ -210,3 +224,4 @@ The iPad layout, a real two-device file exchange and whether the request link is
 - 2026-09-29, later — single shading strip became nested layers (N-or-more-free runs contained within each other), layers under the minimum length aren't drawn, cards show solid/outlined tags for whole-stretch vs. partial people, the previous fix for merging by free set became unnecessary
 - 2026-09-29, night — filter row under the chips (minimum length, people), passing = green and the rest of the free time = gray instead of layers, copy lists free / partly / busy per stretch
 - 2026-09-30 — request link, pick-with-preview send sheet, gray background with green shading that peaks at the people filter
+- 2026-09-30 early morning — Add My Timetable uses the preview picker; card/title view toggle shared by the list and pickers
