@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-29T23:30:00+09:00
+date: 2026-09-30T00:36:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
@@ -154,7 +154,7 @@ Layers made you read "how many are free" from shades of green. But people planni
 
 So the condition moved to the top. Right under the people chips there are now two dropdowns: "30 min or longer" and "Everyone" (or "N+ people", from one less than the number switched on down to one). Minimum length came back out of the collapsing panel, which now holds only the hour range, time format and appearance.
 
-The grid uses two colors. Stretches that pass the filter are green with their length; stretches where someone is free but the filter isn't met are gray; hours when everyone is busy stay blank. The nested greens are gone.
+The grid uses two colors. Stretches that pass the filter are green with their length; stretches where someone is free but the filter isn't met are gray; hours when everyone is busy stay blank (this changed again the next day — see below). The nested greens are gone.
 
 ![Filter dropdowns under the chips set to 30 min and 2+ people; passing stretches in green, the rest of the free time in gray, and a Saturday card listing who is free](/blog/timetable-free-time-finder/filter-row-two-plus.png)
 
@@ -170,9 +170,32 @@ Partly: Me
 
 "Partly" exists because inside an "N or more" stretch the free people can change hour to hour. Empty lines are dropped.
 
+## 2026-09-30 — ask a friend first, and shade toward the filter
+
+Until now someone had to send a file before anything happened. Now the first button on the empty screen is "Ask for a Timetable": it shares a message with a link carrying your name. When your friend taps it, the app opens a sheet that says who asked.
+
+![The send sheet opened from a request link — who asked at the top, the same preview cards as the timetable list, a name row and a Share button](/blog/timetable-free-time-finder/request-send-sheet.png)
+
+The sheet reuses the timetable list's cards: swipe through previews, the centered card is the one you send, type the name your friend will see, tap Share. Class names are still stripped. Every "send my timetable" entry point now opens this sheet, because picking by name from a menu was guesswork when two timetables had similar names.
+
+The link uses the app's URL scheme, which some messengers won't turn into a tappable link (iMessage only links `https`). A web redirect page is the next step.
+
+The colors changed once more. Last night's yes/no split buried "only one person short" in the same gray as "nobody can make it". Now:
+
+| Cell | Color |
+|---|---|
+| Everyone busy, or free but shorter than the minimum | Gray |
+| One or more free | Lightest green |
+| Each additional free person | A step darker |
+| Meets the people filter | Darkest green + length |
+
+![A gray background with greens from light to dark; only the darkest blocks carry lengths like 50 min and 2 hr](/blog/timetable-free-time-finder/heat-gray-grid.png)
+
+The darkest shade is tied to the filter you picked, so changing the condition changes what "best" looks like. More people than the filter asks for doesn't get darker. Filling busy hours with gray makes the whole grid read as decided, and lighter greens are tappable too — those are the cells where you want to know who to talk into it.
+
 ## Where it stands
 
-The iPad layout and a real two-device file exchange are still to be checked.
+The iPad layout, a real two-device file exchange and whether the request link is tappable in each messenger are still to be checked.
 
 
 
@@ -186,3 +209,4 @@ The iPad layout and a real two-device file exchange are still to be checked.
 - 2026-09-29 — flipped the color back: only free hours shaded green, busy hours left blank, a Copy button on every block, merge logic fixed to compare the free set instead of the free count
 - 2026-09-29, later — single shading strip became nested layers (N-or-more-free runs contained within each other), layers under the minimum length aren't drawn, cards show solid/outlined tags for whole-stretch vs. partial people, the previous fix for merging by free set became unnecessary
 - 2026-09-29, night — filter row under the chips (minimum length, people), passing = green and the rest of the free time = gray instead of layers, copy lists free / partly / busy per stretch
+- 2026-09-30 — request link, pick-with-preview send sheet, gray background with green shading that peaks at the people filter
