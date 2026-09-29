@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T17:21:36+09:00
+date: 2026-09-29T17:45:45+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -96,6 +96,20 @@ Widgets still use clock time; they draw separately.
 
 The word stays: for Korean students, university included, 교시 is still the word that reads fastest, and "block" already means an event. The real limit was that names were tied to order — there was no way to write homeroom, zero period, lunch or an after-school slot. Now tapping a period in the editor turns the card title into a name field, with "P3" as the placeholder. Clear it and the ordinal name comes back; add or remove periods and ordinal names renumber while custom names stay. Names cap at six characters, the width of the axis label. Only typing is blocked past the cap; imported files are never truncated. A range that includes a custom name reads "Homeroom–P1" instead of "P1–2".
 
+## Update, Sep 29 — the edit sheet picks periods, not times
+
+The grid snapped to periods, but the event edit sheet still asked for start and end *times*. Putting a class in Period 2 meant remembering that Period 2 runs 10:00–10:50 and dialing two wheels.
+
+Now, in a period timetable, the sheet's Start and End rows show a period name in the capsule, with the real time in small type beside it. Tap a capsule and a wheel opens below it, each row reading "P2 10:00 – 10:50". Custom period names show up here too.
+
+![New event sheet in a period timetable — Start shows 09:00 and a P1 capsule, the wheel below lists P1 09:00 – 09:50 and P2 10:00 – 10:50](/blog/timetable-period-axis/edit-sheet-period-wheel.png)
+
+Move the start and the end follows, keeping how many periods the event spans. It stops at the last period. The End wheel only lists periods from the start onward, so the end can never come before the start.
+
+![After moving the start to the last period, start and end both read P7](/blog/timetable-period-axis/edit-sheet-period-follow.png)
+
+Times are still stored as real clock times. If you don't touch the wheel, nothing changes, so imported events that don't line up with period boundaries stay exactly as they are. The 30-minute minimum is dropped for period timetables, since a period can be as short as five minutes. We also considered a row of period chips (too many periods to fit, and range-by-tapping is guesswork) and a single row with a period-count stepper (you couldn't pick the end directly). Along the way we fixed a draft box that jumped far down the grid when you changed the time in the new-event sheet. That path was handing real times to a grid that draws in virtual period hours.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -104,3 +118,4 @@ The word stays: for Korean students, university included, 교시 is still the wo
 - Sep 29, evening — tall scrolling timeline, drag only the selected block, card on selection with start/end times, first setup via the display sheet
 - Sep 29, night — shared images, prints and list previews in period rows
 - Sep 29, late night — rename any period (default "P1, P2…")
+- Sep 29, later evening — the edit sheet picks start and end periods
