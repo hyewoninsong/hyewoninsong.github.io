@@ -1,6 +1,6 @@
 ---
 title: "Overlaying two timetables: a slider decides which one you read"
-date: 2026-09-29T21:48:00+09:00
+date: 2026-09-29T22:53:40+09:00
 app: "timetable"
 tags: ["devlog", "design"]
 summary: "The overlay view now draws the top timetable in its own colors instead of a black dashed outline, with an opacity slider and a swap button. Where two schedules overlap, you pick which one to read."
@@ -42,3 +42,22 @@ The slider value is remembered as a view preference, not saved into the timetabl
 ## Where it stands
 
 The slider row on a wide iPad window hasn't been captured yet. Which of the two comparison views survives is up to the numbers after release.
+
+## 2026-09-29 — Lay another timetable under the one you're editing
+
+The overlay view is read-only, so moving your own schedules around a friend's meant closing it and working from memory. Now the edit screen's `…` menu has "Lay Under", listing your other timetables.
+
+![The … menu with Lay Under open, listing the other timetables](/blog/timetable-overlay-compare/underlay-menu.png)
+
+Pick one and a row appears above the day header: the timetable's name (tap to switch), an opacity slider, and ✕. Its schedules are drawn in their own colors **beneath** your blocks — above the grid lines, below the now line — and ignore touches, so unlocked editing works exactly as before.
+
+![Underlay at 73%: faint blocks and bottom-right titles show only in the gaps between your blocks](/blog/timetable-overlay-compare/underlay-grid.png)
+
+Unlike the overlay view, your blocks always win where they overlap; the slider only sets how strongly the underlay shows in the gaps. Which timetable is underneath lives only while the window is open; the opacity is a view preference.
+
+**A 5% leak.** The first capture showed underlay titles faintly through solid-looking blocks. Schedule colors are clamped to at least 0.95 opacity, not 1.0 — enough for dark text beneath to show. Rather than touching block rendering, the underlay layer is masked with your block shapes cut out (`.destinationOut`).
+
+## History
+
+- 2026-09-29 — Overlay view added, then reworked the same day into a swap button and opacity slider
+- 2026-09-29 — "Lay Under" added to the edit screen; underlay masked around your blocks
