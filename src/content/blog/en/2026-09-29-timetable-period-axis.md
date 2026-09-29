@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T17:02:15+09:00
+date: 2026-09-29T17:21:36+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -92,6 +92,10 @@ It was one change, not three: all of them render through the same offscreen canv
 
 Widgets still use clock time; they draw separately.
 
+## Update, Sep 29 late night — "P1, P2…" by default, and any period can be renamed
+
+The word stays: for Korean students, university included, 교시 is still the word that reads fastest, and "block" already means an event. The real limit was that names were tied to order — there was no way to write homeroom, zero period, lunch or an after-school slot. Now tapping a period in the editor turns the card title into a name field, with "P3" as the placeholder. Clear it and the ordinal name comes back; add or remove periods and ordinal names renumber while custom names stay. Names cap at six characters, the width of the axis label. Only typing is blocked past the cap; imported files are never truncated. A range that includes a custom name reads "Homeroom–P1" instead of "P1–2".
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -99,3 +103,4 @@ Widgets still use clock time; they draw separately.
 - Sep 29, afternoon — wide timeline with a tap-to-edit card, later periods shift along, days on first setup
 - Sep 29, evening — tall scrolling timeline, drag only the selected block, card on selection with start/end times, first setup via the display sheet
 - Sep 29, night — shared images, prints and list previews in period rows
+- Sep 29, late night — rename any period (default "P1, P2…")
