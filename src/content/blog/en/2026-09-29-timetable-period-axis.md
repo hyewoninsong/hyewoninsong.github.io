@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-30T00:17:31+09:00
+date: 2026-09-30T01:45:42+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -161,6 +161,20 @@ Existing timetables open with rules inferred from their periods: the most common
 
 The alternative was keeping yesterday's timeline under the rules as "fine-tune". Moving one period there would break the rules, and the next time the sheet opened there'd be no single source of truth. The timeline, minimap, add button and per-period card are gone. If a school needs one long period, the answer is another rule, not the old editor.
 
+## Update, Sep 30 — the tutorial follows the period timetable
+
+Replaying the tutorial on a period timetable used to show a ghost block growing in 10-minute steps, while the real grid snaps a whole period at a time. It also never said where period times are changed.
+
+The tutorial now adapts to the timetable type. On a period timetable, the create/move/resize demos snap by period and the copy talks about periods, and a tenth step, "Period Times", sits just before Lock: it demos tapping a period on the left axis and advances as soon as the period editor opens.
+
+![Tutorial step 9 of 10 on a period timetable — "Period Times"](/blog/timetable-period-axis/tutorial-period-step.png)
+
+Why this shape:
+
+- **Advance on open, not on save.** The editor is a set of rules; demanding a save would push people into changes they don't want. The step only needs to show where the setting lives.
+- **Near the end, not first.** A new period timetable already opens the period editor right after creation.
+- **A variant, not another course.** The tutorial already splits by shell (iPhone vs. wide iPad). Adding type as a course would make four; type is a separate axis multiplied in, and the demos only swap the grid step from 30 minutes to one period.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -173,3 +187,4 @@ The alternative was keeping yesterday's timeline under the rules as "fine-tune".
 - Sep 29, midnight — whole-day minimap, midnight wall, edge auto-scroll while dragging
 - Sep 29, night (later) — type cards switched from axis miniatures to drawn icons, mask fix for overlap darkening
 - Sep 30 — period editor switched to rules (start, class, break, lunch, lunch timing, count); per-period drag editing removed
+- Sep 30, later — tutorial variant for period timetables: period-snapped demos, a "Period Times" step
