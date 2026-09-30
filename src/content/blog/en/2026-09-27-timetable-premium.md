@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-09-30T02:54:00+09:00
+date: 2026-10-01T02:08:33+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -104,9 +104,42 @@ The unlock row opens the paywall with calendar export listed first.
 
 ![Paywall opened from the calendar sheet, with calendar export first](/blog/timetable-premium/paywall-calendar-first.png)
 
+## 2026-10-01 — Keep starting and sharing easy; charge for repeated work
+
+Three implementation proposals now add browser invitations, photo import, and timetable candidate comparison. They are open for review, not released store features, and the invitation page has not been deployed yet.
+
+### An invitation should make sense before installation
+
+Finding a free time together starts with getting each other's timetables. An app-only link gives someone without the app little context. The new browser page explains the request and offers an explicit Open SuperTimetable button. Someone who needs to install follows the App Store link, then returns to the invitation.
+
+We kept this route free. A sharing feature depends on both people completing it, so charging the recipient would work against the reason to build it. We also chose clear return instructions over promising automatic invitation recovery after installation. The requester's name stays in a URL fragment, outside HTTP request logs; timetable data is not uploaded to the page.
+
+The app checks readiness published with the complete website before generating HTTPS invitations. If the page is unpublished or the network fails, the existing app link and download instructions remain available. Finished code should not create an invitation that leads to a missing page.
+
+### A photo produces a draft, not a finished timetable
+
+Photo import reads text on the device and proposes days and times when it can identify the axes. There is no upload service or new account.
+
+Immediate saving lost to explicit review. A text box is not a class block's boundary, and recognizing a title does not reveal its duration. When duration is uncertain, the draft explains its initial one-hour estimate. Each row must be checked against the original and marked reviewed before saving. Missing axes do not become invented Monday-morning classes.
+
+The first successful save is free; cancellation and failed recognition do not consume it. Further imports belong to the existing Premium purchase. This trial is local to the device, not a synchronized account credit.
+
+The one-timetable free limit still applies. A new user's default empty timetable already occupies that slot, so they can explicitly choose it as the import destination. A timetable with events cannot be overwritten, and emptiness is checked again immediately before saving. A free first import needs a usable place to put the result.
+
+### Compare your own candidates before automating course combinations
+
+Premium compares two to ten timetables that the user has already created. It does not fetch university course catalogs or generate every possible section combination. Helping someone choose among their own options is the smaller, useful step we can deliver first.
+
+The metrics are days with events, gaps between each day's first and last event, and events starting before noon. Overlaps are counted once, and weekends count too. Calling the first metric “days with events” keeps it useful for work and other plans as well as school.
+
+There is no combined score declaring one timetable best for everyone. Users choose one ranking criterion; ties share a rank. Comparing never edits or duplicates the source timetables.
+
+These features use the existing one-time Premium product. The product hypothesis is that easy sharing brings people in, while avoiding repeated input and comparison work gives them a reason to pay. Whether it improves installs or purchases is still unproven. Review and broader photo testing remain before release.
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
 - 2026-09-28 — app goes free, 7-day trial reconsidered and shelved, thank-you card + review request
 - 2026-09-29 — custom colors fall back to the nearest basic color once confirmed free; mapping fixed twice
 - 2026-09-30 — calendar export moves to Premium; disabled-button exception; unlock moved to a top card
+- 2026-10-01 — browser sharing stays free, first saved photo draft is free, own-candidate comparison joins existing Premium; proposals under review
