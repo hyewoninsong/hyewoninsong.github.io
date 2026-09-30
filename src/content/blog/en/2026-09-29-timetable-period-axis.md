@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-30T03:29:38+09:00
+date: 2026-10-01T00:00:19+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -194,6 +194,20 @@ School-level preset chips (elementary to college) went in and came straight back
 
 The lunch row is a full row, not a half one — snapping and zoom work in whole rows, and a half row would knock every later period off the grid. Drawing a thin band on the boundary instead would have needed every vertical coordinate rewritten. Lunch position isn't stored separately; it's read from the periods, the same way the editor reads its rules, so there's one source of truth. Events that already span lunch are left alone rather than silently cut.
 
+## Update, Sep 30 evening — clearer rules and an easier preview
+
+The editor keeps the same values and wheels, but makes the reading order easier to follow. **Class settings, Lunch, and Preview** headings separate the inputs from their result below the day summary.
+
+![Period editor with a day summary, class and lunch headings, muted icons, and value pills](/blog/timetable-period-axis/period-editor-refined.png)
+
+Small, muted icons give each rule a quick cue. The open row uses the app tint; the rest stay secondary, so the screen does not turn into a set of colored controls. Tapping anywhere in a rule row now opens its wheel, rather than requiring a tap on the value pill. Opening another row closes the first. With no lunch, the lunch-timing row stays in place, dimmed and unavailable.
+
+The preview adds a quiet numbered circle to each class. It is easier to find the period position, then read its time range—even with a custom name. Lunch keeps its smaller fork-and-knife line and has no period number.
+
+![The class-length row open, with a wheel selecting 50 minutes beneath it](/blog/timetable-period-axis/period-editor-wheel.png)
+
+We chose clearer grouping over more controls or decorative colors. Bringing back individual period cards would create two competing answers again: the rules and hand-edited times. The summary, cancel/save flow, and confirmation before removing events remain the same.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -208,3 +222,4 @@ The lunch row is a full row, not a half one — snapping and zoom work in whole 
 - Sep 30 — period editor switched to rules (start, class, break, lunch, lunch timing, count); per-period drag editing removed
 - Sep 30, later — tutorial variant for period timetables: period-snapped demos, a "Period Times" step
 - Sep 30, early morning — cleaner editor (summary line, value pills + wheels, class/lunch cards); optional lunch row on the axis, closed to events
+- Sep 30, evening — section headings, row icons, whole-row taps, and numbered preview markers
