@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-01T00:08:34+09:00
+date: 2026-10-01T01:36:18+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
@@ -178,7 +178,7 @@ Until now someone had to send a file before anything happened. Now the first but
 
 The sheet reuses the timetable list's cards: swipe through previews, the centered card is the one you send, type the name your friend will see, tap Share. Class names are still stripped. Every "send my timetable" entry point now opens this sheet, because picking by name from a menu was guesswork when two timetables had similar names.
 
-The link uses the app's URL scheme, which some messengers won't turn into a tappable link (iMessage only links `https`). A web redirect page is the next step.
+The first link used the app's URL scheme, which some messengers would not display as tappable. The October 1 update adds an HTTPS page with a button that opens the existing app link.
 
 The colors changed once more. Last night's yes/no split buried "only one person short" in the same gray as "nobody can make it". Now:
 
@@ -225,9 +225,45 @@ On iPhone, simulator checks covered selection, copying, options, 12-hour time, d
 
 The collapsing options panel and Share button keep their places. The update makes the existing comparison easier to read; toggling people, copying and sharing follow the same rules.
 
+## 2026-10-01 — turn a free stretch into a concrete invitation
+
+Finding five free hours still leaves you choosing one hour in chat. It can also leave a second question: does “two people available” mean the same two people throughout? This update closes those gaps between finding time and proposing it.
+
+### A headcount can stay the same while the people change
+
+Suppose Minji and Junho are free from 9 to 9:30, then Junho and Seoyeon from 9:30 to 10. Two people are free at every moment, but no pair can stay for the full hour.
+
+The people menu now offers both “Headcount at each moment” and “Same people throughout.” The existing headcount rule remains the default: it still suits a gathering where people can arrive and leave. A team task can ask for the same participants instead. When everyone is required, the two rules produce the same answer.
+
+Overlapping candidates remain separate. A pair available from 9–11 and another from 10–12 do not become one 9–12 candidate. The grid, list, copying and shared image all keep that meaning.
+
+### Pick the hour you actually want to suggest
+
+A selected grid card now opens a time chooser. List rows still copy on tap; holding a row opens the same chooser. Adjust the start and end inside the original stretch, then copy an invitation such as “How about Tue 14:00–15:00 (1 hr)?” The initial selection is up to one hour.
+
+Attendance is recalculated for those exact times. Someone only partly free in a five-hour stretch may be fully free in the chosen hour. The original whole-stretch copy remains available. There is no new appointment list to maintain: the result is a proposal to send to a friend.
+
+### An empty result suggests a change that actually helps
+
+The app checks whether a shorter duration, fewer people or a wider range would produce candidates. It offers the nearest useful relaxation, with the resulting number of stretches, and changes only that one condition when tapped.
+
+Silently relaxing several conditions would change what the gathering needs. Keeping the choice explicit also means the same-participants rule stays in effect when calculating suggestions.
+
+### The image carries attendance with each candidate
+
+Shared images now include the same Free / Partly / Busy groups as copied text, beside each stretch. Long names wrap, and empty groups disappear. Listing everyone only at the top could imply they can attend every candidate; listing only fully available people would hide partial availability. The existing full-result image stays, with enough context to judge each time.
+
+### Ask through a web link, then open the app
+
+The request link is now HTTPS. Its page shows who asked, offers a button to open the timetable send sheet, and links to the App Store for friends who need the app.
+
+An explicit button works with messenger browsers that block automatic app switches. It reuses the existing app link without adding Universal Link setup. A build with Find Free Time hidden still refuses to open the send sheet. The web page must be deployed before the app starts sharing its new address.
+
+These five changes keep the comparison at the center while carrying its answer through to a concrete invitation.
+
 ## Where it stands
 
-A real two-device file exchange and whether the request link is tappable in each messenger are still to be checked. The grid and list layouts on iPad were verified in the October 1 update.
+A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
 
 
 
@@ -244,3 +280,5 @@ A real two-device file exchange and whether the request link is tappable in each
 - 2026-09-30 — request link, pick-with-preview send sheet, gray background with green shading that peaks at the people filter
 - 2026-09-30 early morning — Add My Timetable uses the preview picker; card/title view toggle shared by the list and pickers
 - 2026-10-01 — clearer time axis and hour/half-hour rules, labeled filters, separate clock ranges and durations, list view on iPad
+
+- 2026-10-01 — same-participant rule, choose an invitation inside a stretch, useful filter suggestions, attendance in shared images, HTTPS request page
