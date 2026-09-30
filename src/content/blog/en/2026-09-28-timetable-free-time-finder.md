@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-09-30T01:18:00+09:00
+date: 2026-10-01T00:08:34+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
@@ -207,9 +207,27 @@ The title list keeps the card rules: tap to open, long-press to duplicate, and i
 
 One testing trap: passing the setting as a launch argument (`-timetableListStyle cards`) puts it in UserDefaults' argument domain, which wins over anything the app writes. The toggle looked broken; it was the test.
 
+## 2026-10-01 — hour marks stay visible inside the color
+
+A green stretch tells you where to look, but you still need to read its start and end. Filled green and gray blocks made the grid's time rules hard to follow, so the axis and rules now have a clearer hierarchy.
+
+The time axis has its own background, stronger numbers and a label for the end of the range. Solid rules mark hours; lighter dashed rules mark half hours. Both sit above the filled blocks, so you can trace the time inside a green stretch. Green still means how many people are free.
+
+![Hour and half-hour rules stay visible above the green and gray blocks, with a clearer time axis and labeled filters](/blog/timetable-free-time-finder/clearer-hour-grid.png)
+
+A much wider axis would squeeze the day columns. Repeating start and end times in every block would crowd the seven-day phone layout. A shared axis with visible rules gives the same reference without repeating text.
+
+Filters now show a small label above the value: minimum length and people. In the list, weekday and clock range sit on the left while duration gets its own capsule. A selected grid card also separates the clock range from the duration. The grid/list toggle is available on iPad too: a wide screen doesn't remove the need to find the longest opening first.
+
+![The free time list separates weekday and clock range from the duration capsule on the right](/blog/timetable-free-time-finder/separate-time-duration.png)
+
+On iPhone, simulator checks covered selection, copying, options, 12-hour time, dark mode and list view. The grid and list were also checked on iPad.
+
+The collapsing options panel and Share button keep their places. The update makes the existing comparison easier to read; toggling people, copying and sharing follow the same rules.
+
 ## Where it stands
 
-The iPad layout, a real two-device file exchange and whether the request link is tappable in each messenger are still to be checked.
+A real two-device file exchange and whether the request link is tappable in each messenger are still to be checked. The grid and list layouts on iPad were verified in the October 1 update.
 
 
 
@@ -225,3 +243,4 @@ The iPad layout, a real two-device file exchange and whether the request link is
 - 2026-09-29, night — filter row under the chips (minimum length, people), passing = green and the rest of the free time = gray instead of layers, copy lists free / partly / busy per stretch
 - 2026-09-30 — request link, pick-with-preview send sheet, gray background with green shading that peaks at the people filter
 - 2026-09-30 early morning — Add My Timetable uses the preview picker; card/title view toggle shared by the list and pickers
+- 2026-10-01 — clearer time axis and hour/half-hour rules, labeled filters, separate clock ranges and durations, list view on iPad
