@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex">
+<title>SuperTimetable invitation</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#171717;background:#fafafa;color-scheme:light dark}body{margin:0;padding:24px}main{max-width:440px;margin:8vh auto;padding:32px;border:1px solid #ddd;border-radius:24px;background:#fff}header{display:flex;align-items:center;justify-content:space-between;gap:16px}header a{font-weight:600;color:inherit;text-decoration:none}select{max-width:140px;padding:8px;border-radius:8px}h1{font-size:32px;line-height:1.2;letter-spacing:-1px;margin-top:40px}p{line-height:1.65;color:#555;overflow-wrap:anywhere}.action{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:16px;margin-top:16px;font-weight:600;color:#fff;background:#171717}.secondary{background:transparent;border:1px solid #aaa;color:inherit}#sender{font-weight:600;color:inherit}#invalid{color:#a32020}small{display:block;margin-top:24px;line-height:1.6;color:#666}@media(prefers-color-scheme:dark){:root{background:#111;color:#eee}main{background:#1d1d1d;border-color:#444}p,small{color:#bbb}.action{background:#eee;color:#111}.secondary{background:transparent;color:#eee}#invalid{color:#ffaaaa}}
+</style>
+</head>
+<body><main>
+<header><a href="/en/apps/timetable/">SuperTimetable</a><select id="language" aria-label="Language"><option value="en">English</option><option value="ko">한국어</option><option value="ja">日本語</option><option value="zh-Hans">简体中文</option><option value="zh-Hant">繁體中文</option><option value="es">Español</option><option value="fr">Français</option><option value="pt-BR">Português</option></select></header>
+<h1 id="title">Find a time together</h1><p id="sender" dir="auto"></p><p id="body">A friend is asking for your timetable.</p>
+<p id="invalid" role="alert" hidden></p><a class="action" id="open" hidden>Open SuperTimetable</a>
+<a class="action secondary" id="install" href="https://apps.apple.com/app/id6760938147">Get the app</a>
+<small id="reopen">After installing, return to this invitation and open SuperTimetable.</small>
+<noscript><p>Enable JavaScript to open this invitation. You can download SuperTimetable using the link above.</p></noscript>
+</main><script type="module">
+import {inviteURL, copy, languageFor} from './invite.mjs';
+const language = document.querySelector('#language');
+language.value = languageFor(navigator.language);
+function render(){
+ const strings = copy[language.value]; document.documentElement.lang = language.value;
+ for(const [i,id] of ['title','body','open','install','reopen','invalid'].entries()) document.getElementById(id).textContent = strings[i];
+ const invite = inviteURL(location.hash); const open = document.getElementById('open');
+ open.hidden = !invite; document.getElementById('invalid').hidden = !!invite;
+ document.getElementById('sender').textContent = invite?.name ?? '';
+ if(invite) open.href = invite.url; else open.removeAttribute('href');
+}
+language.addEventListener('change',render);window.addEventListener('hashchange',render);render();
+</script></body></html>
