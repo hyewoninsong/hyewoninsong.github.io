@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-01T02:08:33+09:00
+date: 2026-10-01T17:34:20+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -120,7 +120,7 @@ The app checks readiness published with the complete website before generating H
 
 Photo import reads text on the device and proposes days and times when it can identify the axes. There is no upload service or new account.
 
-Immediate saving lost to explicit review. A text box is not a class block's boundary, and recognizing a title does not reveal its duration. When duration is uncertain, the draft explains its initial one-hour estimate. Each row must be checked against the original and marked reviewed before saving. Missing axes do not become invented Monday-morning classes.
+A text box is not a class block's boundary, and recognizing a title does not reveal its duration. The initial one-hour estimate and mandatory row-review list were replaced in a follow-up proposal the same day. Valid events now create a timetable that opens directly for editing. Uncertain positions or end times in clock-based imports are omitted with a notice. Period-only tables use the app's period settings for storage; those clock times were not recovered from the image.
 
 The first successful save is free; cancellation and failed recognition do not consume it. Further imports belong to the existing Premium purchase. This trial is local to the device, not a synchronized account credit.
 
@@ -136,6 +136,34 @@ There is no combined score declaring one timetable best for everyone. Users choo
 
 These features use the existing one-time Premium product. The product hypothesis is that easy sharing brings people in, while avoiding repeated input and comparison work gives them a reason to pay. Whether it improves installs or purchases is still unproven. Review and broader photo testing remain before release.
 
+## 2026-10-01 — Create the timetable, then fix it in the grid
+
+The photo-import proposal now opens the created timetable directly instead of requiring approval of every row in a separate list. Days and event lengths are easier to check in the grid where they will be used. This is implementation under review, not an announced store release.
+
+### The large model is an optional download
+
+Settings now offers a pinned, roughly 3.1GB Qwen3-VL 4B 4-bit model bundle. Once ready, it reads photos on the device. Network access downloads public model files; photos and recognized content are not sent to an external AI service.
+
+![Settings shows an optional photo-recognition model download with its 3.1GB size](/blog/timetable-premium/local-photo-model-download.png)
+
+Bundling it with the app would make everyone download it, including people who never import a photo. Automatic downloading lost for the same reason. Users choose to start, cancel, retry, or remove it. Removing the model keeps their timetables. Without it, photo import uses the existing text-recognition path.
+
+Four real timetable images helped choose the candidate. With the same grid-transcription prompt and image enlargement, SmolVLM2 matched 0 of 118 cells, Qwen3-VL 2B matched 70, and 4B matched 97, requiring the correct subject, weekday and period. The 4B model also recovered both clock boundaries for 56 of 81 cells with known times after range parsing and AM/PM normalization. These are **Mac experiments**, not app-wide accuracy or phone-performance promises. The 35 cells in a period-only image were scored separately; preserving unknown times is not recovering clocks.
+
+### A period number is not a recovered clock time
+
+A table containing only period numbers creates a period-based timetable. Its stored times come from the app's existing period settings, which users must adjust if their school's bell schedule differs.
+
+For clock-based tables, an unclear position or end time no longer becomes a guessed one-hour event. That entry is omitted and a notice explains omissions; usable events still create the timetable. An entirely unusable result does not create an empty success. Literal `null` subjects and rows whose number of cells does not match their weekdays are rejected before saving.
+
+Removing mandatory review does not make recognition infallible. Users compare the result with the source and fix subjects, days and lengths through normal editing. The choice is to show usable work first instead of blocking the entire import behind incomplete entries.
+
+### A pixel-limit property did not enforce the input budget
+
+Review found that the selected Qwen processor ignored per-call `minPixels` and `maxPixels`. A compiling setting was mistaken for a bounded image. ImageIO now creates an orientation-aware thumbnail before decoding the full camera image, checks the actual dimensions, and supplies the supported `resize` input. Clock normalization is also scoped by weekday so Monday afternoon cannot turn Tuesday morning into evening; explicit 24-hour times remain unchanged.
+
+Device and simulator builds passed, along with 35 unit tests and two UI tests covering immediate creation and download controls. Downloading the full weights and measuring repeated inference time and whole-app memory on a physical iPhone remain unverified. Host allocator peaks and simulator success do not establish phone performance.
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
@@ -143,3 +171,4 @@ These features use the existing one-time Premium product. The product hypothesis
 - 2026-09-29 — custom colors fall back to the nearest basic color once confirmed free; mapping fixed twice
 - 2026-09-30 — calendar export moves to Premium; disabled-button exception; unlock moved to a top card
 - 2026-10-01 — browser sharing stays free, first saved photo draft is free, own-candidate comparison joins existing Premium; proposals under review
+- 2026-10-01 — optional local model download, direct grid editing, period/clock distinction, and verified input-image budgets
