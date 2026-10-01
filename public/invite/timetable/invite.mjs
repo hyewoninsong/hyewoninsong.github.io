@@ -24,3 +24,10 @@ export function languageFor(raw) {
   if (raw.startsWith('pt')) return 'pt-BR';
   return Object.hasOwn(copy, raw.split('-')[0]) ? raw.split('-')[0] : 'en';
 }
+
+/** Install destination follows the recipient's platform; opening the app preserves the invitation. */
+export function installURL(userAgent = '') {
+  return /Android/i.test(userAgent)
+    ? 'https://play.google.com/store/apps/details?id=com.hyewoninsong.supertimetable'
+    : 'https://apps.apple.com/app/id6760938147';
+}

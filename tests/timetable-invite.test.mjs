@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {inviteURL, copy, languageFor} from '../public/invite/timetable/invite.mjs';
+import {inviteURL, copy, languageFor, installURL} from '../public/invite/timetable/invite.mjs';
 test('requester survives Unicode and URL punctuation', () => {
  const name = '민지 & 준호#?+%';
  const invite = inviteURL('#from='+encodeURIComponent(name));
@@ -21,4 +21,15 @@ test('all eight locales and regional fallbacks',()=>{
  assert.equal(Object.keys(copy).length,8);
  for(const strings of Object.values(copy)) assert.equal(strings.length,6);
  assert.equal(languageFor('zh-TW'),'zh-Hant');assert.equal(languageFor('pt-PT'),'pt-BR');assert.equal(languageFor('ko-KR'),'ko');assert.equal(languageFor('de-DE'),'en');
+});
+
+test('installation follows Android recipients without changing iOS or desktop fallback', () => {
+ const play = 'https://play.google.com/store/apps/details?id=com.hyewoninsong.supertimetable';
+ const apple = 'https://apps.apple.com/app/id6760938147';
+ assert.equal(installURL('Mozilla/5.0 (Linux; Android 16; Pixel 9)'), play);
+ assert.equal(installURL('android'), play);
+ assert.equal(installURL('Mozilla/5.0 (iPhone; CPU iPhone OS 26_0)'), apple);
+ assert.equal(installURL('Mozilla/5.0 (iPad; CPU OS 26_0)'), apple);
+ assert.equal(installURL('Mozilla/5.0 (Macintosh)'), apple);
+ assert.equal(installURL(), apple);
 });
