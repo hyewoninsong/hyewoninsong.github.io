@@ -14,11 +14,12 @@
 <p id="invalid" role="alert" hidden></p><a class="action" id="open" hidden>Open SuperTimetable</a>
 <a class="action secondary" id="install" href="https://apps.apple.com/app/id6760938147">Get the app</a>
 <small id="reopen">After installing, return to this invitation and open SuperTimetable.</small>
-<noscript><p>Enable JavaScript to open this invitation. You can download SuperTimetable using the link above.</p></noscript>
+<noscript><p>Enable JavaScript to open this invitation. Download SuperTimetable from <a href="https://apps.apple.com/app/id6760938147">App Store</a> or <a href="https://play.google.com/store/apps/details?id=com.hyewoninsong.supertimetable">Google Play</a>, then return here.</p></noscript>
 </main><script type="module">
-import {inviteURL, copy, languageFor} from './invite.mjs';
+import {inviteURL, copy, languageFor, installURL} from './invite.mjs';
 const language = document.querySelector('#language');
 language.value = languageFor(navigator.language);
+document.getElementById('install').href = installURL(navigator.userAgent);
 function render(){
  const strings = copy[language.value]; document.documentElement.lang = language.value;
  for(const [i,id] of ['title','body','open','install','reopen','invalid'].entries()) document.getElementById(id).textContent = strings[i];
