@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-01T17:34:20+09:00
+date: 2026-10-01T23:56:40+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -164,6 +164,36 @@ Review found that the selected Qwen processor ignored per-call `minPixels` and `
 
 Device and simulator builds passed, along with 35 unit tests and two UI tests covering immediate creation and download controls. Downloading the full weights and measuring repeated inference time and whole-app memory on a physical iPhone remain unverified. Host allocator peaks and simulator success do not establish phone performance.
 
+## 2026-10-01 — A failed model run should leave the timetable intact
+
+An iPhone crash report exposed a gap after the optional local model was added. The update adds process-memory checks and a boundary that turns supported native failures into an import error. Device-log access was blocked, so the reported crash's cause remains unknown; this is not a claim that the original failure was reproduced or fixed on the phone.
+
+### Check process headroom again after loading
+
+The clarified failure point was photo selection after the model download. Selection immediately starts local inference, so we checked the full ordering again. Admission now precedes GPU cache configuration as well as weight loading: even a cache-limit setter can initialize the runtime. A rejected attempt must not synchronize a GPU stream or clear its cache. This closes an observed ordering gap; the reported stage alone does not identify the actual crash cause.
+
+A roughly 3.1GB download is not the whole inference footprint. Before loading, the app now requires the snapshot size plus 512MiB of current process headroom, measured with `os_proc_available_memory()`. Before image preparation and prefill, it samples again and requires another 1GiB. These are conservative admission policies, not measured guarantees across devices. Concurrent allocations or a changing OS limit can invalidate either snapshot.
+
+A refusal leaves timetables and the first-import trial unchanged. The error offers an explicit diagnostic-copy action containing model, stage and memory numbers. It excludes photos, recognized text, file paths and raw native error messages.
+
+### Put the native error scope where computation runs
+
+Swift `do/catch` does not by itself convert MLX's native failures into Swift errors. `MLX.withError` now runs inside the detached inference task, where its task-local handler can reach the inheriting generation task. Errors are checked between stages; the iterator stops at the first captured failure. Generation is drained before models and caches are released, including on cancellation.
+
+This cannot recover every termination. Jetsam kills the process, and the currently pinned MLX Swift 0.31.4 includes a Metal completion exception path that bypasses the scoped handler. Those limits remain distinct from the recoverable C-API failures tested here.
+
+That runtime limitation is not permanent. [Official issue #458](https://github.com/ml-explore/mlx-swift/issues/458) is closed and newer core code includes the callback fix. [MLX Swift 0.32.3](https://github.com/ml-explore/mlx-swift/releases/tag/0.32.3) also patches launch compatibility on older OS versions, making current release notes essential.
+
+An actual upgrade attempt hit a toolchain blocker: the new package requires Swift tools 6.3, while installed Xcode 26.3 provides Swift 6.2.4. Isolated package loading rejected the version floor; the LM package also needs a compatible update. We did not lower the manifest's tools declaration to pretend compatibility. This change keeps 0.31.4 and adds safeguards; adopting the existing upstream fix still requires a compatible toolchain and package graph.
+
+### Even a CPU probe can initialize Metal
+
+The first real-error test used `zeros(stream: .cpu)` and crashed during global Metal allocator initialization on the simulator. A proposed lazy `arange` probe also failed: constructing the CPU stream initialized a scheduler that created a GPU default stream. Neither failure diagnoses the user's iPhone; both invalidated assumptions about the test itself.
+
+The final probe uses direct native device-metadata calls without arrays, streams or scheduler initialization. An empty-device getter produces a real native validation error through the production scope. An inheriting child task receives the same handler, and a healthy CPU-device getter works afterward.
+
+The device-SDK build and 44 tests across seven simulator suites passed. That verifies error propagation, stopping/recovery and the memory policy, not downloaded-weight Metal inference. Repeated inference and the original crash on the affected physical iPhone remain unverified.
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
@@ -172,3 +202,4 @@ Device and simulator builds passed, along with 35 unit tests and two UI tests co
 - 2026-09-30 — calendar export moves to Premium; disabled-button exception; unlock moved to a top card
 - 2026-10-01 — browser sharing stays free, first saved photo draft is free, own-candidate comparison joins existing Premium; proposals under review
 - 2026-10-01 — optional local model download, direct grid editing, period/clock distinction, and verified input-image budgets
+- 2026-10-01 — process-headroom checks and scoped native errors after an iPhone crash report; corrected simulator probe assumptions
