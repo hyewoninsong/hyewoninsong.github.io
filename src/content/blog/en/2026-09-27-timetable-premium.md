@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-01T23:43:00+09:00
+date: 2026-10-01T23:56:40+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -169,6 +169,8 @@ Device and simulator builds passed, along with 35 unit tests and two UI tests co
 An iPhone crash report exposed a gap after the optional local model was added. The update adds process-memory checks and a boundary that turns supported native failures into an import error. Device-log access was blocked, so the reported crash's cause remains unknown; this is not a claim that the original failure was reproduced or fixed on the phone.
 
 ### Check process headroom again after loading
+
+The clarified failure point was photo selection after the model download. Selection immediately starts local inference, so we checked the full ordering again. Admission now precedes GPU cache configuration as well as weight loading: even a cache-limit setter can initialize the runtime. A rejected attempt must not synchronize a GPU stream or clear its cache. This closes an observed ordering gap; the reported stage alone does not identify the actual crash cause.
 
 A roughly 3.1GB download is not the whole inference footprint. Before loading, the app now requires the snapshot size plus 512MiB of current process headroom, measured with `os_proc_available_memory()`. Before image preparation and prefill, it samples again and requires another 1GiB. These are conservative admission policies, not measured guarantees across devices. Concurrent allocations or a changing OS limit can invalidate either snapshot.
 
