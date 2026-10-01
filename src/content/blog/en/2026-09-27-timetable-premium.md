@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-01T23:56:40+09:00
+date: 2026-10-02T02:08:31+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -140,13 +140,15 @@ These features use the existing one-time Premium product. The product hypothesis
 
 The photo-import proposal now opens the created timetable directly instead of requiring approval of every row in a separate list. Days and event lengths are easier to check in the grid where they will be used. This is implementation under review, not an announced store release.
 
-### The large model is an optional download
+### The model was optional — removed on October 2
 
-Settings now offers a pinned, roughly 3.1GB Qwen3-VL 4B 4-bit model bundle. Once ready, it reads photos on the device. Network access downloads public model files; photos and recognized content are not sent to an external AI service.
+At that point, settings offered a pinned, roughly 3.1GB Qwen3-VL 4B 4-bit download for on-device photo recognition. Network access fetched the public weights, not remote photo inference. The download and inference path were removed on October 2; current photo import uses Apple Vision.
 
-![Settings shows an optional photo-recognition model download with its 3.1GB size](/blog/timetable-premium/local-photo-model-download.png)
+![October 1 settings capture: the 3.1GB model download removed on October 2](/blog/timetable-premium/local-photo-model-download.png)
 
-Bundling it with the app would make everyone download it, including people who never import a photo. Automatic downloading lost for the same reason. Users choose to start, cancel, retry, or remove it. Removing the model keeps their timetables. Without it, photo import uses the existing text-recognition path.
+This is a historical capture. Current settings no longer contains this model section or download button.
+
+Bundling it with the app would make everyone download it, including people who never import a photo. Automatic downloading lost for the same reason. The original controls let users start, cancel, retry, or remove it while keeping their timetables. Without it, the text-recognition path remained available.
 
 Four real timetable images helped choose the candidate. With the same grid-transcription prompt and image enlargement, SmolVLM2 matched 0 of 118 cells, Qwen3-VL 2B matched 70, and 4B matched 97, requiring the correct subject, weekday and period. The 4B model also recovered both clock boundaries for 56 of 81 cells with known times after range parsing and AM/PM normalization. These are **Mac experiments**, not app-wide accuracy or phone-performance promises. The 35 cells in a period-only image were scored separately; preserving unknown times is not recovering clocks.
 
@@ -154,37 +156,37 @@ Four real timetable images helped choose the candidate. With the same grid-trans
 
 A table containing only period numbers creates a period-based timetable. Its stored times come from the app's existing period settings, which users must adjust if their school's bell schedule differs.
 
-For clock-based tables, an unclear position or end time no longer becomes a guessed one-hour event. That entry is omitted and a notice explains omissions; usable events still create the timetable. An entirely unusable result does not create an empty success. Literal `null` subjects and rows whose number of cells does not match their weekdays are rejected before saving.
+For clock-based tables, an unclear position or end time no longer becomes a guessed one-hour event. That entry is omitted and a notice explains omissions; usable events still create the timetable. An entirely unusable result does not create an empty success. The original model decoder rejected literal `null` subjects and misaligned rows before saving. Current recognition also rejects entirely unusable results.
 
 Removing mandatory review does not make recognition infallible. Users compare the result with the source and fix subjects, days and lengths through normal editing. The choice is to show usable work first instead of blocking the entire import behind incomplete entries.
 
 ### A pixel-limit property did not enforce the input budget
 
-Review found that the selected Qwen processor ignored per-call `minPixels` and `maxPixels`. A compiling setting was mistaken for a bounded image. ImageIO now creates an orientation-aware thumbnail before decoding the full camera image, checks the actual dimensions, and supplies the supported `resize` input. Clock normalization is also scoped by weekday so Monday afternoon cannot turn Tuesday morning into evening; explicit 24-hour times remain unchanged.
+Review found that the selected Qwen processor ignored per-call `minPixels` and `maxPixels`. A compiling setting was mistaken for a bounded image. That implementation used an orientation-aware ImageIO thumbnail, checked its actual dimensions, and supplied the supported `resize` input. Clock normalization is also scoped by weekday so Monday afternoon cannot turn Tuesday morning into evening; explicit 24-hour times remain unchanged.
 
 Device and simulator builds passed, along with 35 unit tests and two UI tests covering immediate creation and download controls. Downloading the full weights and measuring repeated inference time and whole-app memory on a physical iPhone remain unverified. Host allocator peaks and simulator success do not establish phone performance.
 
 ## 2026-10-01 — A failed model run should leave the timetable intact
 
-An iPhone crash report exposed a gap after the optional local model was added. The update adds process-memory checks and a boundary that turns supported native failures into an import error. Device-log access was blocked, so the reported crash's cause remains unknown; this is not a claim that the original failure was reproduced or fixed on the phone.
+An iPhone crash report exposed a gap after the optional local model was added. That update added process-memory checks and a boundary for supported native failures. The following records the model path before its removal. Device-log access was blocked, so the reported crash's cause remains unknown; this is not a claim that the original failure was reproduced or fixed on the phone.
 
 ### Check process headroom again after loading
 
-The clarified failure point was photo selection after the model download. Selection immediately starts local inference, so we checked the full ordering again. Admission now precedes GPU cache configuration as well as weight loading: even a cache-limit setter can initialize the runtime. A rejected attempt must not synchronize a GPU stream or clear its cache. This closes an observed ordering gap; the reported stage alone does not identify the actual crash cause.
+The clarified failure point was photo selection after the model download. Selection immediately starts local inference, so we checked the full ordering again. Admission was moved ahead of GPU cache configuration as well as weight loading: even a cache-limit setter can initialize the runtime. A rejected attempt must not synchronize a GPU stream or clear its cache. This closes an observed ordering gap; the reported stage alone does not identify the actual crash cause.
 
-A roughly 3.1GB download is not the whole inference footprint. Before loading, the app now requires the snapshot size plus 512MiB of current process headroom, measured with `os_proc_available_memory()`. Before image preparation and prefill, it samples again and requires another 1GiB. These are conservative admission policies, not measured guarantees across devices. Concurrent allocations or a changing OS limit can invalidate either snapshot.
+A roughly 3.1GB download is not the whole inference footprint. Before loading, that version required the snapshot size plus 512MiB of current process headroom, measured with `os_proc_available_memory()`. Before image preparation and prefill, it sampled again and required another 1GiB. These are conservative admission policies, not measured guarantees across devices. Concurrent allocations or a changing OS limit can invalidate either snapshot.
 
-A refusal leaves timetables and the first-import trial unchanged. The error offers an explicit diagnostic-copy action containing model, stage and memory numbers. It excludes photos, recognized text, file paths and raw native error messages.
+A refusal left timetables and the first-import trial unchanged. The error offered a diagnostic-copy action containing model, stage and memory numbers. It excludes photos, recognized text, file paths and raw native error messages.
 
 ### Put the native error scope where computation runs
 
-Swift `do/catch` does not by itself convert MLX's native failures into Swift errors. `MLX.withError` now runs inside the detached inference task, where its task-local handler can reach the inheriting generation task. Errors are checked between stages; the iterator stops at the first captured failure. Generation is drained before models and caches are released, including on cancellation.
+Swift `do/catch` does not by itself convert MLX's native failures into Swift errors. That implementation ran `MLX.withError` inside the detached inference task, where its task-local handler can reach the inheriting generation task. Errors are checked between stages; the iterator stops at the first captured failure. Generation is drained before models and caches are released, including on cancellation.
 
-This cannot recover every termination. Jetsam kills the process, and the currently pinned MLX Swift 0.31.4 includes a Metal completion exception path that bypasses the scoped handler. Those limits remain distinct from the recoverable C-API failures tested here.
+This cannot recover every termination. Jetsam kills the process, and the then-pinned MLX Swift 0.31.4 includes a Metal completion exception path that bypasses the scoped handler. Those limits remain distinct from the recoverable C-API failures tested here.
 
 That runtime limitation is not permanent. [Official issue #458](https://github.com/ml-explore/mlx-swift/issues/458) is closed and newer core code includes the callback fix. [MLX Swift 0.32.3](https://github.com/ml-explore/mlx-swift/releases/tag/0.32.3) also patches launch compatibility on older OS versions, making current release notes essential.
 
-An actual upgrade attempt hit a toolchain blocker: the new package requires Swift tools 6.3, while installed Xcode 26.3 provides Swift 6.2.4. Isolated package loading rejected the version floor; the LM package also needs a compatible update. We did not lower the manifest's tools declaration to pretend compatibility. This change keeps 0.31.4 and adds safeguards; adopting the existing upstream fix still requires a compatible toolchain and package graph.
+An actual upgrade attempt hit a toolchain blocker: the new package requires Swift tools 6.3, while installed Xcode 26.3 provides Swift 6.2.4. Isolated package loading rejected the version floor; the LM package also needs a compatible update. We did not lower the manifest's tools declaration to pretend compatibility. That change retained 0.31.4 with safeguards; adopting the upstream fix required a compatible toolchain and package graph.
 
 ### Even a CPU probe can initialize Metal
 
@@ -193,6 +195,39 @@ The first real-error test used `zeros(stream: .cpu)` and crashed during global M
 The final probe uses direct native device-metadata calls without arrays, streams or scheduler initialization. An empty-device getter produces a real native validation error through the production scope. An inheriting child task receives the same handler, and a healthy CPU-device getter works afterward.
 
 The device-SDK build and 44 tests across seven simulator suites passed. That verifies error propagation, stopping/recovery and the memory policy, not downloaded-weight Metal inference. Repeated inference and the original crash on the affected physical iPhone remain unverified.
+
+## 2026-10-02 — Remove the large model, keep direct creation
+
+Photo import no longer asks users to download a separate model. Selecting a photo starts Apple's on-device Vision recognition, creates a timetable from usable events, and opens the grid. The per-event approval list stays removed; users compare and edit the actual result.
+
+Memory admission and native-error handling had closed specific gaps, but did not prove that the reported iPhone could run the model reliably. Its crash report was still unavailable. At the user's request, Qwen and MLX were removed along with download, removal and model-diagnostic controls. This is a product decision, not a confirmed diagnosis of that crash.
+
+### Recover the download space without touching timetables
+
+At launch, the app cleans up only the retired model's dedicated directory, including interrupted downloads. Saved timetables, unrelated caches and first-import history remain intact. Missing files are harmless; a failed cleanup is retried on a later launch.
+
+Keeping the optional download would also keep the unverified inference route that photo selection started automatically. Remote photo inference was not added. Recognition now stays within Apple's on-device APIs.
+
+### Combine table boundaries with OCR evidence
+
+Vision's `RecognizeDocumentsRequest` supplies table and cell geometry where usable. It augments the existing text/rectangle recognition rather than discarding printed clock ranges. A failed document request or unsuitable table keeps the OCR fallback.
+
+Foundation Models' [image prompting](https://developer.apple.com/documentation/foundationmodels/analyzing-images-with-multimodal-prompting) uses `Attachment`, available from iOS 27. It is absent from the installed iOS 26.2 SDK. The presence of Foundation Models on iOS 26 does not imply support for that later image API. [Vision document recognition](https://developer.apple.com/documentation/vision/recognizedocumentsrequest) is available from iOS 26 and fits the app's current deployment target.
+
+Period-only tables still use configured period times; those are not recovered clocks. Bare clock-axis hours are not reinterpreted as periods, and unknown ends do not receive invented one-hour durations.
+
+### Four photos show partial improvement
+
+The same app pipeline was compared on Mac with one-to-one matching:
+
+- Printed periods and ranges: correct subject/day/start/end matches rose from 11 to 28 of 36.
+- Period-only table: generation still failed because usable weekday/axis evidence was missing.
+- Numeric clock-axis table: one of nine subject/day matches and zero exact clock pairs, unchanged.
+- Mixed morning, period, lunch and dismissal rows: subject/day matches rose from 12 to 16 of 38; clock matches stayed at six of the 36 entries with known ends.
+
+These are Mac measurements, not iPhone accuracy or latency. Improving the first photo does not resolve the other three.
+
+The device-SDK build, 27 related unit tests and one immediate-create UI test passed. The wider run still had nine failures out of 1,622 tests; an unchanged baseline was not rerun, so those failures are not described as confirmed pre-existing issues. The cancellation test covers cancellation before recognition starts, not immediate interruption of an in-flight native Vision request. The new flow remains to be checked on the affected physical iPhone.
 
 ## History
 
@@ -203,3 +238,4 @@ The device-SDK build and 44 tests across seven simulator suites passed. That ver
 - 2026-10-01 — browser sharing stays free, first saved photo draft is free, own-candidate comparison joins existing Premium; proposals under review
 - 2026-10-01 — optional local model download, direct grid editing, period/clock distinction, and verified input-image budgets
 - 2026-10-01 — process-headroom checks and scoped native errors after an iPhone crash report; corrected simulator probe assumptions
+- 2026-10-02 — custom-model removal and scoped cleanup, Apple table geometry, measured partial improvement and remaining limits
