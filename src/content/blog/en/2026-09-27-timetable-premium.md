@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-01T23:34:00+09:00
+date: 2026-10-01T23:43:00+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -178,7 +178,11 @@ A refusal leaves timetables and the first-import trial unchanged. The error offe
 
 Swift `do/catch` does not by itself convert MLX's native failures into Swift errors. `MLX.withError` now runs inside the detached inference task, where its task-local handler can reach the inheriting generation task. Errors are checked between stages; the iterator stops at the first captured failure. Generation is drained before models and caches are released, including on cancellation.
 
-This cannot recover every termination. Jetsam kills the process, and some asynchronous Metal completion exceptions bypass the scoped error path. Those limits remain distinct from the recoverable C-API failures tested here.
+This cannot recover every termination. Jetsam kills the process, and the currently pinned MLX Swift 0.31.4 includes a Metal completion exception path that bypasses the scoped handler. Those limits remain distinct from the recoverable C-API failures tested here.
+
+That runtime limitation is not permanent. [Official issue #458](https://github.com/ml-explore/mlx-swift/issues/458) is closed and newer core code includes the callback fix. [MLX Swift 0.32.3](https://github.com/ml-explore/mlx-swift/releases/tag/0.32.3) also patches launch compatibility on older OS versions, making current release notes essential.
+
+An actual upgrade attempt hit a toolchain blocker: the new package requires Swift tools 6.3, while installed Xcode 26.3 provides Swift 6.2.4. Isolated package loading rejected the version floor; the LM package also needs a compatible update. We did not lower the manifest's tools declaration to pretend compatibility. This change keeps 0.31.4 and adds safeguards; adopting the existing upstream fix still requires a compatible toolchain and package graph.
 
 ### Even a CPU probe can initialize Metal
 
