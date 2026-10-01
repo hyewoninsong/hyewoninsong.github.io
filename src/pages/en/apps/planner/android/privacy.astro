@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={`SuperPlanner Android Privacy Policy - ${t('site.title')}`} description="How SuperPlanner for Android handles local plans, Android backup, JSON files, permissions and planned Firebase analytics." lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperPlanner Android</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
+      <p class="text-sm text-text-sub">Effective date: October 2, 2026</p>
+      <p class="text-sm text-text-sub mt-2">Applies to SuperPlanner Android 1.0.0 (version code 1)</p>
+    </div>
+    <div class="prose prose-gray max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4 prose-p:text-text-sub prose-p:leading-7 prose-li:text-text-sub prose-strong:text-text prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+      <p>This policy applies to SuperPlanner for Android, developed by Hyewon &amp; Insong. The iOS version and other apps have their own policies. If this policy differs from the general privacy policy, this app-specific policy takes precedence.</p>
+      <p><a href="/en/privacy/">General privacy policy</a></p>
+      <h2>1. Data handling in the current test release</h2>
+<p>Android 1.0.0 (version code 1) works without an account. It includes no developer-operated server, advertising, Firebase Analytics or Crashlytics, and does not send user data from the app to the developer.</p>
+<p>Local storage, Android system backup and user-selected file exports work separately as described below.</p>
+<h2>2. Information stored on your device</h2>
+<p>Plans, task lists, profiles, colors, reminder preferences and other settings are stored in app-private storage on your device. They are used to display and manage plans, schedule reminders and show home-screen widgets. Widgets may display plan information to people who can see your home screen.</p>
+<h2>3. Android backup and JSON files</h2>
+<ul>
+<li>Depending on your device and Google account backup settings, Android may back up planner data to the cloud or transfer it to another device. The system backup provider and your settings govern its storage, security, retention and deletion. The developer does not receive these backups.</li>
+<li>JSON export saves a file to the location you choose only when you request it. The file contains plans and settings and is not separately encrypted by the app. If you choose a cloud storage service, that service's policies also apply.</li>
+<li>JSON import reads the file you select. Keep exported files secure and delete copies you no longer need.</li>
+</ul>
+<h2>4. Notification and alarm permissions</h2>
+<p>Notification and exact-alarm permissions are requested optionally for reminders. Saved reminders may be rescheduled after a reboot. You can manage plans without granting these permissions. Reminder delivery depends on device permissions, battery settings and Do Not Disturb.</p>
+<h2>5. Retention and deletion</h2>
+<p>App-private data is retained until you delete the relevant content, clear the app's storage in Android settings or uninstall the app. System backups and exported files may remain or be restored; manage them separately with the backup provider or at the file location. The current release has no developer-held user account or remote copy of your data.</p>
+<h2>6. Planned Firebase analytics</h2>
+<p><strong>Firebase Analytics is planned for a future release. It does not collect data in the current test release identified above.</strong> Its intended purpose is to understand app usage and improve features.</p>
+<p>Before distributing a release that includes Firebase, we will verify its actual configuration and data collection, then update this policy, the in-app privacy notice and the Google Play Data safety declaration together. That release's notice will describe whether app usage events, app-instance identifiers and device information are processed, any transmission to Google LLC, retention and collection controls. Planned integration does not mean the current release collects this data.</p>
+<p>This notice does not establish a Crashlytics integration, a specific retention period or an advertising-ID collection configuration.</p>
+<h2>7. Contact and policy changes</h2>
+<p>For privacy inquiries, contact the developer, Hyewon &amp; Insong, at <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a>. General help is available on our <a href="/en/support/">support page</a>.</p>
+<p>If data handling changes, we will update this page and its effective date and announce the change in the app or on this page before it takes effect.</p>
+    </div>
+    <a class="inline-block mt-12 text-sm text-primary hover:underline" href="/en/apps/planner/">← SuperPlanner</a>
+  </div>
+</BaseLayout>

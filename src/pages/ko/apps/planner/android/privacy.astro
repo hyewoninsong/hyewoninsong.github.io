@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={`SuperPlanner Android 개인정보처리방침 - ${t('site.title')}`} description="SuperPlanner Android의 기기 저장, Android 백업, JSON 파일, 권한과 Firebase 통계 도입 예정 안내입니다." lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperPlanner Android</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">개인정보처리방침</h1>
+      <p class="text-sm text-text-sub">시행일: 2026년 10월 2일</p>
+      <p class="text-sm text-text-sub mt-2">적용 대상: SuperPlanner Android 1.0.0 (버전 코드 1)</p>
+    </div>
+    <div class="prose prose-gray max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4 prose-p:text-text-sub prose-p:leading-7 prose-li:text-text-sub prose-strong:text-text prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+      <p>이 방침은 Hyewon &amp; Insong의 SuperPlanner Android에 적용됩니다. iOS 버전과 다른 앱의 처리는 해당 앱의 방침을 따릅니다. 공통 개인정보처리방침과 내용이 다른 경우 이 앱 전용 방침이 우선합니다.</p>
+      <p><a href="/ko/privacy/">공통 개인정보처리방침</a></p>
+      <h2>1. 현재 테스트 버전의 데이터 처리</h2>
+<p>현재 Android 1.0.0 (버전 코드 1)은 계정 가입 없이 사용할 수 있습니다. 개발자 운영 서버, 광고, Firebase Analytics와 Crashlytics를 포함하지 않으며, 앱에서 개발자에게 사용자 데이터를 전송하지 않습니다.</p>
+<p>기기 저장과 Android 시스템 백업, 사용자가 선택한 파일 내보내기는 아래와 같이 별도로 이루어집니다.</p>
+<h2>2. 기기에 저장하는 내용</h2>
+<p>일정, 할 일 목록, 프로필, 색상과 알림 등 설정은 기기의 앱 전용 저장소에 보관됩니다. 이 내용은 계획 표시, 일정 관리, 알림과 홈 화면 위젯에 사용됩니다. 위젯에는 일정 정보가 표시될 수 있으므로 홈 화면을 보는 사람에게 노출될 수 있습니다.</p>
+<h2>3. Android 백업과 JSON 파일</h2>
+<ul>
+<li>Android 시스템은 기기와 Google 계정의 백업 설정에 따라 일정 데이터를 클라우드에 백업하거나 다른 기기로 이전할 수 있습니다. 백업의 저장 위치, 보안, 보관과 삭제는 시스템 백업 제공자의 정책과 사용자 설정을 따릅니다. 개발자는 해당 백업을 전달받지 않습니다.</li>
+<li>JSON 내보내기는 사용자가 직접 실행할 때 선택한 위치에 파일을 저장합니다. 파일에는 일정과 설정이 포함되며 앱이 별도로 암호화하지 않습니다. 선택한 저장 서비스가 클라우드라면 그 서비스의 정책도 적용됩니다.</li>
+<li>JSON 가져오기는 사용자가 직접 선택한 파일을 읽습니다. 내보낸 파일은 안전하게 보관하고 필요하지 않은 사본은 직접 삭제하세요.</li>
+</ul>
+<h2>4. 알림과 알람 권한</h2>
+<p>알림 및 정확한 알람 권한은 일정 알림을 위해 선택적으로 요청합니다. 부팅 후에는 저장된 알림을 다시 예약할 수 있습니다. 권한을 허용하지 않아도 일정 관리 기능을 사용할 수 있으며, 알림 동작은 기기의 권한, 절전과 방해 금지 설정에 따라 달라질 수 있습니다.</p>
+<h2>5. 보관과 삭제</h2>
+<p>앱 전용 저장소의 데이터는 해당 내용을 삭제하거나 Android 설정에서 앱 저장공간을 지우거나 앱을 제거할 때까지 보관됩니다. 시스템 백업과 내보낸 파일은 남아 있거나 복원될 수 있으므로 해당 서비스 또는 파일 위치에서 별도로 관리해야 합니다. 현재 버전에는 개발자가 보관하는 사용자 계정이나 원격 데이터 사본이 없습니다.</p>
+<h2>6. Firebase 통계 도입 예정</h2>
+<p><strong>Firebase Analytics는 향후 도입할 예정이며, 위에 명시한 현재 테스트 버전에서는 데이터를 수집하지 않습니다.</strong> 도입 목적은 앱 사용 현황을 이해하고 기능을 개선하는 것입니다.</p>
+<p>Firebase를 적용하는 버전을 배포하기 전에 실제 설정과 수집 항목을 확인하여 이 방침, 앱 안의 개인정보 안내와 Google Play 데이터 보안 신고를 함께 갱신합니다. 앱 사용 이벤트, 앱 인스턴스 식별자, 기기 정보 등의 처리 여부, Google LLC로의 전송, 보관 기간과 수집 제어 방법은 그 버전에 맞춰 안내합니다. Firebase 도입 예정이라는 이유로 현재 버전에서 수집이 이루어지는 것은 아닙니다.</p>
+<p>이 안내는 Firebase Crashlytics 도입이나 특정 보관 기간, 광고 식별자 수집 설정이 확정되었다는 의미가 아닙니다.</p>
+<h2>7. 문의와 방침 변경</h2>
+<p>개인정보 문의는 개발자 Hyewon &amp; Insong의 <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a>으로 보내세요. 일반적인 사용 안내는 <a href="/ko/support/">지원 페이지</a>에서 확인할 수 있습니다.</p>
+<p>데이터 처리 방식이 바뀌면 이 페이지의 시행일과 내용을 갱신하고 변경 적용 전에 앱 또는 이 페이지에서 안내합니다.</p>
+    </div>
+    <a class="inline-block mt-12 text-sm text-primary hover:underline" href="/ko/apps/planner/">← SuperPlanner</a>
+  </div>
+</BaseLayout>
