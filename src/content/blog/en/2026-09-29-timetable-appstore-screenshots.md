@@ -1,6 +1,6 @@
 ---
 title: "Ten App Store screenshots that read as one picture"
-date: 2026-10-01T21:04:03+09:00
+date: 2026-10-01T23:10:54+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's new App Store screenshots: a three-card panorama of 3D bars taken from the app icon, then seven feature cards whose background keeps running between the phones. How the seams line up, and why the drag shot had two guide lines."
@@ -42,7 +42,7 @@ When you move an event, it also snaps to its own original start and end, so you 
 
 ## Where it stands
 
-All ten cards exist in eight languages, and every locale now shows its own app screens instead of borrowing the English ones. Version 1.1.0 is in review and its screenshots are locked, so the new set goes up with the next version.
+All ten cards exist in eight languages, and every locale now shows its own app screens instead of borrowing the English ones. When the iPhone set was prepared, version 1.1.0 was in review and its screenshots were locked. The new set was reserved for the next version.
 
 ## 2026-10-01 — The iPad needed a different capture position
 
@@ -54,9 +54,15 @@ Reusing an older frame plan exposed another default: an iPhone notch appeared on
 
 Every iPad frame now sets `notch: false`. We also inspect the top-center bezel at full size, because a successful render and a reduced contact sheet can both hide the mistake. Reused plans need their hardware settings checked again.
 
-These ten Korean cards are review candidates. Other languages and the store upload remain ahead.
+The approved Korean composition now has real app captures in all eight languages. We also set the simulator's system language for each run, because app launch arguments alone do not localize the date in the status bar. All 80 selected originals have the expected scene names and resolution. Store publication is checked separately after upload.
+
+Two captures exposed a second output route. Normal screenshots read the folder configured by the test. Background captures taken while a finger remains held bypassed that setting and wrote directly to a shared cache. The English tests passed, yet two planned images were absent from the isolated output folder.
+
+Trying to override `SIMULATOR_HOST_HOME` through the test runner did not replace the system's existing path. An explicit capture directory fixed the mismatch: both normal and mid-gesture writers now use it. We repeated only the two affected English tests, which passed in 99 seconds, and checked the new PNGs' timestamps and dimensions.
+
+Completion now requires the actual ten selected files for every language, alongside the test result. Even the recovery log needed care: a single test is reported as `1 test`, while a full run uses `tests`. A passing test proves the interaction ran; the image manifest proves the deliverable exists.
 
 ## History
 
 - 2026-09-29 — Added the iPhone panorama, continuous feature backgrounds, and drag capture notes.
-- 2026-10-01 — Adjusted the iPad capture viewport and checked the reused frame's iPhone notch default.
+- 2026-10-01 — Verified the iPad viewport, notch default, and gesture capture output route across eight languages.
