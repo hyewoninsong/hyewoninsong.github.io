@@ -14,29 +14,36 @@ const t = useTranslations(lang);
       <p class="text-sm text-text-sub">Effective Date: October 2, 2026</p>
     </div>
     <div class="prose prose-gray max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4 prose-p:text-text-sub prose-p:leading-7 prose-strong:text-text prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:before:content-none prose-code:after:content-none">
-      <p>This policy describes how Hyewon &amp; Insong handles data in <strong>SuperMusicNote for Android, version 1.0.0</strong> (package <code>com.hyewoninsong.supermusicnote</code>). It takes precedence over the studio’s general policy for this Android app. It does not describe the iOS version or other apps.</p>
+      <p>This policy describes how Hyewon &amp; Insong handles data in <strong>SuperMusicNote for Android</strong> (package <code>com.hyewoninsong.supermusicnote</code>). It takes precedence over the studio’s general policy for this Android app. It does not describe the iOS version or other apps.</p>
 
       <h2>1. Data Stored for Your Practice</h2>
       <p>The app stores learner names you enter, learner settings, and saved practice sessions on your device. Session records include the notes shown, answers, first-try results, and solve times. It uses these records to show your practice history and statistics and to focus practice on weak notes.</p>
 <p>Learner accounts are local profiles, not online accounts. The app does not request an email address, password, or remote sign-in.</p>
 
       <h2>2. Collection, Sharing, and Third Parties</h2>
-      <p>This Android release does not send your practice data or device information to Hyewon &amp; Insong or a third party. The app has no internet permission, cloud sync, analytics, or crash-reporting SDK. It does not use Firebase, display advertising, process payments, or collect advertising identifiers.</p>
-<p>We do not receive, sell, or share the data stored by this app. Google Play and Android may handle information as part of their own services; their policies apply to those services.</p>
+      <p>The app uses <strong>Google Firebase Analytics</strong> (Google LLC) to understand how the app is used and how quizzes go in aggregate. For this, the app uses the internet permission. Your settings and practice records are not uploaded: there is no cloud sync, and they stay on your device only. The app does not display advertising or process payments.</p>
+<p><strong>What is collected:</strong></p>
+<ul>
+<li>App interaction events: screens viewed, tab and settings changes, quiz start and end, and answer attempts. An answer event includes the predefined note (clef and staff position), the correct and selected solfege, the solve time rounded to 0.1 seconds, and whether hints or weak-note focus were on.</li>
+<li>Coarse bucket counts of saved records and learner accounts (for example 0, 1, or 2_5), not exact values or the records themselves.</li>
+<li>The Firebase app-instance identifier, plus standard device and app information Firebase collects automatically: device model, OS version, app version, and approximate region or country derived from the IP address.</li>
+</ul>
+<p><strong>What is not collected:</strong> advertising ID (the app does not declare the AD_ID permission, and ad storage and ad personalization consent are denied), learner names or IDs, saved record IDs, text you enter, and wall-clock timestamps of your records. We do not sell data.</p>
+<p>Analytics is disabled by default on emulators. Google processes this data under <a href="https://firebase.google.com/support/privacy" rel="noopener noreferrer">Firebase’s privacy terms</a>. Analytics data is retained according to the Google Analytics data retention settings. Google Play and Android may also handle information as part of their own services; their policies apply to those services.</p>
 
       <h2>3. Storage and Device Migration</h2>
-      <p>Practice data is kept in the app’s private local storage. The developer cannot access those records remotely. Protect your device with its screen lock and only share the device with people you trust.</p>
+      <p>Settings and practice records are kept in the app’s private local storage. The developer cannot access those records remotely; analytics events described above are the only data sent off the device. Protect your device with its screen lock and only share the device with people you trust.</p>
 <p>The app disables Android cloud backup. On some devices, Android or a device manufacturer may still transfer app data during a device-to-device migration. That behavior depends on the device and its settings; the app does not provide its own backup, export, or transfer service.</p>
 
       <h2>4. Retention and Deletion</h2>
       <p>Saved records and settings remain in local storage until you remove them or clear the app’s data. You can delete individual saved sessions in the app. Deleting a local learner profile deletes that profile’s settings and records; the app retains at least one profile.</p>
-<p>To remove all locally stored app data, use Android Settings to clear SuperMusicNote’s storage or uninstall the app. We have no server copy to retain or delete. Device-migration copies, if any, must be removed on the receiving device as well.</p>
+<p>To remove all locally stored app data, use Android Settings to clear SuperMusicNote’s storage or uninstall the app; deleting the app removes the local data. You can stop all analytics collection by uninstalling the app. We have no server copy of your records to retain or delete; analytics data already sent is retained per Google Analytics retention settings. Device-migration copies, if any, must be removed on the receiving device as well.</p>
 
       <h2>5. Privacy Contact</h2>
       <p>For privacy questions, contact <strong>Hyewon &amp; Insong</strong> at <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a>. If you email us, we receive the address and information you choose to send so that we can respond. Do not include practice records or personal information unless needed for your inquiry.</p>
 
       <h2>6. Policy Changes</h2>
-      <p>We will update this page if the Android app’s data handling changes and show the applicable effective date. This policy describes the Android release identified above.</p>
+      <p>We will update this page if the Android app’s data handling changes and show the applicable effective date. This policy describes the Android app identified above, including its use of Firebase Analytics.</p>
     </div>
   </div>
 </BaseLayout>
