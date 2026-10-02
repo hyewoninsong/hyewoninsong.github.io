@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-09-29T20:02:13+09:00
+date: 2026-10-01T00:00:19+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -10,7 +10,7 @@ School timetables are read as "Period 2", not "10:00". New timetables now start 
 
 ## You set the periods; the rows stack at equal height
 
-A new period timetable opens the display sheet, where a "Periods" row takes the place of the time range and leads to the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. Drag periods or set exact start and end times (see the evening update below), add or remove periods — the only rule is that each period starts after the previous one ends.
+A new period timetable opens the display sheet, where a "Periods" row takes the place of the time range and leads to the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
@@ -18,7 +18,7 @@ Each period is one equal-height row labeled with its name and times. Long-press 
 
 ## Why equal rows, and why whole periods only
 
-Drawing to real scale leaves thin break stripes between every row and blurs the one thing you want to read: what's in which period. Equal rows read like a paper timetable. And people who choose periods rarely start something mid-period, so snapping to whole periods saves fiddling; the minute-level time wheel is off for these timetables.
+Drawing to real scale leaves thin break stripes between every row and blurs the one thing you want to read: what's in which period. Equal rows read like a paper timetable. Lunch is just a row boundary by default; it can now be switched on as its own row (last update below). And people who choose periods rarely start something mid-period, so snapping to whole periods saves fiddling; the minute-level time wheel is off for these timetables.
 
 ## Real times stored, virtual times drawn
 
@@ -136,6 +136,78 @@ We looked at the type-card drawings again. The axis miniatures were accurate but
 
 One catch on the way: the unselected card paints in `secondaryLabel`, which has alpha. Painting each stroke with that color made overlaps — a guide line crossing the block, the frame meeting the axis — visibly darker than the rest of the drawing (caught on a simulator capture). The fix draws the `Canvas` opaque black first, uses that as a mask, and fills once with `.fill(.foreground)`; overlapping strokes stop stacking into a darker patch. And since the period icon needs digits, it's drawn in code rather than shipped as an SVG asset — asset catalog SVG doesn't render `<text>`. The 64×64 SVG files stay as the source of truth, mirrored by hand into the `Canvas` code.
 
+## Update, Sep 30 — five rules instead of seven periods
+
+After a day of making per-period editing less painful — dragging, a wider timeline, later periods shifting along, a minimap, edge auto-scroll — the request that came back changed direction: "Don't make me set periods. Let me pick a start time, class length, lunch, break and number of periods."
+
+Real school days are a handful of rules. The editor now takes the rules and shows the result.
+
+![Period editor — a rules card (first period 9:00 AM, class 50 min, break 10 min, lunch 1 hr, lunch after P4, 7 periods) above a preview list with the lunch row](/blog/timetable-period-axis/period-plan-rules.png)
+
+| Setting | Control | Range |
+|---|---|---|
+| First period starts | time picker | within the day |
+| Class length | value pill → wheel | 30–180 min, by 5 |
+| Break | value pill → wheel | 0–60 min, by 5 |
+| Lunch | value pill → wheel | 0–180 min, by 10 (0 = none) |
+| Lunch timing | value pill → wheel | "After P4" |
+| Periods | value pill → wheel | 1–24 |
+
+Lunch *timing* wasn't in the request, but a lunch length alone can't say where lunch goes, so it got its own row (default: after period 4). With lunch at 0 the row dims rather than disappearing, so the card doesn't jump. A value that pushes the last period past midnight is kept but shown as a red "—" and blocks ✓ (the steppers first refused such taps; they became wheels later the same day).
+
+![No lunch, six periods — the lunch-timing row dims; the list shows periods 10 minutes apart](/blog/timetable-period-axis/period-plan-no-lunch.png)
+
+Existing timetables open with rules inferred from their periods: the most common length and break, and the widest gap larger than the break as lunch. Period names stay with their position; events follow the same numbered period; events left without a period after lowering the count are deleted only after a confirmation.
+
+The alternative was keeping yesterday's timeline under the rules as "fine-tune". Moving one period there would break the rules, and the next time the sheet opened there'd be no single source of truth. The timeline, minimap, add button and per-period card are gone. If a school needs one long period, the answer is another rule, not the old editor.
+
+## Update, Sep 30 — the tutorial follows the period timetable
+
+Replaying the tutorial on a period timetable used to show a ghost block growing in 10-minute steps, while the real grid snaps a whole period at a time. It also never said where period times are changed.
+
+The tutorial now adapts to the timetable type. On a period timetable, the create/move/resize demos snap by period and the copy talks about periods, and a tenth step, "Period Times", sits just before Lock: it demos tapping a period on the left axis and advances as soon as the period editor opens.
+
+![Tutorial step 9 of 10 on a period timetable — "Period Times"](/blog/timetable-period-axis/tutorial-period-step.png)
+
+Why this shape:
+
+- **Advance on open, not on save.** The editor is a set of rules; demanding a save would push people into changes they don't want. The step only needs to show where the setting lives.
+- **Near the end, not first.** A new period timetable already opens the period editor right after creation.
+- **A variant, not another course.** The tutorial already splits by shell (iPhone vs. wide iPad). Adding type as a course would make four; type is a separate axis multiplied in, and the demos only swap the grid step from 30 minutes to one period.
+
+## Update, Sep 30 early morning — a cleaner editor, and lunch as its own row
+
+The rules editor worked but looked like a settings form: five − / + steppers stacked up, and the end of the day hidden at the bottom of the list.
+
+![Period editor — lunch card with 1 hour, after P4, "Show lunch on axis" on; the list below shows P1–P7 with a smaller fork-and-knife lunch line](/blog/timetable-period-axis/period-lunch-toggle.png)
+
+- A big summary line on top: `09:00 – 16:40`, then `7 periods · 7h 40m`.
+- Every value is a gray pill; tap it and a wheel opens under the row, like the time rows elsewhere in the app.
+- Two cards: class (start, length, break, count) and lunch (length, timing, axis toggle).
+- The preview bolds period names and turns lunch into a smaller, gray line with a fork-and-knife icon.
+
+School-level preset chips (elementary to college) went in and came straight back out: values differ too much from school to school, and two wheel flicks do the same job.
+
+**Lunch on the axis.** With the new toggle on, the grid gets a gray "Lunch" row between periods, and nothing can go in it. Creating there does nothing; dragging down from P4 stops at the lunch row (below, the finger is far lower but the block ends at 12:50); moving snaps to the nearer period; resizing stops at the edge; the edit sheet's end-period wheel won't cross lunch.
+
+![Grid with a gray "Lunch 12:50–13:50" row between P4 and P5; a new block dragged down from Wednesday P4 stops above it](/blog/timetable-period-axis/period-lunch-row-clamp.png)
+
+The lunch row is a full row, not a half one — snapping and zoom work in whole rows, and a half row would knock every later period off the grid. Drawing a thin band on the boundary instead would have needed every vertical coordinate rewritten. Lunch position isn't stored separately; it's read from the periods, the same way the editor reads its rules, so there's one source of truth. Events that already span lunch are left alone rather than silently cut.
+
+## Update, Sep 30 evening — clearer rules and an easier preview
+
+The editor keeps the same values and wheels, but makes the reading order easier to follow. **Class settings, Lunch, and Preview** headings separate the inputs from their result below the day summary.
+
+![Period editor with a day summary, class and lunch headings, muted icons, and value pills](/blog/timetable-period-axis/period-editor-refined.png)
+
+Small, muted icons give each rule a quick cue. The open row uses the app tint; the rest stay secondary, so the screen does not turn into a set of colored controls. Tapping anywhere in a rule row now opens its wheel, rather than requiring a tap on the value pill. Opening another row closes the first. With no lunch, the lunch-timing row stays in place, dimmed and unavailable.
+
+The preview adds a quiet numbered circle to each class. It is easier to find the period position, then read its time range—even with a custom name. Lunch keeps its smaller fork-and-knife line and has no period number.
+
+![The class-length row open, with a wheel selecting 50 minutes beneath it](/blog/timetable-period-axis/period-editor-wheel.png)
+
+We chose clearer grouping over more controls or decorative colors. Bringing back individual period cards would create two competing answers again: the rules and hand-edited times. The summary, cancel/save flow, and confirmation before removing events remain the same.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -147,3 +219,7 @@ One catch on the way: the unselected card paints in `secondaryLabel`, which has 
 - Sep 29, later evening — the edit sheet picks start and end periods
 - Sep 29, midnight — whole-day minimap, midnight wall, edge auto-scroll while dragging
 - Sep 29, night (later) — type cards switched from axis miniatures to drawn icons, mask fix for overlap darkening
+- Sep 30 — period editor switched to rules (start, class, break, lunch, lunch timing, count); per-period drag editing removed
+- Sep 30, later — tutorial variant for period timetables: period-snapped demos, a "Period Times" step
+- Sep 30, early morning — cleaner editor (summary line, value pills + wheels, class/lunch cards); optional lunch row on the axis, closed to events
+- Sep 30, evening — section headings, row icons, whole-row taps, and numbered preview markers
