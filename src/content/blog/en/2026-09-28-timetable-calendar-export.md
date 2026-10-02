@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-02T12:30:47+09:00
+date: 2026-10-02T18:35:40+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -72,8 +72,12 @@ The remembered date range had a gap: reopen the sheet long after a semester ends
 
 Two smaller touches: a color dot now marks the destination calendar, for telling apart same-named calendars across accounts, and if a dedicated calendar gets deleted from the Calendar app directly, the sheet now says so in one line instead of quietly losing the status card.
 
+Later that day, one more layout fix. A two-line note sat between the "Calendar" picker card and the "Add to Apple Calendar" button, so the button read as part of the ".ics" block below rather than the choice above it. Now the add button sits right under the picker, and the note moves below the button, since it describes what happens when you add to that calendar. The .ics button and its instructions stand apart with a section gap, as the separate path they are. When premium is locked, only the buttons dim; the picker still opens.
+
+![The lower half of the export sheet. Under the Apple Calendar header, the calendar picker card, the Add to Apple Calendar button right below it, and a short note form one group; the .ics share button and its instructions sit apart below](/blog/timetable-calendar-export/cta-grouped.png)
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
 - 2026-09-28 — markers for finding and removing events, record recovery, change notice
-- 2026-10-02 — series checklist, twin-series note, dimmed out-of-range rows, end-date presets, first-event-date caption, "Update Calendar" CTA, remove button moved to the bottom, stale-range bug fix, calendar color dot, dropped-record notice
+- 2026-10-02 — series checklist, twin-series note, dimmed out-of-range rows, end-date presets, first-event-date caption, "Update Calendar" CTA, remove button moved to the bottom, picker and add button grouped, stale-range bug fix, calendar color dot, dropped-record notice
