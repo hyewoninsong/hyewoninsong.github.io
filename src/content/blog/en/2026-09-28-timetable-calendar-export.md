@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-09-28T15:43:00+09:00
+date: 2026-10-02T12:25:17+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -48,7 +48,20 @@ Now every event carries a marker in its `url` field: a deep link back to the tim
 
 When the timetable changes after an export, the app doesn't rewrite the calendar on its own. That would silently undo edits made in Calendar, like a skipped class or a per-event alert. It stores a fingerprint of what it exported and shows "Your timetable changed after this export" until you export again.
 
+## 2026-10-02 — Choosing which series actually go out
+
+A timetable has blocks that have no business on a calendar — lunch, study hall, empty slots. Until now, all of them went out with everything else. There was a second wrinkle too: the rule for merging series (same title, time and note) was correct, but that correctness was itself confusing. A single different character in a note turns one class into two "Calculus" entries on the calendar, and the summary line's count gave no hint why.
+
+So we added a series checklist between the date range and the destination calendar. Every series in the timetable shows up as a row, all checked by default. Turn off the ones that don't belong — lunch, say — and the choice is remembered per device, per timetable. Leave it off and it stays off the next time the sheet opens.
+
+Series that split over a differing note are not merged back together. Merging them would silently drop one of the two notes. Instead, when two or more series share a title, a line under the card explains why: "Events sharing a title but differing in time or notes stay separate."
+
+Series whose weekday doesn't fall in the chosen range aren't hidden from the list — they're dimmed, with a "Not in this period" note, while the checkmark stays exactly as the user left it. Selection and period are two different questions, and hiding one makes the other unanswerable.
+
+The fingerprint used to detect timetable changes after export is now computed from this selection too. Flipping a series off and back on is itself a reason the next export would change the calendar.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
 - 2026-09-28 — markers for finding and removing events, record recovery, change notice
+- 2026-10-02 — a series checklist for what gets exported (all on by default, remembered per device), a note on twin series, dimmed rows for series outside the chosen period
