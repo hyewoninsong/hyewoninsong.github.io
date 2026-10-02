@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-02T18:35:40+09:00
+date: 2026-10-02T19:50:30+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -52,7 +52,7 @@ When the timetable changes after an export, the app doesn't rewrite the calendar
 
 A timetable has blocks that have no business on a calendar — lunch, study hall, empty slots. Until now, all of them went out with everything else. There was a second wrinkle too: the rule for merging series (same title, time and note) was correct, but that correctness was itself confusing. A single different character in a note turns one class into two "Calculus" entries on the calendar, and the summary line's count gave no hint why.
 
-So we added a series checklist between the date range and the destination calendar. Every series in the timetable shows up as a row, all checked by default. Turn off the ones that don't belong — lunch, say — and the choice is remembered per device, per timetable. Leave it off and it stays off the next time the sheet opens.
+So we added a series checklist between the date range and the destination calendar (later that night it moved out of the sheet into a popover — see below). Every series in the timetable shows up as a row, all checked by default. Turn off the ones that don't belong — lunch, say — and the choice is remembered per device, per timetable. Leave it off and it stays off the next time the sheet opens.
 
 Series that split over a differing note are not merged back together. Merging them would silently drop one of the two notes. Instead, when two or more series share a title, a line under the card explains why: "Events sharing a title but differing in time or notes stay separate."
 
@@ -60,7 +60,7 @@ Series whose weekday doesn't fall in the chosen range aren't hidden from the lis
 
 The fingerprint used to detect timetable changes after export is now computed from this selection too. Flipping a series off and back on is itself a reason the next export would change the calendar.
 
-The date range card used two calendar pickers. Picking a common range like "to the end of the year" instead of the 16-week default meant paging through months. So we added three chips under the end date — 8 weeks, 16 weeks, end of year. The chips hold no state of their own: the chosen end date is recomputed every time, and whichever chip it matches lights up. Move the start date and the chips' targets move with it. We used chips instead of a segmented control because the series checklist already uses that grammar, and we skipped start-date presets — the start already defaults to today, so there was nothing to pick.
+The date range card used two calendar pickers. Picking a common range like "to the end of the year" instead of the 16-week default meant paging through months. So we added three chips under the end date — 8 weeks, 16 weeks, end of year (now four with a 1-year chip, inside the date card). The chips hold no state of their own: the chosen end date is recomputed every time, and whichever chip it matches lights up. Move the start date and the chips' targets move with it. We used chips instead of a segmented control because the series checklist already uses that grammar, and we skipped start-date presets — the start already defaults to today, so there was nothing to pick.
 
 The period caption now gets a second line. Pick a Wednesday start and Monday/Tuesday classes land the following week, not this one — something the old summary line never said, and easy to read as a broken export. Now it adds "First event is Oct 6 (Mon)" right under the summary, skipped when the first event falls on the start date itself. We considered snapping the start date to the nearest Monday automatically, but that silently overrides what the user picked, so we dropped it.
 
@@ -76,8 +76,30 @@ Later that day, one more layout fix. A two-line note sat between the "Calendar" 
 
 ![The lower half of the export sheet. Under the Apple Calendar header, the calendar picker card, the Add to Apple Calendar button right below it, and a short note form one group; the .ics share button and its instructions sit apart below](/blog/timetable-calendar-export/cta-grouped.png)
 
+## 2026-10-02, night — The picker moved out of the sheet
+
+One row per series made the sheet long. A timetable with ten-odd classes pushed the calendar picker and the Add button well below the fold, and the same class at different times took separate rows, so you couldn't see at a glance how often English meets.
+
+The sheet now has a single "Choose Events · 9/9" row. Tapping it opens a popover anchored to the row — a popover on iPhone too, not a sheet. Tap outside to close.
+
+![The "Choose Events 9/9" row with its popover open below. The School card holds two rows, "Mon, Fri 08:50–12:50" and "Tue, Wed, Thu 08:50–13:40", followed by Taekwondo and English cards](/blog/timetable-calendar-export/series-popover.png)
+
+| Group | What goes together | Order |
+|---|---|---|
+| Card | Series with the same title and color | Earliest weekday → its start time → title → color |
+| Row in a card | Series with the same start and end time, any weekday | Earliest weekday → start time |
+
+The card header toggles the whole class; a partly selected group shows a minus. "Earliest weekday, then earliest time" compares the single earliest occurrence, so a class meeting Monday 15:00 and Tuesday 9:00 doesn't pose as "Monday 9:00". What's stored is unchanged — still one choice per series — so earlier selections carry over.
+
+We passed on a collapsible list inside the sheet (expanding it makes the sheet long again) and on a pushed screen or a sheet on a sheet (too heavy, the same call we made for the color picker).
+
+### Getting the simulator to that screen
+
+Verifying it hit three walls. `simctl openurl` puts up a system "Open in Timetable?" prompt that neither `simctl` nor the app can dismiss. `simctl launch` skips the scheme's StoreKit config, so the purchase code asks for an Apple Account sign-in. And a fresh simulator has no timetable. The existing debug flag `-premiumUnlocked` handles the sign-in; two new debug-only launch arguments handle the rest — `-openURL <url>` hands the URL to the app's own `onOpenURL` path after launch, and `UI-Testing-SampleData` loads the store sample timetables without the rest of screenshot mode. A UI test with all three opens the sheet, taps the row, and took the capture above.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
 - 2026-09-28 — markers for finding and removing events, record recovery, change notice
 - 2026-10-02 — series checklist, twin-series note, dimmed out-of-range rows, end-date presets, first-event-date caption, "Update Calendar" CTA, remove button moved to the bottom, picker and add button grouped, stale-range bug fix, calendar color dot, dropped-record notice
+- 2026-10-02 — event picker moved to a popover (title+color cards, same-time rows, ordering rules), debug launch arguments for simulator checks
