@@ -29,21 +29,22 @@ const t = useTranslations(lang);
 <li>The Firebase app-instance identifier, plus standard device and app information Firebase collects automatically: device model, OS version, app version, and approximate region or country derived from the IP address.</li>
 </ul>
 <p><strong>What is not collected:</strong> advertising ID (the app does not declare the AD_ID permission, and ad storage and ad personalization consent are denied), learner names or IDs, saved record IDs, text you enter, and wall-clock timestamps of your records. We do not sell data.</p>
-<p>Analytics is disabled by default on emulators. Google processes this data under <a href="https://firebase.google.com/support/privacy" rel="noopener noreferrer">Firebase’s privacy terms</a>. Analytics data is retained according to the Google Analytics data retention settings. Google Play and Android may also handle information as part of their own services; their policies apply to those services.</p>
+<p><strong>Firebase Crashlytics</strong> (Google LLC) is also used to diagnose and fix app crashes and stability problems. When the app crashes or stops responding (ANR), it sends the crash stack trace and diagnostic data such as device model, OS version, app version, orientation, free memory and disk space, whether the device is rooted, the time of the crash, and a Firebase installation identifier (Crashlytics installation UUID). No learner names or IDs, record contents, or text you enter are attached, and no advertising ID is collected. Crashlytics keeps crash stack traces and associated identifiers for 90 days.</p>
+<p>Analytics and Crashlytics are disabled by default on emulators. Google processes this data under <a href="https://firebase.google.com/support/privacy" rel="noopener noreferrer">Firebase’s privacy terms</a>. Analytics data is retained according to the Google Analytics data retention settings. Google Play and Android may also handle information as part of their own services; their policies apply to those services.</p>
 
       <h2>3. Storage and Device Migration</h2>
-      <p>Settings and practice records are kept in the app’s private local storage. The developer cannot access those records remotely; analytics events described above are the only data sent off the device. Protect your device with its screen lock and only share the device with people you trust.</p>
+      <p>Settings and practice records are kept in the app’s private local storage. The developer cannot access those records remotely; analytics events and crash reports described above are the only data sent off the device. Protect your device with its screen lock and only share the device with people you trust.</p>
 <p>The app disables Android cloud backup. On some devices, Android or a device manufacturer may still transfer app data during a device-to-device migration. That behavior depends on the device and its settings; the app does not provide its own backup, export, or transfer service.</p>
 
       <h2>4. Retention and Deletion</h2>
       <p>Saved records and settings remain in local storage until you remove them or clear the app’s data. You can delete individual saved sessions in the app. Deleting a local learner profile deletes that profile’s settings and records; the app retains at least one profile.</p>
-<p>To remove all locally stored app data, use Android Settings to clear SuperMusicNote’s storage or uninstall the app; deleting the app removes the local data. You can stop all analytics collection by uninstalling the app. We have no server copy of your records to retain or delete; analytics data already sent is retained per Google Analytics retention settings. Device-migration copies, if any, must be removed on the receiving device as well.</p>
+<p>To remove all locally stored app data, use Android Settings to clear SuperMusicNote’s storage or uninstall the app; deleting the app removes the local data. You can stop all analytics and crash-report collection by uninstalling the app. We have no server copy of your records to retain or delete; analytics data already sent is retained per Google Analytics retention settings, and crash reports for 90 days. Device-migration copies, if any, must be removed on the receiving device as well.</p>
 
       <h2>5. Privacy Contact</h2>
       <p>For privacy questions, contact <strong>Hyewon &amp; Insong</strong> at <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a>. If you email us, we receive the address and information you choose to send so that we can respond. Do not include practice records or personal information unless needed for your inquiry.</p>
 
       <h2>6. Policy Changes</h2>
-      <p>We will update this page if the Android app’s data handling changes and show the applicable effective date. This policy describes the Android app identified above, including its use of Firebase Analytics.</p>
+      <p>We will update this page if the Android app’s data handling changes and show the applicable effective date. This policy describes the Android app identified above, including its use of Firebase Analytics and Firebase Crashlytics.</p>
     </div>
   </div>
 </BaseLayout>
