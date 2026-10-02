@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-02T12:50:00+09:00
+date: 2026-10-02T13:40:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
@@ -267,6 +267,8 @@ A pass over the whole feature, fixing fourteen things that snagged in use withou
 
 A friend's timetable can arrive three ways: opened from Files, dropped onto the window, or loaded from inside the Find Free Time screen. All three call the same store function. But the "send yours back?" banner only appeared on the first two. Someone who loaded a file from inside the screen was never prompted to return the favor — the loop this feature spreads through was broken on one path. Saving was shared; "what happens after saving" was written separately at each call site. The follow-up is now one function all three paths call. For the same reason, a plain file with no sender name used to put the timetable's own name ("Fall") on the chip — now every path asks for a name once — and a failed send, which used to just not open the share sheet, now shows an alert. The lesson: when two or more paths lead to the same result, draw a paths × follow-ups table and check every cell. "It saved" is only the first cell.
 
+![Empty state — Ask for a Timetable and Send My Timetable as two equal buttons, with Load a Friend's Timetable below](/blog/timetable-free-time-finder/empty-two-buttons.png)
+
 ### Why Saturday looked free
 
 Days of the week followed only my base timetable's display setting. If I showed weekdays, a friend's Saturday shift was simply not there, and Saturday looked free — the one place the screen was confidently wrong. "Widen range" used to widen hours only; it now widens days too, judged by where schedules actually exist rather than by a day-range field in the file: a Sunday schedule means all seven days, Saturday only means Mon–Sat. Carrying the friend's display range in the file lost — a friend who merely shows Saturday with nothing on it would just add an empty column.
@@ -275,22 +277,30 @@ Days of the week followed only my base timetable's display setting. If I showed 
 
 Minimum length, people, participation rule and the hour/day range reset every time, though the next answer is almost always the same. They now persist on the device. The time format and light/dark chips moved out of that panel into the share sheet: the on-screen grid follows the app's time format and the system appearance, and those two chips are options for the exported picture — the structure the print and share sheets already had.
 
+![The export sheet — time format and appearance chips in a card under the preview, Share as Image below](/blog/timetable-free-time-finder/export-options.png)
+
 ### The list speaks the grid's grammar
 
 Tapping a list row copied it immediately, so you couldn't see who was free until you pasted. Rows now show the free count ("3/4") on the right, and a tap opens the same selection card as the grid. Copy lives on the card, next to a new Share button that sends the same text straight to a messenger.
+
+![List view — each row shows 3/3 and a duration capsule; the tapped row is tinted green and a card with name tags, Copy and Share sits below](/blog/timetable-free-time-finder/list-row-card.png)
 
 ### Smaller things
 
 - "Ask for a timetable" and "Send mine" on the empty screen now weigh the same; the copy said "send yours first" while the primary button said "ask".
 - The Me chip toggles everywhere except a narrow strip on the right that opens Send — people hit it by accident. That strip is now a hairline-split segment, 44pt wide.
 - A friend chip gets a clock after 30 days, and long-press offers "Request again" for a new term.
+
+![The chip row — the Me chip's share segment split by a hairline, a clock on the Junho chip](/blog/timetable-free-time-finder/chips-split-stale.png)
+
+![Long-pressing the Minji chip — received date, Request Again, Rename, Delete](/blog/timetable-free-time-finder/friend-menu-rerequest.png)
 - In edit mode, tapping a friend chip offers Rename or Delete; Rename was hidden behind long-press only.
 - The people-limit alert said "long-press a chip to remove it", but the Me chip has no long-press. It now says "use Edit" and has an Edit button.
 - The request message puts the App Store link first, and a source-contract test keeps the old app-name URL scheme from ever reappearing in code — it is still accepted on the way in.
 
 ## Where it stands
 
-The split chip, the share sheet's option card, the list rows and the two-button card have not been captured in the simulator yet. A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
+A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
 
 
 
