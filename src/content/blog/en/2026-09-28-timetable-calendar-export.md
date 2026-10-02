@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-02T12:25:17+09:00
+date: 2026-10-02T12:30:47+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -60,8 +60,20 @@ Series whose weekday doesn't fall in the chosen range aren't hidden from the lis
 
 The fingerprint used to detect timetable changes after export is now computed from this selection too. Flipping a series off and back on is itself a reason the next export would change the calendar.
 
+The date range card used two calendar pickers. Picking a common range like "to the end of the year" instead of the 16-week default meant paging through months. So we added three chips under the end date — 8 weeks, 16 weeks, end of year. The chips hold no state of their own: the chosen end date is recomputed every time, and whichever chip it matches lights up. Move the start date and the chips' targets move with it. We used chips instead of a segmented control because the series checklist already uses that grammar, and we skipped start-date presets — the start already defaults to today, so there was nothing to pick.
+
+The period caption now gets a second line. Pick a Wednesday start and Monday/Tuesday classes land the following week, not this one — something the old summary line never said, and easy to read as a broken export. Now it adds "First event is Oct 6 (Mon)" right under the summary, skipped when the first event falls on the start date itself. We considered snapping the start date to the nearest Monday automatically, but that silently overrides what the user picked, so we dropped it.
+
+Reopening the sheet with an existing export still showed "Add to Apple Calendar" on the bottom button, even though tapping it doesn't add — it deletes and recreates. The confirmation dialog that pops up ("Already on your calendar → Replace?") made no sense against that label. Now the button reads "Update Calendar" whenever a record exists. The confirmation stays, because deleting and recreating can't be undone regardless of what the button says.
+
+The destructive "Remove from Calendar" button used to sit right under the status card, so it was the first thing your eyes landed on when reopening the sheet. The status card is just that — status, not an action — so it stays at the top. The remove button moved below both main buttons, to the very bottom of the sheet, matching the iOS convention of putting irreversible actions last.
+
+The remembered date range had a gap: reopen the sheet long after a semester ends, and the stored range (last semester's dates) would still be there, looking perfectly normal ("16 weeks · 9 events") right up until you tapped Add and got repeating events in the past. The fix keeps the stored range only if its end date hasn't passed; once it has, only the length survives, and the range restarts from today.
+
+Two smaller touches: a color dot now marks the destination calendar, for telling apart same-named calendars across accounts, and if a dedicated calendar gets deleted from the Calendar app directly, the sheet now says so in one line instead of quietly losing the status card.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
 - 2026-09-28 — markers for finding and removing events, record recovery, change notice
-- 2026-10-02 — a series checklist for what gets exported (all on by default, remembered per device), a note on twin series, dimmed rows for series outside the chosen period
+- 2026-10-02 — series checklist, twin-series note, dimmed out-of-range rows, end-date presets, first-event-date caption, "Update Calendar" CTA, remove button moved to the bottom, stale-range bug fix, calendar color dot, dropped-record notice
