@@ -1,6 +1,6 @@
 ---
 title: "Overlaying two timetables: a slider decides which one you read"
-date: 2026-10-01T10:42:15+09:00
+date: 2026-10-02T11:29:12+09:00
 app: "timetable"
 tags: ["devlog", "design"]
 summary: "The overlay view now draws the top timetable in its own colors instead of a black dashed outline, with an opacity slider and a swap button. Where two schedules overlap, you pick which one to read."
@@ -69,11 +69,11 @@ The update adds an overlay on a shared day-and-time axis. Each candidate has an 
 
 ### Drawing order must not become ranking
 
-You can hide a layer, adjust its opacity, or reorder it with a drag handle. Bringing a candidate to the front does not make it rank first. Hidden layers still participate in the numerical comparison, and view controls live only for the current sheet session.
+You could hide a layer, adjust its opacity, or reorder it with a drag handle (retired 2026-10-02 — see below). Bringing a candidate to the front did not make it rank first. Hidden layers still participated in the numerical comparison, and view controls lived only for the current sheet session.
 
-![Lia is the front layer while Siwoo remains first in the tied ranking: the two orders stay independent](/blog/timetable-overlay-compare/candidate-layers.png)
+![Lia is the front layer while Siwoo remains first in the tied ranking: a record of a view retired 2026-10-02](/blog/timetable-overlay-compare/candidate-layers.png)
 
-Bars compare four criteria and the grid highlights the relevant days or intervals. Gaps lie between the first and last event of each day. Morning means an event starts before noon: an 11–13 event counts as one morning event, not one hour. Occupied time counts overlaps within each candidate once.
+Bars compared four criteria (replaced by a table on 2026-10-02) and the grid highlights the relevant days or intervals. Gaps lie between the first and last event of each day. Morning means an event starts before noon: an 11–13 event counts as one morning event, not one hour. Occupied time counts overlaps within each candidate once.
 
 Overlap between two candidates is not a conflict warning. They are alternatives, not events you intend to attend simultaneously. Users choose the criterion; equal values share a rank. There is no combined score claiming one timetable is best for everyone.
 
@@ -83,9 +83,26 @@ Restoring another comparison sheet would separate candidate selection, numerical
 
 This is an extension under development. Earlier screenshots in this post document the retired views, not the current candidate comparison.
 
+## 2026-10-02 — One screen, a table instead of bars, the grid paged
+
+New semester, several draft timetables, deciding which courses to actually take: that's who opens this screen. The October 1 version stacked a candidate list, a sort picker, a 600pt-wide horizontally scrolling overlay grid, layer sliders, and rank bars — comparing meant scrolling through two or three screens. Candidates usually share most of their courses, so overlaying them stacked the shared blocks N deep and buried the differences.
+
+This version fits on one screen with no scrolling: a row of candidate chips, a metrics table (candidates as rows; days with events, gap time, morning events, and total time as columns, lowest value in each column highlighted, tapping a column header sorts and highlights that metric on the grid), and the grid filling the rest of the height. The grid pages one candidate at a time — an iPad page sheet shows two or three side by side — and draws events present in every candidate in grey, reserving color for the differences. A caption below reads "Only here: School (Mon) · Math (Sat)," next to a button that opens the full timetable.
+
+![A candidate chip row, a metrics table, and a paged grid fit on one screen without scrolling](/blog/timetable-overlay-compare/one-screen.png)
+
+The overlay survives as "pick two": long-pressing two rows in the table overlays just those two on the grid, front candidate at 85% opacity, back at 60%. Layer reordering, hiding, opacity sliders, and rank bars are all gone — the same layer list described above, where "bringing a candidate to the front didn't make it rank first." With only two candidates ever overlaid, a fixed 85/60 split is enough; that layer of control wasn't needed.
+
+![Long-pressing two rows overlays them: shared events turn grey, each candidate's differences keep their own color](/blog/timetable-overlay-compare/overlay-two.png)
+
+Same course, different section means a different time — and that time difference is exactly what the decision is about. So "shared" is judged by title plus day plus start/end time, not title alone. Candidates as table columns were considered too, but ten candidates overflow an iPhone's width; candidates stay as rows, and the table scrolls internally past six. A separate button to enter overlay mode was also considered, but that's one more state and a control outside the table — long-press plus a one-line hint does the same job.
+
+Nesting the comparison sheet inside the list sheet kept it stuck at 580pt wide on iPad even with `.presentationSizing(.page)`. iPadOS sizes a sheet presented from inside another sheet to match the presenter's size — measuring both sheets showed identical widths down to the pixel. The fix: the list sheet closes itself, its `onDismiss` opens the comparison sheet, and the comparison sheet's `onDismiss` reopens the list (unless you tapped to open the timetable, which skips that). Metric definitions and the Premium gate are unchanged.
+
 ## History
 
 - 2026-09-29 — Overlay view added, then reworked the same day into a swap button and opacity slider
 - 2026-09-29 — "Lay Under" added to the edit screen; underlay masked around your blocks
 - 2026-09-30 — separate overlay and underlay views removed
 - 2026-10-01 — layer controls and visual metrics integrated into own-candidate comparison
+- 2026-10-02 — candidate comparison moved to one screen (chips, metrics table, grid pages colored only by difference); overlay reduced to picking two
