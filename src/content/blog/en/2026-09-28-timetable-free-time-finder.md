@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-02T22:57:23+09:00
+date: 2026-10-03T17:31:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -152,7 +152,7 @@ The "split segments when the free set changes" fix from the section just above i
 
 Layers made you read "how many are free" from shades of green. But people planning a meetup start from a condition: "at least three of us, for an hour." Answering that on the layered grid meant hunting for the third layer and measuring it.
 
-So the condition moved to the top. Right under the people chips there are now two dropdowns: "30 min or longer" and "Everyone" (or "N+ people", from one less than the number switched on down to one). Minimum length came back out of the collapsing panel, which then held only the hour range, time format and appearance (the format and appearance chips moved to the share sheet on October 2).
+So the condition moved to the top. Right under the people chips there are now two dropdowns: "30 min or longer" and "Everyone" (or "N+ people", from one less than the number switched on down to one). Minimum length came back out of the collapsing panel, which then held only the hour range, time format and appearance (the format and appearance chips moved to the share sheet on October 2). (On October 3 both filters went back into the panel — once the collapsed handle summarized them, the reason for keeping them outside was gone. See the October 3 section.)
 
 The grid uses two colors. Stretches that pass the filter are green with their length; stretches where someone is free but the filter isn't met are gray; hours when everyone is busy stay blank (this changed again the next day — see below). The nested greens are gone.
 
@@ -217,7 +217,7 @@ The time axis has its own background, stronger numbers and a label for the end o
 
 A much wider axis would squeeze the day columns. Repeating start and end times in every block would crowd the seven-day phone layout. A shared axis with visible rules gives the same reference without repeating text.
 
-Filters now show a small label above the value: minimum length and people. In the list, weekday and clock range sit on the left while duration gets its own capsule. A selected grid card also separates the clock range from the duration. The grid/list toggle is available on iPad too: a wide screen doesn't remove the need to find the longest opening first.
+Filters now show a small label above the value: minimum length and people (on iPhone this row moved into the options panel on October 3; the labels survive as the row labels there, and the iPad column keeps the dropdowns). In the list, weekday and clock range sit on the left while duration gets its own capsule. A selected grid card also separates the clock range from the duration. The grid/list toggle is available on iPad too: a wide screen doesn't remove the need to find the longest opening first.
 
 ![The free time list separates weekday and clock range from the duration capsule on the right](/blog/timetable-free-time-finder/separate-time-duration.png)
 
@@ -318,6 +318,34 @@ The first version made the gray blocks transparent on inversion. Frame captures 
 
 ![The inverted beat — transparent gray lets old green layers leak through (left); background-colored busy blocks leave only free time green (right)](/blog/timetable-free-time-finder/import-reveal-invert-fix.png)
 
+## 2026-10-03 — filters back into the panel, and a selection border that inner layers were covering
+
+On an iPhone 17 the grid showed about 08:00 to 12:30 of a twelve-hour range. The chip row and the filter row sat on top, the options panel and Share button at the bottom, and tapping a green cell floated a selection card on top of that. Three changes.
+
+### Once the handle reads the values, the filters can live inside
+
+The filters moved out of the panel on September 29 for one reason: the panel starts collapsed, so seeing what you were filtering by meant opening it every time. But the collapsed handle was already printing the hour range. Printing the filters there too removes the reason. The handle now reads "08:00–20:00 · 30 min+ · Everyone". Reading needs no tap; only changing does.
+
+![The options panel collapsed — the handle reads 08:00–20:00 · 30 min+ · Everyone, and the grid reaches 14:00](/blog/timetable-free-time-finder/panel-collapsed-summary.png)
+
+Expanded, it's four rows: minimum length, people, start time, end time, each a label on the left and a gray capsule menu on the right. The grid now reaches 14:00 collapsed on the same phone. Two alternatives lost: dropping only the small captions from the row saves about 24pt, a cell and a half; leaving it alone keeps the 12:30 cutoff. iPad keeps the dropdowns in its left column, where there is room.
+
+![The options panel expanded — minimum length, people, start time, end time, and the Share button](/blog/timetable-free-time-finder/panel-expanded.png)
+
+### A two-line card, and the last hour above it
+
+The selection card was three text lines plus two stacked text buttons, about 110pt floating over a 110pt panel, hiding the bottom two hours. Now the range and duration are one unit ("Mon 08:00–10:00 · 2 hr") flowing in the same wrap layout as the name tags, and Copy and Share are two icon buttons side by side: 76pt. The grid's bottom margin also measures the card and panel together instead of the panel alone, so 20:00 can scroll up above the card.
+
+### The selection border was drawn under the inner layer
+
+Tap a light outer layer and a black 2pt border surrounds it — except where a darker inner block sat, where the border was missing.
+
+![A Monday 08:00–10:00 outer layer selected, the black border intact over the dark inner 50-minute block, with the compact card below](/blog/timetable-free-time-finder/outer-layer-selected.png)
+
+The border was the block's own `.overlay`. Within a day column the layers are a `ForEach` in ascending people count, so the darker inner layer is a later sibling of the lighter outer one, and later siblings paint over the same pixels. An overlay sits above its own view, not above whatever is drawn after it. The fix is a separate sibling layer, drawn after every green layer in the column, that strokes the selected block's frame and ignores touches. The app had already hit this with a badge that extends outside its block's frame and gets covered by the neighbor; this time it happened entirely inside the frame. The rule is the same: whoever paints the pixel last wins.
+
+Why it was missed: every capture since the layers arrived selected the darkest, innermost layer, which has no later sibling. Selection states in layered UI need to be checked on the outermost layer.
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -341,3 +369,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 - 2026-10-01 — same-participant rule, choose an invitation inside a stretch, useful filter suggestions, attendance in shared images, HTTPS request page
 - 2026-10-02 — one follow-up for all three entry paths (banner, name prompt, failure alert), widen days too, persisted filters, format/appearance chips in the share sheet, list tap = card with "3/4" and Share, split chip, 30-day clock, Request again
 - 2026-10-02 evening — new timetables enter drawn → inverted (free time in light green) → merged; busy blocks turn background-colored on inversion
+- 2026-10-03 — iPhone filter row moved into the options panel (handle summarizes "08:00–20:00 · 30 min+ · Everyone"), two-line selection card with icon buttons, grid margin measures card + panel, selection border drawn as a sibling layer above the green layers
