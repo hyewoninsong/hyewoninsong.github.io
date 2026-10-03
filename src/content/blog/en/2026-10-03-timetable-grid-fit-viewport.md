@@ -22,7 +22,7 @@ Time-based timetables with a short range (9 to 17) have the same gap; the period
 
 Two changes together.
 
-First, if the content is shorter than the viewport, rows scale up by the ratio, capped at 1.5×. A three-period timetable should not get 200pt rows just to touch the bottom. The ratio is measured against the locked scale; the edit zoom that comes with unlocking multiplies on top of it, so locking and unlocking never changes it.
+First, if the content is shorter than the viewport, rows scale up by the ratio, capped at 1.5×. A three-period timetable should not get 200pt rows just to touch the bottom. The ratio is measured against the locked scale, so locking and unlocking never changes it. The edit zoom that comes with unlocking is not multiplied on top — the larger of the two wins. The first version multiplied them, and a seven-period timetable in edit mode showed barely three periods at 2.9×; the 2× edit scale was already chosen as "big enough to drag", so there was no reason to grow it further.
 
 Second, when the cap leaves space anyway, the bounce layer is clipped to the content height. Below the last period there is only the ground colour. Pulling down from the top still reveals ruled columns because that area is inside the content; pulling up from the bottom reveals plain floor. It reads as "this is the end".
 
