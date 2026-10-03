@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-03T14:47:28+09:00
+date: 2026-10-03T17:43:42+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -10,7 +10,7 @@ School timetables are read as "Period 2", not "10:00". New timetables now start 
 
 ## You set the periods; the rows stack at equal height
 
-A new period timetable opens the display sheet, where a "Periods" row takes the place of the time range and leads to the period editor. The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
+A new period timetable opens the display sheet, where a period-rules card takes the place of the time range (since Oct 3 — before that a "Periods" row led to a separate editor; see the last update). The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
@@ -226,6 +226,33 @@ What lost: asking users to define 75-minute periods (breaks timetables that mix 
 
 One more fix: saving used to stretch any event to at least 30 minutes. Half of a 50-minute period is 25, so it would spill into the break. Period timetables now use a 1-minute floor, matching the edit sheet. The edit sheet's period wheels still pick whole periods; a 1.5-period class stays as it is unless you turn them.
 
+## Update, Oct 3 evening — the period rules live in the display sheet; the editor is gone
+
+A time-based timetable edits days and hours in one display sheet. A period timetable had the same sheet with a single "Periods 7 · 09:00–16:40 ›" row, which closed the sheet, waited half a second and opened a separate editor with ✓ and X. One layer versus two, live versus draft. The request was simply to make them the same.
+
+Now the period sheet has a **rules card** where the time card would be: first period start, class length, break, lunch, lunch timing, period count, and a summary line underneath — "09:00 – 16:40 · 7 periods · 7h 40m". Turn a wheel and the axis behind the sheet changes immediately, exactly like the hour wheels on a time timetable.
+
+![Display sheet — days card, then a Periods card with six rows and the summary line](/blog/timetable-period-axis/display-sheet-period-rules.png)
+
+| | Before | Now |
+|---|---|---|
+| Getting there | "Periods ›" row → sheet closes → new sheet | a card in the same sheet |
+| Applied | on ✓ | as you turn (saved on close) |
+| Cancel | X | none — same as time timetables |
+| Events losing their period | a dedicated alert | the same "delete out-of-range events" alert |
+
+What lost: pushing the editor inside the sheet (no sheet-on-sheet, but still a draft with X), making time timetables two layers too (a regression), and refusing to lower the period count past an occupied period (a wall inside a wheel is odd, and time timetables already confirm on ✓).
+
+The big summary header and the preview list went away because the grid behind the sheet is the preview now. Move the first period to 10:00 and the axis label updates in place; lower the count and the blocks past the end get clipped, which says "these will be deleted" better than a number. The "check period times" comparison card, which used to appear after any edit, now only appears when the saved periods can't be expressed as rules.
+
+**The lunch toggle had to be rebuilt.** The "lunch on the axis" switch described in the Sep 30 update was never in the app: its pull request was based on another working branch, that branch was squash-merged first, and the three commits landed nowhere. The notes said it existed; a grep said otherwise. The commits were recovered and the switch now sits under the lunch-timing row in the rules card. Turn it on and a gray "Lunch" row appears on the axis behind the sheet.
+
+![Period grid — a gray "Lunch 12:50–13:50" row under Period 4](/blog/timetable-period-axis/lunch-slot-live.png)
+
+Showing that live needed one more piece: when the lunch row appears, everything from Period 5 moves down a row, but blocks are placed by their saved period number. While the sheet is open, blocks are laid out by saved period first and then mapped to the preview axis's rows — the same mapping the save uses. Lesson: a PR stacked on a working branch can vanish when its base merges first. Base on main, or write the merge order into the PR.
+
+**A pitfall, for the third time.** The test for the lunch row couldn't find the axis label's identifier. The hierarchy dump showed every label tagged `time_header_column` — the identifier on the axis column. In SwiftUI an `accessibilityIdentifier` on a container that isn't itself an accessibility element propagates to every element inside and overrides their own. The original lunch work had even moved the label identifier onto the combined element, and it still didn't help, because the parent was overwriting it. The fix is `.accessibilityElement(children: .contain)` on the container before its identifier. Since this was the third occurrence in a week, a source-scan test now fails on any tap container that gets an identifier without being made an element first.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -242,3 +269,4 @@ One more fix: saving used to stretch any event to at least 30 minutes. Half of a
 - Sep 30, early morning — cleaner editor (summary line, value pills + wheels, class/lunch cards); optional lunch row on the axis, closed to events
 - Sep 30, evening — section headings, row icons, whole-row taps, and numbered preview markers
 - Oct 3 — half-period snapping, unlocked period rows at 2x, 1-minute save floor for period timetables (reversing that morning's one-period minimum)
+- Oct 3, evening — period rules card inside the display sheet (live, editor/X/dedicated alert removed), lost lunch-row toggle recovered, container-identifier pitfall guarded by a source scan
