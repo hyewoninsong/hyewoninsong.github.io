@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-03T19:56:13+09:00
+date: 2026-10-03T21:02:33+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -24,7 +24,7 @@ Drawing to real scale leaves thin break stripes between every row and blurs the 
 
 Storing "Period 2" would have forced alarms, calendar export and widgets to learn about periods. Instead events keep real times, and **only the grid draws period i as a virtual hour i**. That virtual grid is an ordinary hour grid (snapping was 60 minutes, now 30, a half period), so dragging, snapping, overlap checks and the now-line needed no changes. The work moved to the boundary: events leaving the grid convert back to real times, previews coming from editors convert in, and a boundary means "start of the next period" or "end of the previous one" depending on its role. Visible times are converted back too, so you never see a fake "01:00".
 
-The same mapping keeps events attached when you edit periods: shift Period 2 to 10:10 and its events move with it. Only events in removed periods are deleted, after a confirmation.
+The same mapping keeps events attached when you edit periods: shift Period 2 to 10:10 and its events move with it. Events only in removed periods are deleted, and events spanning a removed period are shortened; both are counted in a confirmation first (see the Oct 3 late-night update).
 
 ## What's next
 
@@ -157,7 +157,7 @@ Lunch *timing* wasn't in the request, but a lunch length alone can't say where l
 
 ![No lunch, six periods — the lunch-timing row dims; the list shows periods 10 minutes apart](/blog/timetable-period-axis/period-plan-no-lunch.png)
 
-Existing timetables open with rules inferred from their periods: the most common length and break, and the widest gap larger than the break as lunch. Period names stay with their position; events follow the same numbered period; events left without a period after lowering the count are deleted only after a confirmation.
+Existing timetables open with rules inferred from their periods: the most common length and break, and the widest gap larger than the break as lunch. Period names stay with their position; events follow the same numbered period; events left without a period after lowering the count are deleted, and events spanning a removed period are shortened, both only after a confirmation.
 
 The alternative was keeping yesterday's timeline under the rules as "fine-tune". Moving one period there would break the rules, and the next time the sheet opened there'd be no single source of truth. The timeline, minimap, add button and per-period card are gone. If a school needs one long period, the answer is another rule, not the old editor.
 
@@ -239,11 +239,11 @@ Now the period sheet has a **rules card** where the time card would be: first pe
 | Getting there | "Periods ›" row → sheet closes → new sheet | a card in the same sheet |
 | Applied | on ✓ | as you turn (saved on close) |
 | Cancel | X | none — same as time timetables |
-| Events losing their period | a dedicated alert | the same "delete out-of-range events" alert |
+| Events losing their period | a dedicated alert | the same confirmation path as the time grid (period-specific wording since Oct 3 late night) |
 
 What lost: pushing the editor inside the sheet (no sheet-on-sheet, but still a draft with X), making time timetables two layers too (a regression), and refusing to lower the period count past an occupied period (a wall inside a wheel is odd, and time timetables already confirm on ✓).
 
-The big summary header and the preview list went away because the grid behind the sheet is the preview now. Move the first period to 10:00 and the axis label updates in place; lower the count and the blocks past the end get clipped, which says "these will be deleted" better than a number. The "check period times" comparison card, which used to appear after any edit, now only appears when the saved periods can't be expressed as rules.
+The big summary header and the preview list went away because the grid behind the sheet is the preview now. Move the first period to 10:00 and the axis label updates in place; lower the count and the blocks past the end get clipped, which shows what will be deleted or shortened before the alert counts it. The "check period times" comparison card, which used to appear after any edit, now only appears when the saved periods can't be expressed as rules.
 
 **The lunch toggle had to be rebuilt.** The "lunch on the axis" switch described in the Sep 30 update was never in the app: its pull request was based on another working branch, that branch was squash-merged first, and the three commits landed nowhere. The notes said it existed; a grep said otherwise. The commits were recovered and the switch now sits under the lunch-timing row in the rules card. Turn it on and a gray "Lunch" row appears on the axis behind the sheet.
 
@@ -275,6 +275,18 @@ What lost: migrating saved data (touches user files and leaves the 45-minute rou
 
 Why it slipped past the afternoon's check: every verified event was freshly dragged, and dragged events start on a half line. The tests now feed off-grid saved values — 60%, 40%, 23 minutes of a 45-minute period, a 5-minute event — and assert the drawing is a half row.
 
+## Update, Oct 3 late night — counting only deletions let spanning events shrink silently
+
+Lowering the period count keeps events on the same numbered period and deletes events that only lived in removed periods, after a confirmation. The gap was events that **span** a removed period. A double class in Periods 6–7 survives a drop from 7 to 6 periods, shortened to Period 6. That is the right outcome, but the alert counted deletions only, so a shortened class with nothing deleted produced no alert at all. The wording was also the time grid's "outside the new display range (days or hours)", which doesn't explain anything about periods.
+
+![The "Change Periods" alert after lowering the count from 7 to 6 — one event deleted, one shortened](/blog/timetable-period-axis/period-change-alert.png)
+
+Period timetables now get their own "Change Periods" alert. It lists only the lines that apply: events that will be deleted, and events that will be shortened to the remaining periods. If nothing is deleted, the button says Continue instead of a red Delete. The check compares how many periods an event spans before and after the change. The Done button, the swipe-to-dismiss block and the alert all read that one check, so they can't disagree.
+
+What lost: deleting spanning events too (the remaining hour is still a real class), and widening the time-grid wording to "days, hours or periods" (one sentence can't carry both delete and shorten).
+
+Why it slipped: the original tests checked where shortened events ended up, but not whether the user was told. A UI test now lowers the count from 7 to 6 and checks both alert lines, that Cancel keeps the sheet, and that Delete removes only the Period 7 event.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -293,3 +305,4 @@ Why it slipped past the afternoon's check: every verified event was freshly drag
 - Oct 3 — half-period snapping, unlocked period rows at 2x, 1-minute save floor for period timetables (reversing that morning's one-period minimum)
 - Oct 3, evening — period rules card inside the display sheet (live, editor/X/dedicated alert removed), lost lunch-row toggle recovered, container-identifier pitfall guarded by a source scan
 - Oct 3, night — block edges quantised to half-period lines at the point of entry (old 30-minute clamp values, odd-length rounding, magnet-snap spread); edit stripes per half period
+- Oct 3, late night — events spanning a removed period are counted in the confirmation ("shortened"), period-specific alert wording, Continue when nothing is deleted
