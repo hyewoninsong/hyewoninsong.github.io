@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-02T13:40:00+09:00
+date: 2026-10-02T22:57:23+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
@@ -298,6 +298,26 @@ Tapping a list row copied it immediately, so you couldn't see who was free until
 - The people-limit alert said "long-press a chip to remove it", but the Me chip has no long-press. It now says "use Edit" and has an Edit button.
 - The request message puts the App Store link first, and a source-contract test keeps the old app-name URL scheme from ever reappearing in code — it is still accepted on the way in.
 
+## 2026-10-02, evening — a new timetable shows up on its own first, then merges
+
+When a friend's timetable arrived, the grid simply repainted. The result was right, but you couldn't see what changed: with four people already compared, a fifth just made a few green cells lighter.
+
+Now every new timetable — from a file, a link, or one of your own — enters in three beats:
+
+1. **Drawn.** The new person's busy hours grow in as gray blocks, over the grid as it was.
+2. **Inverted.** The gray drops out and only their free time turns light green — one beat where you read that person alone.
+3. **Merged.** The light green layer fades out as the grid repaints with the new person included.
+
+0.45 s per step, each weekday starting 0.04 s after the last, about 2.5 s in total. With Reduce Motion on, it merges immediately.
+
+![Four frames — the grid before, the new person's busy hours drawn in gray, inverted to light green free time, and the merged grid](/blog/timetable-free-time-finder/import-reveal-steps.png)
+
+The merge only reads if the grid holds the new person back until that last beat, so saving the timetable and starting the animation happen in the same update. Only the drawing waits; the list, copy, and share already include the new person.
+
+The first version made the gray blocks transparent on inversion. Frame captures showed the old grid's pale green leaking through, so busy and free looked the same. Turning the busy blocks into the background color instead leaves only the free time green.
+
+![The inverted beat — transparent gray lets old green layers leak through (left); background-colored busy blocks leave only free time green (right)](/blog/timetable-free-time-finder/import-reveal-invert-fix.png)
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -320,3 +340,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 
 - 2026-10-01 — same-participant rule, choose an invitation inside a stretch, useful filter suggestions, attendance in shared images, HTTPS request page
 - 2026-10-02 — one follow-up for all three entry paths (banner, name prompt, failure alert), widen days too, persisted filters, format/appearance chips in the share sheet, list tap = card with "3/4" and Share, split chip, 30-day clock, Request again
+- 2026-10-02 evening — new timetables enter drawn → inverted (free time in light green) → merged; busy blocks turn background-colored on inversion
