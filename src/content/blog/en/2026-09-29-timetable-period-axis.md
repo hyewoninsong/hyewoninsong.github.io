@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-01T00:00:19+09:00
+date: 2026-10-03T14:47:28+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -14,15 +14,15 @@ A new period timetable opens the display sheet, where a "Periods" row takes the 
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
-Each period is one equal-height row labeled with its name and times. Long-press and drag to create an event as before; it snaps to period boundaries. Dragging across periods 2–3 above saves an event from 10:00 to 11:50. Moving and resizing work in whole periods.
+Each period is one equal-height row labeled with its name and times. Long-press and drag to create an event as before; it snaps to period boundaries. Dragging across periods 2–3 above saves an event from 10:00 to 11:50. Moving and resizing work in half periods (whole periods until the Oct 3 update below).
 
-## Why equal rows, and why whole periods only
+## Why equal rows, and why not minutes
 
-Drawing to real scale leaves thin break stripes between every row and blurs the one thing you want to read: what's in which period. Equal rows read like a paper timetable. Lunch is just a row boundary by default; it can now be switched on as its own row (last update below). And people who choose periods rarely start something mid-period, so snapping to whole periods saves fiddling; the minute-level time wheel is off for these timetables.
+Drawing to real scale leaves thin break stripes between every row and blurs the one thing you want to read: what's in which period. Equal rows read like a paper timetable. Lunch is just a row boundary by default; it can now be switched on as its own row (last update below). And people who choose periods rarely start something mid-period, so snapping to the grid saves fiddling; the minute-level time wheel is off for these timetables. The exception turned out to be 75-minute university classes, so half periods are allowed since Oct 3.
 
 ## Real times stored, virtual times drawn
 
-Storing "Period 2" would have forced alarms, calendar export and widgets to learn about periods. Instead events keep real times, and **only the grid draws period i as a virtual hour i**. That virtual grid is an ordinary hour grid with 60-minute snapping, so dragging, snapping, overlap checks and the now-line needed no changes. The work moved to the boundary: events leaving the grid convert back to real times, previews coming from editors convert in, and a boundary means "start of the next period" or "end of the previous one" depending on its role. Visible times are converted back too, so you never see a fake "01:00".
+Storing "Period 2" would have forced alarms, calendar export and widgets to learn about periods. Instead events keep real times, and **only the grid draws period i as a virtual hour i**. That virtual grid is an ordinary hour grid (snapping was 60 minutes, now 30, a half period), so dragging, snapping, overlap checks and the now-line needed no changes. The work moved to the boundary: events leaving the grid convert back to real times, previews coming from editors convert in, and a boundary means "start of the next period" or "end of the previous one" depending on its role. Visible times are converted back too, so you never see a fake "01:00".
 
 The same mapping keeps events attached when you edit periods: shift Period 2 to 10:10 and its events move with it. Only events in removed periods are deleted, after a confirmation.
 
@@ -44,7 +44,7 @@ Early feedback: the time-or-period choice was text only, unlocked period rows we
 
 ![Unlocked period grid — rows 1.5x taller than when locked](/blog/timetable-period-axis/unlocked-period-rows.png)
 
-**Unlocking zooms period rows too**, 72pt to 108pt on iPhone, while snapping stays at whole periods.
+**Unlocking zooms period rows too**, 72pt to 108pt on iPhone (144pt since Oct 3), while snapping stays on the period grid.
 
 One bug on the way: blocks selected but wouldn't drag. A tap gesture attached inside a drag gesture claimed the touch first. A single `DragGesture(minimumDistance: 0)` now handles both.
 
@@ -208,6 +208,24 @@ The preview adds a quiet numbered circle to each class. It is easier to find the
 
 We chose clearer grouping over more controls or decorative colors. Bringing back individual period cards would create two competing answers again: the rules and hand-edited times. The summary, cancel/save flow, and confirmation before removing events remain the same.
 
+## Update, Oct 3 — half periods, for 75-minute classes
+
+University timetables mix 50-minute and 75-minute classes. Counted in 50-minute periods, a 75-minute class is 1.5 periods, and period timetables had no way to draw it. The period grid now snaps to **half periods**: creating, moving and resizing all work in half rows.
+
+![Unlocked period grid — each period row is twice its locked height](/blog/timetable-period-axis/half-period-edit-rows.png)
+
+To make a half row easy to grab, unlocking now doubles the period row (144pt on iPhone, up from 1.5x at 108pt). A half row is now as tall as a full row when locked. The locked view stays at 72pt, so the day still fits on one screen.
+
+A half period is a fraction, not a fixed time. If Period 2 runs 10:00–10:50, half of it ends at 10:25. Dragging from the top of Period 1 to the middle of Period 2 opens a new event from 09:00 to 10:25.
+
+![New event sheet after dragging to the middle of Period 2 — 09:00 · P1 to 10:25 · P2](/blog/timetable-period-axis/half-period-new-event.png)
+
+Earlier that same day we went the other way. A resize could shrink a block to half a period, because the time grid's 30-minute minimum leaked into the period grid, where 30 virtual minutes is half a period. We raised the minimum to one period. Then the 1.5-period case came up. The half period was useful after all; it was just inconsistent, with whole-period snapping and a half-period minimum. Now both are half a period.
+
+What lost: asking users to define 75-minute periods (breaks timetables that mix both lengths), minute-level dragging (drops the reason to pick periods), and pointing them to time-based timetables (drops the period axis they wanted).
+
+One more fix: saving used to stretch any event to at least 30 minutes. Half of a 50-minute period is 25, so it would spill into the break. Period timetables now use a 1-minute floor, matching the edit sheet. The edit sheet's period wheels still pick whole periods; a 1.5-period class stays as it is unless you turn them.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -223,3 +241,4 @@ We chose clearer grouping over more controls or decorative colors. Bringing back
 - Sep 30, later — tutorial variant for period timetables: period-snapped demos, a "Period Times" step
 - Sep 30, early morning — cleaner editor (summary line, value pills + wheels, class/lunch cards); optional lunch row on the axis, closed to events
 - Sep 30, evening — section headings, row icons, whole-row taps, and numbered preview markers
+- Oct 3 — half-period snapping, unlocked period rows at 2x, 1-minute save floor for period timetables (reversing that morning's one-period minimum)
