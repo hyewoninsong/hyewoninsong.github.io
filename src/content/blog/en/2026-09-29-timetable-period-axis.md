@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-03T17:43:42+09:00
+date: 2026-10-03T19:56:13+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -253,6 +253,28 @@ Showing that live needed one more piece: when the lunch row appears, everything 
 
 **A pitfall, for the third time.** The test for the lunch row couldn't find the axis label's identifier. The hierarchy dump showed every label tagged `time_header_column` — the identifier on the axis column. In SwiftUI an `accessibilityIdentifier` on a container that isn't itself an accessibility element propagates to every element inside and overrides their own. The original lunch work had even moved the label identifier onto the combined element, and it still didn't help, because the parent was overwriting it. The fix is `.accessibilityElement(children: .contain)` on the container before its identifier. Since this was the third occurrence in a week, a source-scan test now fails on any tap container that gets an identifier without being made an element first.
 
+## Update, Oct 3 night — a half period must sit at the exact middle, and so must the stripes
+
+On a real phone the half periods added that afternoon didn't look like halves. A half-period block in Period 3 (11:00–11:50) ended at 60% of the row; a block in the next column ended above the middle. And the white/gray stripes that appear when you unlock still alternated by whole period, so the screen never showed where a half row was.
+
+![Unlocked period grid — the top half of each period is white, the bottom half gray](/blog/timetable-period-axis/half-slot-stripes.png)
+
+The stripes were a one-line change: the stripe unit for period timetables is now half a period, the same unit as snapping and the minimum length.
+
+The 60% was more interesting. The grid maps saved real times onto a virtual axis, linearly within each period, so 11:00–11:30 in a 50-minute period is drawn at 30/50. The drawing was correct; the question was why 11:00–11:30 was saved. Three sources:
+
+1. **Old data.** Until that afternoon, saving stretched every event to at least 30 minutes, so a 25-minute half period became 30. Lowering the floor to 1 minute didn't touch events saved before.
+2. **Halves that aren't whole minutes.** Half of a 45-minute period is 22.5; saved as 23 it lands one virtual minute below the half line.
+3. **Magnet snapping to neighbours.** Dragging snaps to other blocks' edges as well as to the half lines. Next to a 60% block, a resize snaps to 60% and is saved that way. One off-grid block spreads to the next column — that was the "above the middle" case.
+
+Making every write path snap to half periods, which we had already done, cannot stop values that arrive from outside the write paths. So the fix is at the **one function where real times enter the virtual axis**: both edges round to the nearest half line, a zero-length result is widened to half a row, and anything past the end of the axis lands in the last half row. Saved values are untouched; 11:00–11:30 stays in the file, draws as a half row, and is rewritten as 11:25 the first time you move or resize it. The grid, shared images and the re-placement that runs when you change the periods all go through the same function. The current-time line is the exception and keeps the unrounded mapping, because it has to move continuously.
+
+![An event dragged from the middle of Period 1 to the end of Period 2 — its top edge sits on the stripe boundary](/blog/timetable-period-axis/half-slot-block-midline.png)
+
+What lost: migrating saved data (touches user files and leaves the 45-minute rounding), and excluding period neighbours from magnet snapping (stops the spread but leaves the 60% block itself wrong).
+
+Why it slipped past the afternoon's check: every verified event was freshly dragged, and dragged events start on a half line. The tests now feed off-grid saved values — 60%, 40%, 23 minutes of a 45-minute period, a 5-minute event — and assert the drawing is a half row.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -270,3 +292,4 @@ Showing that live needed one more piece: when the lunch row appears, everything 
 - Sep 30, evening — section headings, row icons, whole-row taps, and numbered preview markers
 - Oct 3 — half-period snapping, unlocked period rows at 2x, 1-minute save floor for period timetables (reversing that morning's one-period minimum)
 - Oct 3, evening — period rules card inside the display sheet (live, editor/X/dedicated alert removed), lost lunch-row toggle recovered, container-identifier pitfall guarded by a source scan
+- Oct 3, night — block edges quantised to half-period lines at the point of entry (old 30-minute clamp values, odd-length rounding, magnet-snap spread); edit stripes per half period
