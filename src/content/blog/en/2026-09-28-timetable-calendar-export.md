@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-02T19:50:30+09:00
+date: 2026-10-03T14:55:09+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -97,9 +97,36 @@ We passed on a collapsible list inside the sheet (expanding it makes the sheet l
 
 Verifying it hit three walls. `simctl openurl` puts up a system "Open in Timetable?" prompt that neither `simctl` nor the app can dismiss. `simctl launch` skips the scheme's StoreKit config, so the purchase code asks for an Apple Account sign-in. And a fresh simulator has no timetable. The existing debug flag `-premiumUnlocked` handles the sign-in; two new debug-only launch arguments handle the rest — `-openURL <url>` hands the URL to the app's own `onOpenURL` path after launch, and `UI-Testing-SampleData` loads the store sample timetables without the rest of screenshot mode. A UI test with all three opens the sheet, taps the row, and took the capture above.
 
+## 2026-10-03 — Pick Apple Calendar or another app first
+
+The sheet used to stack both paths: adding to Apple Calendar, and sharing an .ics file. They behave differently after the fact — the app keeps a record of what it added to Apple Calendar and can update or remove it, but it has no idea where a file ends up. Side by side, "Update Calendar" and "Remove from Calendar" read as if they applied to the file too.
+
+Now the top of the sheet has two "Export To" chips. Apple Calendar is the default every time the sheet opens. The date range and event picker are shared; below them, only the chosen path shows.
+
+![The Export to Calendar sheet with Apple Calendar and Other Apps chips at the top, Apple Calendar selected, followed by the period, events, calendar picker and add button](/blog/timetable-calendar-export/target-chips.png)
+
+A segmented control was out — the app already retired that look in favor of chips — and a dropdown would hide one of only two options, so a Google Calendar user wouldn't know their path existed. The Other Apps side keeps the .ics button and import guide, plus one line saying files aren't tracked: share again after changes, and delete old events in that app yourself.
+
+### Already exported? Don't ask where again
+
+When the timetable is already in Apple Calendar, the calendar picker is gone. A status card says which calendar it's in and for what dates, with "Update Calendar" below and "Remove from Calendar" at the very bottom.
+
+![Already-exported state: status card with a Move to Another Calendar row, Update Calendar button, and red Remove from Calendar at the bottom](/blog/timetable-calendar-export/already-exported.png)
+
+A "Move to Another Calendar" row under the status card opens the picker only on demand, minus the current calendar, and the button becomes "Move to This Calendar". Moving removes from the old place and adds to the new one without a second confirmation — choosing to move and picking a target is already two deliberate steps.
+
+![Moving: the row now reads Cancel, and the calendar picker and Move to This Calendar button are expanded](/blog/timetable-calendar-export/moving.png)
+
+We decided against exporting one timetable to several calendars at once. Calendar merges every calendar into one view, so each class would show up twice, and the app keeps one record per timetable. Moving covers the real need, and a Google account added in iOS Settings already shows up in the picker.
+
+### Two different "1 year"s
+
+The "1 year" chip set the end to start + 1 year − 1 day, but the date picker's limit and its caption allowed one more day. Both now come from one function, and a test pins chip end == limit.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
 - 2026-09-28 — markers for finding and removing events, record recovery, change notice
 - 2026-10-02 — series checklist, twin-series note, dimmed out-of-range rows, end-date presets, first-event-date caption, "Update Calendar" CTA, remove button moved to the bottom, picker and add button grouped, stale-range bug fix, calendar color dot, dropped-record notice
 - 2026-10-02 — event picker moved to a popover (title+color cards, same-time rows, ordering rules), debug launch arguments for simulator checks
+- 2026-10-03 — Export To chips (Apple Calendar / Other Apps), status card and Move instead of the picker once exported, no multi-calendar export, end-date limit matches the 1-year chip
