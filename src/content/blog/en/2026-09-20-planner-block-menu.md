@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-09-27T18:30:00+09:00
+date: 2026-10-03T18:50:46+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -295,7 +295,7 @@ With moving handled by the chips, the menu held edit, swap, drawer and remove. O
 | Move to Drawer | The drawer button is **always** there; drop a block on it. A group goes in whole |
 | Remove from Schedule | The editor already ends with *Delete this block* (it comes back as a **trash button in the bottom-right corner** in the last section) |
 
-So a block has four gestures: checkbox = done, tap = select, tap again = edit (since 2026-09-27, tap again deselects — see the last section), drag = move (grouped if a chip is on, into the drawer if released over the button). Nothing to read. The context menu, the transparent `UIButton` that presented it and its `require(toFail:)` acrobatics, the move sheet and swap all left the codebase — most of what the earlier sections of this post fought is gone.
+So a block has four gestures: checkbox = done, tap = select, tap again = edit (on 2026-09-27 tap again became deselect, and on 2026-10-03 it went back to opening the note — see the last section), drag = move (grouped if a chip is on, into the drawer if released over the button). Nothing to read. The context menu, the transparent `UIButton` that presented it and its `require(toFail:)` acrobatics, the move sheet and swap all left the codebase — most of what the earlier sections of this post fought is gone.
 
 ![Right after dropping a block on the drawer button: it leaves the timeline, the button shows 1, and a short "moved to the drawer" note appears](/blog/planner-block-menu/drawer-drop.png)
 
@@ -1039,6 +1039,8 @@ and end capsules already have with the hour labels.
 
 ## 2026-09-27 — Tapping a selected block now deselects it
 
+*The tap-again and note-button part of this section was reversed on 2026-10-03 — see below. The length ruler and list tabs stand.*
+
 The only way to let go of a selected block was to tap empty space, and a full day has none on screen. Tapping the selected block again opened the note composer and the keyboard — so "let go" turned into "start writing". Now tap selects and tap again deselects.
 
 The note moved to the bottom-right capsule, which already held the actions for whatever is selected. It is now **note · delete · drawer**. The drawer slot stays at the right edge, so the drop target for dragging a block into the drawer did not move. The note belongs to the one block you picked; delete and drawer still apply to the whole linked group.
@@ -1071,6 +1073,24 @@ The fraction was never used. Tapping the chip connects everything unless everyth
 
 The fill is not system grey, which reads as *disabled* on iOS. It is the chip's own ink (black in light mode, white in dark) at 28%, so a faint chip tapped once becomes the same ink, solid — it reads as "finish filling it". The old objection that a faint fill gets lost against block colours no longer holds: the chip now sits on an opaque, shadowed disc, so the fill lies on the chip's own background, not on the block. An indeterminate dash lost because the chip already carries a direction glyph. If you want to know which blocks are left, the companion rings and link buttons already show each one.
 
+## 2026-10-03 — The note button is gone; tap again opens the note
+
+Six days ago tap-again became deselect and notes moved to a button in the bottom-right capsule. The cost we accepted then was "one more step to a note". In use that step was long: the block sits mid-screen, the button in the far corner, and the trip happened every time a note was written. Deselecting is occasional; writing a note is not. The frequent action had the far seat.
+
+So it is back:
+
+| Gesture | Result |
+|---|---|
+| Tap a block | Select |
+| Tap the selected block again | Note composer above the keyboard |
+| Tap empty space | Deselect |
+
+The capsule now holds only delete and *Put in Drawer* while a block is selected; the drawer slot is still at the right end, so the drop target did not move.
+
+Three alternatives lost. **Keep the button and also open on tap-again** — two doors to the same thing, and the capsule stops meaning "what you cannot do on the block itself". **Double-tap for notes** — a double-tap recognizer makes every single tap wait, so selection lags. **Note if empty, deselect otherwise** — one gesture, two outcomes, unknowable before you tap.
+
+The cost that returns: on a packed day there is little empty space to deselect with. What softens it is that a mistaken tap-again loses nothing — tap outside and the composer closes with nothing changed. The tutorial's note step now demonstrates the tap on the block instead of on the bottom button.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -1100,3 +1120,4 @@ The fill is not system grey, which reads as *disabled* on iOS. It is the chip's 
 - 2026-09-24 — Added a length capsule (`1 hr 30 min`) midway between the start and end capsules: same colour and size, only when all three fit, and it follows the preview length while resizing; the length capsule alone is sticky so it stays on screen for blocks taller than the viewport
 - 2026-09-27 — Tapping a selected block deselects it; notes open from a note button in the bottom capsule. The length capsule became a dashed line with a grey capsule, like the gap ruler (reversing 09-24). The todo list got Active | Archived tabs, and the strip caption now names its span and total
 - 2026-09-27 — The group chip's partial state became a faint fill in the chip's own ink instead of a proportional arc. The tap never depended on the fraction; grey was avoided because it reads as disabled
+- 2026-10-03 — Removed the note button; tapping a selected block opens the note composer again (reversing 09-27). Deselect is a tap on empty space; the capsule holds delete and drawer only.
