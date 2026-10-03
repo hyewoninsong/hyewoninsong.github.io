@@ -26,20 +26,22 @@
 │   ├── 앱 소개 (/ko/apps)
 │   │   ├── 앱 목록 페이지
 │   │   └── 개별 앱 상세 (/ko/apps/[slug])
-│   └── 개발 블로그 (/ko/blog)
-│       ├── 글 목록 (날짜순)
-│       ├── 태그 필터 (/ko/blog/tag/[tag])
-│       └── 개별 글 (/ko/blog/[slug])
+│   ├── 개발 블로그 (/ko/blog)
+│   │   ├── 글 목록 (날짜순)
+│   │   ├── 태그 필터 (/ko/blog/tag/[tag])
+│   │   └── 개별 글 (/ko/blog/[slug])
+│   └── 개인정보처리방침 (/ko/privacy) — 네비게이션 미노출
 │
 └── /en/  (English)
     ├── About (/en/about)
     ├── Apps (/en/apps)
     │   ├── App list
     │   └── App detail (/en/apps/[slug])
-    └── Dev Blog (/en/blog)
-        ├── Post list (by date)
-        ├── Tag filter (/en/blog/tag/[tag])
-        └── Post detail (/en/blog/[slug])
+    ├── Dev Blog (/en/blog)
+    │   ├── Post list (by date)
+    │   ├── Tag filter (/en/blog/tag/[tag])
+    │   └── Post detail (/en/blog/[slug])
+    └── Privacy Policy (/en/privacy) — not in navigation
 ```
 
 -----
@@ -234,9 +236,10 @@ order: 1
 - 상단에 앱 아이콘, 이름, 플랫폼별 상태 뱃지, 앱스토어 링크(`appStoreUrl`이 있는 경우) 표시. 이 메타데이터는 `getEntry('apps', '<locale>/<slug>')`로 content collection에서 읽는다.
 - **본문 구성 방식 (현재):** 앱마다 `src/pages/{ko,en}/apps/<slug>.astro` 정적 페이지를 직접 작성한다. 본문 카피(섹션 제목, 설명, alt 텍스트)는 이 파일에 언어별로 하드코딩되며, md 본문은 렌더링하지 않는다.
   - 범용 `[slug].astro` 동적 라우트도 존재하지만, 동일 경로의 정적 페이지가 우선순위가 높아 실제로는 렌더링되지 않는다 (빌드 시 "conflicts with higher priority route" 경고). 정적 페이지가 없는 앱을 추가하면 그때 `[slug].astro`가 md 본문을 렌더링한다.
-- **스크린샷 규칙:** `public/apps/<slug>/<locale>/<name>.png` 에 언어별 캡처를 같은 파일명으로 둔다. 페이지 안에서는 `img('<name>')` 헬퍼로 `/apps/<slug>/<locale>/<name>.png` 경로를 만든다. ko/en 페이지가 참조하는 파일명 집합은 항상 동일해야 한다.
+- **스크린샷 규칙 (언어별 캡처가 있는 앱, 현재 timetable):** `public/apps/<slug>/<locale>/<name>.png` 에 언어별 캡처를 같은 파일명으로 둔다. 페이지 안에서는 `img('<name>')` 헬퍼로 `/apps/<slug>/<locale>/<name>.png` 경로를 만든다. ko/en 페이지가 참조하는 파일명 집합은 항상 동일해야 한다.
   - 예: SuperTimetable은 `public/apps/timetable/{en,ko}/` 아래 hero, drag-create, move-drag, resize-drag, quick-edit, color-variant, batch-edit, batch-edit-after, day-range, dark-mode, widget-light, widget-dark, image-share, print, timetable-list, duplicate-timetable, title-suggestions, undo-redo, lock-toggle 19장을 사용한다.
   - 참조 무결성은 `npm test` (`tests/app-screenshots.test.mjs`)로 검사한다.
+  - **언어 공통 스크린샷 (superfont, notequiz, supertimers):** 언어 구분 없이 `public/apps/<slug>/<name>.png` 평면 구조에 두고, 페이지에서 `/apps/<slug>/<name>.png` 절대 경로를 직접 적는다. 이 경우에도 ko/en 페이지가 참조하는 경로 집합은 동일해야 하며, `npm test`가 파일 존재 여부와 ko/en 일치를 함께 검사한다. mathmaster 페이지는 스크린샷 없이 텍스트만으로 구성된다.
 - **SuperTimetable 페이지 섹션 순서:** 헤더 → 소개 + hero 스크린샷 → 교차 2컬럼 기능 섹션 6개 (드래그 제스처 / 편집 시트 / 일괄 수정 / 커스텀 보기 / 위젯 / 공유·인쇄) → "더 많은 기능" 3컬럼 미니 카드 6개
 
 -----
@@ -370,75 +373,71 @@ thumbnail: "./images/timetable-grid.png"
 ## 7. 프로젝트 디렉토리 구조 (Astro)
 
 ```
-hyewon-insong-website/
+hyewoninsong.com/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml         # main push 시 빌드 → GitHub Pages 배포
 ├── src/
+│   ├── content.config.ts      # Content Collections 스키마 정의 (about / apps / blog)
 │   ├── content/
-│   │   ├── config.ts          # Content Collections 스키마 정의
 │   │   ├── about/
 │   │   │   ├── ko.md          # 한국어 회사 소개
 │   │   │   └── en.md          # English about
 │   │   ├── apps/
-│   │   │   ├── ko/            # 한국어 앱 소개
-│   │   │   │   ├── timetable.md
-│   │   │   │   └── fontbox.md
-│   │   │   └── en/            # English app descriptions
-│   │   │       ├── timetable.md
-│   │   │       └── fontbox.md
+│   │   │   ├── ko/            # timetable, superfont, mathmaster, notequiz, supertimers .md
+│   │   │   └── en/            # 동일 slug의 영어 버전
 │   │   └── blog/
-│   │       ├── ko/            # 한국어 블로그
-│   │       │   └── 2025-xx-xx-title.md
+│   │       ├── ko/            # 한국어 블로그 (YYYY-MM-DD-title.md)
 │   │       └── en/            # English blog
-│   │           └── 2025-xx-xx-title.md
 │   ├── i18n/
 │   │   ├── ko.json            # 한국어 UI 문자열
 │   │   ├── en.json            # English UI strings
-│   │   └── utils.ts           # i18n 헬퍼 함수 (getLangFromUrl, useTranslations 등)
+│   │   └── utils.ts           # getLangFromUrl, useTranslations, getLocalizedPath
 │   ├── layouts/
-│   │   ├── BaseLayout.astro   # 공통 레이아웃 (헤더, 푸터, lang 속성)
-│   │   ├── MarkdownLayout.astro
-│   │   └── BlogPost.astro
+│   │   └── BaseLayout.astro   # 공통 레이아웃 (헤더, 푸터, lang 속성)
 │   ├── pages/
 │   │   ├── index.astro        # 루트: 브라우저 언어 감지 → /ko 또는 /en 리다이렉트
 │   │   ├── ko/
 │   │   │   ├── index.astro    # 한국어 랜딩
 │   │   │   ├── about.astro
+│   │   │   ├── privacy.astro
 │   │   │   ├── apps/
 │   │   │   │   ├── index.astro
-│   │   │   │   └── [slug].astro
+│   │   │   │   ├── [slug].astro       # md 본문 렌더링 (정적 페이지가 없는 앱만 실제 사용)
+│   │   │   │   ├── timetable.astro    # 앱별 정적 상세 페이지 (아래 4개도 동일)
+│   │   │   │   ├── superfont.astro
+│   │   │   │   ├── mathmaster.astro
+│   │   │   │   ├── notequiz.astro
+│   │   │   │   └── supertimers.astro
 │   │   │   └── blog/
 │   │   │       ├── index.astro
 │   │   │       ├── [slug].astro
 │   │   │       └── tag/
 │   │   │           └── [tag].astro
-│   │   └── en/
-│   │       ├── index.astro    # English landing
-│   │       ├── about.astro
-│   │       ├── apps/
-│   │       │   ├── index.astro
-│   │       │   └── [slug].astro
-│   │       └── blog/
-│   │           ├── index.astro
-│   │           ├── [slug].astro
-│   │           └── tag/
-│   │               └── [tag].astro
+│   │   └── en/                # ko와 동일한 구조
 │   ├── components/
 │   │   ├── Header.astro
 │   │   ├── Footer.astro
 │   │   ├── LanguageSwitcher.astro  # 언어 전환 버튼 컴포넌트
 │   │   ├── AppCard.astro
-│   │   ├── BlogPostCard.astro
-│   │   ├── TagList.astro
-│   │   └── Pagination.astro
+│   │   └── BlogPostCard.astro
 │   └── styles/
 │       └── global.css
 ├── public/
 │   ├── apps/
-│   │   └── <slug>/
-│   │       ├── en/            # 영어 UI 스크린샷 (<name>.png)
-│   │       └── ko/            # 한국어 UI 스크린샷 (en과 동일한 파일명)
-│   ├── images/                # 정적 이미지 (로고, 파비콘 등)
+│   │   ├── timetable/
+│   │   │   ├── en/            # 영어 UI 스크린샷 (<name>.png)
+│   │   │   └── ko/            # 한국어 UI 스크린샷 (en과 동일한 파일명)
+│   │   ├── superfont/         # 언어 공통 스크린샷 (평면 구조)
+│   │   ├── notequiz/
+│   │   └── supertimers/
+│   ├── CNAME                  # hyewoninsong.com 커스텀 도메인
+│   ├── robots.txt
+│   ├── favicon.ico
 │   └── favicon.svg
-├── astro.config.mjs           # i18n 설정 포함
+├── tests/
+│   └── app-screenshots.test.mjs   # npm test — 스크린샷 참조 무결성
+├── astro.config.mjs           # site URL, sitemap, Tailwind vite 플러그인 (Astro i18n 라우팅 옵션은 쓰지 않고 디렉토리 기반)
 ├── package.json
 └── tsconfig.json
 ```
@@ -447,11 +446,11 @@ hyewon-insong-website/
 
 ## 8. 배포 파이프라인
 
-1. `main` 브랜치에 push
-1. GitHub Actions 자동 트리거
-1. `npm run build` → 정적 파일 생성
-1. `gh-pages` 브랜치에 빌드 결과물 배포
-1. GitHub Pages에서 서빙
+1. `main` 브랜치에 push (또는 `workflow_dispatch` 수동 실행)
+1. `.github/workflows/deploy.yml` 자동 트리거 (Node 22, `npm ci`)
+1. `npm run build` → `dist/` 정적 파일 생성
+1. `actions/upload-pages-artifact` 로 `dist/` 업로드 → `actions/deploy-pages` 로 배포 (별도 `gh-pages` 브랜치 없음)
+1. GitHub Pages에서 서빙 (`public/CNAME` 으로 hyewoninsong.com 커스텀 도메인 연결)
 
 -----
 

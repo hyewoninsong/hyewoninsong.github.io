@@ -1,7 +1,12 @@
 // Verifies that every screenshot referenced by a static app detail page
-// (src/pages/{en,ko}/apps/<slug>.astro via the `img('<name>')` helper)
-// exists in public/apps/<slug>/<locale>/, and that the en and ko pages
-// reference the same set of screenshot names.
+// (src/pages/{en,ko}/apps/<slug>.astro) exists under public/, and that the
+// en and ko pages reference the same set of screenshots.
+//
+// Two layouts are covered:
+//   - localized: `img('<name>')` helper -> public/apps/<slug>/<locale>/<name>.png
+//     (currently timetable)
+//   - flat: absolute "/apps/<slug>/<name>.png" paths written directly in the
+//     page, shared by both locales (superfont, notequiz, supertimers)
 //
 // Run with: npm test   (node --test "tests/**/*.test.mjs")
 
@@ -18,10 +23,10 @@ function pagePath(locale, slug) {
   return join(root, 'src', 'pages', locale, 'apps', `${slug}.astro`);
 }
 
-/** Static app pages that exist in the given locale (excluding [slug].astro). */
+/** Static app pages that exist in the given locale (excluding index.astro and [slug].astro). */
 function staticAppSlugs(locale) {
   return readdirSync(join(root, 'src', 'pages', locale, 'apps'))
-    .filter((f) => f.endsWith('.astro') && !f.startsWith('['))
+    .filter((f) => f.endsWith('.astro') && !f.startsWith('[') && f !== 'index.astro')
     .map((f) => f.replace(/\.astro$/, ''))
     .sort();
 }
@@ -34,6 +39,21 @@ function referencedScreenshots(locale, slug) {
     names.add(m[1]);
   }
   return [...names].sort();
+}
+
+/**
+ * Absolute /apps/... image paths written directly in the page (flat layout).
+ * Template-literal paths such as `/apps/timetable/en/${name}.png` are skipped;
+ * those are covered by the img-helper checks.
+ */
+function referencedImagePaths(locale, slug) {
+  const source = readFileSync(pagePath(locale, slug), 'utf8');
+  const paths = new Set();
+  for (const m of source.matchAll(/["'`](\/apps\/[^"'`\s]+\.(?:png|jpe?g|webp|gif|svg))["'`]/g)) {
+    if (m[1].includes('${')) continue;
+    paths.add(m[1]);
+  }
+  return [...paths].sort();
 }
 
 /** The locale folder the img helper resolves to, e.g. /apps/timetable/en. */
@@ -88,5 +108,31 @@ for (const slug of staticAppSlugs('en')) {
       return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.png')).sort() : [];
     };
     assert.deepEqual(files('en'), files('ko'));
+  });
+}
+
+test('flat-layout apps reference screenshots directly from public/apps/<slug>/', () => {
+  for (const slug of ['superfont', 'notequiz', 'supertimers']) {
+    const paths = referencedImagePaths('en', slug);
+    assert.ok(paths.length > 0, `${slug} references no screenshots`);
+    assert.ok(
+      paths.every((p) => p.startsWith(`/apps/${slug}/`)),
+      `${slug} references images outside /apps/${slug}/: ${paths}`,
+    );
+  }
+});
+
+for (const slug of staticAppSlugs('en')) {
+  test(`${slug}: en and ko pages reference the same absolute /apps/ image paths`, () => {
+    assert.deepEqual(referencedImagePaths('en', slug), referencedImagePaths('ko', slug));
+  });
+
+  test(`${slug}: every absolute /apps/ image path exists under public/`, () => {
+    for (const locale of locales) {
+      const missing = referencedImagePaths(locale, slug).filter(
+        (p) => !existsSync(join(root, 'public', p)),
+      );
+      assert.deepEqual(missing, [], `missing for locale ${locale}`);
+    }
   });
 }
