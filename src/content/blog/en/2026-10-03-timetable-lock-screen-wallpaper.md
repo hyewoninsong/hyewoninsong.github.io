@@ -1,9 +1,9 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-04T00:14:45+09:00
+date: 2026-10-04T12:10:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter."
+summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, and over a photo."
 ---
 
 SuperTimetable's `…` menu now has "Lock Screen Wallpaper". It produces an image exactly the size of your screen; save it to Photos, set it as wallpaper, and this week's timetable is there before you unlock. It's free. Three decisions shaped it; the last one was reversed a day later.
@@ -59,7 +59,28 @@ The fix: a "Save to Photos" button that asks only for add-only access (`requestA
 
 What would have caught it: checking that a file actually appeared in Photos, not that the share sheet opened. The simulator check now counts the photo library before and after (6 → 7, a 1206×2622 PNG), and a test guards the usage string.
 
+## 2026-10-04 — For a device that isn't this one, and over a photo
+
+Two more things landed the same day. The image only came out at this phone's size, so making one for a family member's phone or an iPad meant opening the app there. And the background was a flat colour only.
+
+**Device is now a dropdown at the top of the options card.** It defaults to the current device with a "This device" tag. The menu lists every device running iOS 26 in iPhone and iPad sections, but far fewer rows than there are models: devices that share a screen panel produce the same image, so they share a row — "iPhone 16 · 15 · 15 Pro · 14 Pro". Pick another device and the preview takes its aspect ratio and the card is re-rendered at its size.
+
+![Device menu — iPhone section, models sharing a screen on one row, the current device checked](/blog/timetable-lock-screen-wallpaper/device-menu.png)
+
+The current device is found by screen, not by model identifier. The wallpaper only cares about native pixels, so `UIScreen.nativeBounds` looks the entry up; an identifier table lags every new device and splits identical screens into separate rows. A screen not in the list gets its own entry built from the live values, so "This device" always exists. It's a dropdown rather than chips because there are 21 entries, and the value shows only the lead name — the sibling list wouldn't fit on one line.
+
+![iPad Pro 13″ selected — iPad proportions, card width still capped at 420pt](/blog/timetable-lock-screen-wallpaper/ipad-selected.png)
+
+**Background is now "Color | Photo".** Photo opens the system picker. `PhotosPicker` runs out of process and hands back only the one picked image, so no read permission is requested — yesterday's add-only permission stays as is. The photo is cropped centre to fill the screen's pixel size exactly and the card goes on top. Changing device re-crops from the original bytes rather than upscaling a reduced copy, and the decode goes through ImageIO thumbnails sized to what the fill needs — a 48 MP original decoded in full is hundreds of megabytes.
+
+![Photo background — the timetable card over a flower photo, with white clock and widget silhouettes](/blog/timetable-lock-screen-wallpaper/photo-background.png)
+
+One thing broke immediately: the clock and widget silhouette was 35% black, fine on a flat colour and invisible over a pink flower bed. Without the clock position there's nothing to drag against. Over a photo it's now drawn white with a shadow, like the real Lock Screen clock.
+
+Rejected: re-tapping the "Photo" chip to re-open the picker (a selected chip doesn't fire again), so a "Change Photo" row appears under it; remembering the device choice (the sheet always starts on this device). Switching back to Color keeps the photo, so choosing Photo again is instant.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
 - 2026-10-04 — Save to Photos button and photo add permission; share becomes secondary
+- 2026-10-04 — Device dropdown (defaults to this device, matched by screen pixels) + photo background (`PhotosPicker`, no read permission)
