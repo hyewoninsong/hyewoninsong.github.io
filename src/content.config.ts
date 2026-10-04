@@ -10,7 +10,7 @@ const about = defineCollection({
   }),
 });
 
-const platformStatus = z.enum(['released', 'in-development']);
+const platformStatus = z.enum(['released', 'in-review', 'in-development']);
 
 const apps = defineCollection({
   loader: glob({
@@ -31,6 +31,10 @@ const apps = defineCollection({
     }).default({}),
     order: z.number().default(0),
     appStoreUrl: z.string().optional(),
+    /** 출시일 — 있으면 카드와 상세 상단에 "2026년 9월 22일 출시" 한 줄이 붙는다. 없으면 뱃지만 나온다. */
+    releaseDate: z.coerce.date().optional(),
+    /** 상세 페이지를 아직 안 쓴 앱 — 본문 대신 "준비 중" 안내만 나온다. */
+    comingSoon: z.boolean().default(false),
   }),
 });
 
@@ -43,6 +47,8 @@ const blog = defineCollection({
   schema: z.object({
     title: z.string(),
     date: z.coerce.date(),
+    /** 어느 앱을 만들다 나온 글인지 — `src/lib/blog-apps.ts` 의 키. 앱과 무관한 글(소식)은 비운다. */
+    app: z.string().optional(),
     tags: z.array(z.string()).default([]),
     summary: z.string(),
     thumbnail: z.string().optional(),

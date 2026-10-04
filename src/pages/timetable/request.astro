@@ -1,0 +1,87 @@
+---
+import '../../styles/global.css';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Share your timetable · SuperTimetable</title>
+    <meta name="description" content="Open SuperTimetable and choose a timetable to share your availability." />
+    <meta property="og:title" content="Find a time together · SuperTimetable" />
+    <meta property="og:description" content="Choose a timetable and share your availability." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <main class="request-page">
+      <a class="brand" href="/en/apps/timetable/">SuperTimetable</a>
+      <section class="request-card" aria-labelledby="request-title">
+        <p class="eyebrow" data-copy="eyebrow">Find a time together</p>
+        <h1 id="request-title" data-copy="title">Share your timetable</h1>
+        <p id="request-from" hidden></p>
+        <p class="description" data-copy="description">Choose a timetable in the app and send it back to your friend. Only busy times are shared; event titles and notes stay private.</p>
+        <a id="open-app" class="primary-action" href="supertimetable://feature/free-time-request" data-copy="open">Share in SuperTimetable</a>
+        <p class="help" data-copy="help">If the app does not open, open this page in Safari or install SuperTimetable first. If sharing is unavailable in your version, update the app.</p>
+        <a class="store-link" href="https://apps.apple.com/app/id6760938147" rel="noreferrer" data-copy="install">Get SuperTimetable on the App Store</a>
+      </section>
+    </main>
+    <script>
+      const copy = {
+        en: { eyebrow: 'Find a time together', title: 'Share your timetable', description: 'Choose a timetable in the app and send it back to your friend. Only busy times are shared; event titles and notes stay private.', open: 'Share in SuperTimetable', help: 'If the app does not open, open this page in Safari or install SuperTimetable first. If sharing is unavailable in your version, update the app.', install: 'Get SuperTimetable on the App Store', from: (name: string) => `${name} asked for your timetable.` },
+        ko: { eyebrow: '함께 비는 시간 찾기', title: '시간표를 보내 줘', description: '앱에서 보낼 시간표를 고르고 친구에게 보내 줘. 바쁜 시간만 공유하고, 일정 이름과 메모는 보내지 않아.', open: '앱에서 시간표 보내기', help: '앱이 열리지 않으면 Safari에서 이 페이지를 열거나 SuperTimetable을 먼저 설치해 줘. 현재 버전에서 공유 기능이 보이지 않으면 앱을 업데이트해 줘.', install: 'App Store에서 SuperTimetable 받기', from: (name: string) => `${name} 님이 시간표를 요청했어.` },
+        ja: { eyebrow: '一緒に空いている時間を探す', title: '時間割を送ってください', description: 'アプリで時間割を選んで、友だちに送り返しましょう。予定のある時間だけを共有し、予定名やメモは送りません。', open: 'アプリで時間割を送る', help: 'アプリが開かない場合は、Safariでこのページを開くか、SuperTimetableをインストールしてください。共有機能が表示されない場合はアプリを更新してください。', install: 'App StoreでSuperTimetableを入手', from: (name: string) => `${name}さんが時間割をリクエストしました。` },
+        'zh-Hans': { eyebrow: '寻找共同空闲时间', title: '发送你的课程表', description: '在应用中选择课程表并发给朋友。仅分享忙碌时段，不包含日程名称和备注。', open: '在应用中发送课程表', help: '如果应用未打开，请用Safari打开此页面或先安装SuperTimetable。如果看不到分享功能，请更新应用。', install: '在App Store获取SuperTimetable', from: (name: string) => `${name}请求你的课程表。` },
+        'zh-Hant': { eyebrow: '尋找共同空閒時間', title: '傳送你的課表', description: '在應用程式中選擇課表並傳給朋友。僅分享忙碌時段，不包含行程名稱和備註。', open: '在應用程式中傳送課表', help: '如果應用程式未開啟，請用Safari開啟此頁面或先安裝SuperTimetable。如果看不到分享功能，請更新應用程式。', install: '在App Store取得SuperTimetable', from: (name: string) => `${name}請求你的課表。` },
+        es: { eyebrow: 'Encuentra un momento en común', title: 'Comparte tu horario', description: 'Elige un horario en la app y envíaselo a tu amigo. Solo se comparten las horas ocupadas, sin títulos de eventos ni notas.', open: 'Enviar horario en la app', help: 'Si la app no se abre, abre esta página en Safari o instala SuperTimetable. Si no aparece la función para compartir, actualiza la app.', install: 'Descargar SuperTimetable en el App Store', from: (name: string) => `${name} ha pedido tu horario.` },
+        fr: { eyebrow: 'Trouvez un moment ensemble', title: 'Partage ton emploi du temps', description: 'Choisis un emploi du temps dans l’app et envoie-le à ton ami. Seules les heures occupées sont partagées, sans titres d’événements ni notes.', open: 'Envoyer depuis l’app', help: 'Si l’app ne s’ouvre pas, ouvre cette page dans Safari ou installe SuperTimetable. Si le partage n’apparaît pas, mets l’app à jour.', install: 'Obtenir SuperTimetable sur l’App Store', from: (name: string) => `${name} a demandé ton emploi du temps.` },
+        'pt-BR': { eyebrow: 'Encontre um horário em comum', title: 'Compartilhe seu horário', description: 'Escolha um horário no app e envie para seu amigo. Apenas os períodos ocupados são compartilhados, sem nomes de eventos ou notas.', open: 'Enviar horário pelo app', help: 'Se o app não abrir, abra esta página no Safari ou instale o SuperTimetable. Se a opção de compartilhar não aparecer, atualize o app.', install: 'Baixar SuperTimetable na App Store', from: (name: string) => `${name} pediu seu horário.` },
+      };
+      const locale = navigator.language.toLowerCase();
+      const lang: keyof typeof copy = locale.startsWith('zh')
+        ? (/hant|tw|hk|mo/.test(locale) ? 'zh-Hant' : 'zh-Hans')
+        : locale.startsWith('pt') ? 'pt-BR'
+        : (['ko', 'ja', 'es', 'fr'] as const).find(value => locale.startsWith(value)) ?? 'en';
+      const text = copy[lang];
+      document.documentElement.lang = lang;
+      document.title = `${text.title} · SuperTimetable`;
+      document.querySelector('.brand')?.setAttribute('href', `/${lang === 'ko' ? 'ko' : 'en'}/apps/timetable/`);
+      document.querySelectorAll<HTMLElement>('[data-copy]').forEach(element => {
+        const key = element.dataset.copy as keyof Omit<typeof text, 'from'>;
+        element.textContent = text[key];
+      });
+      const rawName = new URLSearchParams(window.location.search).get('from') ?? '';
+      // Match the app's 20-character display limit and keep external text out of HTML and URL paths.
+      const cleanedName = rawName.trim().replace(/[\r\n\u000b\u000c\u0085\u2028\u2029]/g, '');
+      // Swift Character counts grapheme clusters (including combining marks and joined emoji).
+      const characters = typeof Intl.Segmenter === 'function'
+        ? Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(cleanedName), item => item.segment)
+        : Array.from(cleanedName);
+      const name = characters.slice(0, 20).join('');
+      const target = new URL('supertimetable://feature/free-time-request');
+      if (name) {
+        target.searchParams.set('from', name);
+        const from = document.querySelector<HTMLElement>('#request-from');
+        if (from) { from.textContent = text.from(name); from.hidden = false; }
+      }
+      document.querySelector('#open-app')?.setAttribute('href', target.href);
+      // No automatic redirect: in-app browsers may require the user's tap to open an app.
+    </script>
+  </body>
+</html>
+<style>
+  body { font-family: var(--font-sans); color: var(--color-text); background: var(--color-bg); }
+  .request-page { min-height: 100svh; max-width: 640px; margin: 0 auto; padding: 32px 24px 64px; display: flex; flex-direction: column; justify-content: center; }
+  .brand { color: var(--color-text-sub); font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 32px; }
+  .request-card { border-top: 1px solid var(--color-border); padding-top: 28px; }
+  .eyebrow { color: var(--color-text-sub); font-size: 13px; margin-bottom: 12px; }
+  h1 { font-size: clamp(28px, 6vw, 42px); line-height: 1.2; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 20px; }
+  #request-from { font-weight: 600; margin-bottom: 12px; overflow-wrap: anywhere; }
+  .description { color: var(--color-text-sub); line-height: 1.8; margin-bottom: 28px; }
+  .primary-action { display: block; padding: 16px 20px; background: var(--color-primary); color: var(--color-bg); border-radius: 12px; text-align: center; font-weight: 600; text-decoration: none; }
+  .primary-action:hover { background: var(--color-primary-dark); }
+  .help { color: var(--color-text-sub); font-size: 13px; line-height: 1.7; margin: 20px 0; }
+  .store-link { font-size: 14px; text-underline-offset: 4px; }
+  a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
+</style>

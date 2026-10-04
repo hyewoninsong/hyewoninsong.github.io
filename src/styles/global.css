@@ -32,3 +32,15 @@
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Noto Sans KR', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
+
+/* 앱 아이콘 — 목록 카드와 상세 페이지 헤더가 같은 모양을 쓴다.
+   원본은 1024 정사각 평면 PNG(모서리 없음)이라 곡률은 여기서 준다. 22.37% 는 iOS 앱 아이콘의
+   모서리 비율 그대로다 — 홈 화면에서 본 아이콘과 같은 실루엣으로 읽히는 게 목적이다.
+   배경이 흰색/크림색인 아이콘이 흰 카드 위에서 사라지지 않게 테두리를 얇게 두른다.
+   컴포넌트 <style> 은 스코프가 갈려서 공유할 수 없으므로 전역에 둔다. */
+.app-icon {
+  border-radius: 22.37%;
+  border: 1px solid var(--color-border);
+  object-fit: cover;
+  flex-shrink: 0;
+}

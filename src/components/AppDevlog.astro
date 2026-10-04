@@ -1,0 +1,74 @@
+---
+/**
+ * 앱 소개 페이지 맨 아래 "개발 기록" — 그 앱을 만들며 쓴 블로그 글 최근 셋.
+ *
+ * 앱 페이지는 두 갈래다: 마크다운을 그대로 싣는 공용 `apps/[slug].astro` 와, 앱마다 카피를 넘기는
+ * 템플릿 `AppPage.astro`(timetable · superfont). 둘 다 이 컴포넌트를 쓴다 — 한쪽에만 붙이면
+ * 앱마다 개발 기록이 있고 없고가 갈린다.
+ *
+ * 글이 한 편도 없는 앱에서는 아무것도 그리지 않는다.
+ */
+import BlogPostCard from './BlogPostCard.astro';
+import { getCollection } from 'astro:content';
+import { useTranslations, type Lang } from '../i18n/utils';
+import { appKeyOf, blogAppForAppSlug, tagsWithoutApp } from '../lib/blog-apps';
+import { byNewest } from '../lib/blog-posts';
+
+interface Props {
+  lang: Lang;
+  /** apps 컬렉션의 slug. 블로그 키로는 `blogAppForAppSlug` 가 바꿔 준다. */
+  slug: string;
+  /**
+   * 어디에 놓이는지.
+   * - `inline`: 본문 컨테이너 안(공용 앱 페이지). 위에 구분선만 긋는다.
+   * - `section`: 전체 폭 섹션이 이어지는 템플릿 페이지. 스스로 여백과 배경을 갖는다.
+   */
+  variant?: 'inline' | 'section';
+  /** `section` 일 때 앞 섹션과 배경을 엇갈리게 한다. */
+  alt?: boolean;
+}
+
+const { lang, slug, variant = 'inline', alt = false } = Astro.props;
+const t = useTranslations(lang);
+
+/** 최근 몇 편까지 여기 걸지. 나머지는 앱별 목록으로 보낸다. */
+const VISIBLE = 3;
+
+const blogApp = blogAppForAppSlug(slug);
+const posts = blogApp
+  ? (await getCollection('blog'))
+      .filter((post) => post.id.startsWith(`${lang}/`) && appKeyOf(post.data) === blogApp.key)
+      .sort(byNewest)
+  : [];
+---
+
+{posts.length > 0 && (
+  <section
+    class:list={variant === 'section'
+      ? ['px-6 py-20 border-t border-border', alt && 'bg-bg-alt']
+      : ['mt-16 pt-12 border-t border-border']}
+  >
+    <div class:list={[variant === 'section' && 'max-w-5xl mx-auto']}>
+      <div class="flex items-baseline justify-between gap-4 mb-5">
+        <h2 class="text-2xl font-semibold text-text tracking-tight">{t('apps.devlog')}</h2>
+        {posts.length > VISIBLE && (
+          <a href={`/${lang}/blog/app/${blogApp!.key}`} class="text-sm font-medium text-primary hover:underline shrink-0">
+            {t('blog.viewAll')} →
+          </a>
+        )}
+      </div>
+      <p class="text-sm text-text-sub leading-relaxed mb-6 max-w-xl">{t('apps.devlog.body')}</p>
+      <div class="grid grid-cols-1 gap-4">
+        {posts.slice(0, VISIBLE).map((post) => (
+          <BlogPostCard
+            title={post.data.title}
+            date={post.data.date}
+            tags={tagsWithoutApp(post.data)}
+            summary={post.data.summary}
+            href={`/${lang}/blog/${post.id.replace(`${lang}/`, '')}`}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+)}

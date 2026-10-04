@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout
+  title={`SuperFont Support - ${t('site.title')}`}
+  description="How to install fonts with SuperFont, why installation finishes in Safari and Settings, common sticking points, and how to reach us."
+  lang={lang}
+>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperFont</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Support</h1>
+      <p class="text-sm text-text-sub">Stuck on an install? Check the steps below first, then tell us if it still fails.</p>
+    </div>
+
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-h3:text-base prose-h3:mt-8 prose-h3:mb-2
+      prose-p:text-text-sub prose-p:leading-7
+      prose-li:text-text-sub
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+      prose-code:before:content-none prose-code:after:content-none
+    ">
+      <h2>Contact</h2>
+      <p>
+        Questions, bug reports, and feature requests all go to the address below.
+        We reply within 7 business days.
+      </p>
+      <ul>
+        <li><strong>Email</strong>: <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a></li>
+      </ul>
+
+      <h2>Why installation finishes in Safari and Settings</h2>
+      <p>
+        iOS does not let apps install system fonts directly. Fonts can only be installed through a
+        <strong>configuration profile</strong>, iOS's official route, and a profile is downloaded by Safari and installed by the Settings app.
+        SuperFont builds the profile from the fonts you chose and hands it to Safari; the final "Install" button lives in Settings.
+        Leaving the app is how iOS is designed, not an error.
+      </p>
+      <p>
+        Everything happens on your device. The profile reaches Safari over an on-device connection only, and your font files are never uploaded anywhere.
+      </p>
+
+      <h2>Installation steps</h2>
+      <ol>
+        <li>In SuperFont, tap <strong>Install New Font</strong>, pick your font files, then tap <strong>Get Profile in Safari</strong>. Safari opens.</li>
+        <li>When Safari asks "This website is trying to download a configuration profile", tap <strong>Allow</strong>. A "Profile Downloaded" notice appears.</li>
+        <li>Open the <strong>Settings</strong> app. If a "Profile Downloaded" row is shown at the top, tap it.
+          Otherwise go to <strong>General &gt; VPN &amp; Device Management</strong>.</li>
+        <li>Tap the profile, tap <strong>Install</strong> in the top right, enter your device passcode, and tap <strong>Install</strong> once more.</li>
+        <li>Return to SuperFont. It confirms which fonts are now installed.</li>
+      </ol>
+      <p>Installed fonts are also listed under <strong>Settings &gt; General &gt; Fonts</strong>.</p>
+
+      <h2>Common sticking points</h2>
+
+      <h3>Safari never shows "Profile Downloaded"</h3>
+      <p>
+        Either "Ignore" was tapped in the download prompt, or another browser is set as the default.
+        Go back to SuperFont, tap <strong>Get Profile in Safari</strong> again, and choose <strong>Allow</strong> this time.
+        Profile downloads only work in Safari.
+      </p>
+
+      <h3>The profile is not in Settings</h3>
+      <p>
+        Check the "Downloaded Profile" row under <strong>Settings &gt; General &gt; VPN &amp; Device Management</strong>.
+        If it is not there, the download did not complete in Safari. Repeat the steps above.
+      </p>
+
+      <h3>The font is installed but an app does not show it</h3>
+      <p>
+        The app you are using has to support user-installed fonts. Pages, Keynote, Numbers, Word, and Procreate do;
+        apps such as Notes and Messages use system fonts only and will not show it.
+        Fully quit and reopen the app you want to use the font in.
+      </p>
+
+      <h3>Removing fonts</h3>
+      <p>
+        Go to <strong>Settings &gt; General &gt; VPN &amp; Device Management</strong>, tap the profile SuperFont created, and choose <strong>Remove Profile</strong>.
+        Every font in that profile is removed. Deleting the same entry from SuperFont's profile list tidies up the record inside the app.
+      </p>
+
+      <h3>It says the font is already installed</h3>
+      <p>
+        SuperFont unchecks faces that are already registered on the device in the preview. If you want to install them again anyway, check them and continue.
+      </p>
+
+      <h2>What to include in a report</h2>
+      <ul>
+        <li>Device model and iOS version (Settings &gt; General &gt; About)</li>
+        <li>Where it stopped: inside the app, in Safari, or in Settings</li>
+        <li>The kind and number of font files (for example, 3 OTF files and 1 ZIP). You do not need to send the files themselves.</li>
+        <li>A screen recording or screenshot, if you can</li>
+      </ul>
+
+      <h2>Privacy</h2>
+      <p>
+        What SuperFont collects and where your font files stay is set out in the
+        <a href="/en/apps/superfont/privacy/">SuperFont privacy policy</a>.
+      </p>
+    </div>
+
+    <div class="mt-16 text-center">
+      <a href="/en/apps/superfont/" class="text-sm font-medium text-primary hover:underline">← SuperFont</a>
+    </div>
+  </div>
+</BaseLayout>

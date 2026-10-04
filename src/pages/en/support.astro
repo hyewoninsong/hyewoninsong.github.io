@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={`Support - ${t('site.title')}`} lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Support</h1>
+      <p class="text-sm text-text-sub">Stuck on something? Tell us and we'll help.</p>
+    </div>
+
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-p:text-text-sub prose-p:leading-7
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+    ">
+      <h2>Contact</h2>
+      <p>
+        Questions, bug reports, and feature requests all go to the address below.
+        We reply within 7 business days.
+      </p>
+      <ul>
+        <li><strong>Email</strong>: <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a></li>
+      </ul>
+
+      <h2>What to include in a report</h2>
+      <p>These details let us find the cause much faster.</p>
+      <ul>
+        <li>App name and version (near the bottom of the app's settings screen)</li>
+        <li>Device model and iOS version (Settings &gt; General &gt; About)</li>
+        <li>What you were doing, what you expected, and what happened instead</li>
+        <li>A screen recording or screenshot, if you can</li>
+      </ul>
+
+      <h2>App guides</h2>
+      <p>Each app has its own page with features and screenshots.</p>
+      <ul>
+        <li><a href="/en/apps/">See all apps</a></li>
+      </ul>
+
+      <h2>Privacy</h2>
+      <p>
+        What we collect and why is written out in the <a href="/en/privacy/">Privacy Policy</a>.
+        Requests to delete collected data also go to the address above.
+      </p>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,133 @@
+---
+title: "Adding delete to an app that never deleted"
+date: 2026-09-27T20:00:00+09:00
+app: "daily-planner"
+tags: ["devlog", "swiftui", "data"]
+summary: "Todos in the day planner could only be archived, never deleted. Watching typo todos pile up in the archive flipped the rule — one warning, no undo."
+---
+
+In the day planner, a todo could never be deleted. Anything you were done with went to the **archive**, and its history stayed. That rule is now reversed: todos can be deleted permanently, from both the active and the archived list. Before they go, the app says exactly what goes with them.
+
+## The archive was holding two different things
+
+Renaming or recoloring a todo in this app updates every past block. Deleting one therefore erases everything built on it — blocks, contribution graph, stats. That is why delete did not exist.
+
+But some todos have nothing to keep. Typos, test entries, ones created under the wrong profile. They sit in the archive forever, and once the archive mixes "later" with "garbage", nobody uses it.
+
+## Two places, one warning
+
+Delete lives in two places: the red `Delete` under a row swipe, and the trash button in edit mode for a multi-selection.
+
+![Swiping a row reveals delete and archive. The full-swipe action is still archive](/blog/planner-delete-todos/swipe-actions.png)
+
+The full-swipe slot stays with archive on purpose. Whatever fires when a thumb slips should be the reversible one.
+
+The warning names the todo and the **number of blocks** that disappear with it: "12 blocks and all history will be gone. This cannot be undone — archive it instead if you just want it out of the way." The cost shows up as a number, not an adjective. Twelve blocks and zero blocks are not the same decision.
+
+![The delete warning leads with the target and how many blocks go with it](/blog/planner-delete-todos/delete-alert.png)
+
+## It does not go on the undo stack
+
+The app has an undo stack covering every write, and putting deletion on it looked natural. It is not there. If the dialog says "cannot be undone" and the undo button brings it back, one of them is lying. Folding hundreds of inverse operations into a single entry — on a stack capped at 50 — is its own cost.
+
+Deleting without a confirmation and relying on undo was the other option. That is exactly how **blocks** are deleted here: no dialog, undo catches it. A todo is a different order of magnitude. One block is five minutes; one todo is half a year of records.
+
+A trash that empties after 30 days was considered too. It adds a third state and an expiry schedule to a problem one dialog solves.
+
+## The dialog read a model that was already gone
+
+The first version held the target `Todo` itself. Confirm, delete, dismiss — except SwiftUI evaluates the title and message once more on the way out, and those read `todo.title` on an object already removed from the context.
+
+The fix is to hold a **value** instead of a model:
+
+```swift
+private struct DeleteRequest: Identifiable {
+    let id = UUID()
+    let ids: [UUID]      // re-fetched after the confirmation
+    let title: String
+    let message: String
+}
+```
+
+Freezing the name and the count into strings when the question is asked means there is still something to render after the objects are gone. For the same reason the confirmation re-fetches its targets by id.
+
+The undo stack was left alone. Its entries capture id snapshots rather than model references, so an older entry pointing at a deleted todo resolves to nil and falls through. That much was true; reading "falls through" as "is safe" was the mistake — see the 2026-09-21 section below.
+
+## 2026-09-21 — an undo that quietly does nothing is a broken undo
+
+The paragraph above said a stale entry "resolves to nil and does nothing." True — but nobody asked why that was fine. It wasn't.
+
+Every inverse operation looks like this:
+
+```swift
+ctx.block(id: id)?.parkedAt = nil     // optional chaining passes when the block is gone
+```
+
+Deleting a todo cascades to every block it owns. At that moment every stack entry touching that todo — moved, completed, sent to the drawer, block deleted — points at nothing. The button stays enabled, because the stack is not empty. Tapping it consumes one step and changes nothing on screen. Five dead entries means five taps before one lands. What the user reads is simply: undo is broken.
+
+Worse, the dead entry moves to the redo stack. The redo of an "add todo" entry restores from a snapshot — so a permanently deleted todo could come back with one tap of the right arrow, right after a dialog promised it could not be undone.
+
+The fix removes the optional chaining. An inverse now reports **whether it changed anything**:
+
+```swift
+extension ModelContext {
+    func apply(block id: UUID, _ body: (TodoBlock) -> Void) -> Bool {
+        guard let block = block(id: id) else { return false }
+        body(block)
+        block.updatedAt = .now
+        return true
+    }
+}
+```
+
+The stack keeps popping until an entry applies, and drops the ones that don't — they never reach the other stack either. An enabled undo button now always undoes something, dead entries clean themselves up unseen, and a deleted todo stays deleted.
+
+One more trap showed up in grouped actions. "Applied if any step applied" was folded as `entries.reduce(false) { $0 || $1.undo(ctx) }` — and `||` short-circuits, so once the first step succeeds the rest never run at all. Loop, don't fold.
+
+The investigation started from a report that undo did nothing for the drawer. The drawer path turned out to be fine — six UI tests across park/unpark, undo/redo, today and other days all pass. The symptom was real, its cause was somewhere else entirely.
+
+One drawer-side gap did remain: undo sending a block back to the drawer gave no signal beyond the block disappearing. It now reuses the same "moved to the drawer" cue that parking shows. Not saying where something went reads as nothing happening.
+
+## Undo flies the block too — but only if it was on screen
+
+Adding the cue raised the obvious next question. Parking from the menu sends a block-shaped ghost falling from its slot into the drawer button. Doing the same thing through undo showed only the label. Same outcome, different animation depending on how you got there.
+
+![Right after undo: the block-shaped ghost shrinks toward the drawer button at the bottom right, and the button icon switches to a tray with an arrow going into it](/blog/planner-delete-todos/undo-drawer-ghost.png)
+
+Two things stood in the way. First, **there is no frame to measure.** By the time undo finishes, the block is already in the drawer and off the timeline. The menu can hand over the block's screen rect just before parking; undo has no idea which block is about to move. So the order got inverted — the visible day's block ranges are captured *before* the undo runs, and whichever block turns up in the drawer afterwards hands its old range to the timeline to measure.
+
+The second is the interesting one. Undo deliberately does not move the view, so the block it just parked may be scrolled out of sight, or on another day entirely. Flying a ghost from there means a block bursting in from a screen edge the user never looked at. That does not say "it went from here to there" — it just startles.
+
+So **the ghost flies only when the departure point is on screen right now.** Off screen or another day, the animation is dropped and only the label remains. Both paths converge: landed or dropped, the button bounces once and says "moved to the drawer." Dropping it explicitly matters too — leaving the transfer to expire keeps the drawer button stuck on its arrow icon for three seconds while nothing happens.
+
+The opposite direction — undo pulling a block back *out* of the drawer — got no animation. The block reappearing on the timeline already answers the question.
+
+## 2026-09-27 — Profiles get archived, not deleted
+
+This post originally ended with "profiles still cannot be deleted." That decision came due, and the answer was not delete.
+
+The real problem was the combination with the limit. You can have ten profiles. With no way to remove one, anyone who filled all ten could neither create another nor clear out an old one — a ratchet that only turned one way.
+
+So profiles now follow the same grammar as todos. Swipe a profile row and `Archive` sits next to `Edit`. Archiving keeps every todo, block, and bit of history, but takes the profile out of the list and the switcher and moves it to an `Archived` section at the bottom, where a single `Restore` button brings it back. Because it is reversible, there is no confirmation.
+
+| Situation | Behavior |
+|---|---|
+| The limit of 10 | Counts **active** profiles only; archiving frees a slot |
+| Restoring with 10 active | The button is disabled: "archive one first" |
+| The last remaining profile | `Archive` does not appear |
+| Archiving the profile you are viewing | Switches to the first active profile |
+
+Blocks in an archived profile do not ring alarms — an alarm for something you cannot see anywhere is an alarm you cannot find to turn off. Restoring re-arms them.
+
+What lost: counting archived profiles toward the limit (the ratchet stays), allowing restore past the limit (the limit stops meaning anything), and auto-archiving the least-used profile on restore (saves a tap, but a profile you did not choose disappears). And if two devices archive different profiles and sync leaves none active, the app restores the first one on launch.
+
+## What is left
+
+There is still no profile delete — archive fills that role. Devices running an older version do not know about the archive flag and keep showing archived profiles until updated.
+
+## History
+
+- 2026-09-21 — permanent delete for todos (two entry points, one warning, no undo)
+- 2026-09-21 — that delete's leftovers in the undo stack are now skipped
+- 2026-09-21 — the drawer cue on undo became a full ghost flight (only when on screen)
+- 2026-09-27 — profile archive and restore (archived profiles don't count toward the limit)

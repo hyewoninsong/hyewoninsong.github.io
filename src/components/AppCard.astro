@@ -1,38 +1,43 @@
 ---
 import { getLangFromUrl, useTranslations } from '../i18n/utils';
-
-type PlatformStatus = 'released' | 'in-development';
+import { withHash } from '../lib/asset-hash';
+import { statusBadgeClass, statusLabelKey, releaseLine, type PlatformStatus } from '../lib/platform-status';
 
 interface Props {
   title: string;
   summary: string;
+  /** `public/` 기준 앱 아이콘 경로 (`.md` frontmatter 의 `icon`). 없으면 제목만 나온다. */
+  icon?: string;
   platforms?: {
     iphone?: PlatformStatus;
     ipad?: PlatformStatus;
     mac?: PlatformStatus;
     android?: PlatformStatus;
   };
+  /** 출시일 (`.md` frontmatter 의 `releaseDate`). 있으면 뱃지 아래 한 줄이 붙는다. */
+  releaseDate?: Date;
   href: string;
 }
 
-const { title, summary, platforms = {}, href } = Astro.props;
+const { title, summary, icon, platforms = {}, releaseDate, href } = Astro.props;
+const iconSrc = icon ? withHash(icon) : null;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 
 const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
 const hasAndroid = !!platforms.android;
 
-const badgeClass = (status: PlatformStatus) =>
-  status === 'released'
-    ? 'border-green-200 bg-green-50 text-green-700'
-    : 'border-border bg-muted text-muted-foreground';
-
-const statusLabel = (status: PlatformStatus) =>
-  status === 'released' ? t('status.released') : t('status.dev');
+const badgeClass = statusBadgeClass;
+const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
 ---
 
 <a href={href} class="block group">
-  <div class="border border-border rounded-xl bg-card shadow-sm p-6 transition-shadow hover:shadow-md">
+  <div class="border border-border rounded-xl bg-card shadow-sm p-6 transition-shadow hover:shadow-md flex items-start gap-4">
+    {iconSrc && (
+      <img src={iconSrc} alt="" aria-hidden="true" width="256" height="256"
+           class="app-icon w-14 h-14 md:w-16 md:h-16" />
+    )}
+    <div class="min-w-0 flex-1">
     <h3 class="text-[15px] font-semibold text-text group-hover:text-primary transition-colors leading-snug mb-2">{title}</h3>
     <p class="text-sm text-text-sub leading-relaxed mb-5">{summary}</p>
 
@@ -80,6 +85,11 @@ const statusLabel = (status: PlatformStatus) =>
           </span>
         </div>
       )}
+
+      {releaseDate && (
+        <p class="text-xs text-text-sub">{releaseLine(releaseDate, lang, t)}</p>
+      )}
+      </div>
     </div>
   </div>
 </a>

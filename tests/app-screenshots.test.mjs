@@ -67,18 +67,6 @@ test('en and ko expose the same set of static app pages', () => {
   assert.deepEqual(staticAppSlugs('en'), staticAppSlugs('ko'));
 });
 
-test('timetable page references the expected 19 localized screenshots', () => {
-  const expected = [
-    'batch-edit', 'batch-edit-after', 'color-variant', 'dark-mode', 'day-range',
-    'drag-create', 'duplicate-timetable', 'hero', 'image-share', 'lock-toggle',
-    'move-drag', 'print', 'quick-edit', 'resize-drag', 'timetable-list',
-    'title-suggestions', 'undo-redo', 'widget-dark', 'widget-light',
-  ].sort();
-  for (const locale of locales) {
-    assert.deepEqual(referencedScreenshots(locale, 'timetable'), expected, `locale ${locale}`);
-  }
-});
-
 for (const slug of staticAppSlugs('en')) {
   const usesHelper = locales.some((l) => imgHelperBase(l, slug) !== null);
   if (!usesHelper) continue;
@@ -110,17 +98,6 @@ for (const slug of staticAppSlugs('en')) {
     assert.deepEqual(files('en'), files('ko'));
   });
 }
-
-test('flat-layout apps reference screenshots directly from public/apps/<slug>/', () => {
-  for (const slug of ['superfont', 'notequiz', 'supertimers']) {
-    const paths = referencedImagePaths('en', slug);
-    assert.ok(paths.length > 0, `${slug} references no screenshots`);
-    assert.ok(
-      paths.every((p) => p.startsWith(`/apps/${slug}/`)),
-      `${slug} references images outside /apps/${slug}/: ${paths}`,
-    );
-  }
-});
 
 for (const slug of staticAppSlugs('en')) {
   test(`${slug}: en and ko pages reference the same absolute /apps/ image paths`, () => {

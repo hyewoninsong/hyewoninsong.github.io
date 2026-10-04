@@ -24,7 +24,9 @@ const apps = allApps
         <AppCard
           title={app.data.title}
           summary={app.data.summary}
+          icon={app.data.icon}
           platforms={app.data.platforms}
+          releaseDate={app.data.releaseDate}
           href={`/ko/apps/${app.data.slug}`}
         />
       ))}

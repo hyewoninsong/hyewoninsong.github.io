@@ -1,0 +1,114 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout
+  title={`SuperFont 지원 - ${t('site.title')}`}
+  description="SuperFont로 폰트를 설치하는 순서, 설치가 Safari와 설정 앱에서 끝나는 이유, 자주 막히는 지점과 문의 방법."
+  lang={lang}
+>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperFont</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">지원</h1>
+      <p class="text-sm text-text-sub">설치가 막히면 아래를 먼저 확인하고, 그래도 안 되면 알려주세요</p>
+    </div>
+
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-h3:text-base prose-h3:mt-8 prose-h3:mb-2
+      prose-p:text-text-sub prose-p:leading-7
+      prose-li:text-text-sub
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+      prose-code:before:content-none prose-code:after:content-none
+    ">
+      <h2>문의하기</h2>
+      <p>
+        기능 문의, 버그 제보, 개선 제안 모두 아래 이메일로 받습니다.
+        영업일 기준 7일 이내에 답장드립니다.
+      </p>
+      <ul>
+        <li><strong>이메일</strong>: <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a></li>
+      </ul>
+
+      <h2>설치가 Safari와 설정 앱에서 끝나는 이유</h2>
+      <p>
+        iOS는 앱이 시스템 폰트를 직접 설치하는 것을 허용하지 않습니다. 폰트는 <strong>구성 프로파일</strong>이라는
+        iOS의 공식 경로로만 설치할 수 있고, 프로파일은 Safari가 내려받아 설정 앱이 설치합니다.
+        SuperFont는 고른 폰트로 프로파일을 만들고 Safari로 넘기는 일까지 하며, 마지막 "설치" 버튼은 설정 앱에 있습니다.
+        앱 밖으로 나가는 것은 iOS의 설계이지 오류가 아닙니다.
+      </p>
+      <p>
+        이 과정은 모두 기기 안에서 일어납니다. 프로파일은 기기 내부 연결로만 Safari에 전달되고, 폰트 파일은 어디에도 올라가지 않습니다.
+      </p>
+
+      <h2>설치 순서</h2>
+      <ol>
+        <li>SuperFont에서 <strong>새 폰트 설치</strong>로 폰트 파일을 고른 뒤 <strong>Safari로 프로파일 받기</strong>를 누릅니다. Safari가 열립니다.</li>
+        <li>Safari가 "구성 프로파일을 다운로드하려고 합니다" 라고 물으면 <strong>허용</strong>을 누릅니다. "프로파일이 다운로드됨" 안내가 뜹니다.</li>
+        <li><strong>설정</strong> 앱을 엽니다. 맨 위에 "프로파일이 다운로드됨" 항목이 보이면 그것을 누르고,
+          보이지 않으면 <strong>일반 &gt; VPN 및 기기 관리</strong>로 갑니다.</li>
+        <li>프로파일을 누르고 오른쪽 위 <strong>설치</strong>를 누른 뒤, 기기 암호를 입력하고 한 번 더 <strong>설치</strong>를 누릅니다.</li>
+        <li>SuperFont로 돌아오면 설치된 폰트를 확인해 줍니다.</li>
+      </ol>
+      <p>설치된 폰트는 <strong>설정 &gt; 일반 &gt; 서체</strong>에서도 볼 수 있습니다.</p>
+
+      <h2>자주 막히는 지점</h2>
+
+      <h3>Safari에서 "프로파일이 다운로드됨"이 뜨지 않아요</h3>
+      <p>
+        다운로드 허용 창에서 "무시"를 눌렀거나, Safari가 아닌 다른 브라우저가 기본 브라우저로 설정된 경우입니다.
+        SuperFont로 돌아와 <strong>Safari로 프로파일 받기</strong>를 다시 누르고, 이번에는 <strong>허용</strong>을 선택하세요.
+        프로파일 다운로드는 Safari에서만 동작합니다.
+      </p>
+
+      <h3>설정 앱에 프로파일이 안 보여요</h3>
+      <p>
+        <strong>설정 &gt; 일반 &gt; VPN 및 기기 관리</strong>의 "다운로드된 프로파일" 항목을 확인하세요.
+        그래도 없으면 Safari에서 다운로드가 완료되지 않은 것이니 위 순서를 다시 진행합니다.
+      </p>
+
+      <h3>설치했는데 앱에서 폰트가 안 보여요</h3>
+      <p>
+        폰트를 쓰려는 앱이 사용자 설치 폰트를 지원해야 합니다. Pages, Keynote, Numbers, Word, Procreate 등이 지원하고,
+        메모·메시지처럼 시스템 서체만 쓰는 앱에서는 나타나지 않습니다.
+        폰트를 쓰려는 앱을 완전히 종료했다가 다시 열어 보세요.
+      </p>
+
+      <h3>폰트를 지우고 싶어요</h3>
+      <p>
+        <strong>설정 &gt; 일반 &gt; VPN 및 기기 관리</strong>에서 SuperFont가 만든 프로파일을 누르고 <strong>프로파일 제거</strong>를 선택하세요.
+        프로파일 하나에 들어 있던 폰트가 모두 제거됩니다. SuperFont의 프로파일 목록에서 해당 항목을 지우면 앱 안의 기록도 정리됩니다.
+      </p>
+
+      <h3>같은 폰트가 이미 설치돼 있다고 나와요</h3>
+      <p>
+        SuperFont는 기기에 이미 등록된 서체를 미리보기에서 선택 해제해 둡니다. 그래도 다시 설치하고 싶으면 체크해서 진행하면 됩니다.
+      </p>
+
+      <h2>제보할 때 함께 적어주시면 좋은 것</h2>
+      <ul>
+        <li>기기 모델과 iOS 버전 (설정 &gt; 일반 &gt; 정보)</li>
+        <li>어느 단계에서 막혔는지 (앱 안 / Safari / 설정 앱)</li>
+        <li>폰트 파일의 종류와 개수 (예: OTF 3개, ZIP 1개). 파일 자체는 보내지 않으셔도 됩니다.</li>
+        <li>가능하다면 화면 녹화나 스크린샷</li>
+      </ul>
+
+      <h2>개인정보</h2>
+      <p>
+        SuperFont가 수집하는 정보와 폰트 파일이 어디에 머무는지는
+        <a href="/ko/apps/superfont/privacy/">SuperFont 개인정보처리방침</a>에 정리해 두었습니다.
+      </p>
+    </div>
+
+    <div class="mt-16 text-center">
+      <a href="/ko/apps/superfont/" class="text-sm font-medium text-primary hover:underline">← SuperFont</a>
+    </div>
+  </div>
+</BaseLayout>

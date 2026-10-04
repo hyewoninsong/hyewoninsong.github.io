@@ -1,0 +1,463 @@
+---
+/**
+ * 앱 소개 페이지 템플릿 — ko/en 페이지가 slug 와 카피만 넘긴다.
+ * iPhone / iPad 탭: 루트의 data-device 로 갈라지고, 섹션마다 기기별 문장·스샷을 따로 둔다.
+ * 스샷 행(.shot-row)은 좁은 화면에서 가로 스크롤, 768px 부터 줄바꿈.
+ */
+import { withHash } from '../lib/asset-hash';
+import { useTranslations, type Lang } from '../i18n/utils';
+import { statusBadgeClass, statusLabelKey, releaseLine, type PlatformStatus } from '../lib/platform-status';
+import AppDevlog from './AppDevlog.astro';
+
+type Device = 'iphone' | 'ipad';
+type Shot = { file: string; alt: string };
+type PerDevice<T> = T | { iphone: T; ipad: T };
+
+export interface Section {
+  label: string;
+  title: PerDevice<string>;
+  lead: PerDevice<string>;
+  /** 라벨 + 설명 쌍 (드래그 섹션) */
+  steps?: PerDevice<[string, string][]>;
+  points?: PerDevice<string[]>;
+  /** 없으면 글만 있는 섹션 — 캡처를 아직 안 찍은 앱(개발 중)이다. 찍히면 그때 채운다. */
+  shots?: { iphone: Shot[]; ipad: Shot[] };
+}
+
+export interface Copy {
+  tagline: string;
+  summary: string;
+  /** 히어로 스샷의 대체 텍스트. 없으면 헤더 아래 스샷 자리를 통째로 뺀다. */
+  hero?: { iphone: string; ipad: string };
+  /** 기기 탭 라벨. 없으면 탭 줄도 iPad 문장·스샷도 안 그린다 — iPhone 만 있는 앱. */
+  tabs?: { iphone: string; ipad: string };
+  sections: Section[];
+  closing: [string, string];
+}
+
+interface Props {
+  lang: Lang;
+  /** public/apps/<slug>/ 아래에서 스샷을 찾고, 기기 탭 상태를 저장할 때도 쓴다. */
+  slug: string;
+  app: { data: { title: string; summary: string; icon?: string; appStoreUrl?: string; releaseDate?: Date; platforms?: Record<string, PlatformStatus | undefined> } };
+  copy: Copy;
+  /**
+   * iPad 스샷을 어떻게 얹을지. 'frame' 은 베젤 카드 안에 넣는다 — 가로(4:3) 캡처는 화면 모서리가
+   * 직각이라 이미지에 곡률을 주면 상태바·툴바가 잘리기 때문이다. 세로 캡처는 그 문제가 없으니
+   * 'plain' 으로 테두리 없이 iPhone 과 같은 모양으로 둔다.
+   */
+  ipadShot?: 'frame' | 'plain';
+  /** 스샷의 실제 픽셀 크기 — 로딩 중 레이아웃이 튀지 않게 img 에 그대로 넣는다. */
+  shotSize?: { iphone: [number, number]; ipad: [number, number] };
+  /** 하단 "← 앱" 줄 오른쪽에 붙는 링크 (지원 / 개인정보처리방침 등). */
+  footerLinks?: { href: string; label: string }[];
+}
+
+const {
+  lang,
+  slug,
+  app,
+  copy,
+  ipadShot = 'frame',
+  shotSize = { iphone: [720, 1564], ipad: [1200, 900] },
+  footerLinks = [],
+} = Astro.props;
+const t = useTranslations(lang);
+const platforms = app.data.platforms ?? {};
+const hasIOS = platforms.iphone || platforms.ipad || platforms.mac;
+const hasAndroid = !!platforms.android;
+
+const badgeClass = statusBadgeClass;
+const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
+
+const pick = <T,>(v: PerDevice<T>, d: Device): T =>
+  (typeof v === 'object' && v !== null && 'iphone' in (v as object) && 'ipad' in (v as object))
+    ? (v as { iphone: T; ipad: T })[d]
+    : (v as T);
+
+/** 앱 아이콘 — 언어 공용이라 `.md` frontmatter 의 `icon` 경로 하나다. 비어 있으면 헤더에서 뺀다. */
+const icon = app.data.icon ? withHash(app.data.icon) : null;
+
+const img = (d: Device, file: string) =>
+  withHash(d === 'ipad' ? `/apps/${slug}/${lang}/ipad/${file}.png` : `/apps/${slug}/${lang}/${file}.png`);
+
+const devices: Device[] = copy.tabs ? ['iphone', 'ipad'] : ['iphone'];
+const dim = (d: Device) => ({ width: shotSize[d][0], height: shotSize[d][1] });
+---
+
+<style>
+  .animate-reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .animate-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .delay-1 { transition-delay: 0.06s; }
+
+  /* 그림자 가로 도달거리 = blur/2 = 24px. 스샷 행의 좌우 패딩(1.5rem)과 같은 값이라
+     스크롤 컨테이너 안에서도 잘리지 않는다. blur 를 키우면 그 패딩부터 같이 키워야 한다. */
+  .screenshot {
+    border-radius: 2.5rem;
+    box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 4px 14px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: block;
+  }
+
+  /* iPad 캡처(4:3)는 화면 모서리가 직각이라 상태바·툴바·시각 축이 모서리에 붙어 있다.
+     이미지에 직접 border-radius 를 주면 그 UI 가 잘린다 (좁은 폭일수록 심함 —
+     곡률은 20px 로 고정인데 이미지는 345px 까지 줄어든다).
+     곡률은 베젤 프레임이 갖고, 이미지 자신은 거의 각지게 둔다. */
+  .shot-frame {
+    display: block;
+    padding: 0.4rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 4px 14px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .shot-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+  }
+
+  /* 호버 그림자는 가로로 36px 까지 번진다 — 스샷 행이 스크롤 컨테이너인 좁은 화면에서는
+     그만큼이 잘린다. 포인터가 있는 넓은 화면(행이 overflow: visible 인 곳)에서만 건다. */
+  @media (hover: hover) and (min-width: 768px) {
+    .screenshot:hover,
+    .shot-frame:hover {
+      transform: scale(1.02) translateY(-2px);
+      box-shadow: 0 28px 72px rgba(0,0,0,0.16), 0 6px 20px rgba(0,0,0,0.1);
+    }
+  }
+
+  /* ipadShot="plain" — 테두리 없이 스샷만 얹는다. iPad 캡처는 상태바·툴바가 화면 모서리에
+     바짝 붙어 있어서 곡률을 크게 주면 그 UI 가 잘린다. 그림자로 띄우고 곡률은 거의 주지 않는다. */
+  .screenshot-flat { border-radius: 0.25rem; }
+
+  .section-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin-bottom: 0.75rem;
+  }
+
+  /* 스샷 행.
+     좁은 화면은 가로 스크롤 캐러셀 — 손가락으로 밀면 되고, 세로로 쌓으면 섹션 하나가
+     화면 세 개 높이가 된다.
+     768px 위로는 줄바꿈 — 마우스에는 가로 스크롤을 굴릴 방법이 없다. 스크롤바는 숨겨져
+     있고 휠은 세로다. 잘린 세 번째 스샷은 "옆으로 더 있다" 는 신호가 아니라 그냥 깨진
+     화면으로 읽힌다 (2026-09-20 실제 신고). 넓은 화면에서는 잘리는 것 자체를 없앤다. */
+  .shot-row {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 1.5rem;
+    /* overflow-x: auto 인 스크롤 컨테이너는 네 방향 모두 패딩 박스에서 잘린다(overflow-y 를
+       visible 로 둘 수 없다). 그림자가 닿는 만큼 패딩을 주고, 레이아웃 여백은 같은 크기의
+       음수 마진으로 되돌린다 — 안 그러면 스샷 밑에 각진 회색 띠가 남는다.
+       좌우 1.5rem 은 섹션 px-6 과 같은 값이라 행이 화면 폭까지 꽉 차고(음수 마진이 정확히
+       상쇄되어 페이지 가로 스크롤이 생기지 않는다), 그 안에 그림자 가로 도달거리 24px 가
+       들어간다. 아래 3.5rem 은 20+48/2 = 44px 를 담는다. */
+    padding: 1.5rem 1.5rem 3.5rem;
+    margin: -1.5rem -1.5rem -3.5rem;
+  }
+  .shot-row::-webkit-scrollbar { display: none; }
+  .shot-row > img,
+  .shot-row > .shot-frame { flex-shrink: 0; scroll-snap-align: center; }
+  .shot-row.single { justify-content: center; }
+
+  @media (min-width: 768px) {
+    /* 줄바꿈으로 전부 보여준다. 자를 것이 없으니 스크롤 컨테이너일 이유도 없고,
+       그러면 그림자도 온전히 나온다. 줄 간격은 아래로 44px 번지는 그림자보다 커야 한다. */
+    .shot-row {
+      flex-wrap: wrap;
+      justify-content: center;
+      overflow: visible;
+      padding: 0;
+      margin: 0;
+      row-gap: 3.5rem;
+    }
+  }
+
+  .step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  .step-list li {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text-sub);
+    line-height: 1.6;
+  }
+  .step-list li span:first-child {
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--color-text);
+    min-width: 4.5rem;
+  }
+
+  .point-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+  .point-list li {
+    position: relative;
+    padding-left: 1.1rem;
+    font-size: 0.875rem;
+    color: var(--color-text-sub);
+    line-height: 1.6;
+  }
+  .point-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.7rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+  }
+
+  /* 기기 탭 */
+  .device-tabs {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: var(--color-bg-alt);
+  }
+  .device-tabs button {
+    border: 0;
+    border-radius: 9999px;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-sub);
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .device-tabs button[aria-selected="true"] {
+    background: var(--color-card);
+    color: var(--color-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  [data-device="iphone"] .only-ipad { display: none !important; }
+  [data-device="ipad"] .only-iphone { display: none !important; }
+</style>
+
+<div id="device-root" data-device="iphone" data-slug={slug}>
+
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+
+    <!-- ── Header ── -->
+    <div class="text-center mb-16 md:mb-20 animate-reveal">
+      {icon && (
+        <img src={icon} alt="" aria-hidden="true" width="256" height="256"
+             class="app-icon w-20 h-20 md:w-24 md:h-24 mx-auto mb-5" />
+      )}
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-3">{app.data.title}</h1>
+      <p class="text-lg text-text font-medium mb-3">{copy.tagline}</p>
+      <p class="text-base text-text-sub mb-6 max-w-md mx-auto leading-relaxed">{copy.summary}</p>
+
+      {hasIOS && (
+        <div class:list={['flex items-center gap-2 flex-wrap justify-center', app.data.releaseDate ? 'mb-2' : 'mb-8']}>
+          <span class="flex items-center gap-1 text-xs text-text-sub shrink-0">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            iOS
+          </span>
+          <div class="flex gap-1.5 flex-wrap justify-center">
+            {platforms.iphone && (
+              <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.iphone)]}>
+                iPhone · {statusLabel(platforms.iphone)}
+              </span>
+            )}
+            {platforms.ipad && (
+              <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.ipad)]}>
+                iPad · {statusLabel(platforms.ipad)}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {hasAndroid && (
+        <div class="flex items-center justify-center gap-2 mb-4">
+          <span class="flex items-center gap-1 text-xs text-text-sub shrink-0">
+            <!-- Android icon (same path as AppCard) -->
+            <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 shrink-0">
+              <path d="M17.523 15.341a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m-11.046 0a.985.985 0 01-.984-.984.985.985 0 01.984-.984.985.985 0 01.984.984.985.985 0 01-.984.984m11.405-6.022l1.969-3.411a.41.41 0 00-.149-.559.41.41 0 00-.559.149l-1.994 3.454A11.774 11.774 0 0012 8.098c-1.73 0-3.364.393-4.799 1.084L5.207 5.698a.41.41 0 00-.559-.149.41.41 0 00-.149.559l1.969 3.411C3.945 10.878 2.5 13.239 2.5 15.898h19c0-2.659-1.445-5.02-3.618-6.579z"/>
+            </svg>
+            Android
+          </span>
+          <span class:list={['inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-medium', badgeClass(platforms.android!)]}>
+            {statusLabel(platforms.android!)}
+          </span>
+        </div>
+      )}
+
+      {app.data.releaseDate && (
+        <p class="text-xs text-text-sub mb-8">{releaseLine(app.data.releaseDate, lang, t)}</p>
+      )}
+
+      {copy.tabs && (
+        <div class="device-tabs" role="tablist" aria-label="Device">
+          <button type="button" role="tab" data-device-tab="iphone" aria-selected="true">{copy.tabs.iphone}</button>
+          <button type="button" role="tab" data-device-tab="ipad" aria-selected="false">{copy.tabs.ipad}</button>
+        </div>
+      )}
+
+      {app.data.appStoreUrl && (
+        <div>
+          <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer"
+             class="inline-block mt-6 text-sm text-primary hover:underline">
+            App Store →
+          </a>
+        </div>
+      )}
+    </div>
+
+    <!-- ── Intro screenshot ── -->
+    {copy.hero && (
+      <div class="flex justify-center mb-28 animate-reveal delay-1">
+        <img src={img('iphone', 'hero')} alt={copy.hero.iphone} class="only-iphone screenshot w-full max-w-[300px]" {...dim('iphone')} />
+        {ipadShot === 'frame' ? (
+          <div class="only-ipad shot-frame w-full max-w-[760px]">
+            <img src={img('ipad', 'hero')} alt={copy.hero.ipad} {...dim('ipad')} loading="lazy" />
+          </div>
+        ) : (
+          <img src={img('ipad', 'hero')} alt={copy.hero.ipad} class="only-ipad screenshot screenshot-flat w-full max-w-[420px]" {...dim('ipad')} loading="lazy" />
+        )}
+      </div>
+    )}
+
+  </div>
+
+  {copy.sections.map((s, i) => {
+    const alt = i % 2 === 1;
+    /* 스샷이 없으면 좌우 두 단이 아니라 한 단이다 — 빈 단을 남기면 섹션이 반쯤 지워진 것으로 읽힌다. */
+    const shots = s.shots;
+    return (
+      <section class:list={['py-24 px-6 border-t border-border', alt && 'bg-bg-alt']}>
+        <div class:list={['mx-auto flex flex-col items-center gap-16', shots ? ['max-w-5xl', alt ? 'md:flex-row-reverse' : 'md:flex-row'] : 'max-w-3xl']}>
+          <div class="flex-1 min-w-0 w-full animate-reveal">
+            <span class="section-label">{s.label}</span>
+            {devices.map((d) => {
+              const steps = s.steps ? pick(s.steps, d) : undefined;
+              const points = s.points ? pick(s.points, d) : undefined;
+              return (
+                <div class={`only-${d}`}>
+                  <h2 class="text-2xl font-semibold text-text tracking-tight mb-4">{pick(s.title, d)}</h2>
+                  <p class="text-text-sub leading-relaxed">{pick(s.lead, d)}</p>
+                  {steps && (
+                    <ul class="step-list">
+                      {steps.map(([k, v]) => (<li><span>{k}</span><span>{v}</span></li>))}
+                    </ul>
+                  )}
+                  {points && points.length > 0 && (
+                    <ul class="point-list">
+                      {points.map((p) => (<li>{p}</li>))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {shots && (
+          <div class="flex-1 min-w-0 w-full animate-reveal delay-1">
+            {devices.map((d) => {
+              const row = shots[d];
+              return (
+                <div class:list={[`only-${d}`, 'shot-row', row.length === 1 && 'single']}>
+                  {row.map((sh) => (
+                    d === 'ipad'
+                      ? (ipadShot === 'frame'
+                          ? <div class="shot-frame w-full max-w-[480px]"><img src={img(d, sh.file)} alt={sh.alt} {...dim(d)} loading="lazy" /></div>
+                          : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot screenshot-flat w-full max-w-[300px]" {...dim(d)} loading="lazy" />)
+                      : <img src={img(d, sh.file)} alt={sh.alt} class="screenshot w-full max-w-[220px]" {...dim(d)} loading="lazy" />
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          )}
+        </div>
+      </section>
+    );
+  })}
+
+  <!-- ── Closing ── -->
+  <section class:list={['py-20 px-6 border-t border-border', copy.sections.length % 2 === 0 && 'bg-bg-alt']}>
+    <div class="max-w-5xl mx-auto text-center animate-reveal">
+      <p class="text-base text-text font-medium mb-2">{copy.closing[0]}</p>
+      <p class="text-sm text-text-sub">{copy.closing[1]}</p>
+    </div>
+  </section>
+
+  <!-- ── 개발 기록 ── 배경은 Closing 과 엇갈린다 -->
+  <AppDevlog lang={lang} slug={slug} variant="section" alt={copy.sections.length % 2 === 1} />
+
+  <!-- ── Back ── -->
+  <div class="max-w-5xl mx-auto px-6 py-12 border-t border-border flex flex-wrap items-center justify-between gap-4">
+    <a href={`/${lang}/apps`} class="text-sm text-text-sub hover:text-text transition">← {t('apps.title')}</a>
+    {footerLinks.length > 0 && (
+      <div class="flex items-center gap-6">
+        {footerLinks.map((l) => (
+          <a href={l.href} class="text-sm text-text-sub hover:text-text transition">{l.label}</a>
+        ))}
+      </div>
+    )}
+  </div>
+
+</div>
+
+<script>
+  const root = document.getElementById('device-root');
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-device-tab]'));
+  const storeKey = `${root?.dataset.slug || 'app'}-device`;
+
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
+  );
+  document.querySelectorAll('.animate-reveal').forEach(el => observer.observe(el));
+
+  function select(device: string, persist = true) {
+    if (!root) return;
+    root.dataset.device = device;
+    tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.deviceTab === device)));
+    if (persist) {
+      try { localStorage.setItem(storeKey, device); } catch {}
+      history.replaceState(null, '', device === 'ipad' ? '#ipad' : location.pathname + location.search);
+    }
+  }
+
+  tabs.forEach(b => b.addEventListener('click', () => select(b.dataset.deviceTab || 'iphone')));
+
+  if (tabs.length > 0) {
+    let initial = 'iphone';
+    if (location.hash === '#ipad') initial = 'ipad';
+    else { try { initial = localStorage.getItem(storeKey) || 'iphone'; } catch {} }
+    if (initial === 'ipad') select('ipad', false);
+  }
+</script>

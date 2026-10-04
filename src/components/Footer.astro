@@ -6,8 +6,12 @@ const t = useTranslations(lang);
 const year = new Date().getFullYear();
 ---
 
-<footer class="py-8">
+<footer class="py-8 border-t border-border">
   <div class="max-w-6xl mx-auto px-6 text-center">
+    <nav class="mb-3 flex items-center justify-center gap-6">
+      <a href={`/${lang}/support/`} class="text-sm text-text-sub hover:text-text transition-colors">{t('footer.support')}</a>
+      <a href={`/${lang}/privacy/`} class="text-sm text-text-sub hover:text-text transition-colors">{t('footer.privacy')}</a>
+    </nav>
     <p class="text-sm text-text-sub">&copy; {year} Hyewon &amp; Insong. {t('footer.rights')}</p>
   </div>
 </footer>

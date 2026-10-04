@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout
+  title={`SuperFont Privacy Policy - ${t('site.title')}`}
+  description="What SuperFont collects, why, where your font files stay, how long data is kept, and what you can ask us to do with it."
+  lang={lang}
+>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperFont</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
+      <p class="text-sm text-text-sub">Effective Date: September 18, 2026</p>
+    </div>
+
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-semibold prose-headings:tracking-tight
+      prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4
+      prose-p:text-text-sub prose-p:leading-7
+      prose-li:text-text-sub
+      prose-strong:text-text prose-strong:font-medium
+      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+      prose-table:text-sm prose-th:text-text prose-td:text-text-sub
+      prose-code:before:content-none prose-code:after:content-none
+    ">
+      <p>
+        <strong>SuperFont</strong> ("the app") does not collect the font files you import.
+        Your fonts and the configuration profiles built from them are handled entirely on your device.
+        The app automatically collects only the minimum needed to fix errors and improve the app,
+        and this policy explains exactly what that is.
+      </p>
+      <p>
+        This policy applies Hyewon &amp; Insong's <a href="/en/privacy/">general privacy policy</a> to SuperFont specifically.
+      </p>
+
+      <h2>1. Font Files and Profiles</h2>
+      <p>
+        Font files you import from the Files app or iCloud Drive (TTF, OTF, TTC, WOFF, WOFF2, ZIP)
+        <strong>are stored only in the app's storage on your device.</strong>
+        The app never sends them to a server, and the developer cannot see them. There is no cloud sync.
+      </p>
+      <ul>
+        <li>To install fonts, the app builds a configuration profile (<code>.mobileconfig</code>) on the device and hands it to Safari on the same device, which passes it to Settings.
+          This happens over an on-device connection only (<code>127.0.0.1</code>); the profile and font data never leave the device.</li>
+        <li>Copies the app keeps for reinstalling are deleted together with the app.</li>
+        <li>Fonts installed through Settings are managed by iOS. They remain after the app is deleted, and disappear when you remove their profile under Settings &gt; General &gt; VPN &amp; Device Management.</li>
+      </ul>
+
+      <h2>2. Google Fonts Tab</h2>
+      <p>
+        When you open the Google Fonts tab, the app fetches the font catalog from Google's Web Fonts API (<code>googleapis.com</code>)
+        and downloads the font files you pick from Google's servers. These requests happen <strong>only when you use that tab</strong>.
+      </p>
+      <ul>
+        <li>The app includes no account information and nothing that identifies you in these requests.</li>
+        <li>As with any internet request, Google receives request metadata such as your IP address.
+          This is covered by the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</li>
+        <li>Downloaded font files stay on your device as described in section 1.</li>
+      </ul>
+
+      <h2>3. Information Collected Automatically</h2>
+      <p>The following is collected to fix errors and improve the app.</p>
+
+      <h3>Firebase Analytics (Google LLC)</h3>
+      <ul>
+        <li><strong>Device information</strong>: device model, operating system version, language and region settings</li>
+        <li><strong>App usage events</strong>: progress through the install wizard, the number and extensions of imported files, profile creation and deletion, and similar interactions</li>
+        <li><strong>App version and build number</strong></li>
+        <li><strong>Firebase installation ID</strong>: an anonymous identifier used to tell devices apart. It is not linked to your name, email, or any identity.</li>
+      </ul>
+      <p>
+        Usage events <strong>never include font names, file names, profile names, or URLs.</strong>
+        Only aggregate values such as counts, extensions, step names, and device type are sent.
+      </p>
+
+      <h3>Firebase Crashlytics (Google LLC)</h3>
+      <ul>
+        <li>Stack traces from crashes</li>
+        <li>Device model and operating system version</li>
+        <li>App version and build number</li>
+        <li>If a font file cannot be read or a profile cannot be built, the <strong>error type and the step where it happened</strong>.
+          Error message text and file names are not included.</li>
+      </ul>
+
+      <p>The app does not collect names, email addresses, phone numbers, contacts, location, or photos.</p>
+
+      <h2>4. Tracking and Advertising Identifiers</h2>
+      <p>
+        The app <strong>does not collect the advertising identifier (IDFA) and does not track you.</strong>
+        It does not include the frameworks that handle advertising identifiers (AppTrackingTransparency, AdSupport),
+        and therefore never asks for App Tracking Transparency permission. The app contains no advertising.
+      </p>
+      <p>
+        The App Store privacy label reads as follows, matching the privacy manifest shipped inside the app.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Purpose</th><th>Linked to you</th><th>Used to track</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Identifiers — Device ID</td><td>Analytics</td><td>No</td><td>No</td></tr>
+          <tr><td>Usage Data — Product Interaction</td><td>Analytics</td><td>No</td><td>No</td></tr>
+          <tr><td>Diagnostics — Crash Data</td><td>App Functionality</td><td>No</td><td>No</td></tr>
+          <tr><td>Diagnostics — Other Diagnostic Data</td><td>App Functionality</td><td>No</td><td>No</td></tr>
+        </tbody>
+      </table>
+
+      <h2>5. Why It Is Collected</h2>
+      <ul>
+        <li>Diagnosing crashes and errors, and fixing bugs</li>
+        <li>Improving the install wizard and other features, and the overall experience</li>
+        <li>Understanding how the app is used, in aggregate</li>
+      </ul>
+      <p>Collected information is not used for any other purpose. If that ever changes, this policy will be revised and announced first.</p>
+
+      <h2>6. Third Parties and Processors</h2>
+      <p>The app relies on the following third parties.</p>
+      <table>
+        <thead>
+          <tr><th>Third party</th><th>Purpose</th><th>Retention</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Google LLC (Firebase)</td><td>App analytics, crash reporting</td><td>Per the processor's policy</td></tr>
+          <tr><td>Google LLC (Google Fonts)</td><td>Font catalog lookup and font file download, only when you request it</td><td>Per Google's policy</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy Policy</a></li>
+        <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
+      </ul>
+      <p>The developer never sells collected data or shares it beyond the purposes above.</p>
+
+      <h2>7. Retention Period</h2>
+      <ul>
+        <li><strong>Firebase Analytics data</strong>: automatically deleted after at most 14 months</li>
+        <li><strong>Firebase Crashlytics data</strong>: crash reports kept for at most 90 days</li>
+        <li><strong>Font file copies</strong>: kept only on your device until you delete them in the app or delete the app</li>
+      </ul>
+      <p>Data past its retention period is destroyed without delay.</p>
+
+      <h2>8. Your Rights</h2>
+      <ul>
+        <li><strong>Opting out of tracking</strong>: the app does not track you and does not collect an advertising identifier, so no opt-out step is needed.</li>
+        <li><strong>Stopping collection</strong>: deleting the app stops all further analytics and crash collection. There is no in-app switch to turn collection off separately.</li>
+        <li><strong>Deletion requests</strong>: contact us at the address below to request deletion of collected data. Deletion within Firebase is handled within the limits of Firebase's own policy.</li>
+      </ul>
+
+      <h2>9. Children's Privacy</h2>
+      <p>
+        The app is not directed at children under 14 and does not knowingly collect their personal information.
+        If we learn that such information has been collected, we delete it immediately.
+      </p>
+
+      <h2>10. Contact</h2>
+      <ul>
+        <li><strong>Developer</strong>: Hyewon &amp; Insong</li>
+        <li><strong>Email</strong>: <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a></li>
+        <li><strong>Response time</strong>: within 7 business days</li>
+      </ul>
+      <p>For help with installation, see the <a href="/en/apps/superfont/support/">SuperFont support page</a>.</p>
+
+      <h2>11. Changes to This Policy</h2>
+      <p>
+        This policy may be revised as laws or the app change.
+        Any revision will be announced on this page at least 7 days before it takes effect.
+      </p>
+    </div>
+
+    <div class="mt-16 text-center">
+      <a href="/en/apps/superfont/" class="text-sm font-medium text-primary hover:underline">← SuperFont</a>
+    </div>
+  </div>
+</BaseLayout>
