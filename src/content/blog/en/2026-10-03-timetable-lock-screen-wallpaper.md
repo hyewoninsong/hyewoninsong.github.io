@@ -1,9 +1,9 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-04T12:10:00+09:00
+date: 2026-10-04T14:05:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, and over a photo."
+summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape."
 ---
 
 SuperTimetable's `…` menu now has "Lock Screen Wallpaper". It produces an image exactly the size of your screen; save it to Photos, set it as wallpaper, and this week's timetable is there before you unlock. It's free. Three decisions shaped it; the last one was reversed a day later.
@@ -45,7 +45,7 @@ Calendar export is premium; this stays free. Lock Screen screenshots travel, and
 
 ## What's left
 
-iPad landscape puts the clock on the left — portrait only for now. Whether the dragged position should be remembered next time is undecided; today it always starts at the band's top edge.
+iPad landscape puts the clock on the left — portrait only in the first version; landscape followed a day later (see the second October 4 entry). Whether the dragged position should be remembered next time is undecided; today it always starts at the band's top edge.
 
 ## 2026-10-04 — "Save Image" in the share sheet is still the app's permission
 
@@ -79,8 +79,29 @@ One thing broke immediately: the clock and widget silhouette was 35% black, fine
 
 Rejected: re-tapping the "Photo" chip to re-open the picker (a selected chip doesn't fire again), so a "Change Photo" row appears under it; remembering the device choice (the sheet always starts on this device). Switching back to Color keeps the photo, so choosing Photo again is instant.
 
+## 2026-10-04 — Pinch the photo into place, pick the colour where events get theirs, and iPad landscape
+
+The first question after photo backgrounds shipped: can I zoom and move the photo? No — it was cropped once, centred, and that was it. If the part you cared about landed behind the card, nothing could be done. Six changes went out as six separate PRs.
+
+**Photo adjustment is a mode.** One-finger drag on the preview moves the timetable card. A pinch is unambiguously the photo, but a single-finger drag is used by both, so one gesture can't tell them apart. An **Adjust Photo** row under "Change Photo" switches the preview into photo mode: pinch scales (1–4×), drag moves, the card goes translucent and the footnote turns into instructions. Tap again ("Done Adjusting") to get the card back; "Reset" appears whenever the transform isn't the default. Because the mode is a button, there's no flipping a gesture mask on an in-flight gesture.
+
+Two images back it. The **cropped** one is what gets composed; an **uncropped fill** image — the photo scaled so its short side meets the screen, about 13 MB on a 3× iPhone — is what the preview moves during the gesture. On release the original is re-cropped with the final zoom and offset. Both read one set of formulas (fill size, draw rect, clamp so the screen stays covered), so nothing jumps when you let go. The test uses a half-red, half-blue image: push it all the way right and the screen must show red; zoom 3× and the centre must stay put.
+
+**Background colour reuses the event colour popover.** Flat backgrounds were light grey or black. Rather than a new palette, the same popover that picks an event's colour opens from a colour circle in a "Background Color" row — the 20 basics, the user's custom colours, and the colours already used in this timetable. Colour only, no title; drawn opaque because wallpaper bitmaps have no alpha. The popover has no "none", so a "Default" text button appears only while a colour is chosen. The clock silhouette picks white or black from the chosen colour's luminance.
+
+**A shadow under the card, over photos only.** A white card vanished against sky and snow. Over a photo the card now gets a shadow — black at 35%, 16pt blur, 6pt down. Flat colours stay as designed. One mistake on the way: `CGContext.setShadow` takes its offset in device space, so it's multiplied by the scale, and inside a UIKit renderer **positive is down**. The first build used a negative offset on the "flipped coordinates" theory; the pixel test caught it at once — 195 three points above the card, 246 three points below. The shadow was falling upward. The test now pins the direction.
+
+**iPad landscape.** Yesterday's "portrait only" is reversed. In landscape the iPad Lock Screen puts the clock and date top-left, widgets below them in the left column, notifications on the right, and has no flashlight/camera buttons. Reusing the portrait band would put the card on the clock. So in landscape the **card zone is the right half** (card centred in it, still capped at 420pt wide), the band runs from below the status bar (10% of height) to above the home indicator (92%), and the widgets toggle doesn't affect it. Orientation isn't a flag; width greater than height is landscape, and because fitting, composing and the preview ratio all read only the screen size, they handled landscape untouched. An "Orientation" chip row appears under Device only for iPad devices, and it starts in landscape when the iPad window is landscape.
+
+Two small ones: the preview frame's corner radius was a fixed 48pt, which lied once you could pick an iPhone SE or a home-button iPad — the device list now carries each screen's radius (62 for the 17 line, 55 for 16/15, 0 for home-button devices, 18 for iPads). And the "Saved to Photos" alert gained an **Open Photos** button via `photos-redirect://`, since the next step is always the Photos app.
+
+The menu row moved from right under Share to **below Free Time**: share, print, calendar and free time are weekly paths; the wallpaper is set up once a term.
+
+No screenshots this time — five other simulators were running on the machine and boots took twenty minutes, so verification stopped at unit tests. Shadow strength, the landscape band ratios and the pinch feel will be tuned on a device.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
 - 2026-10-04 — Save to Photos button and photo add permission; share becomes secondary
 - 2026-10-04 — Device dropdown (defaults to this device, matched by screen pixels) + photo background (`PhotosPicker`, no read permission)
+- 2026-10-04 — Pinch/drag photo adjustment, background colour via the style popover, card shadow over photos (positive offset is down), iPad landscape, per-device corner radius, Open Photos, menu row moved — six PRs
