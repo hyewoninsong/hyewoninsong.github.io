@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-03T17:31:00+09:00
+date: 2026-10-04T14:39:45+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -289,7 +289,7 @@ Tapping a list row copied it immediately, so you couldn't see who was free until
 
 - "Ask for a timetable" and "Send mine" on the empty screen now weigh the same; the copy said "send yours first" while the primary button said "ask".
 - The Me chip toggles everywhere except a narrow strip on the right that opens Send — people hit it by accident. That strip is now a hairline-split segment, 44pt wide.
-- A friend chip gets a clock after 30 days, and long-press offers "Request again" for a new term.
+- A friend chip gets a clock after 30 days, and long-press offers "Request again" for a new term. (Long-press, the split segment and edit mode all merged into one dropdown on October 4 — see below.)
 
 ![The chip row — the Me chip's share segment split by a hairline, a clock on the Junho chip](/blog/timetable-free-time-finder/chips-split-stale.png)
 
@@ -346,6 +346,40 @@ The border was the block's own `.overlay`. Within a day column the layers are a 
 
 Why it was missed: every capture since the layers arrived selected the darkest, innermost layer, which has no later sibling. Selection states in layered UI need to be checked on the outermost layer.
 
+## 2026-10-04 — one dropdown per chip
+
+A person chip had grown three grammars. Long-press a friend chip for received date, Request again, Rename and Delete; tap Edit for a remove badge on every chip; and the Me chip had a hairline-split Send segment on its right. Rename alone had two routes, and nobody found the long-press. The feedback was blunt: put a dropdown on the right of every chip and show what you can do there.
+
+Every chip now ends in a dropdown segment — hairline plus chevron, 44pt. Tapping the body still toggles the person; tapping the chevron lists everything.
+
+| Chip | Dropdown |
+|---|---|
+| Friend | received date · **Send my timetable to this person** · Request again · Rename · Delete |
+| Mine | Send 'name' · **Use as base** · Remove from comparison |
+| Base (first Me chip) | "Base timetable" header · Send |
+
+![Minji's chip dropdown — received date, send my timetable to Minji, request again, rename, delete](/blog/timetable-free-time-finder/chip-dropdown-friend.png)
+
+Two items are new. **Use as base** changes which of your timetables defines the day and hour range — the first chip has been the base since September 28, but switching it meant closing the screen and reopening it from another timetable. **Send my timetable to this person** covers the moment after the return banner is gone; the banner shows once, right after a file arrives, and dismissing it left only the generic Send. Opened from the menu, the send sheet is headed "Pick a timetable to send to Minji."
+
+![The base chip's dropdown — a "Base timetable" header and Send only](/blog/timetable-free-time-finder/chip-dropdown-base.png)
+
+Edit mode, the long-press menu and the split segment are gone. Keeping them next to the dropdown would leave three places to delete from. Making the body tap open the menu and moving the toggle inside would cost the most frequent action a second tap, so "tap = toggle" from September 28 stays.
+
+The options panel also gained a **Days** chip row (Mon–Fri · Mon–Sat · Every day). Hours had wheels; days could only change through Widen range and My range, so "everything but Saturday" was not a choice. Picking the base timetable's own setting stores "follow the base" again.
+
+![Options panel with the new Days chips; Every day selected and a Sunday column visible](/blog/timetable-free-time-finder/options-day-range-chips.png)
+
+The three features from the October 1 section — relaxation suggestions when nothing matches, attendance in the shared image, picking a concrete time inside a free stretch — had merged without ever reaching the app (see the October 3 post), so they were rebuilt against the current screen. Suggestions gained a widen-days kind; the time picker opens from a clock button left of Copy on the selection card. Its output differs from Copy (a cut stretch, phrased as a question), so it clears the rule set that morning when the Share button was removed.
+
+![The suggest-a-time sheet — start and end inside Mon 08:00–08:50, who is free, and a Copy This Time button](/blog/timetable-free-time-finder/proposal-sheet-rebuilt.png)
+
+Smaller changes the same day: toggling a chip cross-fades the layers over 0.3 s, a banner offers to re-request when two or more friends' timetables are over a month old, and 3 hours joined the minimum-length options. A travel-buffer option was proposed and dropped as too much.
+
+### Where the identifier goes, fourth time
+
+The first probe could not find the dropdown. In the accessibility tree the menu button carried the chip's identifier, not its own: putting `.accessibilityIdentifier` **after** `.overlay { Menu }` lets it cover the overlay too. It is the container-identifier pitfall in a new shape — a button with an overlay rather than a tap container — which is why the source scan written for the third recurrence did not catch it. The identifier moved before the overlay, and a second scan now looks for controls inside an overlay followed by an identifier.
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -370,3 +404,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 - 2026-10-02 — one follow-up for all three entry paths (banner, name prompt, failure alert), widen days too, persisted filters, format/appearance chips in the share sheet, list tap = card with "3/4" and Share, split chip, 30-day clock, Request again
 - 2026-10-02 evening — new timetables enter drawn → inverted (free time in light green) → merged; busy blocks turn background-colored on inversion
 - 2026-10-03 — iPhone filter row moved into the options panel (handle summarizes "08:00–20:00 · 30 min+ · Everyone"), two-line selection card with icon buttons, grid margin measures card + panel, selection border drawn as a sibling layer above the green layers
+- 2026-10-04 — one dropdown per chip (long-press, edit mode and split segment removed), Use as base, Send to this person, Days chips, toggle cross-fade, stale-timetable banner, 3-hour minimum, the three October 1 features rebuilt, a second identifier scan
