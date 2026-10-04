@@ -6,6 +6,12 @@
 //     builds fine and ships as a broken image
 //   - a post that exists in both languages carries the same `date` and `app`,
 //     so both locales sort it and group it the same way
+//   - frontmatter has the keys the blog schema requires and none it does not
+//     know (src/content.config.ts) — a typo'd optional key is silently ignored
+//   - `app` is a BLOG_APPS key (src/lib/blog-apps.ts); an unknown key still
+//     renders, but as a bare slug with no icon, name or app-page link
+//   - every BLOG_APPS `appSlug` is a real apps-collection entry, so the
+//     app-page link it produces is not a 404
 //
 // Translation itself is optional (docs/specs/website.md §4.3), so a post that
 // exists in only one language is not a failure.
@@ -97,4 +103,55 @@ test('a post written in both languages has the same date and app', () => {
     }
   }
   assert.deepEqual(mismatched, []);
+});
+
+// src/content.config.ts — the `blog` collection schema.
+const schemaKeys = ['title', 'date', 'app', 'tags', 'summary', 'thumbnail'];
+const requiredKeys = ['title', 'date', 'summary'];
+
+function frontmatterKeys(source) {
+  return [...frontmatter(source).matchAll(/^([A-Za-z]+):/gm)].map((m) => m[1]);
+}
+
+test('every post has the frontmatter the blog schema requires and no key it does not know', () => {
+  const bad = [];
+  for (const locale of locales) {
+    for (const file of postFiles(locale)) {
+      const source = readPost(locale, file);
+      for (const key of requiredKeys) {
+        if (!field(source, key)) bad.push(`${locale}/${file}: missing ${key}`);
+      }
+      for (const key of frontmatterKeys(source)) {
+        if (!schemaKeys.includes(key)) bad.push(`${locale}/${file}: unknown key ${key}`);
+      }
+      if (Number.isNaN(Date.parse(field(source, 'date') ?? ''))) {
+        bad.push(`${locale}/${file}: date "${field(source, 'date')}" does not parse`);
+      }
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
+// src/lib/blog-apps.ts imports astro:content, so read the BLOG_APPS table as text.
+const blogApps = readFileSync(join(root, 'src', 'lib', 'blog-apps.ts'), 'utf8');
+const appKeys = [...blogApps.matchAll(/key: '([^']+)'/g)].map((m) => m[1]);
+const linkedAppSlugs = [...blogApps.matchAll(/appSlug: '([^']+)'/g)].map((m) => m[1]);
+
+test("a post's app is a BLOG_APPS key, and every BLOG_APPS appSlug is a real app entry", () => {
+  assert.ok(appKeys.length > 0, 'BLOG_APPS not found in src/lib/blog-apps.ts');
+  const bad = [];
+  for (const locale of locales) {
+    for (const file of postFiles(locale)) {
+      const app = field(readPost(locale, file), 'app');
+      if (app !== undefined && !appKeys.includes(app)) bad.push(`${locale}/${file}: app "${app}" is not in BLOG_APPS`);
+    }
+  }
+  const appsDir = join(root, 'src', 'content', 'apps', 'ko');
+  const appSlugs = readdirSync(appsDir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => field(readFileSync(join(appsDir, f), 'utf8'), 'slug'));
+  for (const slug of linkedAppSlugs) {
+    if (!appSlugs.includes(slug)) bad.push(`BLOG_APPS appSlug "${slug}" has no src/content/apps/ko entry`);
+  }
+  assert.deepEqual(bad, []);
 });
