@@ -147,9 +147,9 @@ Real school days are a handful of rules. The editor now takes the rules and show
 | Setting | Control | Range |
 |---|---|---|
 | First period starts | time picker | within the day |
-| Class length | value pill → wheel | 30–180 min, by 5 |
-| Break | value pill → wheel | 0–60 min, by 5 |
-| Lunch | value pill → wheel | 0–180 min, by 10 (0 = none) |
+| Class length | value pill → wheel | 30–180 min, by 1 (updated Oct 1) |
+| Break | value pill → wheel | 0–60 min, by 1 (updated Oct 1) |
+| Lunch | value pill → wheel | 0–180 min, by 1 (0 = none; updated Oct 1) |
 | Lunch timing | value pill → wheel | "After P4" |
 | Periods | value pill → wheel | 1–24 |
 
@@ -157,7 +157,7 @@ Lunch *timing* wasn't in the request, but a lunch length alone can't say where l
 
 ![No lunch, six periods — the lunch-timing row dims; the list shows periods 10 minutes apart](/blog/timetable-period-axis/period-plan-no-lunch.png)
 
-Existing timetables open with rules inferred from their periods: the most common length and break, and the widest gap larger than the break as lunch. Period names stay with their position; events follow the same numbered period; events left without a period after lowering the count are deleted, and events spanning a removed period are shortened, both only after a confirmation.
+Existing timetables open with rules inferred from their periods: the most common length and break, and the widest gap larger than the break as lunch. The original periods stay intact until a rule value actually changes; opening and saving without edits preserves the stored times (strengthened Oct 1). Period names stay with their position; events follow the same numbered period; events left without a period after lowering the count are deleted, and events spanning a removed period are shortened, both only after a confirmation.
 
 The alternative was keeping yesterday's timeline under the rules as "fine-tune". Moving one period there would break the rules, and the next time the sheet opened there'd be no single source of truth. The timeline, minimap, add button and per-period card are gone. If a school needs one long period, the answer is another rule, not the old editor.
 
@@ -207,6 +207,36 @@ The preview adds a quiet numbered circle to each class. It is easier to find the
 ![The class-length row open, with a wheel selecting 50 minutes beneath it](/blog/timetable-period-axis/period-editor-wheel.png)
 
 We chose clearer grouping over more controls or decorative colors. Bringing back individual period cards would create two competing answers again: the rules and hand-edited times. The summary, cancel/save flow, and confirmation before removing events remain the same.
+
+## Update, Oct 1 — show the consequences before rebuilding a school day
+
+Rule-based editing removed the work of positioning seven separate periods. The next improvements address what happens around those rules: reusing the same school day, choosing exact lengths, and understanding what an edit will change.
+
+### Reuse the bell schedule without copying the classes
+
+A new semester rarely needs a new set of bell times. The period editor can take times and period names from another period timetable, leaving the target's title, days, and events in place. Copying the whole timetable would make the user remove old classes again.
+
+The source stays untouched. Imported periods are a draft until saved; cancellation discards them. Existing target events follow the same numbered periods, and events that lose their slot still go through the existing deletion confirmation and undo path.
+
+Importing also preserves irregular periods exactly. A 15-minute homeroom followed by a 47-minute class should not turn into two equal classes merely because the editor inferred a rule. Regeneration begins only after a rule value actually changes, and the source notice explains that boundary.
+
+### Exact minutes and a comparison you can fold away
+
+Five-minute class and break steps, and ten-minute lunch steps, excluded valid school schedules. One-minute choices keep the existing wheel interaction while allowing a 47-minute class or a 45-minute lunch. A second keyboard-based input would create another way to edit the same value without improving this task.
+
+![Period editor reopened after saving: 47-minute classes, 7-minute breaks, a 45-minute lunch, and a 09:00–15:49 day summary](/blog/timetable-period-axis/period-exact-minutes.png)
+
+The preview also needs to answer “what changes?” alongside “what will the day look like?” The comparison shows old and new period times and the effect on existing events. Its details can be collapsed so a long period list does not push the rule controls away. Collapsing details does not replace confirmation before deleting events.
+
+When the day runs past midnight, the chosen values remain visible. The editor explains the boundary and how to get back within it instead of silently shortening the day or undoing the user's wheel movement. Any recovery that removes period slots still uses the same impact review and deletion confirmation.
+
+### Inferred controls are not the saved data
+
+The old editor inferred the most common class length and break, then immediately rebuilt its draft from those rules. Irregular stored periods could therefore change even when the user simply opened the sheet and pressed save.
+
+The original list now remains the preview and save payload until an actual rule edit. A picker opening and reporting its current value is not an edit. Inference supplies a starting point for the controls; it does not authorize rewriting the timetable. Impact previews must also share the commit path’s no-op condition, so an unchanged period list cannot falsely predict that an event will be deleted.
+
+The checks must cover an irregular day: save without editing, open a wheel without changing its value, then make an actual edit and cancel. The important promise is small and concrete: a day the user did not change should remain a day the app did not change.
 
 ## Update, Oct 3 — half periods, for 75-minute classes
 
@@ -302,6 +332,7 @@ Why it slipped: the original tests checked where shortened events ended up, but 
 - Sep 30, later — tutorial variant for period timetables: period-snapped demos, a "Period Times" step
 - Sep 30, early morning — cleaner editor (summary line, value pills + wheels, class/lunch cards); optional lunch row on the axis, closed to events
 - Sep 30, evening — section headings, row icons, whole-row taps, and numbered preview markers
+- Oct 1 — import period settings, exact-minute choices, collapsible impact comparison, midnight recovery, and preserving original periods
 - Oct 3 — half-period snapping, unlocked period rows at 2x, 1-minute save floor for period timetables (reversing that morning's one-period minimum)
 - Oct 3, evening — period rules card inside the display sheet (live, editor/X/dedicated alert removed), lost lunch-row toggle recovered, container-identifier pitfall guarded by a source scan
 - Oct 3, night — block edges quantised to half-period lines at the point of entry (old 30-minute clamp values, odd-length rounding, magnet-snap spread); edit stripes per half period
