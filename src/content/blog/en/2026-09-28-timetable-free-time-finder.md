@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-01T00:08:34+09:00
+date: 2026-10-04T14:39:45+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -104,7 +104,7 @@ The collapsed handle doesn't say "Options." It shows the current values: "08:00�
 
 ![Start time row tapped open, with an hour wheel below it](/blog/timetable-free-time-finder/start-hour-wheel.png)
 
-Start and end default to the base timetable's (the first "me" chip) display range. Manual changes live only on this screen — nothing is saved. Pull the end time before the start time, and the display settings sheet would show a red strikethrough and block saving. Here the other side just moves one hour instead, so an invalid state never exists in the first place — there's nothing to delete or save, it's a view-only range.
+Start and end default to the base timetable's (the first "me" chip) display range. Manual changes lived only on this screen at first — nothing was saved (since October 2 the range persists on the device; see below). Pull the end time before the start time, and the display settings sheet would show a red strikethrough and block saving. Here the other side just moves one hour instead, so an invalid state never exists in the first place — there's nothing to delete or save, it's a view-only range.
 
 The range shortcut row is computed from the current range: "Widen range" appears when someone's schedule falls outside it, "Match mine" when the range differs from the base timetable's. Narrow the range by hand, and "Widen" still works — it recalculates from whatever range is showing now.
 
@@ -152,7 +152,7 @@ The "split segments when the free set changes" fix from the section just above i
 
 Layers made you read "how many are free" from shades of green. But people planning a meetup start from a condition: "at least three of us, for an hour." Answering that on the layered grid meant hunting for the third layer and measuring it.
 
-So the condition moved to the top. Right under the people chips there are now two dropdowns: "30 min or longer" and "Everyone" (or "N+ people", from one less than the number switched on down to one). Minimum length came back out of the collapsing panel, which now holds only the hour range, time format and appearance.
+So the condition moved to the top. Right under the people chips there are now two dropdowns: "30 min or longer" and "Everyone" (or "N+ people", from one less than the number switched on down to one). Minimum length came back out of the collapsing panel, which then held only the hour range, time format and appearance (the format and appearance chips moved to the share sheet on October 2). (On October 3 both filters went back into the panel — once the collapsed handle summarized them, the reason for keeping them outside was gone. See the October 3 section.)
 
 The grid uses two colors. Stretches that pass the filter are green with their length; stretches where someone is free but the filter isn't met are gray; hours when everyone is busy stay blank (this changed again the next day — see below). The nested greens are gone.
 
@@ -178,7 +178,7 @@ Until now someone had to send a file before anything happened. Now the first but
 
 The sheet reuses the timetable list's cards: swipe through previews, the centered card is the one you send, type the name your friend will see, tap Share. Class names are still stripped. Every "send my timetable" entry point now opens this sheet, because picking by name from a menu was guesswork when two timetables had similar names.
 
-The link uses the app's URL scheme, which some messengers won't turn into a tappable link (iMessage only links `https`). A web redirect page is the next step.
+The first link used the app's URL scheme, which some messengers would not display as tappable. The October 1 update adds an HTTPS page with a button that opens the existing app link.
 
 The colors changed once more. Last night's yes/no split buried "only one person short" in the same gray as "nobody can make it". Now:
 
@@ -217,7 +217,7 @@ The time axis has its own background, stronger numbers and a label for the end o
 
 A much wider axis would squeeze the day columns. Repeating start and end times in every block would crowd the seven-day phone layout. A shared axis with visible rules gives the same reference without repeating text.
 
-Filters now show a small label above the value: minimum length and people. In the list, weekday and clock range sit on the left while duration gets its own capsule. A selected grid card also separates the clock range from the duration. The grid/list toggle is available on iPad too: a wide screen doesn't remove the need to find the longest opening first.
+Filters now show a small label above the value: minimum length and people (on iPhone this row moved into the options panel on October 3; the labels survive as the row labels there, and the iPad column keeps the dropdowns). In the list, weekday and clock range sit on the left while duration gets its own capsule. A selected grid card also separates the clock range from the duration. The grid/list toggle is available on iPad too: a wide screen doesn't remove the need to find the longest opening first.
 
 ![The free time list separates weekday and clock range from the duration capsule on the right](/blog/timetable-free-time-finder/separate-time-duration.png)
 
@@ -225,9 +225,164 @@ On iPhone, simulator checks covered selection, copying, options, 12-hour time, d
 
 The collapsing options panel and Share button keep their places. The update makes the existing comparison easier to read; toggling people, copying and sharing follow the same rules.
 
+## 2026-10-01 — turn a free stretch into a concrete invitation
+
+Finding five free hours still leaves you choosing one hour in chat. It can also leave a second question: does “two people available” mean the same two people throughout? This update closes those gaps between finding time and proposing it.
+
+### A headcount can stay the same while the people change
+
+Suppose Minji and Junho are free from 9 to 9:30, then Junho and Seoyeon from 9:30 to 10. Two people are free at every moment, but no pair can stay for the full hour.
+
+The people menu now offers both “Headcount at each moment” and “Same people throughout.” The existing headcount rule remains the default: it still suits a gathering where people can arrive and leave. A team task can ask for the same participants instead. When everyone is required, the two rules produce the same answer.
+
+Overlapping candidates remain separate. A pair available from 9–11 and another from 10–12 do not become one 9–12 candidate. The grid, list, copying and shared image all keep that meaning.
+
+### Pick the hour you actually want to suggest
+
+A selected grid card now opens a time chooser. List rows copied on tap at the time; holding a row opened the same chooser (since October 2 a list tap opens the card, like the grid — see below). Adjust the start and end inside the original stretch, then copy an invitation such as “How about Tue 14:00–15:00 (1 hr)?” The initial selection is up to one hour.
+
+Attendance is recalculated for those exact times. Someone only partly free in a five-hour stretch may be fully free in the chosen hour. The original whole-stretch copy remains available. There is no new appointment list to maintain: the result is a proposal to send to a friend.
+
+### An empty result suggests a change that actually helps
+
+The app checks whether a shorter duration, fewer people or a wider range would produce candidates. It offers the nearest useful relaxation, with the resulting number of stretches, and changes only that one condition when tapped.
+
+Silently relaxing several conditions would change what the gathering needs. Keeping the choice explicit also means the same-participants rule stays in effect when calculating suggestions.
+
+### The image carries attendance with each candidate
+
+Shared images now include the same Free / Partly / Busy groups as copied text, beside each stretch. Long names wrap, and empty groups disappear. Listing everyone only at the top could imply they can attend every candidate; listing only fully available people would hide partial availability. The existing full-result image stays, with enough context to judge each time.
+
+### Ask through a web link, then open the app
+
+The request link is now HTTPS. Its page shows who asked, offers a button to open the timetable send sheet, and links to the App Store for friends who need the app.
+
+An explicit button works with messenger browsers that block automatic app switches. It reuses the existing app link without adding Universal Link setup. A build with Find Free Time hidden still refuses to open the send sheet. The web page must be deployed before the app starts sharing its new address.
+
+These five changes keep the comparison at the center while carrying its answer through to a concrete invitation.
+
+## 2026-10-02 — Three ways in, and the follow-up has to match on all three
+
+A pass over the whole feature, fixing fourteen things that snagged in use without touching the shape. The one that mattered most was invisible.
+
+A friend's timetable can arrive three ways: opened from Files, dropped onto the window, or loaded from inside the Find Free Time screen. All three call the same store function. But the "send yours back?" banner only appeared on the first two. Someone who loaded a file from inside the screen was never prompted to return the favor — the loop this feature spreads through was broken on one path. Saving was shared; "what happens after saving" was written separately at each call site. The follow-up is now one function all three paths call. For the same reason, a plain file with no sender name used to put the timetable's own name ("Fall") on the chip — now every path asks for a name once — and a failed send, which used to just not open the share sheet, now shows an alert. The lesson: when two or more paths lead to the same result, draw a paths × follow-ups table and check every cell. "It saved" is only the first cell.
+
+![Empty state — Ask for a Timetable and Send My Timetable as two equal buttons, with Load a Friend's Timetable below](/blog/timetable-free-time-finder/empty-two-buttons.png)
+
+### Why Saturday looked free
+
+Days of the week followed only my base timetable's display setting. If I showed weekdays, a friend's Saturday shift was simply not there, and Saturday looked free — the one place the screen was confidently wrong. "Widen range" used to widen hours only; it now widens days too, judged by where schedules actually exist rather than by a day-range field in the file: a Sunday schedule means all seven days, Saturday only means Mon–Sat. Carrying the friend's display range in the file lost — a friend who merely shows Saturday with nothing on it would just add an empty column.
+
+### The filter remembers itself
+
+Minimum length, people, participation rule and the hour/day range reset every time, though the next answer is almost always the same. They now persist on the device. The time format and light/dark chips moved out of that panel into the share sheet: the on-screen grid follows the app's time format and the system appearance, and those two chips are options for the exported picture — the structure the print and share sheets already had.
+
+![The export sheet — time format and appearance chips in a card under the preview, Share as Image below](/blog/timetable-free-time-finder/export-options.png)
+
+### The list speaks the grid's grammar
+
+Tapping a list row copied it immediately, so you couldn't see who was free until you pasted. Rows now show the free count ("3/4") on the right, and a tap opens the same selection card as the grid. Copy lives on the card, next to a new Share button that sends the same text straight to a messenger.
+
+![List view — each row shows 3/3 and a duration capsule; the tapped row is tinted green and a card with name tags, Copy and Share sits below](/blog/timetable-free-time-finder/list-row-card.png)
+
+### Smaller things
+
+- "Ask for a timetable" and "Send mine" on the empty screen now weigh the same; the copy said "send yours first" while the primary button said "ask".
+- The Me chip toggles everywhere except a narrow strip on the right that opens Send — people hit it by accident. That strip is now a hairline-split segment, 44pt wide.
+- A friend chip gets a clock after 30 days, and long-press offers "Request again" for a new term. (Long-press, the split segment and edit mode all merged into one dropdown on October 4 — see below.)
+
+![The chip row — the Me chip's share segment split by a hairline, a clock on the Junho chip](/blog/timetable-free-time-finder/chips-split-stale.png)
+
+![Long-pressing the Minji chip — received date, Request Again, Rename, Delete](/blog/timetable-free-time-finder/friend-menu-rerequest.png)
+- In edit mode, tapping a friend chip offers Rename or Delete; Rename was hidden behind long-press only.
+- The people-limit alert said "long-press a chip to remove it", but the Me chip has no long-press. It now says "use Edit" and has an Edit button.
+- The request message puts the App Store link first, and a source-contract test keeps the old app-name URL scheme from ever reappearing in code — it is still accepted on the way in.
+
+## 2026-10-02, evening — a new timetable shows up on its own first, then merges
+
+When a friend's timetable arrived, the grid simply repainted. The result was right, but you couldn't see what changed: with four people already compared, a fifth just made a few green cells lighter.
+
+Now every new timetable — from a file, a link, or one of your own — enters in three beats:
+
+1. **Drawn.** The new person's busy hours grow in as gray blocks, over the grid as it was.
+2. **Inverted.** The gray drops out and only their free time turns light green — one beat where you read that person alone.
+3. **Merged.** The light green layer fades out as the grid repaints with the new person included.
+
+0.45 s per step, each weekday starting 0.04 s after the last, about 2.5 s in total. With Reduce Motion on, it merges immediately.
+
+![Four frames — the grid before, the new person's busy hours drawn in gray, inverted to light green free time, and the merged grid](/blog/timetable-free-time-finder/import-reveal-steps.png)
+
+The merge only reads if the grid holds the new person back until that last beat, so saving the timetable and starting the animation happen in the same update. Only the drawing waits; the list, copy, and share already include the new person.
+
+The first version made the gray blocks transparent on inversion. Frame captures showed the old grid's pale green leaking through, so busy and free looked the same. Turning the busy blocks into the background color instead leaves only the free time green.
+
+![The inverted beat — transparent gray lets old green layers leak through (left); background-colored busy blocks leave only free time green (right)](/blog/timetable-free-time-finder/import-reveal-invert-fix.png)
+
+## 2026-10-03 — filters back into the panel, and a selection border that inner layers were covering
+
+On an iPhone 17 the grid showed about 08:00 to 12:30 of a twelve-hour range. The chip row and the filter row sat on top, the options panel and Share button at the bottom, and tapping a green cell floated a selection card on top of that. Three changes.
+
+### Once the handle reads the values, the filters can live inside
+
+The filters moved out of the panel on September 29 for one reason: the panel starts collapsed, so seeing what you were filtering by meant opening it every time. But the collapsed handle was already printing the hour range. Printing the filters there too removes the reason. The handle now reads "08:00–20:00 · 30 min+ · Everyone". Reading needs no tap; only changing does.
+
+![The options panel collapsed — the handle reads 08:00–20:00 · 30 min+ · Everyone, and the grid reaches 14:00](/blog/timetable-free-time-finder/panel-collapsed-summary.png)
+
+Expanded, it's four rows: minimum length, people, start time, end time, each a label on the left and a gray capsule menu on the right. The grid now reaches 14:00 collapsed on the same phone. Two alternatives lost: dropping only the small captions from the row saves about 24pt, a cell and a half; leaving it alone keeps the 12:30 cutoff. iPad keeps the dropdowns in its left column, where there is room.
+
+![The options panel expanded — minimum length, people, start time, end time, and the Share button](/blog/timetable-free-time-finder/panel-expanded.png)
+
+### A two-line card, and the last hour above it
+
+The selection card was three text lines plus two stacked text buttons, about 110pt floating over a 110pt panel, hiding the bottom two hours. Now the range and duration are one unit ("Mon 08:00–10:00 · 2 hr") flowing in the same wrap layout as the name tags, and Copy and Share are two icon buttons side by side: 76pt. The grid's bottom margin also measures the card and panel together instead of the panel alone, so 20:00 can scroll up above the card.
+
+### The selection border was drawn under the inner layer
+
+Tap a light outer layer and a black 2pt border surrounds it — except where a darker inner block sat, where the border was missing.
+
+![A Monday 08:00–10:00 outer layer selected, the black border intact over the dark inner 50-minute block, with the compact card below](/blog/timetable-free-time-finder/outer-layer-selected.png)
+
+The border was the block's own `.overlay`. Within a day column the layers are a `ForEach` in ascending people count, so the darker inner layer is a later sibling of the lighter outer one, and later siblings paint over the same pixels. An overlay sits above its own view, not above whatever is drawn after it. The fix is a separate sibling layer, drawn after every green layer in the column, that strokes the selected block's frame and ignores touches. The app had already hit this with a badge that extends outside its block's frame and gets covered by the neighbor; this time it happened entirely inside the frame. The rule is the same: whoever paints the pixel last wins.
+
+Why it was missed: every capture since the layers arrived selected the darkest, innermost layer, which has no later sibling. Selection states in layered UI need to be checked on the outermost layer.
+
+## 2026-10-04 — one dropdown per chip
+
+A person chip had grown three grammars. Long-press a friend chip for received date, Request again, Rename and Delete; tap Edit for a remove badge on every chip; and the Me chip had a hairline-split Send segment on its right. Rename alone had two routes, and nobody found the long-press. The feedback was blunt: put a dropdown on the right of every chip and show what you can do there.
+
+Every chip now ends in a dropdown segment — hairline plus chevron, 44pt. Tapping the body still toggles the person; tapping the chevron lists everything.
+
+| Chip | Dropdown |
+|---|---|
+| Friend | received date · **Send my timetable to this person** · Request again · Rename · Delete |
+| Mine | Send 'name' · **Use as base** · Remove from comparison |
+| Base (first Me chip) | "Base timetable" header · Send |
+
+![Minji's chip dropdown — received date, send my timetable to Minji, request again, rename, delete](/blog/timetable-free-time-finder/chip-dropdown-friend.png)
+
+Two items are new. **Use as base** changes which of your timetables defines the day and hour range — the first chip has been the base since September 28, but switching it meant closing the screen and reopening it from another timetable. **Send my timetable to this person** covers the moment after the return banner is gone; the banner shows once, right after a file arrives, and dismissing it left only the generic Send. Opened from the menu, the send sheet is headed "Pick a timetable to send to Minji."
+
+![The base chip's dropdown — a "Base timetable" header and Send only](/blog/timetable-free-time-finder/chip-dropdown-base.png)
+
+Edit mode, the long-press menu and the split segment are gone. Keeping them next to the dropdown would leave three places to delete from. Making the body tap open the menu and moving the toggle inside would cost the most frequent action a second tap, so "tap = toggle" from September 28 stays.
+
+The options panel also gained a **Days** chip row (Mon–Fri · Mon–Sat · Every day). Hours had wheels; days could only change through Widen range and My range, so "everything but Saturday" was not a choice. Picking the base timetable's own setting stores "follow the base" again.
+
+![Options panel with the new Days chips; Every day selected and a Sunday column visible](/blog/timetable-free-time-finder/options-day-range-chips.png)
+
+The three features from the October 1 section — relaxation suggestions when nothing matches, attendance in the shared image, picking a concrete time inside a free stretch — had merged without ever reaching the app (see the October 3 post), so they were rebuilt against the current screen. Suggestions gained a widen-days kind; the time picker opens from a clock button left of Copy on the selection card. Its output differs from Copy (a cut stretch, phrased as a question), so it clears the rule set that morning when the Share button was removed.
+
+![The suggest-a-time sheet — start and end inside Mon 08:00–08:50, who is free, and a Copy This Time button](/blog/timetable-free-time-finder/proposal-sheet-rebuilt.png)
+
+Smaller changes the same day: toggling a chip cross-fades the layers over 0.3 s, a banner offers to re-request when two or more friends' timetables are over a month old, and 3 hours joined the minimum-length options. A travel-buffer option was proposed and dropped as too much.
+
+### Where the identifier goes, fourth time
+
+The first probe could not find the dropdown. In the accessibility tree the menu button carried the chip's identifier, not its own: putting `.accessibilityIdentifier` **after** `.overlay { Menu }` lets it cover the overlay too. It is the container-identifier pitfall in a new shape — a button with an overlay rather than a tap container — which is why the source scan written for the third recurrence did not catch it. The identifier moved before the overlay, and a second scan now looks for controls inside an overlay followed by an identifier.
+
 ## Where it stands
 
-A real two-device file exchange and whether the request link is tappable in each messenger are still to be checked. The grid and list layouts on iPad were verified in the October 1 update.
+A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
 
 
 
@@ -244,3 +399,9 @@ A real two-device file exchange and whether the request link is tappable in each
 - 2026-09-30 — request link, pick-with-preview send sheet, gray background with green shading that peaks at the people filter
 - 2026-09-30 early morning — Add My Timetable uses the preview picker; card/title view toggle shared by the list and pickers
 - 2026-10-01 — clearer time axis and hour/half-hour rules, labeled filters, separate clock ranges and durations, list view on iPad
+
+- 2026-10-01 — same-participant rule, choose an invitation inside a stretch, useful filter suggestions, attendance in shared images, HTTPS request page
+- 2026-10-02 — one follow-up for all three entry paths (banner, name prompt, failure alert), widen days too, persisted filters, format/appearance chips in the share sheet, list tap = card with "3/4" and Share, split chip, 30-day clock, Request again
+- 2026-10-02 evening — new timetables enter drawn → inverted (free time in light green) → merged; busy blocks turn background-colored on inversion
+- 2026-10-03 — iPhone filter row moved into the options panel (handle summarizes "08:00–20:00 · 30 min+ · Everyone"), two-line selection card with icon buttons, grid margin measures card + panel, selection border drawn as a sibling layer above the green layers
+- 2026-10-04 — one dropdown per chip (long-press, edit mode and split segment removed), Use as base, Send to this person, Days chips, toggle cross-fade, stale-timetable banner, 3-hour minimum, the three October 1 features rebuilt, a second identifier scan

@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../../../../layouts/BaseLayout.astro';
+import { getLangFromUrl, useTranslations } from '../../../../../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={`SuperMusicNote Android 개인정보처리방침 - ${t('site.title')}`} lang={lang}>
+  <div class="max-w-5xl w-full mx-auto px-6 py-24 md:py-36">
+    <div class="text-center mb-16 md:mb-20">
+      <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperMusicNote · Android</span>
+      <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">SuperMusicNote Android 개인정보처리방침</h1>
+      <p class="text-sm text-text-sub">시행일: 2026년 10월 2일</p>
+    </div>
+    <div class="prose prose-gray max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:text-xl prose-h2:mt-12 prose-h2:mb-4 prose-p:text-text-sub prose-p:leading-7 prose-strong:text-text prose-strong:font-medium prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:before:content-none prose-code:after:content-none">
+      <p>이 방침은 Hyewon &amp; Insong의 <strong>SuperMusicNote Android 앱</strong>(패키지 <code>com.hyewoninsong.supermusicnote</code>)이 데이터를 다루는 방법을 설명해. 이 Android 앱에는 스튜디오 공통 방침보다 이 방침이 우선 적용돼. iOS 버전이나 다른 앱의 데이터 처리를 설명하는 방침은 아니야.</p>
+
+      <h2>1. 연습을 위해 기기에 저장하는 데이터</h2>
+      <p>앱은 직접 입력한 학습자 이름, 학습자별 설정, 저장한 연습 기록을 기기에 보관해. 연습 기록에는 출제된 음표, 선택한 답, 첫 시도 정답 여부, 풀이 시간이 포함돼. 이 데이터로 지난 연습과 통계를 보여주고 취약한 음표를 더 자주 연습할 수 있게 해.</p>
+<p>학습자 계정은 기기에만 있는 프로필이야. 온라인 계정이 아니며 이메일, 비밀번호, 외부 로그인을 요청하지 않아.</p>
+
+      <h2>2. 수집·공유 및 외부 서비스</h2>
+      <p>앱은 사용 방식과 퀴즈 결과를 통계적으로 이해하기 위해 <strong>Google Firebase Analytics</strong>(Google LLC)를 사용해. 이를 위해 앱이 인터넷 권한을 사용해. 설정과 연습 기록은 업로드되지 않아. 클라우드 동기화가 없고 기기에만 저장돼. 앱은 광고를 표시하거나 결제를 처리하지 않아.</p>
+<p><strong>수집하는 정보:</strong></p>
+<ul>
+<li>앱 사용 이벤트: 본 화면, 탭·설정 변경, 퀴즈 시작·종료, 답 시도. 답 이벤트에는 출제된 음표(음자리표와 오선 위치), 정답과 선택한 계이름, 0.1초 단위로 반올림한 풀이 시간, 힌트·취약 음표 집중 사용 여부가 포함돼.</li>
+<li>저장된 기록 수와 학습자 계정 수의 대략적인 구간 값(예: 0, 1, 2_5). 정확한 수나 기록 자체는 아니야.</li>
+<li>Firebase 앱 인스턴스 식별자와 Firebase가 자동으로 수집하는 기본 기기·앱 정보: 기기 모델, OS 버전, 앱 버전, IP 주소로 추정한 대략적인 지역 또는 국가.</li>
+</ul>
+<p><strong>수집하지 않는 정보:</strong> 광고 ID(앱은 AD_ID 권한을 선언하지 않으며 광고 저장소·광고 개인화 동의는 거부 상태야), 학습자 이름이나 ID, 저장된 기록 ID, 직접 입력한 텍스트, 기록의 실제 시각 정보. 데이터를 판매하지 않아.</p>
+<p>또한 앱 충돌과 안정성 문제를 진단하고 고치기 위해 <strong>Firebase Crashlytics</strong>(Google LLC)를 사용해. 앱이 충돌하거나 응답하지 않을 때(ANR) 충돌 스택 트레이스와 진단 데이터(기기 모델, OS 버전, 앱 버전, 화면 방향, 여유 메모리·저장 공간, 루팅 여부, 충돌 시각, Firebase 설치 식별자(Crashlytics 설치 UUID))를 전송해. 학습자 이름이나 ID, 기록 내용, 직접 입력한 텍스트는 포함되지 않으며 광고 ID도 수집하지 않아. Crashlytics는 충돌 스택 트레이스와 관련 식별자를 90일 동안 보관해.</p>
+<p>에뮬레이터에서는 분석과 Crashlytics가 기본적으로 꺼져 있어. 이 데이터는 <a href="https://firebase.google.com/support/privacy" rel="noopener noreferrer">Firebase 개인정보 보호 약관</a>에 따라 Google이 처리해. 분석 데이터는 Google Analytics 데이터 보관 설정에 따라 보관돼. Google Play와 Android가 자체 서비스를 제공하며 처리하는 정보에는 해당 서비스의 방침이 적용돼.</p>
+
+      <h2>3. 보관 위치와 기기 이전</h2>
+      <p>설정과 연습 기록은 앱의 전용 로컬 저장 공간에 보관돼. 개발자는 이 기록에 원격으로 접근할 수 없어. 기기 밖으로 전송되는 데이터는 위에 설명한 분석 이벤트와 충돌 보고서뿐이야. 기기 화면 잠금을 사용하고 믿을 수 있는 사람과만 기기를 공유해.</p>
+<p>앱은 Android 클라우드 백업을 비활성화해. 다만 일부 기기에서는 Android나 기기 제조사의 기기 간 이전 기능이 앱 데이터를 옮길 수 있어. 기기와 설정에 따라 동작이 달라지며 앱 자체에는 백업, 내보내기, 이전 서비스가 없어.</p>
+
+      <h2>4. 보관 기간과 삭제</h2>
+      <p>저장한 기록과 설정은 직접 지우거나 앱 데이터를 삭제할 때까지 기기에 남아 있어. 앱에서 개별 연습 기록을 삭제할 수 있어. 학습자 프로필을 삭제하면 해당 프로필의 설정과 기록도 삭제돼. 앱에는 최소 한 개의 프로필이 남아 있어야 해.</p>
+<p>로컬 앱 데이터를 전부 지우려면 Android 설정에서 SuperMusicNote의 저장 공간을 삭제하거나 앱을 제거해. 앱을 삭제하면 로컬 데이터도 함께 삭제돼. 앱을 제거하면 모든 분석·충돌 보고서 수집도 중단돼. 개발자가 보관하는 연습 기록의 서버 사본은 없어. 이미 전송된 분석 데이터는 Google Analytics 데이터 보관 설정에 따라, 충돌 보고서는 90일 동안 보관돼. 기기 이전으로 생긴 사본이 있다면 옮겨진 기기에서도 별도로 지워야 해.</p>
+
+      <h2>5. 개인정보 문의</h2>
+      <p>개인정보 관련 문의는 <strong>Hyewon &amp; Insong</strong>의 <a href="mailto:contact@hyewoninsong.com">contact@hyewoninsong.com</a>으로 보내줘. 이메일을 보내면 답변을 위해 발신 주소와 직접 보낸 내용을 전달받아. 문의에 필요한 경우가 아니면 연습 기록이나 개인정보를 첨부하지 않아도 돼.</p>
+
+      <h2>6. 방침 변경</h2>
+      <p>Android 앱의 데이터 처리 방법이 바뀌면 이 페이지를 수정하고 적용되는 시행일을 표시할게. 이 방침은 위에 명시한 Android 앱과 Firebase Analytics·Crashlytics 사용을 기준으로 해.</p>
+    </div>
+  </div>
+</BaseLayout>
