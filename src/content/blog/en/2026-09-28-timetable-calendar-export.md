@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-03T14:55:09+09:00
+date: 2026-10-04T00:19:02+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -101,7 +101,7 @@ Verifying it hit three walls. `simctl openurl` puts up a system "Open in Timetab
 
 The sheet used to stack both paths: adding to Apple Calendar, and sharing an .ics file. They behave differently after the fact — the app keeps a record of what it added to Apple Calendar and can update or remove it, but it has no idea where a file ends up. Side by side, "Update Calendar" and "Remove from Calendar" read as if they applied to the file too.
 
-Now the top of the sheet has two "Export To" chips. Apple Calendar is the default every time the sheet opens. The date range and event picker are shared; below them, only the chosen path shows.
+So the top of the sheet got two "Export To" chips (that evening they became a dropdown under the event picker — see below). Apple Calendar is the default every time the sheet opens. The date range and event picker are shared; below them, only the chosen path shows.
 
 ![The Export to Calendar sheet with Apple Calendar and Other Apps chips at the top, Apple Calendar selected, followed by the period, events, calendar picker and add button](/blog/timetable-calendar-export/target-chips.png)
 
@@ -123,6 +123,32 @@ We decided against exporting one timetable to several calendars at once. Calenda
 
 The "1 year" chip set the end to start + 1 year − 1 day, but the date picker's limit and its caption allowed one more day. Both now come from one function, and a test pins chip end == limit.
 
+## 2026-10-03, evening — "Export To" became a dropdown under the event picker
+
+The chips at the top didn't last. Reading top to bottom, the sheet asked "where" first, then the dates and events, and only the bottom group changed with that choice. Now "Export To" is a single row right under "Events": the chosen value on the left, an up-down chevron on the right. The sheet reads dates, what, where, then the button, and the chosen path sits directly below the row.
+
+![The Export to Calendar sheet with an Export To row showing Apple Calendar under the Events row, followed by the calendar picker and the add button](/blog/timetable-calendar-export/target-dropdown.png)
+
+Tap it and a menu opens with a check on the current choice; picking Other Apps swaps the group below for the .ics button.
+
+![The Export To menu open, Apple Calendar checked, Other Apps below it](/blog/timetable-calendar-export/target-dropdown-open.png)
+
+Earlier we rejected a dropdown because it hides one option. The chevron answers that, and every other choice in this sheet — the event picker, the target calendar — already uses the same row-and-chevron shape. The chips were the odd one out. The default (Apple Calendar, every time) and the reset of an in-progress move are unchanged.
+
+## 2026-10-04 — Remove everything this app exported, from any timetable
+
+"Remove from Calendar" only clears the timetable you have open. With several timetables you had to open each one, and a timetable you had already deleted left its events behind for good.
+
+The Apple Calendar section now ends with "Remove Events from All Timetables", with a line underneath saying it covers every timetable and leaves events you added yourself alone.
+
+![The bottom of the sheet after exporting: Update Calendar, then a red Remove from Calendar button, then a red Remove Events from All Timetables button with a one-line explanation](/blog/timetable-calendar-export/remove-all.png)
+
+The markers decide what goes. Dedicated calendars this device created are deleted whole; everywhere else only marked series are removed, whichever timetable they came from, so events exported from another device or before a reinstall are found too. A calendar found only through markers is never deleted whole, since it may hold your own events. Everything is removed in one commit and rolled back on failure.
+
+![The confirmation alert: calendars the app created are deleted with their events, other calendars lose only the app's repeating events. Cancel and Remove All buttons](/blog/timetable-calendar-export/remove-all-confirm.png)
+
+The button only appears when something is left to remove, and it works even when premium is locked.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
@@ -130,3 +156,5 @@ The "1 year" chip set the end to start + 1 year − 1 day, but the date picker's
 - 2026-10-02 — series checklist, twin-series note, dimmed out-of-range rows, end-date presets, first-event-date caption, "Update Calendar" CTA, remove button moved to the bottom, picker and add button grouped, stale-range bug fix, calendar color dot, dropped-record notice
 - 2026-10-02 — event picker moved to a popover (title+color cards, same-time rows, ordering rules), debug launch arguments for simulator checks
 - 2026-10-03 — Export To chips (Apple Calendar / Other Apps), status card and Move instead of the picker once exported, no multi-calendar export, end-date limit matches the 1-year chip
+- 2026-10-03, evening — Export To moved from top chips to a dropdown under the event picker
+- 2026-10-04 — Remove Events from All Timetables (found by marker; only dedicated calendars removed whole)
