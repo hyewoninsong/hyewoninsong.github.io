@@ -1,6 +1,6 @@
 ---
 title: "Tapping a class on a locked timetable now shows its notes"
-date: 2026-10-04T00:09:43+09:00
+date: 2026-10-06T02:45:16+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperTimetable opens locked, so most of the time you are just looking. Tapping a class used to show only its start and end time. Now a card slides up with its color, title, day and time, alerts, and notes."
@@ -48,11 +48,28 @@ The note follows as a third line if there is one, and period timetables add the 
 
 ![A locked grid with the Art block selected. No time pills around the block; the card's button at the right shows a checkmark.](/blog/timetable-locked-info/copy-button.png)
 
+## 2026-10-06 — If the card would cover what you tapped, it moves up
+
+The problem flagged under "What's left" got reported for real: tap a class near the bottom of the screen and the card landed on top of the class you had just selected.
+
+The card now has two homes. It stays at the bottom by default and moves to just under the weekday row **only when it would cover the selected block**. Tap a class near the top, then one near the bottom, and the card swaps its content while sliding up. The green-slot card in Find Free Time follows the same rule.
+
+![A locked grid with a late-afternoon block selected. The card sits under the weekday row instead of at the bottom, and the selected block stays fully visible.](/blog/timetable-locked-info/card-above-block.png)
+
+The original plan was to scroll the grid so the block cleared the card. Two things stopped it: on a locked grid, scrolling is what dismisses the card, so the app would close its own card; and short timetables are fitted to the screen with nothing to scroll. A simpler "bottom half of the screen means top" rule moved the card even when nothing was covered.
+
+Knowing whether the card covers the block needs the card's height, and that varies — a note more than doubles it. Measuring after the first render means one frame in the wrong place. So the decision lives inside a SwiftUI `Layout`: `placeSubviews` asks the card for its size with `sizeThatFits`, checks whether the bottom position overlaps the block vertically (with an 8pt gap), and places it. Measuring and placing happen in the same pass. A block tall enough to be covered either way keeps the card on the side that covers less.
+
+The block's position is captured once, at the tap. The Find Free Time grid scrolls with the card open, and re-measuring would make the card hop every time the block passed under it.
+
+![Find Free Time with a slot selected that runs from late morning to evening. The card sits under the weekday row rather than above the options panel.](/blog/timetable-locked-info/free-time-card-above.png)
+
 ## What's left
 
-This hasn't been checked on a wide iPad window yet. Because the card sits over the bottom of the grid, an evening class can end up hidden behind it. If that turns out to be a real problem, the first fix to try is scrolling the tapped block into view.
+This hasn't been checked on a wide iPad window yet. The card still hides an hour or two of the grid — just not the class you tapped. In the Find Free Time list view the card always sits above the panel.
 
 ## History
 
 - 2026-09-29 — Info card for locked taps, tinted notes box, day and time line
 - 2026-10-03 — Time pills removed from locked taps, copy button on the card
+- 2026-10-06 — Card moves under the weekday row when it would cover the selection (Find Free Time card too)
