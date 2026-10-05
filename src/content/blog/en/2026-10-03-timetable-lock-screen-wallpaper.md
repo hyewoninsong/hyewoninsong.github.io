@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T12:44:59+09:00
+date: 2026-10-05T14:03:21+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -14,7 +14,7 @@ The Lock Screen layout belongs to the system, not the app. Users resize the cloc
 
 So instead of "avoid it exactly":
 
-- **Start in a safe band.** Measured on device: clock bottom at 28% of screen height, widget row bottom at 37.5%, flashlight/camera top at 88%. The default assumes widgets exist.
+- **Start in a safe band.** Measured on device: clock bottom at 28% of screen height, widget row bottom at 37.5%, flashlight/camera top at 87.5% (88% at first; re-measured later). The default assumes widgets exist.
 - **Let the user drag.** The preview is one phone-shaped frame with a translucent silhouette of the date, clock, four widget squares and the two bottom circles. Drag it and the timetable card moves vertically. The silhouette never ends up in the exported image.
 
 ![Default — the card sits in the band below the widget row](/blog/timetable-lock-screen-wallpaper/sheet-default.png)
@@ -151,15 +151,15 @@ The chip is now **top / bottom / none** — it asks where the widgets are, not w
 
 | Chip | Band top | Band bottom |
 |---|---|---|
-| Top (default) | below the widget row (37.5%) | above flashlight/camera (88%) |
-| Bottom | below the clock (28%) | above the bottom widget row (78.5%) |
-| None | below the clock (28%) | above flashlight/camera (88%) |
+| Top (default) | below the widget row (37.5%) | above flashlight/camera (87.5%) |
+| Bottom | below the clock (28%) | above the bottom widget row (78%) |
+| None | below the clock (28%) | above flashlight/camera (87.5%) |
 
 Top and bottom give the same band length, shifted up by one widget row. The silhouette's squares move with it. iPad landscape is unaffected; widgets live in the left column there.
 
 A separate "position" row under the old chip lost: it would sit dead whenever widgets are off, and one three-way chip says the same thing.
 
-The 78.5% is an estimate — the button line minus one widget row's height — not a measurement. It gets corrected from a real Lock Screen capture; until then the card can still be dragged. No screenshot this time either: the simulator wouldn't stay up.
+The bottom row's top edge started as an estimate — the button line minus one widget row's height. It was checked against a real Lock Screen capture the same day (78.2%, see below). No screenshot this time either: the simulator wouldn't stay up.
 
 ## 2026-10-05 — Controls you use while looking at the preview don't belong in the collapsible options
 
@@ -199,6 +199,25 @@ The collapsed height is the handle (a constant 28pt) plus the measured button bl
 
 Anything you do directly on the preview — dragging the card, fitting the photo — moved out of the collapsible options in the previous section, so it is done with the panel collapsed. Once that adjust row is in, the collapsed height gains one more row.
 
+## 2026-10-05 — The clock guide didn't match the real Lock Screen
+
+The preview carries a faint date, a 9:41, four widget squares and two circles for the flashlight and camera. None of it is in the exported image; it only shows where the system will draw things so you can drag the card clear. That guide was wrong.
+
+How we found out was the useful part. A tester put a screenshot of their actual Lock Screen in as the background photo. Same device, same aspect ratio — so the real clock in the photo and our drawn clock sat in one image, on top of each other. Nothing lined up.
+
+| | Real (share of screen height) | What we drew |
+|---|---|---|
+| Date | centred at 10.3%, short weekday | 11.5%, full weekday |
+| Clock digits | 13.5% – 23.2% | 16.5% – 24.3% |
+| Bottom widget row | top at 78.2%, spanning 8.5% – 91.5% of the width | top at 78.5%, bunched in the middle |
+| Flashlight / camera | 87.5% – 94.5% | centred at 93.5%, smaller |
+
+That capture was also the ruler: find the preview's edges, derive its height from the screen ratio, draw a line every 1% and read the enlarged crop. Error is within half a percent. Drawing the corrected values back onto the same capture put them on the real clock, widgets and buttons.
+
+Three things changed: the guide now uses the measured values, the date uses the short weekday, and the flashlight/camera line moved from 88% to 87.5% — the only one that changes the exported image, by 4pt.
+
+The 78.5% that the section above called an estimate measured at 78.2%. The number derived by subtraction held up; the ones typed in by eye did not. They now live as named values that both the guide and the band read, with a test pinning them to the measured table. Still unmeasured: widgets at the top, iPad landscape, other screen sizes.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -210,3 +229,4 @@ Anything you do directly on the preview — dragging the card, fitting the photo
 - 2026-10-05 — Widgets chip becomes top / bottom / none: bottom widgets trim the band's lower edge (78.5% is an estimate)
 - 2026-10-05 — Drag-target chips (Timetable | Photo) and Reset moved out of the collapsible options into a row above Save; Reset applies to the selected one
 - 2026-10-05 — Preview keeps its scale when options expand: the stage only clears the collapsed panel, the open panel covers the rest
+- 2026-10-05 — Clock, widget and button guide now uses values measured from a real Lock Screen capture; button line 88% → 87.5%; short weekday in the date
