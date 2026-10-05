@@ -1,6 +1,6 @@
 ---
 title: "A tutorial you do, not one you read"
-date: 2026-09-27T19:30:00+09:00
+date: 2026-10-05T15:20:00+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "The first-run tutorial is follow-along: a finger demonstrates on the real timeline, and a step only advances when you actually do it. It started with six steps and was rebuilt as eight that follow a first real day, plus a timeline lock."
@@ -66,17 +66,48 @@ Resize and complete are gone: the handle and the circle explain themselves. The 
 
 ## A lock, so a day you are only reading does not move
 
-Selected and linked blocks drag without a long press, which meant a block could follow your finger while you were just scrolling and ticking things off. A lock now sits next to undo and redo. Locked, only scrolling and the completion checkbox work; touching a block shakes the lock with a warning haptic so it does not read as broken.
+Selected and linked blocks drag without a long press, which meant a block could follow your finger while you were just scrolling and ticking things off. A lock now sits next to undo and redo. Locked, only scrolling and the completion checkbox work (selection was blocked too at first; that changed on October 5, see below); touching a block shakes the lock with a warning haptic so it does not read as broken.
 
 ![The unlock step: the card points at the lock, and a finger demonstrates tapping it](/blog/planner-tutorial/unlock-step.png)
 
-It lost to a settings toggle (too far for a switch you flip while reading), to "locked but still selectable" (buttons that appear but do nothing), to silence (reads as a bug), and to syncing via iCloud (locking the iPad would block editing on the iPhone). The lock stays per device.
+It lost to a settings toggle (too far for a switch you flip while reading), to "locked but still selectable" (buttons that appear but do nothing — a real concern, later solved by not drawing the buttons), to silence (reads as a bug), and to syncing via iCloud (locking the iPad would block editing on the iPhone). The lock stays per device.
 
 ## A per-device value leaks into the next run
 
 The tutorial starts locked and gives the lock back if you skip before unlocking. At first it remembered "I locked it" only in memory. The group-drag UI tests then all failed with "picker never opened": the unit-test host app, launched without test arguments, had run the first-run tutorial, locked the timeline, and left it in `UserDefaults`, which the UI tests' reset argument does not touch. The same root caused a real bug: kill the app while locked and the next tutorial treats the lock as yours and never releases it. The flag now lives on disk, test and capture launches start unlocked, and a UI test walks all eight steps on the simulator.
 
+## 2026-10-05 — Locked means read-only, not dead
+
+A locked day is a day you are reading, and reading was blocked. A block only shows as many note lines as its height allows; the full note lives in the composer, which opens by selecting a block and tapping it again. Locked, you could not select, so a note on a 30-minute block was unreadable without unlocking.
+
+Locked now means read-only.
+
+| While locked | What happens |
+|---|---|
+| Tap a block | It is selected: outline and start/end times only, no group chips, link buttons or resize handles |
+| While selected | An info card at the bottom: todo name, time, length, the whole note |
+| Tap the checkbox | Completes, as before |
+| Tap empty space | Deselects |
+| Long press, tap the selected block again, tap the card | Refused: a ripple spreads from the lock |
+
+![A block selected while locked: outline and time pills only, an info card at the bottom, and the lock as the only button on the left](/blog/planner-tutorial/locked-info-card.png)
+
+The September objection to "locked but selectable" was that selecting shows buttons that do nothing. The objection stands; the answer changed. Instead of blocking selection, the editing controls are simply not drawn. For the same reason undo, redo and the drawer button are hidden while locked, and their keyboard shortcuts go quiet with them. Dimming them lost: four greyed buttons keep saying "not now" on a screen meant for reading.
+
+The card is the note composer's panel without the field, the save button or the link to edit, and with a small lock where the chevron was. A long note scrolls inside the card rather than being cut. The card floats above the bottom buttons instead of joining their inset, so selecting does not resize the timeline; the timeline only scrolls when the selected block would sit under the card.
+
+### A refusal has to be visible where you are looking
+
+The old refusal was a 14-degree nudge of the lock in the bottom corner while your eyes are mid-timeline. The timetable app already answers the same situation with a ripple from the lock plus a side-to-side shake, so the planner now does the same: a glow, three rings 0.2 seconds apart, and a warning haptic.
+
+![The selected block tapped again while locked: rings spreading from the lock in the bottom-left corner](/blog/planner-tutorial/locked-denied-ripple.png)
+
+Tapping the selected block again could have meant deselect. Unlocked, that tap opens the note; if the lock changed it to deselect, someone trying to write a note would just see the selection vanish. It is a refusal instead. Ripple, shake and haptic all come from one function, so a new path cannot forget one of them. With Reduce Motion the ripple becomes one still ring and the shake a single blink.
+
+The cost: no undo button if you tick the wrong checkbox while locked (tap it again, or unlock and undo), and on a packed day there is little empty space to tap for deselect.
+
 ## History
 
 - 2026-09-21 — six-step follow-along tutorial
 - 2026-09-27 — rebuilt as eight first-day steps, timeline lock
+- 2026-10-05 — lock became read-only: select while locked with an info card, undo and drawer hidden, refusal shown as a lock ripple and shake (reverses 09-27's blocked selection)
