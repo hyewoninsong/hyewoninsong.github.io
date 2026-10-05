@@ -1,6 +1,6 @@
 ---
 title: "A seven-period timetable always left a blank strip at the bottom"
-date: 2026-10-03T17:00:36+09:00
+date: 2026-10-06T00:58:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Period timetables fit on screen with room to spare, and that room showed up as empty grid rows. Short timetables now scale up to fill the viewport, and whatever is left is plain ground, not more grid."
@@ -38,8 +38,28 @@ Second, when the cap leaves space anyway, the bounce layer is clipped to the con
 
 Five layout functions compute heights inside the grid, with close to ninety call sites: block positions, grid lines, the current-time line, the minute under a dragging finger, where the iPad editing panel attaches. The new scale argument has no default. With a default of 1, one forgotten site draws at the old scale — blocks grow but grid lines don't — and a single screenshot will not catch it. Without a default, the compiler points at all ninety.
 
-The value is measured once by the grid's root view and passed down the environment. Share images, print, widgets and list previews live outside that environment and keep scale 1, so exported pictures still don't follow the screen size.
+The value is measured once by the grid's root view and passed down the environment. Share images, print and widgets live outside that environment and keep scale 1, so exported pictures still don't follow the screen size. List previews were on that list too, until three days later — see the 2026-10-06 section below.
 
 ## Where it stands
 
 Changing the number of periods, or switching to a timetable with a different count, changes row height within the 1.5× cap; within one timetable it is constant. The first frame before the viewport is measured draws at 1× and then grows; it didn't show in captures, and drawing can be deferred until the first measurement if it ever does.
+
+## 2026-10-06 — List cards fill the same way
+
+The same gap was still sitting in the timetable list. Each timetable is a fixed-height card, and its preview is drawn on the share-image canvas at one point per minute, so a five-period timetable ended halfway down the card.
+
+That reverses the "list previews stay at 1×" line above. Share images and prints are handed to other people and should not depend on the screen that made them. A list card is where you pick your own timetable, and the grid it opens already scales its rows; a 1× preview showed different proportions from the screen behind it.
+
+So the card reuses the grid's rule instead of inventing one: scale rows only when the picture is shorter than the card, cap at 1.5×, leave long timetables at 1× and scrolling inside the card. A three-period timetable hits the cap and still leaves some space.
+
+Two alternatives lost:
+
+- **Stretching the whole image** — one line of code, but the 11pt labels and day header grow with it, and every card ends up with a different text size. The canvas already took a per-minute height for the lock-screen wallpaper, so scaling rows alone needed no new plumbing.
+- **Shrinking the card to its content** — the duplicate button and the page dots would move every time you swipe.
+
+The one catch was when to redraw. The preview is rendered once and only re-rendered on a light/dark switch, but the scale comes from the card height, which is a placeholder until the first layout pass measures it. The scale is now part of the redraw condition, floored to two decimals so sub-point jitter does not trigger renders and rounding never makes the picture a hair taller than the card.
+
+## History
+
+- 2026-10-03 — Grid: short timetables scale rows to fill the screen; leftover space is plain ground.
+- 2026-10-06 — List card previews get the same vertical fit, reversing "list previews stay at 1×".
