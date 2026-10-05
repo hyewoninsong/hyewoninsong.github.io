@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-04T14:05:00+09:00
+date: 2026-10-05T09:40:48+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape."
@@ -99,9 +99,36 @@ The menu row moved from right under Share to **below Free Time**: share, print, 
 
 No screenshots this time — five other simulators were running on the machine and boots took twenty minutes, so verification stopped at unit tests. Shadow strength, the landscape band ratios and the pinch feel will be tuned on a device.
 
+## 2026-10-05 — For the foldable, only the cover screen
+
+iPhone Duo is now in the device list — as one entry, the cover screen. The wallpaper exists so you can glance at your week without opening the phone, and a closed phone only shows the cover screen. Open it and Face ID unlocks straight into the app.
+
+A second entry for the inner screen lost: the same device twice in the list, and an inner screen that rotates, which would mean reopening landscape Lock Screens (iPad-only today) for an iPhone.
+
+Ignoring the inner screen entirely breaks something else, though. "This device" is matched by screen pixel size, and with the phone open the system reports the inner screen — an unknown size, so the default would become a nameless "iPhone" entry. The inner size is therefore stored on the cover-screen entry as an alias. Whichever screen you open the sheet on, "My device" is the cover screen.
+
+The device isn't out yet, so the numbers come from the simulator.
+
+| Measured | How | Value |
+|---|---|---|
+| Cover screen | simulator display list | 1398×2034 px at 3x (466×678 pt) |
+| Corners | rasterised the simulator's screen mask PDF, distance to the first opaque pixel | about 7 pt on the hinge side, about 62 pt outside |
+| Clock bottom | cover Lock Screen capture | about 0.24 of the height |
+
+![iPhone Duo cover Lock Screen — date and clock sit left of centre, camera cutout top right](/blog/timetable-lock-screen-wallpaper/duo-outer-lock-screen.png)
+
+The band ratios (0.28 under the clock, 0.88 above the buttons) were measured on tall iPhones; the cover screen is much squatter. The clock turned out to end at 0.24, inside the existing 0.28, so the ratios stay.
+
+Corners could not be one number: the hinge side is nearly square, the outside is round. The preview frame now takes a separate hinge radius and draws an `UnevenRoundedRectangle`.
+
+![The wallpaper sheet on iPhone Duo — the preview frame is square on the left, round on the right](/blog/timetable-lock-screen-wallpaper/duo-sheet-preview.png)
+
+One thing is unmeasured: the simulator's Lock Screen draws no flashlight or camera buttons, so the bottom of the band is unverified. And on a screen this short, a 08–20 timetable with title and widget row overflows the band slightly; turning the widget row off fits it. Both get rechecked on real hardware.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
 - 2026-10-04 — Save to Photos button and photo add permission; share becomes secondary
 - 2026-10-04 — Device dropdown (defaults to this device, matched by screen pixels) + photo background (`PhotosPicker`, no read permission)
 - 2026-10-04 — Pinch/drag photo adjustment, background colour via the style popover, card shadow over photos (positive offset is down), iPad landscape, per-device corner radius, Open Photos, menu row moved — six PRs
+- 2026-10-05 — iPhone Duo in the device list: cover screen only, inner screen as an alias, square hinge-side corners
