@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T11:38:24+09:00
+date: 2026-10-05T12:16:39+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape."
@@ -19,7 +19,7 @@ So instead of "avoid it exactly":
 
 ![Default — the card sits in the band below the widget row](/blog/timetable-lock-screen-wallpaper/sheet-default.png)
 
-A "Widgets: yes / no" chip moves the band's top edge up to just below the clock.
+A widgets chip (yes / no at first, now top / bottom / none — see the last 2026-10-05 section) moves the band's top edge up to just below the clock.
 
 ![Widgets off — the band starts under the clock and the hour rows grow](/blog/timetable-lock-screen-wallpaper/widgets-off.png)
 
@@ -143,6 +143,24 @@ One more thing: dragging the preview is the point of this sheet, but the only ex
 
 ![The sheet opens with a "drag to reposition" capsule on the card](/blog/timetable-lock-screen-wallpaper/drag-hint.png)
 
+## 2026-10-05 — If your widgets sit at the bottom, neither chip was right
+
+The first post noted that iOS 26 can move the widget row to the bottom, and waved it off as something you could drag around. On a phone actually set up that way it isn't. "Yes" drew widget squares under the clock where there were none and pushed the card down; "no" started the card in the right place but let it run all the way to the flashlight and camera buttons, straight through the real widget row. Dragging fixes position, not **height**: hour rows are sized from the band, and a band that doesn't know about bottom widgets produces a card that's too tall.
+
+The chip is now **top / bottom / none** — it asks where the widgets are, not whether they exist.
+
+| Chip | Band top | Band bottom |
+|---|---|---|
+| Top (default) | below the widget row (37.5%) | above flashlight/camera (88%) |
+| Bottom | below the clock (28%) | above the bottom widget row (78.5%) |
+| None | below the clock (28%) | above flashlight/camera (88%) |
+
+Top and bottom give the same band length, shifted up by one widget row. The silhouette's squares move with it. iPad landscape is unaffected; widgets live in the left column there.
+
+A separate "position" row under the old chip lost: it would sit dead whenever widgets are off, and one three-way chip says the same thing.
+
+The 78.5% is an estimate — the button line minus one widget row's height — not a measurement. It gets corrected from a real Lock Screen capture; until then the card can still be dragged. No screenshot this time either: the simulator wouldn't stay up.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -151,3 +169,4 @@ One more thing: dragging the preview is the point of this sheet, but the only ex
 - 2026-10-04 — Pinch/drag photo adjustment, background colour via the style popover, card shadow over photos (positive offset is down), iPad landscape, per-device corner radius, Open Photos, menu row moved — six PRs
 - 2026-10-05 — iPhone Duo in the device list: cover screen only, inner screen as an alias, square hinge-side corners
 - 2026-10-05 — Preview grows from the centre when options collapse (same curve on the second measurement); drag hint on the card
+- 2026-10-05 — Widgets chip becomes top / bottom / none: bottom widgets trim the band's lower edge (78.5% is an estimate)
