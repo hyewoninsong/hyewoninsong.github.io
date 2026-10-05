@@ -1,6 +1,6 @@
 ---
 title: "A checkbox and a context menu on planner blocks"
-date: 2026-10-03T18:50:46+09:00
+date: 2026-10-05T12:56:55+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "Tapping a block used to open an edit sheet. Now a checkbox completes it and a second tap opens a menu in place. Getting there meant three rounds with UIButton menus that hijack drags — and clearing an overlap left the menu for the first row of the push sheet."
@@ -1091,6 +1091,44 @@ Three alternatives lost. **Keep the button and also open on tap-again** — two 
 
 The cost that returns: on a packed day there is little empty space to deselect with. What softens it is that a mistaken tap-again loses nothing — tap outside and the composer closes with nothing changed. The tutorial's note step now demonstrates the tap on the block instead of on the bottom button.
 
+## 2026-10-05 — Keep the context when the next action begins
+
+Searching across Active and Archived should not take away the search controls. Opening a past record should let you read it before leaving for the planner. Choosing a date in the drawer should start with the day you were already viewing. Seven small changes now carry that context through the next action.
+
+### A filter needs a visible way out
+
+Search appears when a list reaches eight tasks. Previously, switching to a smaller scope could remove the search button while leaving the query active. The list stayed filtered, but the input that explained it was gone.
+
+An active query now keeps search available, even below the threshold. An empty result also offers Clear Search. Clearing the query whenever the scope changes would be simpler, but would interrupt looking for the same task in Active and Archived. Preserving the input means preserving a way to edit or remove it.
+
+### Reading a record no longer leaves the detail screen
+
+Tapping an activity cell now selects a date and scrolls to its record within task details. Weekly and monthly cells choose the first day with an actual record in that period, rather than an empty Monday or the first of the month. A separate View in Planner action opens that day's timeline.
+
+This avoids a confirmation dialog on every tap. Reading stays in place; leaving the screen becomes explicit. The record row gains one short label in exchange for making activity browsing predictable.
+
+The drawer follows the same principle. Its date picker used to start at the later of today and the block's original date, even when the user was planning another day. It now starts with the day being viewed, including a past day. The original start time, snap interval, and day-boundary handling remain intact.
+
+### Completion gives a brief response; a locked day gives usable advice
+
+Completion still saves immediately. The checkmark, strike-through, block opacity, and minimap now transition over 0.18 seconds. Position and length are unaffected. There is no extra enlargement or success haptic layered on top; Reduce Motion uses a short fade.
+
+An empty timeline also changes its hint when locked. It explains how to unlock using the bottom-left button instead of suggesting a creation gesture that is currently blocked.
+
+![A locked empty day explains how to unlock it. The hint wraps inside the timeline column, clear of the time axis and minimap](/blog/planner-block-menu/locked-day-guidance.png)
+
+The first screenshot exposed a layout problem: the longer hint put its lock icon over an hour label. Centering the hint across the entire viewport had worked only because the old sentence was shorter. The hint now belongs inside the block column, excluding the time axis and minimap, with room to wrap. Correct wording and enough space to display it needed separate checks.
+
+### Groups can be built with VoiceOver, and help can be watched safely
+
+VoiceOver gains actions for connecting blocks into a group. Select an anchor, then connect the blocks before or after it, or add and remove individual companions. Moving accessibility focus to another block does not replace the anchor. The result is announced as a companion count. The actions stay with the existing chronological block elements instead of adding a second set of tiny controls.
+
+Settings now offers short, read-only demonstrations for placement, grouping, notes, and the drawer. Each step can be selected directly. The illustrations move display values only; they do not create or alter tasks. Automatic playback stops under Reduce Motion.
+
+Reviewing the demonstrations caught two outdated instructions. Notes open by tapping a selected block again, not through the removed bottom note button. Group dragging starts on a block's body, not on its tap-only link control. Both the words and finger positions were checked against the current gesture handling. Help should demonstrate something a reader can actually repeat in the app.
+
+Each change has its own review so it can be assessed and reverted independently. Release follows review and integration. The common goal is simple: keep an active query editable, pass an explicitly chosen date forward, and make the action shown in the explanation match the action available on screen.
+
 ## History
 
 - 2026-09-20 — Checkbox and context menu grammar; `require(toFail:)` fixed the `UIButton` menu hijacking drags
@@ -1121,3 +1159,4 @@ The cost that returns: on a packed day there is little empty space to deselect w
 - 2026-09-27 — Tapping a selected block deselects it; notes open from a note button in the bottom capsule. The length capsule became a dashed line with a grey capsule, like the gap ruler (reversing 09-24). The todo list got Active | Archived tabs, and the strip caption now names its span and total
 - 2026-09-27 — The group chip's partial state became a faint fill in the chip's own ink instead of a proportional arc. The tap never depended on the fraction; grey was avoided because it reads as disabled
 - 2026-10-03 — Removed the note button; tapping a selected block opens the note composer again (reversing 09-27). Deselect is a tap on empty space; the capsule holds delete and drawer only.
+- 2026-10-05 — Kept search, record browsing, and drawer dates in context; added completion feedback, lock-aware hints, VoiceOver grouping, and read-only topic help
