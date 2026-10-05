@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-03T21:02:33+09:00
+date: 2026-10-05T11:27:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -28,7 +28,7 @@ The same mapping keeps events attached when you edit periods: shift Period 2 to 
 
 ## What's next
 
-Widgets still draw a clock-time axis. They're correct, just not in period rows yet. (Shared images, printing and list previews switched to period rows later that night — see below.)
+At first widgets, shared images, printing and list previews stayed on a clock-time axis — correct, just not in period rows. Shared images, printing and list previews switched later that night, and the full timetable widget on Oct 5 — see below.
 
 ## Update, Sep 29 — periods you drag like events
 
@@ -90,7 +90,7 @@ All three now match the grid: equal-height rows, period name with start and end 
 
 It was one change, not three: all of them render through the same offscreen canvas. That canvas gets the same trick as the grid — events move to virtual hours before drawing, so each period is a 60pt row and block layout, overlap hatching and alarm badges are untouched. Only the axis labels are new. The one trap was print sizing, which computed the canvas aspect ratio from "end hour − start hour" and would have sized a 7-row canvas as 8 hours. It now asks the canvas for its row count.
 
-Widgets still use clock time; they draw separately.
+Widgets stayed on clock time at this point, since they draw separately (moved to period rows on Oct 5 — see below).
 
 ## Update, Sep 29 late night — "P1, P2…" by default, and any period can be renamed
 
@@ -317,6 +317,38 @@ What lost: deleting spanning events too (the remaining hour is still a real clas
 
 Why it slipped: the original tests checked where shortened events ended up, but not whether the user was told. A UI test now lowers the count from 7 to 6 and checks both alert lines, that Cancel keeps the sheet, and that Delete removes only the Period 7 event.
 
+## Update, Oct 5 — the home screen widget draws period rows too, and period names step aside instead of hiding
+
+The widget was the last surface still on a clock axis. A period timetable you read as "Period 3, Music" in the app showed up on the home screen as "Music, around noon". The full timetable widget now draws the same period rows as the app grid.
+
+![The full timetable widget with period rows on the vertical axis; the 10:25 now-capsule sits inside Period 1 and the period name has moved above it](/blog/timetable-period-axis/widget-period-rows.png)
+
+| Element | In the widget |
+|---|---|
+| Vertical axis | Equal-height rows: name plus start and end time |
+| Lunch | A light grey row when the lunch row is turned on |
+| Now line | Proportional inside a period; during a break it rests on the next period's line |
+| Before the first / after the last period | Capsule pinned to the edge, "out of range" |
+| Today and Lock Screen widgets | Still real clock time |
+
+The Today and Lock Screen widgets answer "what's now and when is next", so they stay on clock time.
+
+### A period name can't hide behind the capsule
+
+On the clock axis, an hour label that collides with the now-capsule is hidden — the capsule says "10:24", so nothing is lost. On a period axis the capsule still says a time, not a period, and the label sits mid-row, so **the current period's name would be missing for most of the class**. Instead the label moves to the roomier side of the capsule and sheds lines as space runs out: end time, start time, then name only. It hides only when not even one line fits, which starts around fourteen periods.
+
+Two options lost: drawing the capsule over the label (two layers of text, neither readable), and dropping the capsule on period timetables (the widget would lose its "what time is it" number).
+
+![Dark-mode widget with the lunch row on; at 15:45, a break, the now line rests on the top of Period 6](/blog/timetable-period-axis/widget-lunch-row.png)
+
+### Found while porting — the last period was drawn one row up
+
+A widget can't import app code, so the period-to-row mapping had to be written a second time. One line stood out: events past the end of the axis were clamped at **period count × one row**. With the lunch row on there is one more row than there are periods, so last-period events were clamped into the lower half of the previous row. Stored times were fine; only the drawing was wrong. Two changes had landed separately — the clamp while the lunch toggle was briefly missing, the toggle later without revisiting the clamp — and the clamp's test only ran an axis without lunch. The limit is now the row count, with a test on a lunch axis.
+
+### Looking at a widget without a home screen
+
+UI tests can't capture a home screen widget. This time the widget's own source files were compiled into a tiny executable, run headless inside the simulator, and rendered to PNG with `ImageRenderer` — in class, on a break, out of range, with lunch, with 14 and 24 periods. It has not yet been checked on a real home screen.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -337,3 +369,4 @@ Why it slipped: the original tests checked where shortened events ended up, but 
 - Oct 3, evening — period rules card inside the display sheet (live, editor/X/dedicated alert removed), lost lunch-row toggle recovered, container-identifier pitfall guarded by a source scan
 - Oct 3, night — block edges quantised to half-period lines at the point of entry (old 30-minute clamp values, odd-length rounding, magnet-snap spread); edit stripes per half period
 - Oct 3, late night — events spanning a removed period are counted in the confirmation ("shortened"), period-specific alert wording, Continue when nothing is deleted
+- Oct 5 — the full timetable widget draws period rows (period names step aside from the now-capsule); fixed last-period events drawn one row up when the lunch row is on
