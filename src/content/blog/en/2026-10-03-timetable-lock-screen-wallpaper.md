@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T12:27:53+09:00
+date: 2026-10-05T12:44:59+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -139,7 +139,7 @@ The fix is to apply the same curve where the frame size is received, skipping it
 
 ![After, same moment — clock, widgets and card scaled with the frame, centred](/blog/timetable-lock-screen-wallpaper/collapse-mid-after.png)
 
-One more thing: dragging the preview is the point of this sheet, but the only explanation sat in small print under the options, and the options panel opens collapsed. There is now a "Drag to reposition" capsule on the card. It disappears on the first drag, is never in the saved image, and shrinks to just the arrow when the preview gets too narrow for the text.
+One more thing: dragging the preview is the point of this sheet, but the only explanation sat in small print under the options, and the options panel opens collapsed. There is now a "Drag to reposition" capsule on the card. It disappears on the first drag, is never in the saved image, and shrinks to just the arrow when the preview gets too narrow for the text. (Opening the options used to shrink the preview that far on an iPhone; that changed the same afternoon — see the last section.)
 
 ![The sheet opens with a "drag to reposition" capsule on the card](/blog/timetable-lock-screen-wallpaper/drag-hint.png)
 
@@ -183,6 +183,22 @@ Two chips replaced a single toggle whose label flipped between "Adjust Photo" an
 
 Still open: the pinch-and-drag instructions live in the options footnote, so they're hidden while collapsed.
 
+## 2026-10-05 — Opening the options no longer shrinks the preview
+
+The same afternoon: "the preview shouldn't change size just because I opened the options. Keep it, and let the open panel cover it."
+
+The morning's fix was about *how* the preview grew and shrank. This one removes the growing and shrinking. The stage now leaves room only for the collapsed panel — the handle and the Save to Photos button — and the expanded options slide up over the lower part of the preview.
+
+![Options collapsed — the preview fills the stage](/blog/timetable-lock-screen-wallpaper/options-collapsed.png)
+
+![Options expanded — the preview is the same size in the same place, with the panel over it](/blog/timetable-lock-screen-wallpaper/options-expanded-over-preview.png)
+
+The print and share sheets still give the stage whatever the panel gives up. They differ because of what the preview is: print can be zoomed and panned, share scrolls, so a smaller stage leaves the picture at its size. The Lock Screen preview is one phone screen fitted whole into the stage, so a smaller stage shrinks all of it — about 40pt wide on an iPhone with the options open.
+
+The collapsed height is the handle (a constant 28pt) plus the measured button block. Subtracting the options list from the measured panel height wobbled mid-animation, and remembering the height "while collapsed" has nothing to remember when an iPad window rotates into this layout already expanded.
+
+Anything you do directly on the preview — dragging the card, fitting the photo — moved out of the collapsible options in the previous section, so it is done with the panel collapsed. Once that adjust row is in, the collapsed height gains one more row.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -193,3 +209,4 @@ Still open: the pinch-and-drag instructions live in the options footnote, so the
 - 2026-10-05 — Preview grows from the centre when options collapse (same curve on the second measurement); drag hint on the card
 - 2026-10-05 — Widgets chip becomes top / bottom / none: bottom widgets trim the band's lower edge (78.5% is an estimate)
 - 2026-10-05 — Drag-target chips (Timetable | Photo) and Reset moved out of the collapsible options into a row above Save; Reset applies to the selected one
+- 2026-10-05 — Preview keeps its scale when options expand: the stage only clears the collapsed panel, the open panel covers the rest
