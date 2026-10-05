@@ -1,9 +1,9 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T12:16:39+09:00
+date: 2026-10-05T12:27:53+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape."
+summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
 ---
 
 SuperTimetable's `…` menu now has "Lock Screen Wallpaper". It produces an image exactly the size of your screen; save it to Photos, set it as wallpaper, and this week's timetable is there before you unlock. It's free. Three decisions shaped it; the last one was reversed a day later.
@@ -83,7 +83,7 @@ Rejected: re-tapping the "Photo" chip to re-open the picker (a selected chip doe
 
 The first question after photo backgrounds shipped: can I zoom and move the photo? No — it was cropped once, centred, and that was it. If the part you cared about landed behind the card, nothing could be done. Six changes went out as six separate PRs.
 
-**Photo adjustment is a mode.** One-finger drag on the preview moves the timetable card. A pinch is unambiguously the photo, but a single-finger drag is used by both, so one gesture can't tell them apart. An **Adjust Photo** row under "Change Photo" switches the preview into photo mode: pinch scales (1–4×), drag moves, the card goes translucent and the footnote turns into instructions. Tap again ("Done Adjusting") to get the card back; "Reset" appears whenever the transform isn't the default. Because the mode is a button, there's no flipping a gesture mask on an in-flight gesture.
+**Photo adjustment is a mode.** One-finger drag on the preview moves the timetable card. A pinch is unambiguously the photo, but a single-finger drag is used by both, so one gesture can't tell them apart. A control picks what the drag moves: choose the photo and pinch scales (1–4×), drag moves, the card goes translucent and the footnote turns into instructions. "Reset" puts it back. Because the mode is a button, there's no flipping a gesture mask on an in-flight gesture. (This control started as an "Adjust Photo" row inside the options card; see the 2026-10-05 section below for where it lives now.)
 
 Two images back it. The **cropped** one is what gets composed; an **uncropped fill** image — the photo scaled so its short side meets the screen, about 13 MB on a 3× iPhone — is what the preview moves during the gesture. On release the original is re-cropped with the final zoom and offset. Both read one set of formulas (fill size, draw rect, clamp so the screen stays covered), so nothing jumps when you let go. The test uses a half-red, half-blue image: push it all the way right and the screen must show red; zoom 3× and the centre must stay put.
 
@@ -161,6 +161,28 @@ A separate "position" row under the old chip lost: it would sit dead whenever wi
 
 The 78.5% is an estimate — the button line minus one widget row's height — not a measurement. It gets corrected from a real Lock Screen capture; until then the card can still be dragged. No screenshot this time either: the simulator wouldn't stay up.
 
+## 2026-10-05 — Controls you use while looking at the preview don't belong in the collapsible options
+
+Adjusting the photo meant expanding the options, tapping "Adjust Photo", and collapsing them again. The panel opens collapsed, and expanded it squeezes the preview to about 40pt wide on an iPhone — so the button was reachable only when the result wasn't visible. "Reset" lived in the same place.
+
+Both now sit in one row right above the Save button, and stay there when the options are collapsed.
+
+![The adjust row under the collapsed options: Timetable chip selected, Reset dimmed](/blog/timetable-lock-screen-wallpaper/adjust-bar-timetable.png)
+
+![Photo chip selected and the photo zoomed: the card is translucent and Reset is active](/blog/timetable-lock-screen-wallpaper/adjust-bar-photo.png)
+
+| Control | What it does |
+|---|---|
+| **Timetable** chip | Drag moves the timetable card up and down |
+| **Photo** chip | Pinch to zoom, drag to move the photo; the card goes translucent |
+| **Reset** | Resets only the selected one — photo to 1× centred, timetable to its starting position |
+
+The row appears only with a photo background; with a solid colour there is just one thing to drag.
+
+Two chips replaced a single toggle whose label flipped between "Adjust Photo" and "Done Adjusting" — you had to read it to know what a drag would move. Floating the buttons over the preview lost: they would cover the surface you drag and pinch on. And Reset follows the selected chip, which is how the timetable got a reset too. When there is nothing to reset it dims instead of disappearing, so the chips don't shift.
+
+Still open: the pinch-and-drag instructions live in the options footnote, so they're hidden while collapsed.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -170,3 +192,4 @@ The 78.5% is an estimate — the button line minus one widget row's height — n
 - 2026-10-05 — iPhone Duo in the device list: cover screen only, inner screen as an alias, square hinge-side corners
 - 2026-10-05 — Preview grows from the centre when options collapse (same curve on the second measurement); drag hint on the card
 - 2026-10-05 — Widgets chip becomes top / bottom / none: bottom widgets trim the band's lower edge (78.5% is an estimate)
+- 2026-10-05 — Drag-target chips (Timetable | Photo) and Reset moved out of the collapsible options into a row above Save; Reset applies to the selected one
