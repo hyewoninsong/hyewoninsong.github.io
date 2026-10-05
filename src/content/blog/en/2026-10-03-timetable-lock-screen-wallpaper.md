@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T19:45:00+09:00
+date: 2026-10-05T20:40:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -254,7 +254,9 @@ The fix is a baseline. Remember the first value the recogniser reports and divid
 - **A zero threshold isn't enough.** `minimumScaleDelta: 0` engages slightly sooner; the recogniser's own decision time remains.
 - The baseline is cleared on release, and also when the drag target is switched mid-pinch, where no end event arrives.
 
-Why it slipped: pinch feel had been deferred to a device, and tests covered the math after the scale arrives, not where the recogniser's zero sits. Two-finger input still wasn't run in the simulator this time; only the ratio is under test.
+Why it slipped: pinch feel had been deferred to a device, and tests covered the math after the scale arrives, not where the recogniser's zero sits. Two-finger input still wasn't run in the simulator this time; only the math is under test. The print preview had the same structure and got the same fix.
+
+**Zoom now centres between the fingers.** It used to centre on the photo, so enlarging a corner meant zooming and then dragging it back. That makes the pinch write the offset as well as the scale — the same value the drag writes — so both now add only the change since their previous value instead of recomputing from the start. Drag changes are ignored once a pinch is active: we couldn't confirm which point the drag follows with two fingers down, and following one finger would slide the photo toward it. Moving both fingers while zooming is not supported yet.
 
 ## History
 
@@ -269,4 +271,4 @@ Why it slipped: pinch feel had been deferred to a device, and tests covered the 
 - 2026-10-05 — Preview keeps its scale when options expand: the stage only clears the collapsed panel, the open panel covers the rest
 - 2026-10-05 — Clock, widget and button guide now uses values measured from a real Lock Screen capture; button line 88% → 87.5%; short weekday in the date
 - 2026-10-05 — Band and guide move from screen ratios to a per-device measured table (12 iPhones, 5 iPads, simulator Lock Screen captures); no flashlight/camera on iPad; clock-size and bottom-button options left out
-- 2026-10-05 — Photo pinch no longer jumps at the start: later values are divided by the recogniser's first reported scale
+- 2026-10-05 — Photo pinch no longer jumps at the start: later values are divided by the recogniser's first reported scale; zoom centres between the fingers (print preview too)
