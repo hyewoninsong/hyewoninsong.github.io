@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T15:39:12+09:00
+date: 2026-10-05T19:45:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -242,6 +242,20 @@ Two options were built or scoped the same day and dropped. A clock-size control 
 
 iPad landscape is untouched. Without widgets the clock stays top-centre, not top-left as the guide draws it; with widgets they move to a left column, and where the clock goes then still needs a real capture.
 
+## 2026-10-05 — The pinch engaged late, then the photo jumped
+
+Spreading two fingers on the photo did nothing for a moment, then the photo grew in one frame before it started following. Lag and a jump look like two bugs; they were one.
+
+`MagnificationGesture` reports scale relative to the finger distance **at touch-down**, but it only recognises the pinch after the fingers have moved a little. Whatever spread happened while it was deciding is already in the first value — 1.1 or 1.2, not 1.0. We multiplied that straight into the starting zoom, so the whole wait landed in the first frame. On a scaled-down preview fingers start close together, which makes it worse: at 40pt apart, 8pt of movement is 20%.
+
+The fix is a baseline. Remember the first value the recogniser reports and divide every later value by it, so the moment of recognition is exactly the current zoom. The spread before recognition is dropped, as system zoom does.
+
+- **No catch-up animation.** Easing the backlog in would soften the jump but leave the photo moving at a different speed from the fingers.
+- **A zero threshold isn't enough.** `minimumScaleDelta: 0` engages slightly sooner; the recogniser's own decision time remains.
+- The baseline is cleared on release, and also when the drag target is switched mid-pinch, where no end event arrives.
+
+Why it slipped: pinch feel had been deferred to a device, and tests covered the math after the scale arrives, not where the recogniser's zero sits. Two-finger input still wasn't run in the simulator this time; only the ratio is under test.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -255,3 +269,4 @@ iPad landscape is untouched. Without widgets the clock stays top-centre, not top
 - 2026-10-05 — Preview keeps its scale when options expand: the stage only clears the collapsed panel, the open panel covers the rest
 - 2026-10-05 — Clock, widget and button guide now uses values measured from a real Lock Screen capture; button line 88% → 87.5%; short weekday in the date
 - 2026-10-05 — Band and guide move from screen ratios to a per-device measured table (12 iPhones, 5 iPads, simulator Lock Screen captures); no flashlight/camera on iPad; clock-size and bottom-button options left out
+- 2026-10-05 — Photo pinch no longer jumps at the start: later values are divided by the recogniser's first reported scale
