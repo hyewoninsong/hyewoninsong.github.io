@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-06T02:59:21+09:00
+date: 2026-10-06T08:45:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -351,9 +351,9 @@ UI tests can't capture a home screen widget. This time the widget's own source f
 
 ## Update, Oct 6 — switch the axis after the fact, and the display sheet gets its X back
 
-The vertical axis used to be a one-time choice at creation. Now the display sheet has a **Vertical Axis** chip row at the top; tap it and the timetable switches on the spot.
+The vertical axis used to be a one-time choice at creation. Now the display sheet has a pair of **Vertical Axis** tiles at the top; tap one and the timetable switches on the spot. It began as a row of text chips, but that did not read as the same choice you make with pictures when creating a timetable, so the same day it became tiles with the same icons.
 
-![The axis chips at the top of the display sheet, with By Time selected and the start/end time card below](/blog/timetable-axis-switch/time-cards.png)
+![The axis tiles at the top of the display sheet — the same icons as the new-timetable sheet, By Time outlined in blue](/blog/timetable-axis-switch/time-cards.png)
 
 ![Right after tapping By Period — the same slot now holds the period rules card, with the first period starting where the events start](/blog/timetable-axis-switch/period-cards.png)
 
@@ -396,3 +396,4 @@ The alert says how many events will go, not which ones. That is next.
 - Oct 3, late night — events spanning a removed period are counted in the confirmation ("shortened"), period-specific alert wording, Continue when nothing is deleted
 - Oct 5 — the full timetable widget draws period rows (period names step aside from the now-capsule); fixed last-period events drawn one row up when the lunch row is on
 - Oct 6 — axis switching from the display sheet (periods laid over the span the events cover, only gap-only events deleted after confirmation, one undo step); the X returns as discard-all; fixed a commit flag stuck by a spurious `onDisappear` on first presentation
+- Oct 6, morning — the axis choice went from text chips to icon tiles (same icons and selection style as the new-timetable sheet)
