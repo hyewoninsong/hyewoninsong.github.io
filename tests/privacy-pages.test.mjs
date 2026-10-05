@@ -9,6 +9,11 @@
 //   - an Android policy does not carry the iOS policy's IDFA / ATT / privacy
 //     manifest wording (docs/references/privacy-policy-host-and-platform-pitfall.md)
 //   - a policy states its effective date, and ko/en state the same one
+//   - a policy has the same section / list structure in both languages — a
+//     disclosure added to one language only (e.g. the SuperTimetable in-app
+//     purchase bullet of 2026-09-28) would leave the other store locale stale
+//   - the SuperTimetable iOS policy discloses in-app purchase status under
+//     Firebase Analytics and says Apple handles payment (docs/specs/website.md §4.2)
 //
 // Run with: node --test "tests/**/*.test.mjs"
 
@@ -116,4 +121,35 @@ test('a Korean policy is written in 합니다체', { todo: 'musicnote Android po
     if (endings.length > 0 || !text.includes('니다.')) casual.push(`${file}: ${endings.length} 해체 endings`);
   }
   assert.deepEqual(casual, []);
+});
+
+test('a policy has the same section and list structure in both languages', () => {
+  const count = (source, tag) => (source.match(new RegExp(`<${tag}[\\s>]`, 'g')) ?? []).length;
+  const uneven = [];
+  for (const file of policyPages('ko')) {
+    if (!existsSync(join(pagesDir('en'), file))) continue;
+    const ko = readPage('ko', file);
+    const en = readPage('en', file);
+    for (const tag of ['h2', 'h3', 'li']) {
+      if (count(ko, tag) !== count(en, tag)) uneven.push(`${file}: <${tag}> ko=${count(ko, tag)} en=${count(en, tag)}`);
+    }
+  }
+  assert.deepEqual(uneven, []);
+});
+
+test('the SuperTimetable iOS policy discloses in-app purchase status, with Apple handling payment', () => {
+  const wording = {
+    ko: [/앱 내 구매 여부/, /Apple이 처리/],
+    en: [/In-app purchase status/, /handled by Apple/],
+  };
+  const missing = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/timetable/privacy.astro');
+    const analytics = source.slice(source.indexOf('Firebase Analytics'), source.indexOf('Firebase Crashlytics'));
+    assert.ok(analytics.length > 0, `${locale}: Firebase Analytics section not found`);
+    for (const pattern of wording[locale]) {
+      if (!pattern.test(analytics)) missing.push(`${locale}/apps/timetable/privacy.astro: ${pattern}`);
+    }
+  }
+  assert.deepEqual(missing, []);
 });
