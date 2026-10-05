@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T14:03:21+09:00
+date: 2026-10-05T15:39:12+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -218,6 +218,30 @@ Three things changed: the guide now uses the measured values, the date uses the 
 
 The 78.5% that the section above called an estimate measured at 78.2%. The number derived by subtraction held up; the ones typed in by eye did not. They now live as named values that both the guide and the band read, with a test pinning them to the measured table. Still unmeasured: widgets at the top, iPad landscape, other screen sizes.
 
+## 2026-10-05 — Ratios measured on one phone were only right on that phone
+
+Everything fixed in the previous section was "a share of screen height", measured on one device. To see whether it held elsewhere, we captured the simulator's Lock Screen on twelve iPhones and four iPads.
+
+It doesn't. **The date and clock sit a fixed distance from the top**, not at a ratio. The date is about 21pt tall everywhere, and the gap from date to clock is 32.5pt on every iPhone. What moves is where that block starts, and it follows the device generation rather than the screen size.
+
+| | Screen height | Clock bottom | If scaled by ratio |
+|---|---|---|---|
+| iPhone 16 | 852 | 198 | 198 |
+| iPhone 17 Pro Max | 956 | 207 | 222 |
+| iPhone 14 Plus | 926 | 229 | 215 |
+
+One formula didn't survive either: the 13 mini and 11 Pro share a 375pt width and have different clock heights. So it is a table. Each entry in the device list carries its date centre, clock top and clock bottom, and both the safe band and the preview guide read them. Screens not in the table fall back to the old ratios.
+
+![Left: the guide in the preview. Right: the same device's real Lock Screen — date and clock at the same height](/blog/timetable-lock-screen-wallpaper/guide-vs-real-14-plus.png)
+
+Capturing the simulator's Lock Screen takes a UI test: press the lock button (`pressLockButton`), press Home once to wake the display, screenshot.
+
+The simulator draws no flashlight, camera or widgets, so the bottom of the iPhone layout is the one real measurement restated as "points from the bottom edge" — an estimate, and labelled as one. iPad was measured from a real device's edit screen and is not a big iPhone: no flashlight or camera at all, and widgets sit in a narrow centred box.
+
+Two options were built or scoped the same day and dropped. A clock-size control (iOS 26 lets the clock stretch past half the screen) — a big clock and a timetable don't belong on the same Lock Screen. And a bottom-buttons on/off chip — removing the buttons leaves the bottom widget row where it was, so the gain is 60pt. Only what moves the band a lot (widgets top or bottom) is a choice; the rest is fixed on the safe side and left to dragging.
+
+iPad landscape is untouched. Without widgets the clock stays top-centre, not top-left as the guide draws it; with widgets they move to a left column, and where the clock goes then still needs a real capture.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -230,3 +254,4 @@ The 78.5% that the section above called an estimate measured at 78.2%. The numbe
 - 2026-10-05 — Drag-target chips (Timetable | Photo) and Reset moved out of the collapsible options into a row above Save; Reset applies to the selected one
 - 2026-10-05 — Preview keeps its scale when options expand: the stage only clears the collapsed panel, the open panel covers the rest
 - 2026-10-05 — Clock, widget and button guide now uses values measured from a real Lock Screen capture; button line 88% → 87.5%; short weekday in the date
+- 2026-10-05 — Band and guide move from screen ratios to a per-device measured table (12 iPhones, 5 iPads, simulator Lock Screen captures); no flashlight/camera on iPad; clock-size and bottom-button options left out
