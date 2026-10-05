@@ -1,6 +1,6 @@
 ---
 title: "Adding App Lock, one flag ended up covering two different moments"
-date: 2026-10-04T19:20:00+09:00
+date: 2026-10-05T09:05:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Added Face ID app lock. Hiding the app-switcher thumbnail and deciding whether to re-prompt on return are two different questions — they ended up collapsing into the same flag."
@@ -42,6 +42,9 @@ only *when* it flips true: unconditionally on `.inactive`, and via a grace-perio
 `.active`. That check is a single pure function, `shouldLock(lockedAt:now:grace:)` — three inputs,
 one output, easy to pin down with boundary-value tests.
 
+(2026-10-05: this call was reversed a day later. Covering and requiring authentication are now
+separate states — see "One flag was not enough" below.)
+
 The toggle got a similar simplification. A SwiftUI custom `Binding` that only commits after
 authentication looks natural, but this app had already hit a race once with a segmented picker
 whose custom `Binding.set` mutated other state inline — taps got silently dropped. So the toggle
@@ -68,11 +71,67 @@ conditional view's appearance or disappearance.
 
 ## Where it stands
 
-The simulator has no command to toggle "Face ID enrolled" — that's Simulator.app's Features menu,
-GUI only. So this round verified the overlay itself: it appears, animates, and the settings UI
-behaves. The actual success/cancel paths through real biometric authentication still need a check
-on a physical device.
+The first round assumed Face ID enrollment in the simulator was menu-only, and verified just the
+overlay and its animation. That gap came back as a bug report the next day (below). A simulator UI
+test now drives the on and off round trip through a real prompt. The cold-launch cancel and grace
+bypasses are covered by state tests only, and none of this has been rerun on a physical device yet.
+
+## 2026-10-05 — One flag was not enough: the Face ID prompt deactivates the app too
+
+A day later a report came in from a real device. Turning App Lock off showed an "Authentication
+Failed" alert even though Face ID had passed, and the switch snapped back on. Turning it on worked.
+
+![The "Authentication Failed" alert over Settings — the App Lock switch is still on](/blog/timetable-biometric-app-lock/auth-failed-alert.png)
+
+The cause was the decision described above. The system Face ID prompt sits above the app's window,
+so showing it moves `scenePhase` to `.inactive`, and dismissing it brings `.active` back. A lock
+that covers the screen on `.inactive` takes that path for a prompt it raised itself.
+
+| # | What happened |
+|---|---|
+| 1 | The switch is turned off, so Settings raises the prompt |
+| 2 | The scene goes `.inactive`, so `isLocked` becomes true to hide the snapshot |
+| 3 | The lock screen appears and starts its automatic authentication |
+| 4 | The second evaluation overlaps the first, and the Settings one comes back failed |
+
+Turning it on never reaches step 2 because the lock is still off. Two more holes had the same root.
+Cancelling Face ID on a cold-launch lock screen dropped the lock, because the following `.active`
+read as "just peeked at the switcher". With a 1 or 5 minute grace period, backgrounding a locked
+app once more reset the timestamp and it unlocked on return.
+
+### Same picture on screen, different right to dismiss it
+
+There are now two states.
+
+| | Covered | Needs authentication |
+|---|---|---|
+| Raised by | inactive or background, launch lock, grace expired | launch lock, grace expired |
+| Cleared by | returning with no pending requirement, successful authentication | successful authentication only |
+
+The lock screen's automatic prompt follows "needs authentication", not "covered". Returning to
+the foreground leaves a pending requirement alone. Authentication calls cannot overlap. Pulling
+down Control Center no longer raises Face ID either.
+
+Skipping the cover while a Settings prompt is up lost because the switcher thumbnail would go
+uncovered. Serialising the prompts alone lost because both bypasses would remain.
+
+### Why it was missed, and what catches it now
+
+The first round verified a forced lock-screen capture and the grace-period function. No test ever
+raised a real prompt, and trying only the "on" direction by hand passes.
+
+The simulator can run this path. Face ID enrollment and matching are Darwin notifications, and a UI
+test runner lives inside the same simulator, so it can call `notify_post` itself: set the state of
+`com.apple.BiometricKit.enrollmentChanged` to 1 and post it, then post
+`com.apple.BiometricKit_Sim.pearl.match` to pass. On the old code the round trip ended with one
+alert and the switch still on. On the new code it ends with no alert and the switch off.
+
+The lock state object now takes its settings, authenticator and clock as inputs, so tests replay
+the scene transitions in order while an authentication is in flight. Those tests guard the two
+bypasses.
+
 
 ## History
 
 - 2026-10-04 — added App Lock (Face ID/Touch ID/passcode), off by default.
+- 2026-10-05 — turning the lock off failed with "Authentication Failed"; covering and requiring authentication became separate states.
