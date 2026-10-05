@@ -1,6 +1,6 @@
 ---
 title: "The small widget shows one card, not a cramped grid"
-date: 2026-10-04T15:30:00+09:00
+date: 2026-10-05T16:10:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The small Today widget gave up on a four-hour timeline grid in favor of a single card. Empty-day captions now name the next class day, the widget header opens display settings, and a lock-screen circular gauge turned out to render as a blank black square inside the app — SwiftUI's accessory styles only draw inside WidgetKit's own pipeline."
@@ -51,8 +51,25 @@ The project's default way of eyeballing a SwiftUI view — render it offscreen i
 
 ## Where it stands
 
-The circular gauge passed every test but hasn't been seen filling in on an actual lock screen yet — that's next. The same goes for the widgets' response to iOS 18's tint-only home screen theme: block backgrounds are wired to stay neutral while axis labels, capsules, and titles pick up the tint, but it hasn't been confirmed on a device with that theme turned on either.
+The circular gauge passed every test but hasn't been seen filling in on an actual lock screen yet — that's next. The tinted and clear home screen themes were also only wired up at this point, never seen on a device — and a hole showed up the next day. See the section below.
+
+## 2026-10-05 — On tinted and clear home screens, the capsules became blank white pills
+
+A store review said that with the clear theme, the widget's text and background were both white. Event blocks had been fixed the day before, but on a real device the current-time capsule and today's weekday capsule showed up as white pills with nothing in them.
+
+![A render imitating the tinted/clear themes — left, the current time and today's weekday are white blobs; right, 12:24 and the weekday are readable](/blog/timetable-widget-tinted-clear/capsule-before-after.png)
+
+With tinted or clear icons, WidgetKit redraws widgets in the `.accented` rendering mode. That mode **throws color away and keeps only opacity**: views marked `widgetAccentable()` get the tint color, everything else gets white — and in the clear theme the tint is near-white too. "White text on a blue capsule" only ever read because of color. With both at alpha 1, it is one shape.
+
+The earlier work sorted views into "takes the tint" and "doesn't". The capsule was sorted correctly; the question was wrong. `widgetAccentable()` picks a group. It does nothing to separate a capsule's ground from its text. In this mode the only thing that can is an alpha difference.
+
+So the fix is alpha: in accented mode only, the capsule ground drops to 0.3 while the text stays at 1 — still stronger than event blocks at 0.18, so "now" reads first. Punching the glyphs out of the pill with `blendMode(.destinationOut)` would have kept the pill solid, but there was no way to be sure the blend survives the widget snapshot. Alpha contrast was already proven by the blocks on the same screen.
+
+![Today widget — before on top, after lowering the capsule ground below](/blog/timetable-widget-tinted-clear/today-before-after.png)
+
+It slipped through because of a belief that only a real device could show this mode. Not true. Compile the widget sources into a tiny harness, set `.environment(\.widgetRenderingMode, .accented)`, render onto a transparent ground with `ImageRenderer`, then replace every pixel's color with one color and keep the alpha. Run it on the old source and the white pill appears exactly as on the device — both images above came from it. It can't imitate the glass material, but it answers "is this readable with alpha alone?", and it now runs whenever a widget puts text on a colored ground.
 
 ## History
 
 - 2026-10-04 — Small Today card, next-class-day caption, header tap to display settings, split Full widget intent, lock-screen circular gauge (unverified on device).
+- 2026-10-05 — Current-time and today capsules lost their text on tinted/clear home screens: capsule ground alpha 0.3, plus an alpha-only render probe.
