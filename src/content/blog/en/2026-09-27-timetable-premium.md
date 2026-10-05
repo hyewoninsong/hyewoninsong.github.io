@@ -1,6 +1,6 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-02T02:08:31+09:00
+date: 2026-10-05T10:44:50+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
 summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
@@ -229,6 +229,26 @@ These are Mac measurements, not iPhone accuracy or latency. Improving the first 
 
 The device-SDK build, 27 related unit tests and one immediate-create UI test passed. The wider run still had nine failures out of 1,622 tests; an unchanged baseline was not rerun, so those failures are not described as confirmed pre-existing issues. The cancellation test covers cancellation before recognition starts, not immediate interruption of an in-flight native Vision request. The new flow remains to be checked on the affected physical iPhone.
 
+## 2026-10-05 — Return to the task after purchasing
+
+After purchasing Premium to create or duplicate a timetable, tapping Get Started now resumes that request. Previously, the welcome screen simply closed. Users had to find the add button or the original timetable again.
+
+### Preserve the request until the payment sheet closes
+
+The app briefly remembers the requested timetable type or the original timetable's ID. Get Started authorizes continuation; the payment sheet's dismissal then opens the creation form or duplication name prompt. It does not create data automatically.
+
+We kept the welcome screen so users can read the purchase confirmation. Immediately opening another form would save a tap but interrupt that moment. Discarding the request entirely would make users repeat information the app already had.
+
+Closing the payment screen or cancelling clears the request. It is never persisted across launches. Before continuing, the app checks entitlement, the timetable limit and whether the original still exists. Another window may have changed those conditions while payment was open. The request is consumed once so repeated dismissal callbacks cannot replay it.
+
+### A failed restore is not an empty purchase history
+
+Restore previously discarded synchronization errors and returned only a purchase Boolean. A failed connection could therefore receive the same message as a successfully checked account with no purchase.
+
+The revised path checks entitlement after synchronization succeeds. Failure offers a retry; user cancellation returns quietly. A failed restore does not remove an existing entitlement.
+
+These changes connect each outcome to its next useful action. They are prepared as reviewable pull requests. Real-account purchase and restore behavior still needs device verification; that is separate from the automated state-transition checks.
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
@@ -239,3 +259,5 @@ The device-SDK build, 27 related unit tests and one immediate-create UI test pas
 - 2026-10-01 — optional local model download, direct grid editing, period/clock distinction, and verified input-image budgets
 - 2026-10-01 — process-headroom checks and scoped native errors after an iPhone crash report; corrected simulator probe assumptions
 - 2026-10-02 — custom-model removal and scoped cleanup, Apple table geometry, measured partial improvement and remaining limits
+
+- 2026-10-05 — resume creation or duplication after payment; distinguish restore failure from no purchase
