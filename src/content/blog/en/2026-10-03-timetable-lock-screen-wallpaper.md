@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T20:40:00+09:00
+date: 2026-10-06T02:29:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -258,6 +258,24 @@ Why it slipped: pinch feel had been deferred to a device, and tests covered the 
 
 **Zoom now centres between the fingers.** It used to centre on the photo, so enlarging a corner meant zooming and then dragging it back. That makes the pinch write the offset as well as the scale — the same value the drag writes — so both now add only the change since their previous value instead of recomputing from the start. Drag changes are ignored once a pinch is active: we couldn't confirm which point the drag follows with two fingers down, and following one finger would slide the photo toward it. Moving both fingers while zooming is not supported yet.
 
+## 2026-10-06 — Dragging the photo past its edge resists instead of stopping
+
+Drag the photo until its edge would come inside the screen and it no longer stops dead. It follows at about half speed, gets heavier, and springs back to cover the screen when you let go. The zoomed print preview does the same.
+
+The two screens started from opposite places: the Lock Screen photo hit a wall, while the print preview slid out with no resistance at all and snapped back on release. Both now use the system scroll view's curve — past the limit by `x`, the picture moves `(1 − 1/(x·0.55/d + 1))·d`, where `d` is the container length on that axis.
+
+**The catch was that drags are read as steps.** Drag and pinch both edit the same offset, so each reads the difference from its previous value. But rubber-banding is a function of how far the finger went. Add a step to the already-compressed value and the resistance compounds: one 60pt drag and three 20pt drags land in different places, and dragging back outruns the finger.
+
+The fix is to invert the curve each step — recover the finger's position from the displayed one, add the step, compress again. The inverse is closed-form, so one stored value is enough.
+
+- A separate "uncompressed" state lost: pinch edits the same offset, and two copies overwrite each other.
+- Scaling each step by the local slope lost: at full stretch the slope is zero, so the photo would not come back either.
+- The inverse is capped at 90% of the container length; beyond that the finger position runs to infinity.
+
+One more case: with the photo pulled past its edge, a second finger landing made the pinch's hard clamp erase the overshoot in one frame. Pinch now sets the overshoot aside and puts it back; it is released once, on lift.
+
+The saved image is unchanged — compositing still reads the hard limit only. Feel on a real device is unverified; the math is pinned by tests.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -272,3 +290,4 @@ Why it slipped: pinch feel had been deferred to a device, and tests covered the 
 - 2026-10-05 — Clock, widget and button guide now uses values measured from a real Lock Screen capture; button line 88% → 87.5%; short weekday in the date
 - 2026-10-05 — Band and guide move from screen ratios to a per-device measured table (12 iPhones, 5 iPads, simulator Lock Screen captures); no flashlight/camera on iPad; clock-size and bottom-button options left out
 - 2026-10-05 — Photo pinch no longer jumps at the start: later values are divided by the recogniser's first reported scale; zoom centres between the fingers (print preview too)
+- 2026-10-06 — Photo drag (and print preview pan) rubber-bands past the edge and springs back: each step inverts the curve to recover the finger position
