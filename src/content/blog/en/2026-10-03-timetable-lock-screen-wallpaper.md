@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-05T09:40:48+09:00
+date: 2026-10-05T11:38:24+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape."
@@ -125,6 +125,24 @@ Corners could not be one number: the hinge side is nearly square, the outside is
 
 One thing is unmeasured: the simulator's Lock Screen draws no flashlight or camera buttons, so the bottom of the band is unverified. And on a screen this short, a 08–20 timetable with title and widget row overflows the band slightly; turning the widget row off fits it. Both get rechecked on real hardware.
 
+## 2026-10-05 — Collapsing the options made the preview grow "left to right"
+
+Collapsing the options panel makes the preview bigger. It was supposed to grow from the centre; it looked like it unrolled from the left. Stretching the 0.3 s transition to 4 s and capturing the middle showed why.
+
+![Before, mid-collapse — the frame is still narrow but the contents are already at full scale, so only the clock's "9" and one and a half widgets show](/blog/timetable-lock-screen-wallpaper/collapse-mid-before.png)
+
+The phone-shaped frame was fine: centred, growing as the panel height eased. The contents weren't. Clock, widgets and the timetable card are positioned by a scale derived from measuring that frame with `onGeometryChange`, which never reports in-between values — it delivers the final size once, when the transition starts. So the contents jumped to full scale on frame one, pinned to the frame's top-left, and the growing clip revealed them from the left.
+
+We had met this before on the print sheet and the fix was already in place for the panel height. What was missed is the second measurement, taken inside the stage that the first one sizes. Fixing only the source leaves the next measurement down the chain to snap the same way — and with top-leading contents inside a clip, it gets reported as "wrong direction", not "it jumps".
+
+The fix is to apply the same curve where the frame size is received, skipping it for the very first measurement.
+
+![After, same moment — clock, widgets and card scaled with the frame, centred](/blog/timetable-lock-screen-wallpaper/collapse-mid-after.png)
+
+One more thing: dragging the preview is the point of this sheet, but the only explanation sat in small print under the options, and the options panel opens collapsed. There is now a "Drag to reposition" capsule on the card. It disappears on the first drag, is never in the saved image, and shrinks to just the arrow when the preview gets too narrow for the text.
+
+![The sheet opens with a "drag to reposition" capsule on the card](/blog/timetable-lock-screen-wallpaper/drag-hint.png)
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -132,3 +150,4 @@ One thing is unmeasured: the simulator's Lock Screen draws no flashlight or came
 - 2026-10-04 — Device dropdown (defaults to this device, matched by screen pixels) + photo background (`PhotosPicker`, no read permission)
 - 2026-10-04 — Pinch/drag photo adjustment, background colour via the style popover, card shadow over photos (positive offset is down), iPad landscape, per-device corner radius, Open Photos, menu row moved — six PRs
 - 2026-10-05 — iPhone Duo in the device list: cover screen only, inner screen as an alias, square hinge-side corners
+- 2026-10-05 — Preview grows from the centre when options collapse (same curve on the second measurement); drag hint on the card
