@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-05T11:27:00+09:00
+date: 2026-10-06T02:59:21+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -349,6 +349,31 @@ A widget can't import app code, so the period-to-row mapping had to be written a
 
 UI tests can't capture a home screen widget. This time the widget's own source files were compiled into a tiny executable, run headless inside the simulator, and rendered to PNG with `ImageRenderer` — in class, on a break, out of range, with lunch, with 14 and 24 periods. It has not yet been checked on a real home screen.
 
+## Update, Oct 6 — switch the axis after the fact, and the display sheet gets its X back
+
+The vertical axis used to be a one-time choice at creation. Now the display sheet has a **Vertical Axis** chip row at the top; tap it and the timetable switches on the spot.
+
+![The axis chips at the top of the display sheet, with By Time selected and the start/end time card below](/blog/timetable-axis-switch/time-cards.png)
+
+![Right after tapping By Period — the same slot now holds the period rules card, with the first period starting where the events start](/blog/timetable-axis-switch/period-cards.png)
+
+Events are never converted: they are stored as real times in both modes, so only the axis changes — plus any event the new axis has no room for.
+
+| Direction | Axis | Events |
+|---|---|---|
+| Period → time | The real hours the periods covered become the visible range | All kept |
+| Time → period | Default rules (50-minute classes, 10-minute breaks) laid over **the span your events cover** | Only events that overlap no period (inside a lunch or break gap) are deleted, after a confirmation |
+
+Laying periods over the visible range would have produced 17 periods for a 6am–midnight grid; using the stock seven periods from 9:00 would have dropped anything in an 8:30 schedule into the gaps. So the periods start at the first event and stop once the last one is covered. The first version still lost data: with only two periods, the default "lunch after period 4" slid to "after period 1", and the second of two back-to-back classes fell into the lunch gap. Four periods or fewer now get no lunch, and the round trip is a test.
+
+A switch is one undo step — a whole-timetable snapshot restores the type, the period list, the lunch row and any deleted events.
+
+**Why the X came back.** The sheet lost its cancel button in September because changes apply live. But shrink the range and you get "2 events will be deleted"; tap Cancel there and you are back in the sheet with no way to tell what to revert. The X now discards everything done since the sheet opened, axis switch included. Swiping down still confirms.
+
+Adding it exposed an older bug. When the sheet auto-opens right after creating a timetable, its content's `onDisappear` fires once spuriously — appear, disappear 7 ms later, appear again — and the "commit only once" flag was left set, so the checkmark silently saved nothing. `onDisappear` means "not visible right now", not "closed"; the flag is now cleared on reappear.
+
+The alert says how many events will go, not which ones. That is next.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -370,3 +395,4 @@ UI tests can't capture a home screen widget. This time the widget's own source f
 - Oct 3, night — block edges quantised to half-period lines at the point of entry (old 30-minute clamp values, odd-length rounding, magnet-snap spread); edit stripes per half period
 - Oct 3, late night — events spanning a removed period are counted in the confirmation ("shortened"), period-specific alert wording, Continue when nothing is deleted
 - Oct 5 — the full timetable widget draws period rows (period names step aside from the now-capsule); fixed last-period events drawn one row up when the lunch row is on
+- Oct 6 — axis switching from the display sheet (periods laid over the span the events cover, only gap-only events deleted after confirmation, one undo step); the X returns as discard-all; fixed a commit flag stuck by a spurious `onDisappear` on first presentation
