@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-04T14:39:45+09:00
+date: 2026-10-05T10:30:15+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown."
@@ -106,7 +106,7 @@ The collapsed handle doesn't say "Options." It shows the current values: "08:00�
 
 Start and end default to the base timetable's (the first "me" chip) display range. Manual changes lived only on this screen at first — nothing was saved (since October 2 the range persists on the device; see below). Pull the end time before the start time, and the display settings sheet would show a red strikethrough and block saving. Here the other side just moves one hour instead, so an invalid state never exists in the first place — there's nothing to delete or save, it's a view-only range.
 
-The range shortcut row is computed from the current range: "Widen range" appears when someone's schedule falls outside it, "Match mine" when the range differs from the base timetable's. Narrow the range by hand, and "Widen" still works — it recalculates from whatever range is showing now.
+The range shortcut row is computed from the current range: "Widen range" appears when someone's schedule falls outside it, "Match mine" when the range differs from the base timetable's. Narrow the range by hand, and "Widen" still works — it recalculates from whatever range is showing now. (On October 5 both shortcuts were replaced by a single reset button — see below.)
 
 Two other layouts lost. Keeping the controls on top would crowd the same row as the people chips, which are the thing being compared; top for who, bottom for how to filter reads better. A separate settings sheet means a round trip every time a value changes, with no way to see the grid update live. The print and share sheets had already solved this with a collapsing panel, so this reused that grammar instead of inventing a third one.
 
@@ -380,6 +380,18 @@ Smaller changes the same day: toggling a chip cross-fades the layers over 0.3 s,
 
 The first probe could not find the dropdown. In the accessibility tree the menu button carried the chip's identifier, not its own: putting `.accessibilityIdentifier` **after** `.overlay { Menu }` lets it cover the overlay too. It is the container-identifier pitfall in a new shape — a button with an overlay rather than a tap container — which is why the source scan written for the third recurrence did not catch it. The identifier moved before the overlay, and a second scan now looks for controls inside an overlay followed by an identifier.
 
+## 2026-10-05 — two range shortcuts became one reset
+
+The bottom row of the options panel used to offer "Widen range" and "My range". It is now a single button, **Reset to Base Timetable**: one tap puts the start hour, end hour and days back to the base timetable's range.
+
+![The reset button at the bottom of the options panel, enabled because Days was switched to Every day](/blog/timetable-free-time-finder/range-reset-button.png)
+
+When the shortcuts were added they were the fastest way to change the range. Since then hours got wheels and days got chips, all in the same card, so a one-direction shortcut was a third way to do the same thing. Undoing a hand-tuned range is different — it means setting two wheels and a chip — so that is the one shortcut worth keeping. The old label also said "mine", which is ambiguous once you compare several of your own timetables; the new one names where you land.
+
+Suggesting a wider range when someone's schedule falls outside it still happens, in the suggestions shown when nothing matches.
+
+The row is also always there now. It used to appear only when there was something to widen or reset, so turning a wheel one notch made the card a row taller and nudged the grid margin that tracks the panel height. Now the button simply dims when there is nothing to reset.
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -405,3 +417,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 - 2026-10-02 evening — new timetables enter drawn → inverted (free time in light green) → merged; busy blocks turn background-colored on inversion
 - 2026-10-03 — iPhone filter row moved into the options panel (handle summarizes "08:00–20:00 · 30 min+ · Everyone"), two-line selection card with icon buttons, grid margin measures card + panel, selection border drawn as a sibling layer above the green layers
 - 2026-10-04 — one dropdown per chip (long-press, edit mode and split segment removed), Use as base, Send to this person, Days chips, toggle cross-fade, stale-timetable banner, 3-hour minimum, the three October 1 features rebuilt, a second identifier scan
+- 2026-10-05 — "Widen range" / "My range" shortcuts replaced by one Reset to Base Timetable button (always visible, disabled at the base range)
