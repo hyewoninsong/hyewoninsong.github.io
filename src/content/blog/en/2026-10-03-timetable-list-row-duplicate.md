@@ -1,6 +1,6 @@
 ---
 title: "Switch the list to titles and Duplicate was gone"
-date: 2026-10-06T19:50:00+09:00
+date: 2026-10-06T23:15:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The title-only view of the timetable list had no duplicate button — the action only lived in a long-press menu. Each row now has its own, and two other placements lost."
@@ -10,7 +10,9 @@ The timetable list has two views: preview cards you swipe through, and a plain l
 
 ## One duplicate button per row
 
-Every row in the title list now ends with a duplicate icon, after the selection checkmark. Tapping it opens the same "Duplicate Timetable" name alert the card view uses, pre-filled with "Copy." At the 20-timetable limit the button stays put but dims and stops responding. In edit mode the reorder handle takes that spot, so the button steps out. The long-press menu keeps its Duplicate item.
+This button was removed three days later; the current design is in the last 2026-10-06 section. What follows is the decision as it stood.
+
+Every row in the title list then ended with a duplicate icon, after the selection checkmark. Tapping it opens the same "Duplicate Timetable" name alert the card view uses, pre-filled with "Copy." At the 20-timetable limit the button stays put but dims and stops responding. In edit mode the reorder handle takes that spot, so the button steps out. The long-press menu keeps its Duplicate item.
 
 ![Each row in the title list ends with a duplicate icon; the selected row shows its checkmark first](/blog/timetable-list-row-duplicate/list-row-duplicate.png)
 
@@ -47,7 +49,7 @@ Each direction now has a target.
 | Cards → titles | The row of the card you were previewing |
 | Titles → cards | The selected timetable (the checked row) |
 
-The targets differ because "what I'm looking at" means different things. The card view has a centered card. The title list has only the check. In edit mode the check marks the delete target, so that one stays centered when you return to cards. An automatic scroll must never change what gets deleted.
+The targets differ because "what I'm looking at" means different things. The card view has a centered card. The title list has only the check. In edit mode the check marks the duplicate/delete target, so that one stays centered when you return to cards. An automatic scroll must never change what gets deleted.
 
 Titles → cards worked first try: set the centered card just before the view value changes, and the new pager is built already there.
 
@@ -65,7 +67,39 @@ The fix is about who owns the value's lifetime. The list scrolls on every appear
 
 Verified with eighteen timetables in both directions. Under a modifier that is attached and detached by a conditional, "once, on appear" may not be once.
 
+## 2026-10-06 — The per-row buttons came off; both views share one button bar
+
+Three days later the decision above was reversed. With several timetables, every row ended in a duplicate icon, and the user's reaction was "there are too many duplicate buttons on the right." Making the action visible had filled the screen with it. And duplicate was not the only mismatch: the two views did the same jobs in different places, and there was no way to load a received timetable file from inside the list.
+
+Both views now follow one frame. Normally you pick and create. Operations happen in edit mode, on one target.
+
+| | Normal | Edit |
+|---|---|---|
+| Bottom bar | Import from file · New timetable | Duplicate · Delete |
+| Target | none (tap opens) | centered card, or the checked row |
+| Reorder | — | arrows on the card, or drag the row |
+
+![Card view, normal: an import button and New Timetable at the bottom, nothing floating on the card](/blog/timetable-list-row-duplicate/bar-normal-cards.png)
+
+![Card view, edit: the bottom bar becomes Duplicate and Delete; only the reorder arrows sit on the card](/blog/timetable-list-row-duplicate/bar-edit-cards.png)
+
+![Title list, normal: no per-row duplicate icons, same bottom bar as the card view](/blog/timetable-list-row-duplicate/bar-normal-titles.png)
+
+The floating button on the card, the per-row button, and the long-press menu are all gone. Delete is irreversible, so it stays a separate button rather than sharing a group with Duplicate.
+
+The earlier objection to a single button in the title list was that you couldn't change its target, because tapping a row closes the sheet. Edit mode already had the answer: there, a tap moves the check instead. Delete was using that check as its target, so Duplicate now does too. Entering edit mode starts the check on the open timetable, so the two buttons are never both locked with no hint why.
+
+Three options lost. Keeping Duplicate in normal mode leaves the row of icons, or needs a separate "pick a row to duplicate" step — built once, then dropped, because edit mode's check already is that step. Moving only the title list's Duplicate into edit mode was rejected first for making the views differ; moving both removed the objection. Putting file import inside the New Timetable sheet is tidier but one level deeper, and that sheet is about choosing a timetable type.
+
+The cost: duplicating from the card view takes one more tap.
+
+File import is a new entry point, not a new path. It calls the same function as opening a timetable file from the Files app, so the read-failure alert and the count limit come with it. One difference: a file opened from outside asks whether it is a friend's timetable or yours; a file picked from the list goes straight into your timetables, because picking it there is the answer.
+
+The test from above still holds — is there a visible entry point. What changed is that the entry point is one bar acting on a chosen target, not a button on every row.
+
+
 ## History
 
 - 2026-10-03 — A duplicate button on every title row
 - 2026-10-06 — Keeping scroll position across the view switch
+- 2026-10-06 — Per-row duplicate removed; one button bar for both views, plus file import
