@@ -1,6 +1,6 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-05T10:30:15+09:00
+date: 2026-10-06T19:35:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown."
@@ -22,7 +22,7 @@ Who is busy only shows up when you tap a gray cell. Tap a green block and a card
 
 ![A green free block selected, with a card showing the day, time, length and 'all free'](/blog/timetable-free-time-finder/free-slot-selected.png)
 
-A list view sorts the gaps longest first. Tap a row to copy it, or use Copy All.
+(The list view was removed on October 6 — see that section.) A list view sorts the gaps longest first. Tap a row to copy it, or use Copy All.
 
 ![Free slots listed from longest to shortest](/blog/timetable-free-time-finder/free-slot-list.png)
 
@@ -392,6 +392,41 @@ Suggesting a wider range when someone's schedule falls outside it still happens,
 
 The row is also always there now. It used to appear only when there was something to widen or reset, so turning a wheel one notch made the card a row taller and nudged the grid margin that tracks the panel height. Now the button simply dims when there is nothing to reset.
 
+## 2026-10-06 — one green, and gray that grows when someone joins
+
+For a week this screen kept gaining things: shade layers, a list view, a copy button, image export, two participation rules. Today went the other way. Fewer choices, fewer ways out, and a grid that says one thing.
+
+![The grid with a single green and gray; the selection card has one button, Propose a time](/blog/timetable-free-time-finder/one-green-card.png)
+
+| Before | Now |
+|---|---|
+| Green layers that darken with the number of free people | One green where the chosen number of people are free together the whole time; everything else gray |
+| "Headcount at each moment" or "Same people throughout" | Same people throughout, only |
+| Grid ↔ list toggle, Copy all | Grid only |
+| Propose and Copy on the card | Propose only |
+| Share (whole comparison as an image) | Removed |
+| "Sat 14:00–15:00 (1 hr), how about it?" | "Sat 14:00–15:00 (1 hr)" |
+
+The layers carried more information but needed explaining. The headcount is already chosen in a menu, so the grid only has to paint that answer. The per-moment rule turned stretches green where the free people changed midway, and you cannot schedule into those.
+
+### From the previous result straight to the new one
+
+The three-step entrance from October 2 showed the newcomer's timetable alone for 2.5 seconds before merging. What you want to know after adding someone is how much free time you lost. So the grid now goes directly from the old result to the new one: gray grows, green shrinks by the same amount, and removing someone runs it backwards. Toggling a chip does the same.
+
+The hard case is a class landing in the middle of a green block, which turns one block into green, gray, green. Carrying view identity and fading the rest is short to write, but the background flashes through while one green shrinks and the other fades in. Instead both pictures are expressed as the **same list of pieces**. Each piece has an old extent and a new one, the pieces tile the whole range in both states, and a piece that exists on one side only has zero length on the other. A 12–14 class in a 9–18 green day splits the green at 13:00 and grows the gray from that single point.
+
+SwiftUI needs two beats for this: first swap, without animation, to pieces that look identical to the old picture, then one frame later send them to their new extents. In a single frame the new views have no "before" to interpolate from. Same-colored pieces that touch are drawn without the gap and rounded corners on the shared edge, so the swap is invisible.
+
+Rules below "everyone" can produce overlapping green candidates, which cannot be lined up. Those days just cross-fade, and overlapping greens get a background-colored outline.
+
+### The picker list was glued to its neighbors
+
+In the sheet where you pick which timetable to send, the title list was a stock list. With many timetables, the white rows were cut flat right under the hint text and right above the name card. Padding inside the scroll view disappears as soon as you scroll, so the list now lives in one rounded window with the spacing outside it.
+
+![Timetable picker with the title list as one rounded card, apart from the hint text and the name card](/blog/timetable-free-time-finder/send-title-card.png)
+
+The piece list is covered by tests and the settled screens by captures. The in-between frames have not been checked on a device yet.
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -418,3 +453,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 - 2026-10-03 — iPhone filter row moved into the options panel (handle summarizes "08:00–20:00 · 30 min+ · Everyone"), two-line selection card with icon buttons, grid margin measures card + panel, selection border drawn as a sibling layer above the green layers
 - 2026-10-04 — one dropdown per chip (long-press, edit mode and split segment removed), Use as base, Send to this person, Days chips, toggle cross-fade, stale-timetable banner, 3-hour minimum, the three October 1 features rebuilt, a second identifier scan
 - 2026-10-05 — "Widen range" / "My range" shortcuts replaced by one Reset to Base Timetable button (always visible, disabled at the base range)
+- 2026-10-06 — one green (shade layers removed), same-people rule only, list view / card copy / image share / "how about it?" removed, gray-grows-green-shrinks transition when people join or leave (three-step entrance removed), picker title list as a rounded card
