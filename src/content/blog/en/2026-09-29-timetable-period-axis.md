@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-06T08:45:00+09:00
+date: 2026-10-06T10:40:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -361,7 +361,7 @@ Events are never converted: they are stored as real times in both modes, so only
 
 | Direction | Axis | Events |
 |---|---|---|
-| Period → time | The real hours the periods covered become the visible range | All kept |
+| Period → time | The real hours the periods covered become the visible range; the period rules are remembered | All kept |
 | Time → period | Default rules (50-minute classes, 10-minute breaks) laid over **the span your events cover** | Only events that overlap no period (inside a lunch or break gap) are deleted, after a confirmation |
 
 Laying periods over the visible range would have produced 17 periods for a 6am–midnight grid; using the stock seven periods from 9:00 would have dropped anything in an 8:30 schedule into the gaps. So the periods start at the first event and stop once the last one is covered. The first version still lost data: with only two periods, the default "lunch after period 4" slid to "after period 1", and the second of two back-to-back classes fell into the lunch gap. Four periods or fewer now get no lunch, and the round trip is a test.
@@ -373,6 +373,14 @@ A switch is one undo step — a whole-timetable snapshot restores the type, the 
 Adding it exposed an older bug. When the sheet auto-opens right after creating a timetable, its content's `onDisappear` fires once spuriously — appear, disappear 7 ms later, appear again — and the "commit only once" flag was left set, so the checkmark silently saved nothing. `onDisappear` means "not visible right now", not "closed"; the flag is now cleared on reappear.
 
 The alert says how many events will go, not which ones. That is next.
+
+## Update, Oct 6 later — a round trip claimed it would delete events
+
+On a real device the same day: a period timetable with lunch after period 6, switched to time and straight back, announced "2 events will be deleted". Coming back, the periods were not restored but rebuilt from the default rules, whose lunch sits after period 4 — so what used to be period 5 became the lunch gap, and two half-period classes there had nowhere to go. The round-trip test existed, but only for a default-rule timetable, which by construction comes back to itself.
+
+Two changes. **Periods are remembered**: switching to time keeps the period list and lunch setting in the save file, and switching back restores them exactly. And **nothing is deleted at the moment of switching**: the periods you land on are a starting point, so the check for events that fit no period runs once, when you confirm the sheet after adjusting the rules. Until then the events stay at their clock times while the periods move underneath.
+
+The "Time → period" row in the table above describes the first version; periods now come from memory when there is one, and deletion waits for the checkmark.
 
 ## History
 
@@ -397,3 +405,4 @@ The alert says how many events will go, not which ones. That is next.
 - Oct 5 — the full timetable widget draws period rows (period names step aside from the now-capsule); fixed last-period events drawn one row up when the lunch row is on
 - Oct 6 — axis switching from the display sheet (periods laid over the span the events cover, only gap-only events deleted after confirmation, one undo step); the X returns as discard-all; fixed a commit flag stuck by a spurious `onDisappear` on first presentation
 - Oct 6, morning — the axis choice went from text chips to icon tiles (same icons and selection style as the new-timetable sheet)
+- Oct 6, later — axis round trips restore the remembered period rules; switching to periods no longer deletes, the checkmark asks once
