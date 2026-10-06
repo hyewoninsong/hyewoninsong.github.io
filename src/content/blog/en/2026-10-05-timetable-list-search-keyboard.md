@@ -1,6 +1,6 @@
 ---
 title: "Opening the keyboard to search squashed the timetable card"
-date: 2026-10-05T18:55:00+09:00
+date: 2026-10-07T00:48:49+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Tapping the search field in the timetable list redrew each card at half height. The modifier meant to prevent that was already in the code, attached in a place where it never did anything. That evening the card view lost its search field altogether."
@@ -77,9 +77,43 @@ VStack { … }
     .modifier(TitleListSearch(isEnabled: style == .titles, text: $query))
 ```
 
-Same placement argument, different result depending on where the modifier sits. We confirmed this by moving it within one build on an iOS 27.2 simulator; we did not find out why. It is the same family as the keyboard issue: modifiers that feed the navigation bar go on the outermost view inside the stack. Filtering worked either way, so only a capture showed it.
+Same placement argument, different result depending on where the modifier sits. We confirmed this by moving it within one build on an iOS 27.2 simulator; we did not find out why. It is the same family as the keyboard issue: modifiers that feed the navigation bar go on the outermost view inside the stack. That turned out to be half the rule; the next section has the other half. Filtering worked either way, so only a capture showed it.
+
+## 2026-10-07: on the outermost view, attached late, it went to the bottom again
+
+Two days later a report came in: the search field sometimes shows up under the "New Timetable" button. The modifier was still where we had put it.
+
+"Sometimes" was the clue. We measured the field's y position along each way into the screen.
+
+| Path | Search field y | Button y |
+|---|---|---|
+| Sheet opened in card view, then switched to the title list | 808 | 727 |
+| Same sheet after toggling edit mode or the new-timetable sheet | 808 | 727 |
+| Sheet opened in the title list | 132 | 779 |
+| Switching back and forth after that | 132 | 779 |
+
+Placement is decided when the `NavigationStack` is first created and is not revisited. A stack born in card view has no search; attaching `.searchable` afterwards ignores `placement`. The view mode is persisted, so only people who last closed the sheet in card view hit it.
+
+The fix is one line: rebuild the stack when the view mode changes.
+
+```swift
+NavigationStack {
+    VStack { … }
+        .modifier(TitleListSearch(isEnabled: style == .titles, text: $query))
+}
+.id(style)
+```
+
+Every path now measures 132. A rebuilt stack reruns its `.task`, so the one-time initial scroll moved outside the stack. Query and edit-mode state already lived outside it.
+
+Two options lost: drawing our own search field (reliable position, but we would rebuild the system field's look, cancel button and keyboard handling), and leaving `.searchable` always attached (which brings back the second header row in card view).
+
+We missed it twice for the same reason. The original fix was checked with the sheet opened in the title list. The first check of this fix also passed without touching the bug, because the previous run had left the mode on the title list. A check on a screen with a persisted setting has to put that setting back, reopen the screen, and measure each way in.
+
+We still do not know why. Measured on an iOS 27.2 simulator; scroll position after switching with many timetables is not yet captured.
 
 ## History
 
 - 2026-10-05, midday: the card no longer shrinks when the search keyboard appears.
 - 2026-10-05, evening: search removed from card view, kept in the title list.
+- 2026-10-07: fixed the search field landing at the bottom when the sheet was opened in card view and switched.
