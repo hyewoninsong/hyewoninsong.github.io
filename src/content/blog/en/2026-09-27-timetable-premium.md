@@ -1,10 +1,12 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-05T10:44:50+09:00
+date: 2026-10-06T13:34:00+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
-summary: "One purchase unlocks multiple timetables, alarms, custom colors, and calendar export. Editing and sharing stay free, and everyone who already installed the app gets it all for free."
+summary: "We added a one-time Premium purchase, then removed it on 2026-10-06 and made everything free. What we chose not to lock, what we did lock, and what is left behind when a paywall comes out."
 ---
+
+> 2026-10-06 — This Premium tier no longer exists. The in-app purchase is gone and multiple timetables, alarms, custom colors, and calendar export are free. What follows is the record of the paid period; the removal is the last section.
 
 The timetable app now has a one-time Premium unlock. Making, editing, and sharing a timetable stays free. Only a second timetable, alarms, and self-made colors sit behind the purchase.
 
@@ -249,6 +251,34 @@ The revised path checks entitlement after synchronization succeeds. Failure offe
 
 These changes connect each outcome to its next useful action. They are prepared as reviewable pull requests. Real-account purchase and restore behavior still needs device verification; that is separate from the automated state-transition checks.
 
+## 2026-10-06 — The in-app purchase is gone and everything is free
+
+A second timetable, an alarm, a custom color, a calendar export: none of them opens a purchase screen anymore. The Premium card at the top of Settings and "Restore Purchases" are gone too.
+
+### We deleted the purchase code instead of leaving it unlocked
+
+The shortest change was to make the "is it unlocked" check always return true. One line. We did not take it.
+
+- The lock branches, the purchase screen, and the restore messages would stay as dead code that the next person has to read around.
+- The app asked StoreKit about transactions on every launch. With nothing to sell there is no reason to ask, and on a device with no account that query brings up a sign-in prompt.
+- Everything attached to purchasing would linger: purchase analytics, the "Purchase History" entry in the privacy manifest, the paid-feature line at the end of the store description.
+
+So the entitlement state, the purchase screen, every gate, 31 strings in 8 languages, and the local StoreKit test configuration all went in one change. The only limit left on timetables is the existing cap of 20.
+
+### The product has to come down in the right order
+
+Removing the product from sale first would strand people still on the old version: their purchase screen cannot load the product and sits on "Try Again", with no way to unlock anything until they update.
+
+So the build without purchases ships first, and the product comes off sale only after that version is live. The store description loses its paid-feature line with that same version, not before. The privacy label follows.
+
+### One thing does not come back
+
+On 2026-09-29 we decided that custom colors on a confirmed-free device would be replaced by the nearest basic color, and that the change would not be undone. We did not record the original color. That path is deleted now, but events that were already recolored stay recolored. The list of colors you created is intact, so you can pick them again.
+
+The lesson: when a conversion cannot be undone, keeping the original value next to it is cheap. The policy reversed within a week and the data could not follow.
+
+There is nothing the app can do for people who already paid. It no longer reads purchase state, and refunds go through Apple.
+
 ## History
 
 - 2026-09-27 — one-time Premium, what stays free, existing users unlocked
@@ -261,3 +291,4 @@ These changes connect each outcome to its next useful action. They are prepared 
 - 2026-10-02 — custom-model removal and scoped cleanup, Apple table geometry, measured partial improvement and remaining limits
 
 - 2026-10-05 — resume creation or duplication after payment; distinguish restore failure from no purchase
+- 2026-10-06 — in-app purchase removed, purchase code deleted outright, the order for taking the product off sale, recolored custom colors cannot be restored
