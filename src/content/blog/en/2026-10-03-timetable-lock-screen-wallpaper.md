@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-06T02:29:00+09:00
+date: 2026-10-06T17:41:52+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -276,6 +276,27 @@ One more case: with the photo pulled past its edge, a second finger landing made
 
 The saved image is unchanged — compositing still reads the hard limit only. Feel on a real device is unverified; the math is pinned by tests.
 
+## 2026-10-06 — See it at real size before saving
+
+There's now a full-screen preview button at the top right of the sheet, next to Share. It shows the clock and widget guide and the timetable card across the whole screen. When you're making a wallpaper for the device in your hand, the scale is exactly 1 — the size it will have on the Lock Screen.
+
+![The wallpaper sheet — a two-arrow full-screen button sits left of Share at the top right](/blog/timetable-lock-screen-wallpaper/fullscreen-button.png)
+
+The preview inside the sheet is one image scaled to fit, about two thirds of real size on an iPhone. That is enough to see whether the card clears the clock, but not whether subject names read at arm's length. Until now the first real-size look came after saving and setting the wallpaper in Photos.
+
+![Full-screen preview — date, clock and widget guide plus the card fill the screen, with a brief "Tap to close" at the bottom](/blog/timetable-lock-screen-wallpaper/fullscreen-preview.png)
+
+The screen is view-only. Tap anywhere to close; the hint fades after 2.5 seconds. The status bar is hidden so the real time doesn't sit on top of the guide's "9:41". For another device, its screen is fitted on black at its own proportions.
+
+What lost:
+
+- **Showing the exported image itself** — pixel-exact, but without the clock and widgets, which are the point.
+- **Dragging in full screen** — tap-to-close and drag would share one surface, without the chips that choose what you drag.
+- **A close button** — something the real Lock Screen doesn't have, covering the preview.
+- **Folding Share into a menu** — it would put Share one tap further away.
+
+Both the sheet preview and the full-screen view draw through the same function, so they can't drift apart. Only the helper elements, like the drag hint, are left out in full screen.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -291,3 +312,4 @@ The saved image is unchanged — compositing still reads the hard limit only. Fe
 - 2026-10-05 — Band and guide move from screen ratios to a per-device measured table (12 iPhones, 5 iPads, simulator Lock Screen captures); no flashlight/camera on iPad; clock-size and bottom-button options left out
 - 2026-10-05 — Photo pinch no longer jumps at the start: later values are divided by the recogniser's first reported scale; zoom centres between the fingers (print preview too)
 - 2026-10-06 — Photo drag (and print preview pan) rubber-bands past the edge and springs back: each step inverts the curve to recover the finger position
+- 2026-10-06 — Full-screen preview button at the top right: guide and card at real size, view-only, tap to close, same drawing function as the sheet preview
