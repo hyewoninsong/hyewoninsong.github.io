@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-06T10:40:00+09:00
+date: 2026-10-06T12:01:49+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -382,6 +382,29 @@ Two changes. **Periods are remembered**: switching to time keeps the period list
 
 The "Time → period" row in the table above describes the first version; periods now come from memory when there is one, and deletion waits for the checkmark.
 
+## Update, Oct 6 afternoon — borrow the periods you already set up
+
+A second period timetable meant dialing in all six rules again, even with an identical schedule sitting in the timetable next to it. Custom period names and irregular periods from an imported file could not be rebuilt with the wheels at all.
+
+The period card in the display sheet now ends with "Import Periods from Another Timetable". It opens a picker, and Import brings over that timetable's periods as they are.
+
+| Comes over | Stays put |
+|---|---|
+| Start and end time of every period | Events |
+| Period names | Visible days, first day of week |
+| Whether the lunch row shows on the axis | Event text color |
+
+The picker is the one the free-time finder already uses: swipe through preview cards or pick from a title list. The previews are drawn in period rows, so you can see what you are about to borrow. Only period timetables are offered, and with none available the row dims rather than disappears.
+
+The imported periods land in the sheet's draft, exactly where a wheel change would. The grid behind the sheet updates at once, the checkmark saves, and the X discards the import along with everything else. If the borrowed set has fewer periods, the existing confirmation counts the events that would be removed or shortened.
+
+What lost:
+
+- **Save on pick.** It would need a second deletion alert and leave no room to look and back out.
+- **Copy the six rules only.** Names and irregular periods would be dropped.
+- **Offer it in Settings too.** That sheet has no X, so a wrong import could not be undone.
+- **Include time-based timetables.** Their previews are drawn on a clock axis and cannot show the periods you would get.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -406,3 +429,4 @@ The "Time → period" row in the table above describes the first version; period
 - Oct 6 — axis switching from the display sheet (periods laid over the span the events cover, only gap-only events deleted after confirmation, one undo step); the X returns as discard-all; fixed a commit flag stuck by a spurious `onDisappear` on first presentation
 - Oct 6, morning — the axis choice went from text chips to icon tiles (same icons and selection style as the new-timetable sheet)
 - Oct 6, later — axis round trips restore the remembered period rules; switching to periods no longer deletes, the checkmark asks once
+- Oct 6, afternoon — import another period timetable's periods (times, names, lunch row) from the display sheet; reuses the free-time picker, lands in the draft (checkmark saves, X discards)
