@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-06T19:35:00+09:00
+date: 2026-10-06T22:51:42+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown. Late on October 6 the un-removable base timetable went away: every chip can be removed, and a single chip still draws the grid."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -348,6 +348,8 @@ Why it was missed: every capture since the layers arrived selected the darkest, 
 
 ## 2026-10-04 — one dropdown per chip
 
+(Use as base and the un-removable base chip were removed late on October 6 — see the second-to-last section. The single dropdown stays.)
+
 A person chip had grown three grammars. Long-press a friend chip for received date, Request again, Rename and Delete; tap Edit for a remove badge on every chip; and the Me chip had a hairline-split Send segment on its right. Rename alone had two routes, and nobody found the long-press. The feedback was blunt: put a dropdown on the right of every chip and show what you can do there.
 
 Every chip now ends in a dropdown segment — hairline plus chevron, 44pt. Tapping the body still toggles the person; tapping the chevron lists everything.
@@ -381,6 +383,8 @@ Smaller changes the same day: toggling a chip cross-fades the layers over 0.3 s,
 The first probe could not find the dropdown. In the accessibility tree the menu button carried the chip's identifier, not its own: putting `.accessibilityIdentifier` **after** `.overlay { Menu }` lets it cover the overlay too. It is the container-identifier pitfall in a new shape — a button with an overlay rather than a tap container — which is why the source scan written for the third recurrence did not catch it. The identifier moved before the overlay, and a second scan now looks for controls inside an overlay followed by an identifier.
 
 ## 2026-10-05 — two range shortcuts became one reset
+
+(Since late October 6 the button reads "Reset Range" — the words "base timetable" no longer appear on screen. It returns to the first chip's range.)
 
 The bottom row of the options panel used to offer "Widen range" and "My range". It is now a single button, **Reset to Base Timetable**: one tap puts the start hour, end hour and days back to the base timetable's range.
 
@@ -427,6 +431,28 @@ In the sheet where you pick which timetable to send, the title list was a stock 
 
 The piece list is covered by tests and the settled screens by captures. The in-between frames have not been checked on a device yet.
 
+## 2026-10-06, night — no more base timetable
+
+The first "me" chip had been special since September 28: the day and hour range followed it, so it could not be removed. On October 4 it gained a companion, Use as base, to promote another timetable. One rule had cost two menu items and a chip that behaved unlike the rest.
+
+That chip is gone. Every one of your chips offers Send and Remove from comparison. The range follows whichever chip is first, and when you remove it the next one takes over. With only friends left, it follows the first friend — hours from their file, days from where their schedule actually falls.
+
+Two things changed with it.
+
+**One chip still draws the grid.** Before, a lone timetable showed an empty state, so adding the second one swapped a whole screen, and the gray-grows-green-shrinks transition only appeared from the third. Now your own free time is already painted, and the second timetable visibly cuts into it.
+
+![Find Free Time with a single chip — free hours in green, classes in gray](/blog/timetable-free-time-finder/single-chip-grid.png)
+
+**You can remove everything and add back one at a time.** The empty state appears only at zero chips. The screen puts your current timetable in for you on first open, when the timetables you had added were all deleted from the app, or when you reopen with nothing at all. It does not refill what you emptied.
+
+![After removing the last chip — the empty state with request, send and open](/blog/timetable-free-time-finder/empty-after-remove-all.png)
+
+The alternative was to keep the base and merely allow removing it. That still needs an explanation of who becomes the base next, and keeps the menu item. Keeping the behavior (range follows the first chip) and dropping the name leaves less to explain.
+
+There is a cost: a first-time user now sees their own timetable instead of an empty state with large Request and Send buttons. Both are still in the `+` menu and the chip dropdown, one tap further away.
+
+Files that ask for a name also changed. Adding a plain timetable file prompts for a chip name, and the grid used to change behind that alert. Now the person is held back until the alert closes. I have not yet watched that sequence on screen.
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -454,3 +480,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 - 2026-10-04 — one dropdown per chip (long-press, edit mode and split segment removed), Use as base, Send to this person, Days chips, toggle cross-fade, stale-timetable banner, 3-hour minimum, the three October 1 features rebuilt, a second identifier scan
 - 2026-10-05 — "Widen range" / "My range" shortcuts replaced by one Reset to Base Timetable button (always visible, disabled at the base range)
 - 2026-10-06 — one green (shade layers removed), same-people rule only, list view / card copy / image share / "how about it?" removed, gray-grows-green-shrinks transition when people join or leave (three-step entrance removed), picker title list as a rounded card
+- 2026-10-06 night — base timetable and Use as base removed (every chip removable, range follows the first chip), a single chip draws the grid, remove all and re-add, plain files join after the name prompt closes
