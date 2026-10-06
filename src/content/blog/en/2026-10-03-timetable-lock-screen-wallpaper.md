@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-06T19:54:18+09:00
+date: 2026-10-07T02:20:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -256,7 +256,7 @@ The fix is a baseline. Remember the first value the recogniser reports and divid
 
 Why it slipped: pinch feel had been deferred to a device, and tests covered the math after the scale arrives, not where the recogniser's zero sits. Two-finger input still wasn't run in the simulator this time; only the math is under test. The print preview had the same structure and got the same fix.
 
-**Zoom now centres between the fingers.** It used to centre on the photo, so enlarging a corner meant zooming and then dragging it back. That makes the pinch write the offset as well as the scale — the same value the drag writes — so both now add only the change since their previous value instead of recomputing from the start. Drag changes are ignored once a pinch is active: we couldn't confirm which point the drag follows with two fingers down, and following one finger would slide the photo toward it. Moving both fingers while zooming is not supported yet.
+**Zoom now centres between the fingers.** It used to centre on the photo, so enlarging a corner meant zooming and then dragging it back. That makes the pinch write the offset as well as the scale — the same value the drag writes — so both now add only the change since their previous value instead of recomputing from the start. At this point drag changes were ignored once a pinch was active, because we couldn't confirm which point the drag follows with two fingers down. That rule was removed on 2026-10-07 (see below); moving both fingers while zooming now works.
 
 ## 2026-10-06 — Dragging the photo past its edge resists instead of stopping
 
@@ -317,6 +317,29 @@ The rows inside the options stay. On iPhone the expanded panel covers the lower 
 
 One snag: the tile's accessibility identifier was invisible to UI tests, because the identifier on the preview container overrode its children's. The tile is now layered after that identifier, and a contract test pins the order.
 
+## 2026-10-07 — Lift one finger mid-pinch and the other one drags
+
+Pinch the photo, lift one finger, move the other: the photo used to keep zooming in and out instead of following. Photos and Maps switch to a drag at that moment and resume the pinch when the finger returns. Now this does too, and so does the print preview, which had the same problem.
+
+| Fingers down | What happens |
+|---|---|
+| One | Drag |
+| Two | Follows the midpoint and zooms around it |
+| Two → one | Becomes a drag where it is |
+| One → two | Becomes a pinch where it is |
+
+**The pinch recogniser doesn't say how many fingers are down.** `MagnifyGesture` reports a scale and a start location, and it does not end when one finger lifts — the remaining finger keeps changing the scale. Our own rule was "ignore drag changes while a pinch is active", so that finger could only zoom. The two earlier fixes were built on that rule without asking whether it held with one finger left.
+
+**So the amounts now come from the touch positions.** A passive layer sits under the preview: a recogniser on the window that never succeeds and takes no touches. It tracks the fingers that started inside the preview, and a small pure function turns positions into steps — translation for one finger, midpoint translation plus distance ratio for two. On the frame a finger lands or lifts it only re-bases; otherwise the midpoint's jump to the remaining finger would read as a drag.
+
+The SwiftUI gestures stay, but only as a gate. They no longer supply values; they say whether the preview owns the touch. That keeps the existing arbitration — a one-finger drag before zooming still dismisses the print sheet, buttons over the preview still get their taps. Steps are applied only while the gesture is live.
+
+Two alternatives lost. Replacing everything with UIKit pinch and pan recognisers gives the finger count for free but means rebuilding that arbitration, which has killed the print preview's pinch once before. Keeping SwiftUI's values and only peeking at the finger count fails because we can't tell which point the drag follows with one finger left.
+
+Two things came along: moving both fingers while zooming now works, and the zoom centre is where the fingers are now, not where the pinch started. The first-value baseline from the earlier section is no longer needed.
+
+Verification is partial. Neither the simulator nor UI tests can lift just one of two fingers, so the step function is unit-tested through pinch → lift one → drag → touch again, and a simulator run on the print preview confirmed pinch and drag still behave as before. The feel of lifting and re-touching is left for a device.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -334,3 +357,4 @@ One snag: the tile's accessibility identifier was invisible to UI tests, because
 - 2026-10-06 — Photo drag (and print preview pan) rubber-bands past the edge and springs back: each step inverts the curve to recover the finger position
 - 2026-10-06 — Full-screen preview button at the top right: guide and card at real size, view-only, tap to close, same drawing function as the sheet preview
 - 2026-10-06 — Background tile at the bottom left of the preview (flat colour opens the colour popover, photo opens the picker); "In Use" row removed from the colour popover; guide clock shows the current time
+- 2026-10-07 — Lifting one finger mid-pinch becomes a drag, touching again resumes the pinch (print preview too): amounts come from touch positions, SwiftUI gestures only arbitrate; two-finger move while zooming
