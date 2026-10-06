@@ -1,6 +1,6 @@
 ---
 title: "The keyboard covered the notes field it opened"
-date: 2026-09-29T20:47:41+09:00
+date: 2026-10-06T20:46:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "We fixed it with a floating composer, then took that back the same day. Now the notes field itself scrolls above the keyboard and follows as it grows."
@@ -48,9 +48,26 @@ The lesson is about testing: a 12pt gap is easy to believe in. Push it to an ext
 
 ## Where it stands
 
-Verified on the iPhone simulator with an existing schedule. New schedules have enough bottom room (20pt inset vs. 12pt gap); the iPad inspector uses the same view but hasn't been checked on device yet.
+Verified on the iPhone simulator with an existing schedule; the 2026-10-06 motion fix was measured from a simulator recording, not on device. New schedules have enough bottom room (20pt inset vs. 12pt gap); the iPad inspector uses the same view but hasn't been checked on device yet.
+
+## 2026-10-06 — it got there, but it teleported
+
+The field did end up above the keyboard. It just had no path: the keyboard slid up while the field was already in place on the next frame, even though the `scrollTo` sat inside `withAnimation`.
+
+A jump and a glide end on the same picture, so screenshots can't tell them apart. We painted the field magenta, recorded the simulator, and listed the field's top edge per frame at 60fps.
+
+| What triggers the scroll | Top edge on the way up |
+|---|---|
+| Scroll view height change only | 561 → 419 in one frame |
+| All three signals (before) | Varied per run — one-frame jump, or a fast move followed by a 0.6s crawl |
+| Keyboard notification only (after) | 558 536 521 506 494 482 470 461 455 449 443 437 434 428 425 422 419 over 0.35s |
+
+The scroll view's height change arrives about 20ms before `keyboardWillShow`, already at its final value, and an offset set at that moment is committed without animation. Moving the same call to the run-loop turn after `keyboardWillShow` was enough. We did not confirm why at the framework level.
+
+The rules now: while the keyboard is rising, only `keyboardWillShow` scrolls, using the duration in the notification (0.38s) for a decelerating curve. Focus moves and line growth scroll only after the keyboard has finished rising; overlapping triggers restart the curve. Dismissal is left alone — the system already eases the content back over 0.3s.
 
 ## History
 
 - 2026-09-29 afternoon — notes typed in a composer floating above the keyboard
 - 2026-09-29 evening — composer removed; the notes field scrolls above the keyboard, with a sibling scroll target
+- 2026-10-06 — the field no longer jumps; it rises with the keyboard, scrolled from `keyboardWillShow` only
