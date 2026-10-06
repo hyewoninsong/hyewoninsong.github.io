@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-05T11:27:00+09:00
+date: 2026-10-06T12:01:49+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -349,6 +349,62 @@ A widget can't import app code, so the period-to-row mapping had to be written a
 
 UI tests can't capture a home screen widget. This time the widget's own source files were compiled into a tiny executable, run headless inside the simulator, and rendered to PNG with `ImageRenderer` — in class, on a break, out of range, with lunch, with 14 and 24 periods. It has not yet been checked on a real home screen.
 
+## Update, Oct 6 — switch the axis after the fact, and the display sheet gets its X back
+
+The vertical axis used to be a one-time choice at creation. Now the display sheet has a pair of **Vertical Axis** tiles at the top; tap one and the timetable switches on the spot. It began as a row of text chips, but that did not read as the same choice you make with pictures when creating a timetable, so the same day it became tiles with the same icons.
+
+![The axis tiles at the top of the display sheet — the same icons as the new-timetable sheet, By Time outlined in blue](/blog/timetable-axis-switch/time-cards.png)
+
+![Right after tapping By Period — the same slot now holds the period rules card, with the first period starting where the events start](/blog/timetable-axis-switch/period-cards.png)
+
+Events are never converted: they are stored as real times in both modes, so only the axis changes — plus any event the new axis has no room for.
+
+| Direction | Axis | Events |
+|---|---|---|
+| Period → time | The real hours the periods covered become the visible range; the period rules are remembered | All kept |
+| Time → period | Default rules (50-minute classes, 10-minute breaks) laid over **the span your events cover** | Only events that overlap no period (inside a lunch or break gap) are deleted, after a confirmation |
+
+Laying periods over the visible range would have produced 17 periods for a 6am–midnight grid; using the stock seven periods from 9:00 would have dropped anything in an 8:30 schedule into the gaps. So the periods start at the first event and stop once the last one is covered. The first version still lost data: with only two periods, the default "lunch after period 4" slid to "after period 1", and the second of two back-to-back classes fell into the lunch gap. Four periods or fewer now get no lunch, and the round trip is a test.
+
+A switch is one undo step — a whole-timetable snapshot restores the type, the period list, the lunch row and any deleted events.
+
+**Why the X came back.** The sheet lost its cancel button in September because changes apply live. But shrink the range and you get "2 events will be deleted"; tap Cancel there and you are back in the sheet with no way to tell what to revert. The X now discards everything done since the sheet opened, axis switch included. Swiping down still confirms.
+
+Adding it exposed an older bug. When the sheet auto-opens right after creating a timetable, its content's `onDisappear` fires once spuriously — appear, disappear 7 ms later, appear again — and the "commit only once" flag was left set, so the checkmark silently saved nothing. `onDisappear` means "not visible right now", not "closed"; the flag is now cleared on reappear.
+
+The alert says how many events will go, not which ones. That is next.
+
+## Update, Oct 6 later — a round trip claimed it would delete events
+
+On a real device the same day: a period timetable with lunch after period 6, switched to time and straight back, announced "2 events will be deleted". Coming back, the periods were not restored but rebuilt from the default rules, whose lunch sits after period 4 — so what used to be period 5 became the lunch gap, and two half-period classes there had nowhere to go. The round-trip test existed, but only for a default-rule timetable, which by construction comes back to itself.
+
+Two changes. **Periods are remembered**: switching to time keeps the period list and lunch setting in the save file, and switching back restores them exactly. And **nothing is deleted at the moment of switching**: the periods you land on are a starting point, so the check for events that fit no period runs once, when you confirm the sheet after adjusting the rules. Until then the events stay at their clock times while the periods move underneath.
+
+The "Time → period" row in the table above describes the first version; periods now come from memory when there is one, and deletion waits for the checkmark.
+
+## Update, Oct 6 afternoon — borrow the periods you already set up
+
+A second period timetable meant dialing in all six rules again, even with an identical schedule sitting in the timetable next to it. Custom period names and irregular periods from an imported file could not be rebuilt with the wheels at all.
+
+The period card in the display sheet now ends with "Import Periods from Another Timetable". It opens a picker, and Import brings over that timetable's periods as they are.
+
+| Comes over | Stays put |
+|---|---|
+| Start and end time of every period | Events |
+| Period names | Visible days, first day of week |
+| Whether the lunch row shows on the axis | Event text color |
+
+The picker is the one the free-time finder already uses: swipe through preview cards or pick from a title list. The previews are drawn in period rows, so you can see what you are about to borrow. Only period timetables are offered, and with none available the row dims rather than disappears.
+
+The imported periods land in the sheet's draft, exactly where a wheel change would. The grid behind the sheet updates at once, the checkmark saves, and the X discards the import along with everything else. If the borrowed set has fewer periods, the existing confirmation counts the events that would be removed or shortened.
+
+What lost:
+
+- **Save on pick.** It would need a second deletion alert and leave no room to look and back out.
+- **Copy the six rules only.** Names and irregular periods would be dropped.
+- **Offer it in Settings too.** That sheet has no X, so a wrong import could not be undone.
+- **Include time-based timetables.** Their previews are drawn on a clock axis and cannot show the periods you would get.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -370,3 +426,7 @@ UI tests can't capture a home screen widget. This time the widget's own source f
 - Oct 3, night — block edges quantised to half-period lines at the point of entry (old 30-minute clamp values, odd-length rounding, magnet-snap spread); edit stripes per half period
 - Oct 3, late night — events spanning a removed period are counted in the confirmation ("shortened"), period-specific alert wording, Continue when nothing is deleted
 - Oct 5 — the full timetable widget draws period rows (period names step aside from the now-capsule); fixed last-period events drawn one row up when the lunch row is on
+- Oct 6 — axis switching from the display sheet (periods laid over the span the events cover, only gap-only events deleted after confirmation, one undo step); the X returns as discard-all; fixed a commit flag stuck by a spurious `onDisappear` on first presentation
+- Oct 6, morning — the axis choice went from text chips to icon tiles (same icons and selection style as the new-timetable sheet)
+- Oct 6, later — axis round trips restore the remembered period rules; switching to periods no longer deletes, the checkmark asks once
+- Oct 6, afternoon — import another period timetable's periods (times, names, lunch row) from the display sheet; reuses the free-time picker, lands in the draft (checkmark saves, X discards)

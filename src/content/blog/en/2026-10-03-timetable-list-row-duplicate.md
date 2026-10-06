@@ -1,6 +1,6 @@
 ---
 title: "Switch the list to titles and Duplicate was gone"
-date: 2026-10-03T16:55:07+09:00
+date: 2026-10-06T19:50:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The title-only view of the timetable list had no duplicate button — the action only lived in a long-press menu. Each row now has its own, and two other placements lost."
@@ -35,3 +35,37 @@ The captures also caught a sizing mistake. The button started at 44pt tall, whic
 ## Where it stands
 
 The test for whether the title list is missing something the card view has is simple: is there a visible entry point. Menus and swipes don't count. Rename still exists in neither view. That's next.
+
+## 2026-10-06 — Switching views keeps your place
+
+Switching between the two views used to lose your place. Swipe a dozen cards in, switch to titles, and the list started at the top. Switch back and you got whichever card you had last swiped to, not the timetable that is actually open.
+
+Each direction now has a target.
+
+| Direction | Scrolls to |
+|---|---|
+| Cards → titles | The row of the card you were previewing |
+| Titles → cards | The selected timetable (the checked row) |
+
+The targets differ because "what I'm looking at" means different things. The card view has a centered card. The title list has only the check. In edit mode the check marks the delete target, so that one stays centered when you return to cards. An automatic scroll must never change what gets deleted.
+
+Titles → cards worked first try: set the centered card just before the view value changes, and the new pager is built already there.
+
+The other direction looked correct and did nothing. `scrollTo` ran on appear with the right id. Deferring it one runloop, or 0.3 seconds, changed nothing. Logging showed the list appearing twice:
+
+```
+19:35:53.030  list appeared, target set    ← read and cleared
+19:35:53.041  list appeared, target nil    ← 11ms later, the one that stays
+19:35:53.345  scroll fired                 ← on the first, already-detached list
+```
+
+The cause was the search field. Search exists only in the title list, and `.searchable` has no off switch, so it is attached with an `if`. Switching views flips that branch, which rebuilds everything under it. The title list is attached once, then immediately replaced. The first instance consumed the one-shot target and the survivor had nothing.
+
+The fix is about who owns the value's lifetime. The list scrolls on every appear while a target exists and never clears it. The side that switched views clears it half a second later. The scroll runs without animation, because the switch itself is animated and the list would otherwise slide down from the top.
+
+Verified with eighteen timetables in both directions. Under a modifier that is attached and detached by a conditional, "once, on appear" may not be once.
+
+## History
+
+- 2026-10-03 — A duplicate button on every title row
+- 2026-10-06 — Keeping scroll position across the view switch
