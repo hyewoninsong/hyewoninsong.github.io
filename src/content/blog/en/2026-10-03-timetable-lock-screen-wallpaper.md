@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-06T17:41:52+09:00
+date: 2026-10-06T19:54:18+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -87,7 +87,7 @@ The first question after photo backgrounds shipped: can I zoom and move the phot
 
 Two images back it. The **cropped** one is what gets composed; an **uncropped fill** image — the photo scaled so its short side meets the screen, about 13 MB on a 3× iPhone — is what the preview moves during the gesture. On release the original is re-cropped with the final zoom and offset. Both read one set of formulas (fill size, draw rect, clamp so the screen stays covered), so nothing jumps when you let go. The test uses a half-red, half-blue image: push it all the way right and the screen must show red; zoom 3× and the centre must stay put.
 
-**Background colour reuses the event colour popover.** Flat backgrounds were light grey or black. Rather than a new palette, the same popover that picks an event's colour opens from a colour circle in a "Background Color" row — the 20 basics, the user's custom colours, and the colours already used in this timetable. Colour only, no title; drawn opaque because wallpaper bitmaps have no alpha. The popover has no "none", so a "Default" text button appears only while a colour is chosen. The clock silhouette picks white or black from the chosen colour's luminance.
+**Background colour reuses the event colour popover.** Flat backgrounds were light grey or black. Rather than a new palette, the same popover that picks an event's colour opens from a colour circle in a "Background Color" row — the 20 basics, the user's custom colours, and the colours already used in this timetable (that "In Use" row was removed on October 6 — see below). Colour only, no title; drawn opaque because wallpaper bitmaps have no alpha. The popover has no "none", so a "Default" text button appears only while a colour is chosen. The clock silhouette picks white or black from the chosen colour's luminance.
 
 **A shadow under the card, over photos only.** A white card vanished against sky and snow. Over a photo the card now gets a shadow — black at 35%, 16pt blur, 6pt down. Flat colours stay as designed. One mistake on the way: `CGContext.setShadow` takes its offset in device space, so it's multiplied by the scale, and inside a UIKit renderer **positive is down**. The first build used a negative offset on the "flipped coordinates" theory; the pixel test caught it at once — 195 three points above the card, 246 three points below. The shadow was falling upward. The test now pins the direction.
 
@@ -201,7 +201,7 @@ Anything you do directly on the preview — dragging the card, fitting the photo
 
 ## 2026-10-05 — The clock guide didn't match the real Lock Screen
 
-The preview carries a faint date, a 9:41, four widget squares and two circles for the flashlight and camera. None of it is in the exported image; it only shows where the system will draw things so you can drag the card clear. That guide was wrong.
+The preview carries a faint date, a clock (a fixed 9:41 at this point, the current time since October 6), four widget squares and two circles for the flashlight and camera. None of it is in the exported image; it only shows where the system will draw things so you can drag the card clear. That guide was wrong.
 
 How we found out was the useful part. A tester put a screenshot of their actual Lock Screen in as the background photo. Same device, same aspect ratio — so the real clock in the photo and our drawn clock sat in one image, on top of each other. Nothing lined up.
 
@@ -286,7 +286,7 @@ The preview inside the sheet is one image scaled to fit, about two thirds of rea
 
 ![Full-screen preview — date, clock and widget guide plus the card fill the screen, with a brief "Tap to close" at the bottom](/blog/timetable-lock-screen-wallpaper/fullscreen-preview.png)
 
-The screen is view-only. Tap anywhere to close; the hint fades after 2.5 seconds. The status bar is hidden so the real time doesn't sit on top of the guide's "9:41". For another device, its screen is fitted on black at its own proportions.
+The screen is view-only. Tap anywhere to close; the hint fades after 2.5 seconds. The status bar is hidden so the status bar time doesn't sit on top of the guide clock. For another device, its screen is fitted on black at its own proportions.
 
 What lost:
 
@@ -296,6 +296,26 @@ What lost:
 - **Folding Share into a menu** — it would put Share one tap further away.
 
 Both the sheet preview and the full-screen view draw through the same function, so they can't drift apart. Only the helper elements, like the drag hint, are left out in full screen.
+
+## 2026-10-06 — Change the background from the corner of the preview
+
+Changing the background colour or swapping the photo meant opening the collapsed options and finding the right row. Now a small tile at the bottom left of the preview always shows the current background: the colour, or the photo. Tap it and a flat colour opens the colour popover; a photo opens the picker for a different one. It is the same idea as the photo thumbnail in the iOS Lock Screen editor.
+
+![A tile next to the flashlight guide at the bottom left shows the current background — here after picking green](/blog/timetable-lock-screen-wallpaper/background-thumbnail.png)
+
+**The position couldn't copy iOS.** iOS puts the thumbnail above the flashlight button. Our card fills everything from under the clock down to the buttons, so in that spot the tile covered the "19:00" and "20:00" labels on the time axis. The preview is how you judge the result, so it moved beside the flashlight, on the button row, which is outside the band the card sits in by default.
+
+![The first position — the tile covers the time labels at the bottom left of the card](/blog/timetable-lock-screen-wallpaper/thumbnail-over-time-axis.png)
+
+**The colour popover lost its "In Use" row.** On October 4 it reused the event colour popover as is: titled "Choose Style", with a row of this timetable's events on top. That row applies an event's title and colour together, and a background has no title, so the screen read as if it did something else. The same popover now has a colour-only mode: the title is "Background Color", and only the 20 basics and the user's custom colours remain. It is shorter by that row. It is still one palette, not two, so adding, editing and reordering colours can't drift apart.
+
+![Background colour popover — only the Basic and Custom tabs, no event row](/blog/timetable-lock-screen-wallpaper/background-color-popover.png)
+
+The rows inside the options stay. On iPhone the expanded panel covers the lower part of the preview, tile included, and the "Default" reset lives only in that row.
+
+**The guide clock shows the current time.** The date was today's but the clock was a fixed 9:41, which looked odd at real size in the full-screen preview. It redraws each minute and, like the real Lock Screen, shows hours and minutes without AM/PM. 12- or 24-hour follows the device setting, not the sheet's time format chip, which belongs to the card's time axis.
+
+One snag: the tile's accessibility identifier was invisible to UI tests, because the identifier on the preview container overrode its children's. The tile is now layered after that identifier, and a contract test pins the order.
 
 ## History
 
@@ -313,3 +333,4 @@ Both the sheet preview and the full-screen view draw through the same function, 
 - 2026-10-05 — Photo pinch no longer jumps at the start: later values are divided by the recogniser's first reported scale; zoom centres between the fingers (print preview too)
 - 2026-10-06 — Photo drag (and print preview pan) rubber-bands past the edge and springs back: each step inverts the curve to recover the finger position
 - 2026-10-06 — Full-screen preview button at the top right: guide and card at real size, view-only, tap to close, same drawing function as the sheet preview
+- 2026-10-06 — Background tile at the bottom left of the preview (flat colour opens the colour popover, photo opens the picker); "In Use" row removed from the colour popover; guide clock shows the current time
