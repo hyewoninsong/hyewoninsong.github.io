@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-07T02:20:00+09:00
+date: 2026-10-07T02:44:40+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -303,7 +303,7 @@ Changing the background colour or swapping the photo meant opening the collapsed
 
 ![A tile next to the flashlight guide at the bottom left shows the current background — here after picking green](/blog/timetable-lock-screen-wallpaper/background-thumbnail.png)
 
-**The position couldn't copy iOS.** iOS puts the thumbnail above the flashlight button. Our card fills everything from under the clock down to the buttons, so in that spot the tile covered the "19:00" and "20:00" labels on the time axis. The preview is how you judge the result, so it moved beside the flashlight, on the button row, which is outside the band the card sits in by default.
+**The position couldn't copy iOS.** iOS puts the thumbnail above the flashlight button. Our card fills everything from under the clock down to the buttons, so in that spot the tile covered the "19:00" and "20:00" labels on the time axis. The preview is how you judge the result, so it moved beside the flashlight, on the button row, which is outside the band the card sits in by default. (It moved again the next day and now sits outside the preview image — see October 7 below.)
 
 ![The first position — the tile covers the time labels at the bottom left of the card](/blog/timetable-lock-screen-wallpaper/thumbnail-over-time-axis.png)
 
@@ -340,6 +340,16 @@ Two things came along: moving both fingers while zooming now works, and the zoom
 
 Verification is partial. Neither the simulator nor UI tests can lift just one of two fingers, so the step function is unit-tested through pinch → lift one → drag → touch again, and a simulator run on the print preview confirmed pinch and drag still behave as before. The feel of lifting and re-touching is left for a device.
 
+## 2026-10-07 — The tile leaves the image, and full screen loses its rounded corners
+
+The background tile no longer sits on the preview. It is now outside the image, at its bottom left. Next to the flashlight guide it covered no text, but it was still on a picture whose job is to show the result, and a button that is not in the result reads like one more Lock Screen element. Only the result and the guide stay on the image; controls go outside.
+
+![The background tile sits outside the preview image, level with its bottom edge](/blog/timetable-lock-screen-wallpaper/thumbnail-outside-preview.png)
+
+A portrait phone preview leaves empty strips at the sides, but a landscape or iPad screen fills the width. So the side margin went from 12pt to 64pt on both sides, which always leaves a gutter for the 44pt tile and keeps the image centred.
+
+**Full-screen preview is a plain rectangle.** It used to be clipped to the chosen device's corner shape, so while the cover slid up, black showed in the corners between the rounded image and the square cover. On your own device the screen already rounds the corners. The letterbox for other devices is unchanged.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -358,3 +368,4 @@ Verification is partial. Neither the simulator nor UI tests can lift just one of
 - 2026-10-06 — Full-screen preview button at the top right: guide and card at real size, view-only, tap to close, same drawing function as the sheet preview
 - 2026-10-06 — Background tile at the bottom left of the preview (flat colour opens the colour popover, photo opens the picker); "In Use" row removed from the colour popover; guide clock shows the current time
 - 2026-10-07 — Lifting one finger mid-pinch becomes a drag, touching again resumes the pinch (print preview too): amounts come from touch positions, SwiftUI gestures only arbitrate; two-finger move while zooming
+- 2026-10-07 — Background tile moved outside the preview image, bottom left (side margins 12 → 64pt); full-screen preview is no longer clipped to the device corners
