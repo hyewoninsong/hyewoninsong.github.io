@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-07T02:44:40+09:00
+date: 2026-10-07T16:44:11+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -187,7 +187,7 @@ Still open: the pinch-and-drag instructions live in the options footnote, so the
 
 The same afternoon: "the preview shouldn't change size just because I opened the options. Keep it, and let the open panel cover it."
 
-The morning's fix was about *how* the preview grew and shrank. This one removes the growing and shrinking. The stage now leaves room only for the collapsed panel — the handle and the Save to Photos button — and the expanded options slide up over the lower part of the preview.
+The morning's fix was about *how* the preview grew and shrank. This one removes the growing and shrinking. The stage now leaves room only for the collapsed panel — the handle and the Save to Photos button (since October 7 the button lives in the top bar, so: the handle and the adjust row) — and the expanded options slide up over the lower part of the preview.
 
 ![Options collapsed — the preview fills the stage](/blog/timetable-lock-screen-wallpaper/options-collapsed.png)
 
@@ -350,6 +350,26 @@ A portrait phone preview leaves empty strips at the sides, but a landscape or iP
 
 **Full-screen preview is a plain rectangle.** It used to be clipped to the chosen device's corner shape, so while the cover slid up, black showed in the corners between the rounded image and the square cover. On your own device the screen already rounds the corners. The letterbox for other devices is unchanged.
 
+## 2026-10-07 — Dragging the options open made the preview lurch sideways
+
+The options panel became draggable today, and while dragging it the preview wobbled: the phone-shaped frame followed the finger, but the clock, widgets and card inside lagged a beat, sliding toward the top left and back.
+
+The preview should not have been resizing at all. Two days ago the stage was fixed to reserve only the collapsed panel height, computed as:
+
+```swift
+footerHeight > 0 ? handle + footerHeight : panelHeight
+```
+
+`footerHeight` is the measured height of what stays when the panel is collapsed, and `> 0` meant "measured yet". That held while the Save to Photos button was always in there. This morning the button moved to the top bar. With a flat-colour background the group is now empty and its measured height is **really 0**, so the first-frame fallback ran forever and the stage followed the full panel height again. The contract test only checked that the string `handle + footerHeight` existed, and it did, as one arm of the ternary.
+
+The lurch is two tempos on top of that. During a drag the panel height is applied without animation, so the frame shrinks immediately. The image scale comes from re-measuring that frame and is applied with a 0.3s curve, restarted on every frame of the drag, so the image keeps chasing the frame.
+
+The fix: the collapsed height is always handle + footer, 0 is a valid height, and "first measurement" is a separate boolean. Turning off the scale curve during drags would have hidden the wobble but kept the shrinking, so that lost.
+
+In the simulator the preview frame is identical collapsed, expanded, and after a drag. The feel mid-drag still needs a real device.
+
+The lesson: don't let a measured 0 double as "not measured yet" when the container's contents are conditional, and test a "size stays the same" promise in the state with the least content.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -369,3 +389,4 @@ A portrait phone preview leaves empty strips at the sides, but a landscape or iP
 - 2026-10-06 — Background tile at the bottom left of the preview (flat colour opens the colour popover, photo opens the picker); "In Use" row removed from the colour popover; guide clock shows the current time
 - 2026-10-07 — Lifting one finger mid-pinch becomes a drag, touching again resumes the pinch (print preview too): amounts come from touch positions, SwiftUI gestures only arbitrate; two-finger move while zooming
 - 2026-10-07 — Background tile moved outside the preview image, bottom left (side margins 12 → 64pt); full-screen preview is no longer clipped to the device corners
+- 2026-10-07 — Preview lurched while dragging the options: after the save button left, the empty footer measured 0, was read as "not measured", and the stage followed the panel; measured-ness is now a separate flag
