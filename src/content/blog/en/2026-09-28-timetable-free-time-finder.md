@@ -1,9 +1,9 @@
 ---
 title: "Receiving a friend's timetable no longer adds a timetable"
-date: 2026-10-06T22:51:42+09:00
+date: 2026-10-07T10:18:15+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown. Late on October 6 the un-removable base timetable went away: every chip can be removed, and a single chip still draws the grid."
+summary: "Find Free Time overlays a friend's timetable on yours and paints the hours anyone is free. Keeping friends out of your own timetable list is most of the design. The color rule flipped twice in three days, then the single shading strip became nested layers, and the layers became a filter with two colors. On October 3 the filters moved back into the collapsing panel, and a selection border that inner layers were painting over got its own layer. On October 4 the long-press menu, edit mode and split share segment on the chips collapsed into one dropdown. Late on October 6 the un-removable base timetable went away: every chip can be removed, and a single chip still draws the grid. On October 7 the suggest-a-time sheet swapped its time menus for the same inline wheel the other sheets use."
 ---
 
 Open a timetable file a friend sent you, and the app now lays it over yours and paints the hours when someone is free. Finding a shared gap used to mean flipping between two timetables and comparing them in your head. The color rule flips twice more in this post — kept in the history at the bottom.
@@ -453,6 +453,21 @@ There is a cost: a first-time user now sees their own timetable instead of an em
 
 Files that ask for a name also changed. Adding a plain timetable file prompts for a chip name, and the grid used to change behind that alert. Now the person is held back until the alert closes. I have not yet watched that sequence on screen.
 
+## 2026-10-07 — proposal times use the same wheel as every other time
+
+The suggest-a-time sheet was the only place that picked a time from a menu. Tapping Start Time opened a list of five-minute steps, and an eight-hour free stretch made that list over ninety rows long, covering the sheet and the grid. Now it works like the event editor: tap the gray capsule on the row and a wheel opens under it, one at a time.
+
+![The suggest-a-time sheet with the Start Time capsule tapped and a wheel open under the row; 07 and 09, outside the free stretch, are dimmed](/blog/timetable-free-time-finder/proposal-start-wheel.png)
+
+A menu can simply leave out times outside the stretch. A wheel spins through the whole day, so the wheel now carries a range through `UIDatePicker`'s `minimumDate` and `maximumDate`. Out-of-range ticks are dimmed, and letting go on one rolls back to the edge.
+
+Two things got in the way.
+
+- **A time wheel has no 24:00.** 00:00 is the start of the same day, so a stretch ending at midnight has no maximum date to set. For that case only, the end wheel has no system range and reads 00:00 as 24:00. This branch has not been checked on screen yet; the sample data has no stretch ending at midnight.
+- **The wheel wraps.** Flick a wheel whose minimum is 08:00 toward earlier hours and it passes 07 and 06 and comes around to 23. If it stops past the maximum, it snaps to the maximum, not the minimum. The first UI test asserted the value stayed put and failed with 09:59. The app was right and the assertion was wrong; the test now checks that the chosen range stays inside the stretch.
+
+Steps went from five minutes to one, matching the editor. Opening a wheel also raises the sheet to full height, because at half height the wheel pushed the free / partly / busy lines off screen, and those lines are the answer you watch while spinning.
+
 ## Where it stands
 
 A real two-device file exchange and the messenger-to-web-to-app flow still need checks after the web page is deployed. The iPad grid and list layouts were verified in the earlier October 1 update.
@@ -481,3 +496,4 @@ A real two-device file exchange and the messenger-to-web-to-app flow still need 
 - 2026-10-05 — "Widen range" / "My range" shortcuts replaced by one Reset to Base Timetable button (always visible, disabled at the base range)
 - 2026-10-06 — one green (shade layers removed), same-people rule only, list view / card copy / image share / "how about it?" removed, gray-grows-green-shrinks transition when people join or leave (three-step entrance removed), picker title list as a rounded card
 - 2026-10-06 night — base timetable and Use as base removed (every chip removable, range follows the first chip), a single chip draws the grid, remove all and re-add, plain files join after the name prompt closes
+- 2026-10-07 — suggest-a-time start and end moved from a menu list to the same inline wheel as the event editor (range enforced by the wheel's minimum and maximum, one-minute steps, sheet rises to full height when a wheel opens)
