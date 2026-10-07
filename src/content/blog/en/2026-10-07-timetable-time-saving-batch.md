@@ -12,7 +12,7 @@ In a timetable app, the slow part is not looking at it but building and fixing i
 
 | Feature | What it saves |
 |---|---|
-| Bulk alerts on | One tap in the `...` menu turns on "N minutes before" for every class. Only bulk-off existed |
+| Bulk alerts on | One tap in the `...` menu (inside its Alerts submenu since that afternoon) turns on "N minutes before" for every class. Only bulk-off existed |
 | Location field | Shows on blocks, widgets, Watch, Siri and calendar export |
 | Title suggestions | Existing titles appear as chips while typing; picking one brings its color |
 | Shortcuts "Add class" | Add a class by voice without opening the app |
