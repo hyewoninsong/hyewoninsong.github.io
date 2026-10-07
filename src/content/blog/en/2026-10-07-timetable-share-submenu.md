@@ -14,14 +14,12 @@ Tap **Share** in the `…` menu of a timetable and six rows unfold: File, Image,
 
 The reference is the iOS Photos share sheet. Pick one photo, tap Share, and the lower section lists "Save to Files", "Add to Album", "Print", "Use as Wallpaper" as short nouns. A timetable ends up as a picture too, so the same jobs get the same names and the same SF Symbols.
 
-| Row | What it does | Symbol |
-|---|---|---|
-| File | The `.supertimetable` file straight to the system share sheet (nothing to choose, so no sheet) | `doc` |
-| Image | Preview and options sheet → share as image | `photo` |
-| Add to Album | Same sheet → saved straight into Photos | `rectangle.stack.badge.plus` |
-| Print | Print sheet | `printer` |
-| Calendar | Export to the Calendar app (dimmed when there are no events) | `calendar.badge.plus` |
-| Lock Screen | Build a lock screen wallpaper | `lock.iphone` |
+- **File** — the `.supertimetable` file straight to the system share sheet. Nothing to choose, so no sheet. (`doc`)
+- **Image** — preview and options sheet, then share as image. (`photo`)
+- **Add to Album** — the same sheet, saved straight into Photos. (`rectangle.stack.badge.plus`)
+- **Print** — the print sheet. (`printer`)
+- **Calendar** — export to the Calendar app; dimmed when there are no events. (`calendar.badge.plus`)
+- **Lock Screen** — build a lock screen wallpaper. (`lock.iphone`)
 
 The rows are nouns, not "Export as file" and "Export to calendar". The header already says Share. The iPad menu bar keeps the verb form, because there the header is "File".
 
