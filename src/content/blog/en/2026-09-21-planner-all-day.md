@@ -1,12 +1,12 @@
 ---
 title: "We shipped an all-day strip and pulled it the same day"
-date: 2026-09-21T22:40:00+09:00
+date: 2026-10-07T17:25:47+09:00
 app: "daily-planner"
 tags: ["devlog", "swiftui", "design"]
-summary: "The day planner got an all-day strip — a todo on a date with no time — and lost it again hours later. What it was, and why a second place to park work is the wrong thing for a planner whose whole value is the timeline."
+summary: "All-day items came as a strip, left the same day, and came back two weeks later as a list view of the day. One thing changed underneath: the contribution graph now counts what you finished, not what you scheduled."
 ---
 
-The day planner got an **all-day strip** — a todo held on a date with no time — and it was reverted in full the same day. The app has no all-day items today. The sections below record what was built; the reason it went away is at the end.
+The day planner got an **all-day strip** — a todo held on a date with no time — and it was reverted in full the same day. Two weeks later the same model came back in a different place: a **list view** of the day. The sections below go in order — what was built, why it was pulled, and what changed enough to bring it back.
 
 Here is what it was. The planner could hold a todo on a day without a time. A small `All-Day` strip sits directly under the date bar; its trailing `+` places a todo there as a chip. Before this, "groceries, sometime today" had to be forced onto some hour, where it rang alarms and joined overlap and push calculations, or go into the drawer, which forgets that the item belonged to today at all.
 
@@ -84,7 +84,32 @@ The record stays. The decision log is append-only, so the decision that introduc
 marked reversed rather than deleted. If the need comes back, that design — one flag, outside the
 timeline math — is the starting point. The question to re-ask first is where it lives.
 
+## 2026-10-07 — back as a list view, and the graph counts only what got done
+
+All-day items are back two weeks after the revert. The model is the one from September — a single `isAllDay` flag on a placement, kept out of the timeline math. What changed is **where it lives** and **what the contribution graph measures**.
+
+The premise moved first. September's reason for pulling it was "no second surface that bypasses the timeline." This time that is exactly the use we accepted. Drink water, vocabulary, stretching — some tasks have no reason to pick an hour, and some people use **only** that. For them a planner that is nine-tenths empty hour grid is the wrong screen. So instead of a thin strip under the date bar, a `Timeline | List` segment at the top swaps **the whole day page**. The date bar, swiping between days and the bottom buttons are shared. The choice is remembered per device, so a checklist-only user opens into the list every time.
+
+![The list view: two all-day tasks, a check circle on the left and the last seven days of the graph on the right](/blog/planner-all-day/list-unchecked.png)
+
+The list has two sections. `All-day` rows are checked with the circle on the left, and each row carries its own last-seven-days strip so the row reads as the place the graph grows from. `Schedule` shows the day's timed placements read-only: the check band works, tapping the body jumps to the timeline with that block selected. Moving and resizing stay on the timeline. The only way in is the `+` at the bottom right — pick a todo and it lands on the day you are looking at, with no time. The same todo cannot be added twice to one day; the check is the record, so a second row would mean nothing.
+
+![After checking: the title is struck through and today's cell in the strip is at full color](/blog/planner-all-day/list-checked.png)
+
+The bigger decision is the graph. Until now it counted **scheduled minutes** and ignored completion. A check cannot live on that scale — zero minutes is an empty cell forever, and inventing a default length piles up fake time. So the scale changed: **only finished work counts.** A timed placement contributes its minutes once checked; an all-day placement contributes one check. A cell takes the darker of its minutes level and its checks level, and one check fills the daily cell completely — a habit graph where "did it today" is pale does not feel planted. Weekly cells darken at 1, 3, 5 and 7 checks, monthly at 1, 8, 16 and 24. Period tiles and row captions follow the same rule and keep the two units apart, as in `1h 40m · 12×`.
+
+Existing users see this. Minutes from placements that were never checked drop out of the graph. For someone who never used the checkbox the graph gets lighter. That was the deliberate choice — planning and doing do not share one scale.
+
+![While on the timeline, unchecked all-day items show as a count badge on the list glyph](/blog/planner-all-day/timeline-badge.png)
+
+The alternatives that lost: a per-todo `timed | count` type, because it forbids scheduling a habit on one day and just checking it on another; a separate check entity, because the drawer, undo, calendar dots and cache invalidation would all need a second implementation when one flag inherits them; and putting the segment in the bottom-left capsule, which is the undo-and-lock capsule and about timeline state, not about which view you are in.
+
+One small thing broke. With the segment in the center of the toolbar the month title `October 2026` truncated to a single digit on iPhone width. The title now shows just the month inside the current year and adds the year only when you scroll into another one.
+
+What is left is on the CloudKit side: `isAllDay` already reached the record type in September, but whether it is deployed to production only the console knows. Checking from the todo list sheet and from a widget button come next.
+
 ## History
 
 - 2026-09-21 — all-day items and the strip
 - 2026-09-21 — reverted in full the same day; no second surface that bypasses the timeline
+- 2026-10-07 — back as the list view; graph and stats count finished work only, one check fills the daily cell
