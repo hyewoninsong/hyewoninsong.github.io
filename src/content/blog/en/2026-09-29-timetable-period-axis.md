@@ -432,7 +432,7 @@ What lost:
 - **Hiding break and lunch behind "More".** Fewer rows, but people would lose lunch.
 - **Big numbers above the card.** That header was removed on Oct 3.
 
-The period sheet now fits one iPhone screen without scrolling. Locales with a long "after period N" phrase shrink the lunch label slightly; I have not looked at those on screen yet.
+Everything down to the period card now fits one iPhone screen (the event text colour card, moved into this sheet the same day, sits below it). Locales with a long "after period N" phrase shrink the lunch label slightly; I have not looked at those on screen yet.
 
 ## History
 
