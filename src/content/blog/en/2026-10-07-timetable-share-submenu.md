@@ -1,6 +1,6 @@
 ---
 title: "A share menu that reads like the Photos app — File, Image, Print, Calendar, Lock Screen"
-date: 2026-10-07T14:41:25+09:00
+date: 2026-10-07T17:50:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Every way to get a timetable out of the app now lives under one Share submenu. The same afternoon one row came back out, and a swipe meant to close the options panel stopped closing the whole sheet."
@@ -87,7 +87,30 @@ With the sheet staying open, Save Image is one tap inside the system share sheet
 
 The drag thresholds (40% of the open height, or 300pt per second) were only checked with synthesized simulator drags. Whether the hand-off from scrolling to collapsing feels smooth needs a real finger.
 
+## 2026-10-07, evening — the pull that sent the app home
+
+The afternoon's drag exposed a new problem within hours. Pulling the collapsed panel up sent the app to the home screen instead of opening the panel.
+
+The collapsed panel is a single 28pt handle sitting right above the home indicator, so a finger pulling it up starts at the very bottom of the screen. An upward swipe from that strip belongs to the system's home gesture before it belongs to the app.
+
+### The first bottom-edge swipe now goes to the app
+
+While the panel accepts drags, the sheet sets `defersSystemGestures(on: .bottom)`. The first swipe up goes to the app, and a second one right after goes home. It was unclear whether this would reach the system from inside a sheet that is not full screen, so we ran both builds side by side in the simulator. Without it the first swipe shrinks the app into a switcher card. With it the app stays.
+
+The cost is two swipes to leave from these sheets, so the deferral is off whenever the drag is off (the iPad side column, or while typing a print size).
+
+Making the handle taller lost. People who swipe from the edge would still leave the app, and the preview would shrink.
+
+### Deferral alone turned "the app leaves" into "nothing happens"
+
+With only the deferral, the app stayed but the panel did not open. The recognizer accepted touches that began inside the panel's frame, and the panel sits above the bottom safe area, so the home-indicator strip was outside it. Extending the hit area to the bottom of the window fixed that.
+
+The afternoon's check missed this because its synthesized drag started at the centre of the handle, and fingers start at the edge. Also, `XCUIApplication.state` reports foreground even while the app is a switcher card, so we judged by screenshots and the handle's label.
+
+All of this was checked with synthesized drags in the simulator, not yet with a finger on a device.
+
 ## History
 
 - 2026-10-07, morning — Share becomes a submenu with Photos' names and symbols. Add to Album added.
 - 2026-10-07, afternoon — drag to collapse the panel, half-height cap, sheet stays after sharing, Add to Album removed.
+- 2026-10-07, evening — pulling the collapsed panel no longer sends the app home: bottom-edge gesture deferral, hit area down to the home indicator.
