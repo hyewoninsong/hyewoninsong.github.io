@@ -1,12 +1,14 @@
 ---
 title: "We merged, split, and re-merged the settings sheet in ten days"
-date: 2026-09-25T18:00:00+09:00
+date: 2026-10-07T11:46:25+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Should app-wide settings and per-timetable settings share a sheet? We changed the answer three times. The final answer is both: one sheet from the menu, a quick sheet from the grid."
 ---
 
-The `…` menu in SuperTimetable now has a single "Settings" row. The sheet it opens has two areas: on top, values that apply to every timetable (appearance, time format, current-time line); below a hairline, values for the timetable you are looking at (displayed days, start/end hour, schedule text color). The "Display" sheet you get by tapping the day header or the time axis is still there, but it only carries the days and hours cards.
+> Update, October 7, 2026: this layout changed again. Settings now holds app-wide values only, and everything per-timetable lives in the Display sheet. The first sections below are the September 25 reasoning as written; the change is in the last section.
+
+Since September 25 the `…` menu in SuperTimetable has had a single "Settings" row. The sheet it opened that day had two areas: on top, values that apply to every timetable (appearance, time format, current-time line); below a hairline, values for the timetable you are looking at (displayed days, start/end hour, schedule text color). The "Display" sheet you get by tapping the day header or the time axis is still there, but it only carries the days and hours cards.
 
 ## What changed
 
@@ -42,4 +44,34 @@ With two sheets drawing the same cards, the plumbing behind them — draft hours
 
 ## Where it stands
 
-The Settings sheet is longer now; on iPhone the lower area needs a scroll. Fine for a menu entry — if people report not finding text color, that is the first thing to revisit.
+The Settings sheet is longer now; on iPhone the lower area needs a scroll. Fine for a menu entry — if people report not finding text color, that is the first thing to revisit. (Twelve days later, that report came. See below.)
+
+## October 7, 2026 — the text color report came, and per-timetable values left Settings
+
+Schedule text color sat at the very end of the Settings sheet. In the meantime the app-wide card had grown to seven rows (sound, haptics, app lock, and iCloud backup were added), so text color was below that card, two standalone cards, the days card, and the hours card. The second complaint was that display settings felt out of place under app settings.
+
+Both had one cause: per-timetable values were split across two sheets, and text color was only in the one that hid it.
+
+![Settings — a "Display" row on top, then three app-wide cards](/blog/timetable-settings-sheet-scope/settings-app-only.png)
+
+Settings now holds app-wide values only, in three cards: Screen, Sounds & Haptics, Lock & Backup. A single "Display" row on top leads to the per-timetable sheet, with a line under it saying what is inside. The `…` menu still has Settings alone.
+
+![Display sheet — vertical axis, days, hours, and schedule text color at the bottom](/blog/timetable-settings-sheet-scope/display-sheet-text-color.png)
+
+The Display sheet holds every per-timetable value. Text color is back as its last card and fits without scrolling on iPhone.
+
+| Path | Sheet | Contents |
+|---|---|---|
+| `…` menu → Settings | Settings | a row to Display · Screen · Sounds & Haptics · Lock & Backup |
+| Day header tap · time axis tap · right after a new timetable · the "Display" row in Settings | Display | vertical axis · days · hours · text color |
+
+This is the first alternative that lost on September 25. It lost because the menu would no longer reach text color or the hour range. One row in Settings answers that without copying three cards.
+
+The reason for keeping text color out of the Display sheet had also weakened. That sheet is opened often from the grid, and the timetable stays visible behind it, so a text color change shows immediately. The Settings sheet covers the timetable, so there was no preview there.
+
+Tapping the "Display" row closes Settings and opens the Display sheet once the dismissal finishes. Stacking a second sheet on top, or pushing inside Settings, would hide the grid that serves as the live preview. In SwiftUI the next sheet is presented from `onDismiss` of `.sheet(isPresented:onDismiss:)`, guarded by a flag set only by the row, so ✓ and swipe-to-dismiss chain nothing.
+
+## History
+
+- 2026-09-25 — Merged Settings into two areas (all timetables / this timetable); the Display sheet kept days and hours only.
+- 2026-10-07 — Removed per-timetable values from Settings and added a "Display" row on top. Text color moved to the Display sheet; the app-wide card became three.
