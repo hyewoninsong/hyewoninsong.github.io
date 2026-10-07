@@ -1,6 +1,6 @@
 ---
 title: "Adding App Lock, one flag ended up covering two different moments"
-date: 2026-10-05T09:05:00+09:00
+date: 2026-10-07T10:31:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Added Face ID app lock. Hiding the app-switcher thumbnail and deciding whether to re-prompt on return are two different questions — they ended up collapsing into the same flag."
@@ -69,6 +69,10 @@ earlier that day, so the lock state's assignment went straight into `withAnimati
 Two confirmations in one day that a view-side `.animation(value:)` doesn't reliably drive a
 conditional view's appearance or disappearance.
 
+(2026-10-07: the lock screen is no longer a layer in this view tree but a dedicated window. The
+banner still sits above the lock; the lock now appears instantly and the window does the fade-out —
+see "Above everything" below.)
+
 ## Where it stands
 
 The first round assumed Face ID enrollment in the simulator was menu-only, and verified just the
@@ -131,7 +135,59 @@ the scene transitions in order while an authentication is in flight. Those tests
 bypasses.
 
 
+## 2026-10-07 — "Above everything" was never a view-hierarchy promise: the lock screen sat under the sheet
+
+A report came in: leave Settings open, lock the device, come back — Face ID runs, but there is no lock
+screen, just Settings. Then a screenshot: with the toolbar menu open, the menu floats on top of the
+lock screen.
+
+![The toolbar menu still floating over the lock screen — its rows cover "Timetable Is Locked"](/blog/timetable-biometric-app-lock/menu-over-lock.png)
+
+The lock state was fine. It locked, drew the lock screen, and started authentication. Only the picture
+was hidden. The lock screen was the top layer of the root `ZStack`, and SwiftUI's `.sheet`, `.alert`,
+`.popover` and `Menu` are not siblings in that tree — they are presentations stacked above the root.
+No `zIndex` inside the root reaches over them. "Covers the whole window" really meant "covers the root
+content".
+
+### The lock screen became a window
+
+Each scene now gets a dedicated `UIWindow` for the lock screen, one level above normal windows
+(`.alert + 1`). A hidden `UIView` in the scene root's background finds its `UIWindowScene` and shows
+or hides that window; on iPad, every window gets its own.
+
+![Back from the Home Screen with Settings still open — the lock screen covers the sheet, with the Face ID prompt on top](/blog/timetable-biometric-app-lock/lock-over-sheet.png)
+
+| | Choice | Why |
+|---|---|---|
+| Appear | Instantly, no curve | It must be opaque before the app-switcher snapshot |
+| Dismiss | 0.25 s fade | No hard cut right after authenticating |
+| Alarm banner | Drawn again by the lock window, above the lock | The root's banner is now covered; a ringing alarm must stay stoppable |
+| Keyboard | Dismissed when the lock requires authentication | A hidden field must not keep taking input |
+| After unlock | The sheet or menu is still there | The lock must not throw away what you were editing |
+
+A separate window does not inherit the scene root's SwiftUI environment, so the app's light/dark
+setting goes in through `overrideUserInterfaceStyle`.
+
+Two alternatives lost. Adding a lock layer to every sheet misses the next sheet someone adds, and
+cannot be done for system menus at all. Dismissing everything on lock discards work in progress.
+
+### Proof of a cover is not "it exists" but "what is under it cannot be tapped"
+
+The Face ID round-trip test from two days earlier ran inside the Settings sheet and still missed
+this: it checked the switch value, the alert count, and that the lock screen *existed*. A lock screen
+buried under a sheet still exists in the accessibility tree.
+
+The new tests check `isHittable`: with a sheet open, and with the menu open, go Home and come back,
+then confirm the Unlock button can be tapped and the switch or menu row underneath cannot. After the
+fix both cases pass in the simulator. The tests were not run against the old code — the evidence for
+"before" is the screenshot above.
+
+Not yet exercised: iPad multi-window, locking while an alarm is ringing, locking with the keyboard up,
+and a real device.
+
+
 ## History
 
 - 2026-10-04 — added App Lock (Face ID/Touch ID/passcode), off by default.
 - 2026-10-05 — turning the lock off failed with "Authentication Failed"; covering and requiring authentication became separate states.
+- 2026-10-07 — the lock screen sat under open sheets and menus; it moved to a dedicated window.

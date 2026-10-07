@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-06T12:01:49+09:00
+date: 2026-10-07T11:54:42+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -260,7 +260,7 @@ One more fix: saving used to stretch any event to at least 30 minutes. Half of a
 
 A time-based timetable edits days and hours in one display sheet. A period timetable had the same sheet with a single "Periods 7 · 09:00–16:40 ›" row, which closed the sheet, waited half a second and opened a separate editor with ✓ and X. One layer versus two, live versus draft. The request was simply to make them the same.
 
-Now the period sheet has a **rules card** where the time card would be: first period start, class length, break, lunch, lunch timing, period count, and a summary line underneath — "09:00 – 16:40 · 7 periods · 7h 40m". Turn a wheel and the axis behind the sheet changes immediately, exactly like the hour wheels on a time timetable.
+Now the period sheet has a **rules card** where the time card would be: first period start, class length, break, lunch, lunch timing, period count, and a summary line underneath — "09:00 – 16:40 · 7 periods · 7h 40m" (grouped into four rows on Oct 7; see that update). Turn a wheel and the axis behind the sheet changes immediately, exactly like the hour wheels on a time timetable.
 
 ![Display sheet — days card, then a Periods card with six rows and the summary line](/blog/timetable-period-axis/display-sheet-period-rules.png)
 
@@ -386,7 +386,7 @@ The "Time → period" row in the table above describes the first version; period
 
 A second period timetable meant dialing in all six rules again, even with an identical schedule sitting in the timetable next to it. Custom period names and irregular periods from an imported file could not be rebuilt with the wheels at all.
 
-The period card in the display sheet now ends with "Import Periods from Another Timetable". It opens a picker, and Import brings over that timetable's periods as they are.
+The period card in the display sheet now ends with "Import Periods from Another Timetable" (moved next to the card title a day later; see the Oct 7 update). It opens a picker, and Import brings over that timetable's periods as they are.
 
 | Comes over | Stays put |
 |---|---|
@@ -404,6 +404,35 @@ What lost:
 - **Copy the six rules only.** Names and irregular periods would be dropped.
 - **Offer it in Settings too.** That sheet has no X, so a wrong import could not be undone.
 - **Include time-based timetables.** Their previews are drawn on a clock axis and cannot show the periods you would get.
+
+## Update, Oct 7 — the period card had seven rows; now it has four
+
+The display sheet looked heavy on a period timetable. A time-based timetable shows two rows in that spot; the period version stacked seven rules, a summary line and an import row. Worse than the count, all seven rows carried the same weight, and lunch alone was spread across three of them.
+
+![Display sheet — a Periods card with four rows (first period start, period count, class and break, lunch) and a strip of seven period bars with a lunch gap at the bottom](/blog/timetable-period-axis/period-rules-four-rows.png)
+
+| Row | Values |
+|---|---|
+| First period start | one pill |
+| Periods | one pill |
+| Class · Break | two pills — 50m · 10m |
+| Lunch | two pills — after P4 · 1h (a single "None" when there is no lunch) |
+
+Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis now sits under the wheel when the lunch row is open.
+
+![The lunch row expanded — the 1h pill highlighted, its length wheel open underneath](/blog/timetable-period-axis/period-rules-lunch-panel.png)
+
+**A strip instead of a sentence.** On Oct 3 I wrote that the grid behind the sheet is the preview. On an iPhone the sheet covers nearly all of it. So the card now draws the day above the summary line: one bar per period, small gaps for breaks, a wide gap for lunch, and red bars from the point where the day runs past midnight. It is read-only. The minimap removed on Sep 30 was an editor's scrollbar and went away because hand edits and rules drifted apart; this strip only shows what the rules produce.
+
+**Import moved next to the title.** Yesterday's full-width row under the card is now a small button beside the "Periods" heading.
+
+What lost:
+
+- **Two wheels side by side.** The wheels span the card while the pills sit at the right edge, so nothing tells you which wheel is which.
+- **Hiding break and lunch behind "More".** Fewer rows, but people would lose lunch.
+- **Big numbers above the card.** That header was removed on Oct 3.
+
+Everything down to the period card now fits one iPhone screen (the event text colour card, moved into this sheet the same day, sits below it). Locales with a long "after period N" phrase shrink the lunch label slightly; I have not looked at those on screen yet.
 
 ## History
 
@@ -430,3 +459,4 @@ What lost:
 - Oct 6, morning — the axis choice went from text chips to icon tiles (same icons and selection style as the new-timetable sheet)
 - Oct 6, later — axis round trips restore the remembered period rules; switching to periods no longer deletes, the checkmark asks once
 - Oct 6, afternoon — import another period timetable's periods (times, names, lunch row) from the display sheet; reuses the free-time picker, lands in the draft (checkmark saves, X discards)
+- Oct 7 — period rules card from seven rows to four (class · break and lunch timing · length as paired pills), lunch-row switch inside the lunch panel, a day strip above the summary, import moved beside the card title

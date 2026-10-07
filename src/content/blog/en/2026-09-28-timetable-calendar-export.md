@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-04T00:19:02+09:00
+date: 2026-10-07T17:32:26+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -149,6 +149,19 @@ The markers decide what goes. Dedicated calendars this device created are delete
 
 The button only appears when something is left to remove, and it works even when premium is locked.
 
+## 2026-10-07 — One event picker for the whole app
+
+"Import from another timetable" shipped the same day with its own picker: a flat list grouped by title only. Two screens doing the same job with different rules made it look as if the export picker's grouping had vanished. It hadn't; the new screen had simply invented its own.
+
+Grouping by title alone loses two things. Same-titled events you deliberately colored differently collapse into one row, and you can't take only the Tuesday-evening slot of a class.
+
+The popover's list is now a single shared view. Rules are unchanged from 2026-10-02: same title and color make a card, same start and end time make a row, ordered by earliest weekday, start time, title, then color. A card with several rows has a header that toggles all of them and shows a minus when only some are picked.
+
+![The event picker in Import from another timetable. A Kindergarten card holds two rows, "Mon, Tue, Wed, Thu 09:00–14:30" and "Fri 09:00–14:00", followed by cards ordered by weekday and time — the same structure as the export popover](/blog/timetable-calendar-export/import-pick-list.png)
+
+The only difference is the check color, which follows each sheet's confirm button. Under the hood the picker now hands over event ids instead of titles, so the import math doesn't care how the list is grouped.
+
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
@@ -158,3 +171,4 @@ The button only appears when something is left to remove, and it works even when
 - 2026-10-03 — Export To chips (Apple Calendar / Other Apps), status card and Move instead of the picker once exported, no multi-calendar export, end-date limit matches the 1-year chip
 - 2026-10-03, evening — Export To moved from top chips to a dropdown under the event picker
 - 2026-10-04 — Remove Events from All Timetables (found by marker; only dedicated calendars removed whole)
+- 2026-10-07 — shared event picker; Import from another timetable uses the same grouping and order (selection by event id)
