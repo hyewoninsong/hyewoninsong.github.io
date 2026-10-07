@@ -17,7 +17,7 @@ In a timetable app, the slow part is not looking at it but building and fixing i
 | Title suggestions | Existing titles appear as chips while typing; picking one brings its color |
 | Shortcuts "Add class" | Add a class by voice without opening the app |
 | Auto color | Least-used palette color; same title, same color |
-| Import from another timetable | Pick from a checklist grouped by title; alarms are not copied, mismatched axis types are blocked |
+| Import from another timetable | Pick from a checklist of title+color cards with time rows (the same list as calendar export); alarms are not copied, mismatched axis types are blocked |
 | Two ways to duplicate | Option-drag on iPad; long-press Duplicate to copy to another day |
 | Biweekly (removed same day) | Odd-week and even-week classes. Pulled because alarms could not follow |
 | Live Activity | Today's remaining classes on the Lock Screen |
