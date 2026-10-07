@@ -1,9 +1,9 @@
 ---
 title: "A disabled confirm button is now filled grey, not faded"
-date: 2026-10-07T11:45:02+09:00
+date: 2026-10-07T12:23:46+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
-summary: "The checkmark at the top right of a sheet fills with ink when it can be tapped and with grey when it cannot. The system's prominent glass style drops its fill entirely when disabled, so the chip is drawn by hand."
+summary: "The primary button at the top right of a sheet fills with ink when it can be tapped. A hand-drawn chip first gave the disabled state a grey fill, but on the folding iPhone that chip was the one button that did not follow the others to the side bar, so navigation bars went back to the system style."
 ---
 
 The checkmark at the top right of a sheet is now filled dark when you can tap it and filled grey when you cannot. Before, only the glyph faded a little, and you had to compare it with the X beside it to notice.
@@ -36,6 +36,8 @@ Disabled is the problem. The moment `.disabled` applies, the fill disappears and
 ![The system prominent style. Disabled on top, enabled below: the disabled one loses its fill and matches the X](/blog/timetable-confirm-chip-fill/system-prominent-disabled.png)
 
 Dropping `.disabled` and only blocking touches would produce the picture, but VoiceOver and UI tests would then believe the button works. So there is a small `ButtonStyle` instead. It reads `isEnabled` from the environment, picks the fill, and removes the glass's interactive press response when disabled. Call sites still just write `.disabled(…)`, so the picture and the behavior cannot drift apart. That exact drift produced a "I have to tap confirm twice" report on iPad last month.
+
+(This hand-drawn chip left the navigation bar later the same day; see "The hand-drawn chip did not follow the bar" below. It now lives only outside bars, such as the iPad popover header.)
 
 In a navigation bar, iOS 26 puts its own glass circle behind every toolbar item, so the chip would sit inside a second circle. `.sharedBackgroundVisibility(.hidden)` on the `ToolbarItem` turns that off, and the chip is 44pt to match the system's.
 
@@ -90,7 +92,48 @@ The test was whether the meaning survives being reduced to one icon.
 
 One filled chip per sheet. With two, the fill stops saying anything.
 
+## 2026-10-07 — The hand-drawn chip did not follow the bar
+
+One more reversal that afternoon. Primary buttons in a navigation bar are system buttons again: `.glassProminent` with a label-color tint.
+
+iPhone Duo moves navigation and toolbar buttons into a vertical strip on the right. In the simulator, the print sheet's close button moved to that strip, and the filled print chip stayed behind at the top.
+
+![The print sheet on a folded iPhone Duo. The X moved to the vertical strip; the hand-drawn print chip stayed in the title row](/blog/timetable-confirm-chip-fill/duo-chip-stays-top.png)
+
+Swapping only the button, in the same place:
+
+| Button | Moves to the strip | Disabled look |
+|---|---|---|
+| Hand-drawn chip with system glass turned off | No | Grey fill |
+| Unstyled system button | Yes | Faded glyph (never filled) |
+| `.glassProminent` with label tint | Yes | Depends on the device |
+
+Placement made no difference. What mattered was whether the system draws the button. The `.sharedBackgroundVisibility(.hidden)` added in the morning, to avoid a circle inside a circle, also removed the item from the set the system relocates.
+
+![The same sheet with a system button. Print now sits under the X in the strip](/blog/timetable-confirm-chip-fill/duo-system-in-bar.png)
+
+### What it cost
+
+The reason for leaving the system style was that it drops its fill when disabled. That is still true on a regular iPhone.
+
+![Disabled print button on iPhone: an empty glass circle](/blog/timetable-confirm-chip-fill/iphone-system-disabled.png)
+
+![Enabled share button on iPhone: filled](/blog/timetable-confirm-chip-fill/iphone-system-enabled.png)
+
+It is still better than the original, where the enabled button was not filled either and only the glyph's weight differed. Now the presence of a fill carries the state. It is less distinct than a grey fill, and that was a known trade.
+
+On Duo's strip the same system button renders its disabled state with a grey fill, the picture the morning's chip was built to produce. The disabled look belongs to the OS and varies by runtime; drawing the whole button to pin it was expensive.
+
+### Search collapses to a magnifier
+
+The search field in the timetable list's bottom toolbar becomes a magnifier button in the strip. Tapping it opens a horizontal field just above the keyboard, and the lower buttons in the strip step aside. It uses the system search item, so nothing needed changing.
+
+### From here on
+
+To restyle a toolbar button, start from a system style plus a tint. Turn the glass off and draw by hand only outside bars. And capture one folded-Duo screenshot whenever a toolbar item is added or changed; skipping that one capture is why this flipped twice in a day.
+
 ## History
 
 - 2026-10-07 — Disabled checkmark filled grey; iPad popover header insets
 - 2026-10-07 — Wide bottom primary buttons replaced by the top-right filled chip (seven sheets)
+- 2026-10-07 — Navigation-bar primary buttons back to the system style (iPhone Duo strip); hand-drawn chip only outside bars
