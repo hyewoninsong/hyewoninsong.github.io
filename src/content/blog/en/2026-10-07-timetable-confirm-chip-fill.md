@@ -1,6 +1,6 @@
 ---
 title: "A disabled confirm button is now filled grey, not faded"
-date: 2026-10-07T12:23:46+09:00
+date: 2026-10-07T17:09:36+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The primary button at the top right of a sheet fills with ink when it can be tapped. A hand-drawn chip first gave the disabled state a grey fill, but on the folding iPhone that chip was the one button that did not follow the others to the side bar, so navigation bars went back to the system style."
@@ -20,7 +20,7 @@ Every confirm button that has an enabled condition got the same treatment.
 |---|---|
 | Edit event (iPhone sheet, iPad popover) | the times are reversed or outside the visible range, or no color is set |
 | New timetable | no vertical axis is picked yet |
-| Settings, Display | an edited value is not valid |
+| Display | an edited value is not valid |
 | Color editor | the hex string is not a color |
 
 No new conditions were invented; each sheet already knew whether it could save. Buttons that are always tappable, such as the one that ends list editing, are left unfilled. A fill that is always on says nothing.
@@ -132,8 +132,39 @@ The search field in the timetable list's bottom toolbar becomes a magnifier butt
 
 To restyle a toolbar button, start from a system style plus a tint. Turn the glass off and draw by hand only outside bars. And capture one folded-Duo screenshot whenever a toolbar item is added or changed; skipping that one capture is why this flipped twice in a day.
 
+## 2026-10-07 — Buttons that are always tappable lost their fill
+
+A third change the same evening. The checkmark in Settings, the share button for images, and the copy button for a proposed time are no longer filled. They are plain glass buttons, the same as the close button beside them.
+
+![Top: the Settings checkmark. Bottom: the image share sheet. Both are a single unfilled glass circle, like the close button](/blog/timetable-confirm-chip-fill/plain-actions.png)
+
+Moving every primary action to the top right had filled all of them, including the ones that can never be disabled. Every sheet opened with a black circle in the corner. The feedback was short: when everything is emphasized, it looks wrong.
+
+The rule is now one question. Is there ever a time this button cannot be tapped?
+
+| Button | Can it be disabled? | Drawn as |
+|---|---|---|
+| Settings checkmark, image share, copy time | no | plain |
+| Edit, Display, New timetable checkmarks | yes, on invalid values | filled |
+| Print | yes, with no printer chosen | filled |
+| Send free time, pick-and-confirm sheets | yes, with nothing picked | filled |
+
+The shared toolbar item takes the disabled condition as an optional argument and fills only when one is passed. A button with no condition has nothing to pass, so it comes out plain without anyone choosing.
+
+One button sits on the line. Saving a lock screen wallpaper is disabled only while the image is prepared or being saved. It stays filled for now, because it shares the bar with two secondary buttons and the fill tells them apart.
+
+### Glass on glass draws two rings
+
+The first attempt at the plain look used `.buttonStyle(.glass)`. The capture showed two concentric rings.
+
+![With the glass style set explicitly: a second circle inside the one the toolbar already draws](/blog/timetable-confirm-chip-fill/glass-double-ring.png)
+
+Since iOS 26 the toolbar draws a glass circle behind each item. A glass button style on top adds another one inside it. The fix is to set no button style at all and apply only the ink tint. This does not show in code review. It showed in the screenshot.
+
+
 ## History
 
 - 2026-10-07 — Disabled checkmark filled grey; iPad popover header insets
 - 2026-10-07 — Wide bottom primary buttons replaced by the top-right filled chip (seven sheets)
 - 2026-10-07 — Navigation-bar primary buttons back to the system style (iPhone Duo strip); hand-drawn chip only outside bars
+- 2026-10-07 — Always-tappable primary buttons (Settings checkmark, image share, copy time) lost their fill; the fill is only for buttons that can be disabled
