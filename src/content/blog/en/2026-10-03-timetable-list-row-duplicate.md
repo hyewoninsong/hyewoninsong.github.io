@@ -1,6 +1,6 @@
 ---
 title: "Switch the list to titles and Duplicate was gone"
-date: 2026-10-07T11:25:00+09:00
+date: 2026-10-08T03:37:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The title-only view of the timetable list had no duplicate button — the action only lived in a long-press menu. Each row now has its own, and two other placements lost."
@@ -106,6 +106,8 @@ A day later the bar changed shape. The positions stayed: create things normally,
 | Normal | Import from file | Search | New timetable `+` |
 | Edit | Duplicate | Search | Delete |
 
+The normal row was reordered a day later — search now comes first. See the 2026-10-08 section below.
+
 ![Card view, normal: import on the left, a search field in the centre, a round + on the right. The view toggle and Edit sit apart at the top](/blog/timetable-list-row-duplicate/bottom-toolbar-normal.png)
 
 ![Card view, edit: Duplicate, search, a red Delete; the top-right button is now an X](/blog/timetable-list-row-duplicate/bottom-toolbar-edit.png)
@@ -124,6 +126,21 @@ Search used to be ignored in edit mode, because drag-to-reorder reports position
 
 Checked on an iPhone simulator in both views; not yet on iPad.
 
+## 2026-10-08 — Search leads the normal bar; the two create buttons sit together
+
+The normal row changed order a day later. The edit row did not.
+
+| | First | Second | Third |
+|---|---|---|---|
+| Normal | Search | Import from file | New timetable `+` |
+| Edit | Duplicate | Search | Delete |
+
+![Card view, normal: the bottom bar reads search field, import, round + from the left, with the two buttons side by side on the right](/blog/timetable-list-row-duplicate/bar-search-first-normal.png)
+
+Both normal buttons add a timetable; they now sit together on the right and the search field starts at the left edge. In edit mode the field moves back to the middle, between Duplicate and Delete, as before.
+
+In code, the whole item order now branches on edit mode instead of swapping buttons inside fixed end items: where `DefaultToolbarItem(kind: .search, placement: .bottomBar)` is written is where the field lands. A `ToolbarSpacer(.fixed)` between the two normal buttons keeps them as separate circles. Measured frames match across both views. Still not captured on iPad.
+
 
 ## History
 
@@ -131,3 +148,4 @@ Checked on an iPhone simulator in both views; not yet on iPad.
 - 2026-10-06 — Keeping scroll position across the view switch
 - 2026-10-06 — Per-row duplicate removed; one button bar for both views, plus file import
 - 2026-10-07 — Bottom bar becomes two round buttons with search between; leaving edit mode is an X
+- 2026-10-08 — Normal bar reordered to search, import, new timetable (edit keeps search in the middle)
