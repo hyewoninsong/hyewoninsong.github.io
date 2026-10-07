@@ -1,6 +1,6 @@
 ---
 title: "Switch the list to titles and Duplicate was gone"
-date: 2026-10-06T23:15:00+09:00
+date: 2026-10-07T11:25:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The title-only view of the timetable list had no duplicate button — the action only lived in a long-press menu. Each row now has its own, and two other placements lost."
@@ -97,9 +97,37 @@ File import is a new entry point, not a new path. It calls the same function as 
 
 The test from above still holds — is there a visible entry point. What changed is that the entry point is one bar acting on a chosen target, not a button on every row.
 
+## 2026-10-07 — The bottom bar is two round buttons and a search field
+
+A day later the bar changed shape. The positions stayed: create things normally, act on one target in edit mode.
+
+| | Left | Centre | Right |
+|---|---|---|---|
+| Normal | Import from file | Search | New timetable `+` |
+| Edit | Duplicate | Search | Delete |
+
+![Card view, normal: import on the left, a search field in the centre, a round + on the right. The view toggle and Edit sit apart at the top](/blog/timetable-list-row-duplicate/bottom-toolbar-normal.png)
+
+![Card view, edit: Duplicate, search, a red Delete; the top-right button is now an X](/blog/timetable-list-row-duplicate/bottom-toolbar-edit.png)
+
+The full-width New Timetable button became a round `+`, and Duplicate and Delete lost their labels. The space that freed up went to search. Search used to live only in the title list, at the top; it was kept out of the card view because the top looked crowded. At the bottom that objection is gone, so both views share the field.
+
+Leaving edit mode is now an X instead of a checkmark. Reorder, duplicate and delete all apply immediately, so there is nothing to confirm. The sheet's own close button hides meanwhile, so there is never a choice between two X's.
+
+The bar is the system bottom toolbar, not a hand-drawn row: `ToolbarItem(placement: .bottomBar)` at each end and `DefaultToolbarItem(kind: .search, placement: .bottomBar)` between them. The glass, the disabled look, rising above the keyboard and collapsing the side buttons while searching all come free.
+
+![Searching in the card view: the field rides above the keyboard, the side buttons collapse, the navigation bar stays](/blog/timetable-list-row-duplicate/bottom-toolbar-search.png)
+
+One default was changed. Searching normally hides the navigation bar, which makes the card jump and takes the view toggle away; `.searchPresentationToolbarBehavior(.avoidHidingContent)` keeps it. Splitting the two top-right buttons is a `ToolbarSpacer(.fixed)` between them.
+
+Search used to be ignored in edit mode, because drag-to-reorder reports positions in the full list and a filtered list would move the wrong timetable. With the field always visible, typing into it and seeing nothing happen reads as broken. So search now always applies, and only reordering locks while a filter is active. If the chosen target is filtered out, the target moves to the first remaining result, so nothing off-screen gets deleted.
+
+Checked on an iPhone simulator in both views; not yet on iPad.
+
 
 ## History
 
 - 2026-10-03 — A duplicate button on every title row
 - 2026-10-06 — Keeping scroll position across the view switch
 - 2026-10-06 — Per-row duplicate removed; one button bar for both views, plus file import
+- 2026-10-07 — Bottom bar becomes two round buttons with search between; leaving edit mode is an X
