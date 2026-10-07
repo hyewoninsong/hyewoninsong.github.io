@@ -1,6 +1,6 @@
 ---
 title: "A sheet that popped in instead of sliding up — measuring its height was cancelling the transition"
-date: 2026-10-08T00:01:33+09:00
+date: 2026-10-08T04:00:57+09:00
 app: "timetable"
 tags: ["devlog", "swiftui"]
 summary: "A content-sized sheet had no present animation. Its height was being rewritten twice while it was still rising, and getting the initial estimate right does not fix it."
@@ -47,3 +47,30 @@ The settings sheet used the same pattern and got the same fix.
 ## Why it was missed
 
 Every check of this sheet was one settled screenshot, and the source-level tests only asserted that a measurement drives the height, not when. For values driven by measurement, when they land matters as much as what they are. Sheets that measure their height now get their opening recorded and judged frame by frame.
+
+## 2026-10-08 — It was also jumping when the height changed while open
+
+The same afternoon, a different moment of the same sheet came up. Switching the vertical axis from time-based to period-based swaps a card, and the content grows from 614 to 783 pt. The sheet did not grow. It was at the new height one frame later.
+
+![One frame after the tap the sheet already fills the screen](/blog/timetable-sheet-detent-present/resize-before-jump.png)
+
+On a height change the detent set went from `[.height(old)]` to `[.height(new)]`, with the selection moved in the same update. The system only animates a move between detents that are both in the set. Once the starting detent is gone there is nothing to animate from. Two `.height` detents with different values are different detents.
+
+Wrapping the update in `withAnimation` changed nothing on the recording. A SwiftUI transaction does not reach the controller that draws the sheet.
+
+What works is splitting the steps:
+
+1. Put both heights in the set. The selection is still the old one, so nothing moves.
+2. On the next tick, move only the selection. The system now animates between the two.
+3. After 0.6 s, drop the old height, so the sheet cannot be dragged back down to it.
+
+![The same tap now grows the sheet over several frames](/blog/timetable-sheet-detent-present/resize-after-moves.png)
+
+A height can change again inside that window, so the cleanup carries a transition number and only removes the old height if it still belongs to it.
+
+The sheet was always meant to follow its content, a wheel expanding for example. It did reach the right height, but nobody had watched whether it moved there. Recording only the opening left the rest unchecked for exactly one day.
+
+## History
+
+- 2026-10-08 — Present transition was cancelled. Measurements are applied after the transition ends.
+- 2026-10-08 — Height changes while open jumped. Old and new heights share the set and the selection moves a tick later.
