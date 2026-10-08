@@ -1,6 +1,6 @@
 ---
 title: "A disabled confirm button is now filled grey, not faded"
-date: 2026-10-07T17:09:36+09:00
+date: 2026-10-08T14:22:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The primary button at the top right of a sheet fills with ink when it can be tapped. A hand-drawn chip first gave the disabled state a grey fill, but on the folding iPhone that chip was the one button that did not follow the others to the side bar, so navigation bars went back to the system style."
@@ -85,7 +85,7 @@ The wallpaper sheet already had full-screen preview and share at the top right. 
 
 The test was whether the meaning survives being reduced to one icon.
 
-- **Export to Calendar.** The title changes with state: add, update, move. An icon cannot say which. There are also two branches, Apple Calendar and a file.
+- **Export to Calendar.** The title changes with state: add, update, move. An icon cannot say which. There are also two branches, Apple Calendar and a file. (Reversed the next day — see the last section.)
 - **"Also update similar events?"** Two choices, so there is no single primary action.
 - **Delete.** Irreversible actions stay in their own group at the bottom of the content.
 - **The bottom row of the timetable list.** The top right already holds two buttons, and that row was rearranged the day before. Moving it means redesigning the list toolbar, which is a separate decision.
@@ -161,6 +161,32 @@ The first attempt at the plain look used `.buttonStyle(.glass)`. The capture sho
 
 Since iOS 26 the toolbar draws a glass circle behind each item. A glass button style on top adds another one inside it. The fix is to set no button style at all and apply only the ink tint. This does not show in code review. It showed in the screenshot.
 
+## 2026-10-08 — Export to Calendar moved up after all
+
+The first item on yesterday's "buttons that stayed" list lasted a day. The request was simple — this was the only sheet with its action at the bottom — and on a second look neither reason for keeping it held.
+
+**Two branches.** Whether the timetable goes to Apple Calendar or out as an .ics file is already chosen by the "Export to" dropdown in the sheet. That is not two buttons; it is one action, "send to the chosen place", and a single chip can follow the dropdown.
+
+**The title carried the state.** The card directly above the button was already saying it. No record: a "Calendar" picker card. Already exported: a card reading "In the '2nd Semester' calendar". Moving: that card gains a Cancel row and the picker card reopens below it. "Add", "Update", "Move" on the button were restating the card.
+
+![No record yet: the calendar picker card, and a filled chip with a calendar-plus glyph at the top right](/blog/timetable-confirm-chip-fill/calendar-export-add.png)
+
+![Already exported: the status card states where the events are, and the chip becomes a sync arrow](/blog/timetable-confirm-chip-fill/calendar-export-update.png)
+
+The glyph takes over from the title, so each state needs its own.
+
+| State | Glyph | Chip is grey when |
+|---|---|---|
+| Apple Calendar, no record | calendar with plus | no events fall in the period |
+| Apple Calendar, already exported | sync arrows | same |
+| Apple Calendar, moving | right arrow | same, or the target is the calendar it is already in |
+| Other app (.ics) | share arrow | no events fall in the period |
+
+It is a filled chip, by yesterday's rule: this sheet has states where the button cannot be tapped. Picking the current calendar as the move target greys the chip out, which explains itself better than a "same calendar" caption did.
+
+Two alternatives lost. A text pill at the top right, the way Apple's Calendar app shows "Add", keeps the verb but makes this one sheet look unlike every other, and the French and Spanish titles are too long for a pill. A navigation title that switches between "Add to Calendar" and "Update Calendar" moves every time the dropdown changes.
+
+Identifiers stayed with each branch, so the existing UI tests and capture scripts run unchanged, plus one new test that walks all four states and checks the labels. Remove and remove-all stay at the bottom as their own group. The remaining exceptions are two: a confirmation with two choices, and destructive actions.
 
 ## History
 
@@ -168,3 +194,4 @@ Since iOS 26 the toolbar draws a glass circle behind each item. A glass button s
 - 2026-10-07 — Wide bottom primary buttons replaced by the top-right filled chip (seven sheets)
 - 2026-10-07 — Navigation-bar primary buttons back to the system style (iPhone Duo strip); hand-drawn chip only outside bars
 - 2026-10-07 — Always-tappable primary buttons (Settings checkmark, image share, copy time) lost their fill; the fill is only for buttons that can be disabled
+- 2026-10-08 — Export to Calendar joined the top-right chip; its glyph follows the export target and record state
