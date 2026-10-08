@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T18:25:00+09:00
+date: 2026-10-08T19:45:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -386,7 +386,7 @@ The "Time → period" row in the table above describes the first version; period
 
 A second period timetable meant dialing in all six rules again, even with an identical schedule sitting in the timetable next to it. Custom period names and irregular periods from an imported file could not be rebuilt with the wheels at all.
 
-The period card in the display sheet now ends with "Import Periods from Another Timetable" (moved next to the card title a day later; see the Oct 7 update). It opens a picker, and Import brings over that timetable's periods as they are.
+The period card in the display sheet now ends with "Import Periods from Another Timetable" (moved next to the card title a day later, then back under the card on Oct 8; see the updates below). It opens a picker, and Import brings over that timetable's periods as they are.
 
 | Comes over | Stays put |
 |---|---|
@@ -424,7 +424,7 @@ Values people think of as a pair share a row. Each pill is its own button and op
 
 **A strip instead of a sentence.** On Oct 3 I wrote that the grid behind the sheet is the preview. On an iPhone the sheet covers nearly all of it. So the card now draws the day above the summary line: one bar per period, small gaps for breaks, a wide gap for lunch, and red bars from the point where the day runs past midnight. It is read-only. The minimap removed on Sep 30 was an editor's scrollbar and went away because hand edits and rules drifted apart; this strip only shows what the rules produce.
 
-**Import moved next to the title.** Yesterday's full-width row under the card is now a small button beside the "Periods" heading.
+**Import moved next to the title** (reversed a day later; see the Oct 8 night update). Yesterday's full-width row under the card is now a small button beside the "Periods" heading.
 
 What lost:
 
@@ -480,6 +480,18 @@ The old rows read "P1 9:00 – 9:50", so picking a start meant reading an end ti
 
 Names, times and the anchor are covered by tests; turning the wheel and dragging by hand on a device is still to do.
 
+## Update, Oct 8 night — one sheet, one look for "tap a value, get a wheel"
+
+Switching the axis inside the display sheet put the two layouts side by side, and the same action had two looks. On a time-based timetable the start and end values are grey pills, and the open one only turns its text blue. On a period timetable each pill carried an up-down chevron and its whole background turned blue when open.
+
+The period pills now match the time pills: no chevron, grey background at all times, blue text on the open value.
+
+![The period count row open: the pill stays grey and only the 8 is blue, with no chevron. The import row stands on its own under the card](/blog/timetable-period-axis/period-rules-plain-capsule.png)
+
+The up-down chevron is the mark of a row that opens a menu. A wheel is a panel that unfolds under its row, so the chevron made it read as a different kind of control, and only on one axis.
+
+**Import is a full row again.** The small text button beside the "Periods" heading went back to a one-row button card directly under the rules card, with its full label. It still sits outside the rules card: those rows edit values, this one replaces them all.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -508,3 +520,4 @@ Names, times and the anchor are covered by tests; turning the wheel and dragging
 - Oct 7 — period rules card from seven rows to four (class · break and lunch timing · length as paired pills), lunch-row switch inside the lunch panel, a day strip above the summary, import moved beside the card title
 - Oct 8 — a period row matches one hour on time grids (unlock zoom 2x → 1.5x), lunch row at half height with a name-only label; lines from row boundaries, stripes per period row, grid end in minutes
 - Oct 8, evening — edit-sheet period wheels step by half periods (start times on the Start wheel, end times on the End wheel); long-press creation floors to the hour / period start, like a tap
+- Oct 8, night — period rule pills match the time pills (no chevron, no blue background when open); import back to a button row under the card
