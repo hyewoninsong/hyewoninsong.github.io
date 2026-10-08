@@ -1,6 +1,6 @@
 ---
 title: "Picking an alert made the text shimmer — the closing menu's glass was refracting it"
-date: 2026-10-08T19:15:39+09:00
+date: 2026-10-08T20:01:42+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Choosing '10 minutes before' made the value label glitch for a fraction of a second. Two causes: a card animation interpolating the text, and the iOS 26 menu glass refracting the label underneath as it closed."
@@ -48,7 +48,16 @@ We missed it because the frame strip was cropped to the row being changed. A fix
 
 The 0.15-second fade on the picked row is unchanged, and the 0.3-second delay was measured in the simulator — device timing has not been measured yet.
 
+## 2026-10-08 (evening) — no scrolling at all while the menu is up
+
+Going back to why Apple's own apps never show this: the original trigger was the list moving while a menu was open. In Apple's apps a touch outside the menu only dismisses it. In our sheet, measured in the simulator, a drag with the menu open scrolled the content by 98pt.
+
+So the sheet's scroll view is now disabled while a menu is up. The hard part was knowing when that is. SwiftUI gives no signal, and a probe showed the iOS 26 menu is not a separate window but a child view inside the app's window, so window notifications never fire. What does arrive is every touch: the tap on the label, taps outside, drags, item picks — all reach a passive recognizer on the window. Any touch ending means closed; a stationary tap on the value label, when it was closed, means open. Same probe after the change: 0pt while open, 98pt once closed.
+
+That removes the reason the lifted label floated, which opens the door to dropping the split label and the hide-then-fade entirely. Not yet — the main-thread trigger remains and nothing has been checked on a device.
+
 ## History
 
 - 2026-10-07 — took the label out of the card animation; hide-then-fade after a pick
 - 2026-10-08 — one hide signal per row
+- 2026-10-08 (evening) — scroll locked while a menu is up; open/closed judged from window touches
