@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T16:13:12+09:00
+date: 2026-10-08T18:25:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -100,7 +100,7 @@ The word stays: for Korean students, university included, 교시 is still the wo
 
 The grid snapped to periods, but the event edit sheet still asked for start and end *times*. Putting a class in Period 2 meant remembering that Period 2 runs 10:00–10:50 and dialing two wheels.
 
-Now, in a period timetable, the sheet's Start and End rows show a period name in the capsule, with the real time in small type beside it. Tap a capsule and a wheel opens below it, each row reading "P2 10:00 – 10:50". Custom period names show up here too.
+Now, in a period timetable, the sheet's Start and End rows show a period name in the capsule, with the real time in small type beside it. Tap a capsule and a wheel opens below it, each row reading "P2 10:00 – 10:50" (since Oct 8 the wheel steps by half periods and shows one time per row — see below). Custom period names show up here too.
 
 ![New event sheet in a period timetable — Start shows 09:00 and a P1 capsule, the wheel below lists P1 09:00 – 09:50 and P2 10:00 – 10:50](/blog/timetable-period-axis/edit-sheet-period-wheel.png)
 
@@ -254,7 +254,7 @@ Earlier that same day we went the other way. A resize could shrink a block to ha
 
 What lost: asking users to define 75-minute periods (breaks timetables that mix both lengths), minute-level dragging (drops the reason to pick periods), and pointing them to time-based timetables (drops the period axis they wanted).
 
-One more fix: saving used to stretch any event to at least 30 minutes. Half of a 50-minute period is 25, so it would spill into the break. Period timetables now use a 1-minute floor, matching the edit sheet. The edit sheet's period wheels still pick whole periods; a 1.5-period class stays as it is unless you turn them.
+One more fix: saving used to stretch any event to at least 30 minutes. Half of a 50-minute period is 25, so it would spill into the break. Period timetables now use a 1-minute floor, matching the edit sheet. At this point the edit sheet's period wheels still picked whole periods (they step by half periods since Oct 8); a 1.5-period class stays as it is unless you turn them.
 
 ## Update, Oct 3 evening — the period rules live in the display sheet; the editor is gone
 
@@ -459,6 +459,27 @@ This reverses two earlier calls: the 2x unlock zoom from Oct 3 and the full-heig
 
 The mapping is covered by tests and the screens by simulator captures; dragging in the rows after lunch has not been tried by hand yet.
 
+## Update, Oct 8 evening — half periods in the edit sheet, and long-press starts where a tap does
+
+The grid has snapped to half periods for five days, but the edit sheet's wheels still moved a whole period at a time. You couldn't make a 1.5-period class from the sheet, and touching the wheel on one snapped it back to period boundaries.
+
+The wheels now list P1, P1.5, P2, P2.5, and each row carries a single time.
+
+| Wheel | Row | Meaning |
+|---|---|---|
+| Start | P1  9:00 | from the start of P1 |
+| Start | P1.5  9:25 | from the middle of P1 |
+| End | P1  9:50 | through the end of P1 |
+| End | P1.5  10:25 | through the middle of P2 |
+
+The old rows read "P1 9:00 – 9:50", so picking a start meant reading an end time too. The Start wheel now shows start times only and the End wheel end times only.
+
+**Naming was the hard part.** Naming each half (P1 = first half, P1.5 = second half) turns every ordinary one-period class into "P3 to P3.5". Instead a name means "one period beginning at that spot": P1.5 begins mid-P1 and runs one period. A one-period class is still P3 to P3, and a 75-minute class is P1 to P1.5. The cost is that an event covering only the first half of P1 ends at "P0.5". That's rare enough to accept.
+
+**Long-press creation** changed with it. A tap creates an event at the start of the tapped period (or on the hour in a time timetable), but a long-press in the same cell started at the nearest half-hour line, so 9:40 gave 9:00 one way and 9:30 the other. Long-press now floors to the start of the pressed cell as well, or to the end of the event above if that cuts into the cell. The end still follows your finger. Rounding the anchor up for upward drags lost: the block would jump a cell whenever the drag changed direction.
+
+Names, times and the anchor are covered by tests; turning the wheel and dragging by hand on a device is still to do.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -486,3 +507,4 @@ The mapping is covered by tests and the screens by simulator captures; dragging 
 - Oct 6, afternoon — import another period timetable's periods (times, names, lunch row) from the display sheet; reuses the free-time picker, lands in the draft (checkmark saves, X discards)
 - Oct 7 — period rules card from seven rows to four (class · break and lunch timing · length as paired pills), lunch-row switch inside the lunch panel, a day strip above the summary, import moved beside the card title
 - Oct 8 — a period row matches one hour on time grids (unlock zoom 2x → 1.5x), lunch row at half height with a name-only label; lines from row boundaries, stripes per period row, grid end in minutes
+- Oct 8, evening — edit-sheet period wheels step by half periods (start times on the Start wheel, end times on the End wheel); long-press creation floors to the hour / period start, like a tap
