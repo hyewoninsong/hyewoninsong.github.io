@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T21:27:03+09:00
+date: 2026-10-08T21:52:48+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -418,7 +418,7 @@ The display sheet looked heavy on a period timetable. A time-based timetable sho
 | Class · Break | two pills — 50m · 10m |
 | Lunch | two pills — after P4 · 1h (a single "None" when there is no lunch) |
 
-Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis moved under the wheel of the open lunch row here — and moved back a day later; it is a permanent row again (see the Oct 8 late-night update).
+Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis moved under the wheel of the open lunch row here — and moved back a day later; it is a permanent row again (see the last Oct 8 update).
 
 ![The lunch row expanded — the 1h pill highlighted, its length wheel open underneath](/blog/timetable-period-axis/period-rules-lunch-panel.png)
 
@@ -444,7 +444,7 @@ Period grids now use the same scale as time grids: one period row is as tall as 
 |---|---|---|
 | Unlocked period row (iPhone) | 144pt (2x) | 108pt (1.5x, same as time grids) |
 | Lunch row | a full row | half a row |
-| Lunch label | name, start, end | name only |
+| Lunch label | name, start, end | name + one line "12:50–1:50" (name only for a few hours — see the late-night update) |
 
 This reverses two earlier calls: the 2x unlock zoom from Oct 3 and the full-height lunch row from Sep 30. Switching between the two kinds of timetable and seeing the same hour at two heights turned out to bother more than a small half row, and a row nothing can be placed in was taking a whole class worth of screen.
 
@@ -492,7 +492,19 @@ The up-down chevron is the mark of a row that opens a menu. A wheel is a panel t
 
 **Import is a full row again.** The small text button beside the "Periods" heading went back to a one-row button card directly under the rules card, with its full label. It still sits outside the rules card: those rows edit values, this one replaces them all.
 
-## Update, Oct 8 late night — a switch inside a collapsed panel comes back as "it's gone"
+## Update, Oct 8 late night — the lunch row says when lunch is
+
+When the lunch row shrank to half height earlier today, its label lost the start and end times: three lines don't fit in a half row, and the period above ends when lunch starts. On a real device that reasoning didn't hold. Lunch was the one row on the axis with no time on it, and reading it meant combining two numbers from the neighbouring rows.
+
+The label now has two lines: the name, and a range underneath — "Lunch / 12:50–1:50".
+
+![Locked period grid — the half-height lunch row between Period 4 and Period 5 reads "Lunch" with "12:50–1:50" on one line beneath it](/blog/timetable-period-axis/lunch-half-row-time-range.png)
+
+The arithmetic was right: a half row is 36pt on a locked iPhone grid, and the period label's three lines come to about 37pt. So the range shares one line. AM/PM is dropped — the axis is 44pt wide and "12:50 PM–1:50 PM" doesn't fit even scaled down. The now-capsule on the same axis already drops it for the same reason, so the lunch range uses the same compact form, and the period labels above and below still carry AM/PM. In 24-hour mode it reads "12:50–13:50", a little smaller but inside the band.
+
+Two alternatives lost: smaller text for just the lunch row would mix two type sizes on one axis, and a range with AM/PM has no room. Shared images, prints and list previews still draw lunch as a full row, so their label keeps the three lines.
+
+## Update, Oct 8 later still — a switch inside a collapsed panel comes back as "it's gone"
 
 The "show lunch on the axis" switch is a permanent row of the period card again, directly under the lunch row. With no lunch set it dims; it does not disappear. The card has five rows.
 
@@ -540,4 +552,5 @@ Two checks guard it now: the switch is called exactly once, as a direct row of t
 - Oct 8 — a period row matches one hour on time grids (unlock zoom 2x → 1.5x), lunch row at half height with a name-only label; lines from row boundaries, stripes per period row, grid end in minutes
 - Oct 8, evening — edit-sheet period wheels step by half periods (start times on the Start wheel, end times on the End wheel); long-press creation floors to the hour / period start, like a tap
 - Oct 8, night — period rule pills match the time pills (no chevron, no blue background when open); import back to a button row under the card
-- Oct 8, late night — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
+- Oct 8, late night — the half-height lunch row's label gets a one-line start–end range ("12:50–1:50", no AM/PM), reversing the name-only label from earlier that day
+- Oct 8, later still — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
