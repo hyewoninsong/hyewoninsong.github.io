@@ -1,6 +1,6 @@
 ---
 title: "Nine time-saving features picked, three left out, one pulled back out"
-date: 2026-10-08T11:30:00+09:00
+date: 2026-10-08T15:36:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Nine features that cut the effort of building and editing a timetable, what we turned down, why biweekly classes went in and came out the same day, and the Shortcuts action."
@@ -13,7 +13,7 @@ In a timetable app, the slow part is not looking at it but building and fixing i
 | Feature | What it saves |
 |---|---|
 | Bulk alerts on | One tap in the `...` menu (inside its Alerts submenu since that afternoon) turns on "N minutes before" for every class. Only bulk-off existed |
-| Location field | Shows on blocks, widgets, Watch, Siri and calendar export |
+| Location field | Shows on blocks, widgets, Watch, Siri and calendar export. Removed the next day (see the bottom) |
 | Title suggestions | Existing titles appear as chips while typing; picking one brings its color |
 | Shortcuts "Add class" | Add a class by voice without opening the app |
 | Auto color | Least-used palette color; same title, same color |
@@ -65,8 +65,17 @@ Some schedules cannot be fitted: a 17:00 swim class when the last period ends at
 
 One snag: SwiftUI's `.disabled` dims the whole row, including the reason you are supposed to read. We block touches instead and dim only the title and time.
 
+## 2026-10-08 — location came out a day later, and the data stayed
+
+The location field went in one day and came out of the edit sheet the next. It looked like deleting one text field, but location also showed on blocks, widgets, Watch, Siri and calendar export. Remove only the input and yesterday's "Room 301" keeps showing with no way to edit or clear it. So every place that displayed it went too.
+
+What stayed is one key in the save file. The app still reads `location` and writes it back unchanged; nothing shows it. Dropping the value on read, or removing the key from the model the way we did for biweekly, would both erase it on the next save. Biweekly was pulled the day it landed, so no file held a value. Location had a day in test builds.
+
+Hidden data needs one guard. The free-time file sent to a friend strips titles and notes, and location was added to that list. Removing that line along with the feature would send an address nobody can see on screen. The line and its test stay. Shared timetable files and iCloud backups still carry the hidden value; if location never comes back, we drop the key then.
+
 ## History
 
 - 2026-10-07 — first entry
 - 2026-10-07 — biweekly removed the same day (AlarmKit `.weekly` limit)
 - 2026-10-08 — cross-type import allowed; schedules that cannot fit are disabled with a reason
+- 2026-10-08 — location field removed (input and every display; stored values kept)
