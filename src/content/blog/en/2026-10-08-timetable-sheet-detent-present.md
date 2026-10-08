@@ -1,6 +1,6 @@
 ---
 title: "A sheet that popped in instead of sliding up — measuring its height was cancelling the transition"
-date: 2026-10-08T04:00:57+09:00
+date: 2026-10-08T17:50:39+09:00
 app: "timetable"
 tags: ["devlog", "swiftui"]
 summary: "A content-sized sheet had no present animation. Its height was being rewritten twice while it was still rising, and getting the initial estimate right does not fix it."
@@ -70,7 +70,26 @@ A height can change again inside that window, so the cleanup carries a transitio
 
 The sheet was always meant to follow its content, a wheel expanding for example. It did reach the right height, but nobody had watched whether it moved there. Recording only the opening left the rest unchecked for exactly one day.
 
+## 2026-10-08 — Sheets taller than the screen "moved" between equal heights, and shrank on the way
+
+A third one arrived that evening. The first time Settings opened after launch, the sheet finished rising, pulled inward on all sides, then returned to full size. The period-based display sheet did it every time a wheel expanded or collapsed. It first looked tied to Face ID unlock. With app lock on, Face ID comes first on every launch, so it lined up with "first open after launch". A build without app lock did exactly the same.
+
+![The settled sheet pulls in from both edges, then returns to full width](/blog/timetable-sheet-detent-present/over-max-before-shrinks.png)
+
+Both sheets have content taller than the screen. A `.height(…)` detent is then clipped to the screen's maximum and the sheet draws full width, like `.large`. The fix from the previous section did the rest. On first open the estimate is corrected to the measurement, and a wheel changes the measurement. Old and new are both clipped to the same height on screen, but different values are still different detents. The system dutifully animates between them, and during that move the sheet takes the look of a detent that is not the largest: the floating, inset shape.
+
+It only showed on first open because the settled height is remembered. From the second open the sheet rises at that height and nothing moves.
+
+The fix is one rule. Every height that does not fit collapses to a single value, and its detent is `.large`, not `.height`. The limit is the window height minus the top safe area and the sheet's navigation bar. Above it, height changes never touch the detent set. Crossing it is still a real move between `.height` and `.large`.
+
+![The same span: the sheet rises full width and stays](/blog/timetable-sheet-detent-present/over-max-after-stays.png)
+
+The mechanism had been read that same morning. Toggling app lock shrank the sheet the same way, triggered by one row appearing and disappearing. App lock was removed, the row went with it, and the note said "not confirmed by reproduction, revisit if seen again". That removed one trigger, not the condition. Two more paths changed the height of an over-tall sheet.
+
+The recording that validated the previous fix used a sheet that fits on screen. Measured-height sheets now get one taller-than-screen configuration recorded too. The wheel case was not recorded this time; a unit test pins that it takes the same path.
+
 ## History
 
 - 2026-10-08 — Present transition was cancelled. Measurements are applied after the transition ends.
 - 2026-10-08 — Height changes while open jumped. Old and new heights share the set and the selection moves a tick later.
+- 2026-10-08 — Sheets taller than the screen shrank and grew back. Heights over the screen limit collapse to `.large`.
