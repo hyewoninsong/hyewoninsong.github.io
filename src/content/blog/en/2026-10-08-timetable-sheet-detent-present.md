@@ -1,12 +1,12 @@
 ---
 title: "A sheet that popped in instead of sliding up — measuring its height was cancelling the transition"
-date: 2026-10-08T17:50:39+09:00
+date: 2026-10-08T19:12:45+09:00
 app: "timetable"
 tags: ["devlog", "swiftui"]
 summary: "A content-sized sheet had no present animation. Its height was being rewritten twice while it was still rising, and getting the initial estimate right does not fix it."
 ---
 
-Tapping the day row or the time column in the timetable opens a display settings sheet. It used to appear in place with no slide-up, while dismissing animated normally. It slides up now.
+Tapping the day row or the time column in the timetable opens a display settings sheet. It used to appear in place with no slide-up, while dismissing animated normally. It slides up now. The same sheet was fixed twice more that day, and in the end it stopped measuring its height at all.
 
 ## Only the opening had no animation
 
@@ -88,8 +88,36 @@ The mechanism had been read that same morning. Toggling app lock shrank the shee
 
 The recording that validated the previous fix used a sheet that fits on screen. Measured-height sheets now get one taller-than-screen configuration recorded too. The wheel case was not recorded this time; a unit test pins that it takes the same path.
 
+## 2026-10-08 — In the end, the sheets stopped measuring
+
+After three fixes in one day the direction changed. The three bugs looked different but shared one condition: the detent changes while the sheet is up. A sheet that follows its content creates that condition every time the content changes: the first measurement, an expanded wheel, an axis switch. Each fix closed one path, and there was no way to count the ones left.
+
+So every sheet in the app now uses only the system sizes, `.medium` and `.large`. Four were not on a preset.
+
+| Sheet | Before | After |
+|---|---|---|
+| Settings | measured height | `.large` |
+| Display settings | measured height | opens at `.medium`, grabber to `.large` |
+| New timetable | `.medium`, then measured | `.medium` |
+| Style apply confirmation | fixed 298pt | `.medium` |
+
+The measuring helper, the view controller that reported the end of the present transition, and the height estimates are gone. None of the fixes in the three sections above exist in the code any more.
+
+Only the display sheet needed a decision. The timetable behind it is the live preview, so `.large` would hide what you are changing. At half height the content does not fit, and by default scrolling a half-height sheet grows it. That would cover the timetable just to reach a lower card, so the content scrolls instead: `.presentationContentInteraction(.scrolls)`.
+
+![The display sheet opens at half height with the timetable visible behind it](/blog/timetable-sheet-detent-present/system-medium-open.png)
+
+Expanding a wheel used to grow the sheet. Now the sheet stays put and scrolls just far enough to show the whole wheel.
+
+![With the end-time wheel expanded the sheet keeps its height and all three rows are visible](/blog/timetable-sheet-detent-present/system-medium-wheel.png)
+
+There is a cost. Short sheets such as New timetable leave empty space below. The display sheet covers about 50% of the screen instead of 77%, so more timetable shows and the lower cards need a scroll. A content-fitted height still looks better. It cost three pitfalls in two days.
+
+A test guards it: any `.height`, `.fraction` or `.custom` detent in the source fails. The period-based wheel scroll and iPad were not captured this time.
+
 ## History
 
 - 2026-10-08 — Present transition was cancelled. Measurements are applied after the transition ends.
 - 2026-10-08 — Height changes while open jumped. Old and new heights share the set and the selection moves a tick later.
 - 2026-10-08 — Sheets taller than the screen shrank and grew back. Heights over the screen limit collapse to `.large`.
+- 2026-10-08 — Measured-height detents removed. Every sheet uses `.medium` or `.large` only.
