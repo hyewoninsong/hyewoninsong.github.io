@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T21:52:48+09:00
+date: 2026-10-08T22:40:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -444,7 +444,7 @@ Period grids now use the same scale as time grids: one period row is as tall as 
 |---|---|---|
 | Unlocked period row (iPhone) | 144pt (2x) | 108pt (1.5x, same as time grids) |
 | Lunch row | a full row | half a row |
-| Lunch label | name, start, end | name + one line "12:50–1:50" (name only for a few hours — see the late-night update) |
+| Lunch label | name, start, end | name, start, end (name only for a few hours, then a one-line range, then back to three lines — see the later updates) |
 
 This reverses two earlier calls: the 2x unlock zoom from Oct 3 and the full-height lunch row from Sep 30. Switching between the two kinds of timetable and seeing the same hour at two heights turned out to bother more than a small half row, and a row nothing can be placed in was taking a whole class worth of screen.
 
@@ -496,7 +496,7 @@ The up-down chevron is the mark of a row that opens a menu. A wheel is a panel t
 
 When the lunch row shrank to half height earlier today, its label lost the start and end times: three lines don't fit in a half row, and the period above ends when lunch starts. On a real device that reasoning didn't hold. Lunch was the one row on the axis with no time on it, and reading it meant combining two numbers from the neighbouring rows.
 
-The label now has two lines: the name, and a range underneath — "Lunch / 12:50–1:50".
+The label now has two lines: the name, and a range underneath — "Lunch / 12:50–1:50". (An hour later this became the same three lines as a period — see the midnight update.)
 
 ![Locked period grid — the half-height lunch row between Period 4 and Period 5 reads "Lunch" with "12:50–1:50" on one line beneath it](/blog/timetable-period-axis/lunch-half-row-time-range.png)
 
@@ -522,6 +522,21 @@ So the switch appeared only after a tap, and then below the fold.
 **Why the tests stayed green.** Three UI tests tap this switch. When it moved, each got one extra line that taps the lunch pill first, and XCUITest's `tap()` scrolls an off-screen element into view on its own, so they kept passing at half height. Nothing asserted that the switch is there when the sheet first opens. That extra tap was the signal: if an existing test needs one more tap to pass, that tap is what the user now pays.
 
 Two checks guard it now: the switch is called exactly once, as a direct row of the card, and the number of expanding panels equals the number of scroll targets. The UI tests look for the switch without touching anything first.
+
+## Update, Oct 8 around midnight — lunch reads like a period, and a blocked drag says so
+
+The one-line range from an hour earlier is gone. Periods showed two lines with AM/PM; lunch alone showed "12:50–1:50". Lunch now uses the same three lines as every period.
+
+![Locked period grid — the half-height lunch row shows "Lunch / 12:50 PM / 1:50 PM" in the same format as the periods around it](/blog/timetable-period-axis/lunch-label-three-lines.png)
+
+Three lines did not fit before because of the 2pt line spacing, not the glyphs: 34.6pt of text in a 36pt row. The lunch row drops the spacing and keeps the font size.
+
+**A drag that stops must say why.** Blocks bulge, the handle squashes and a haptic fires when a drag hits another event or the grid edge. At the lunch row the block just stopped, which read as a bug. Two causes:
+
+- Placement clamped against three walls (neighbour, grid edge, lunch); the resistance check only read the first two. Both now read one wall value.
+- Resize measured resistance from the **snapped** value, so nothing showed until the finger crossed half a snap step. That is a few points on the time grid, but tens of points on the period grid (half-period snap) — above period 1 that distance is inside the day header. It now uses the raw finger position, as moves already did.
+
+Moving still hops across lunch once the block's centre passes the row's centre; resistance shows only while it is held back. Position tests had passed all along, because the block always landed in the right place. The resistance value now has unit tests; the in-drag animation is still a device check.
 
 ## History
 
@@ -554,3 +569,4 @@ Two checks guard it now: the switch is called exactly once, as a direct row of t
 - Oct 8, night — period rule pills match the time pills (no chevron, no blue background when open); import back to a button row under the card
 - Oct 8, late night — the half-height lunch row's label gets a one-line start–end range ("12:50–1:50", no AM/PM), reversing the name-only label from earlier that day
 - Oct 8, later still — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
+- Oct 8, around midnight — lunch label back to the same three lines as periods (zero line spacing in that row) · blocked-drag feedback at the lunch row and above period 1 (missing wall, resize strength from the raw finger value)
