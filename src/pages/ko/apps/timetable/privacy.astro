@@ -15,7 +15,7 @@ const t = useTranslations(lang);
     <div class="text-center mb-16 md:mb-20">
       <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperTimetable</span>
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">개인정보처리방침</h1>
-      <p class="text-sm text-text-sub">시행일: 2026년 9월 28일</p>
+      <p class="text-sm text-text-sub">시행일: 2026년 10월 8일</p>
     </div>
 
     <div class="prose prose-gray max-w-none
@@ -39,12 +39,13 @@ const t = useTranslations(lang);
 
       <h2>1. 사용자가 만든 내용</h2>
       <p>
-        시간표, 일정 제목, 색상, 메모, 알람 설정 등 <strong>사용자가 앱에 입력한 모든 내용은 기기 안에만 저장됩니다.</strong>
-        앱은 이 내용을 서버로 보내지 않고, 개발자도 볼 수 없습니다. 클라우드 동기화 기능이 없습니다.
+        시간표, 일정 제목, 색상, 메모, 알람 설정 등 <strong>사용자가 앱에 입력한 모든 내용은 기기에 저장됩니다.</strong>
+        앱은 이 내용을 개발자의 서버로 보내지 않고, 개발자도 볼 수 없습니다. 기기 간 동기화 기능은 없습니다.
       </p>
       <ul>
         <li>파일로 내보내거나 이미지·PDF로 공유하는 동작은 <strong>사용자가 직접 실행할 때만</strong> 일어나며, 내보낸 파일은 사용자가 고른 곳으로만 갑니다.</li>
-        <li>앱을 삭제하면 기기에 저장된 시간표도 함께 삭제됩니다. 백업이 필요하면 삭제 전에 <code>.supertimetable</code> 파일로 내보내 두세요.</li>
+        <li><strong>iCloud 백업</strong>(설정에서 끌 수 있으며 기본으로 켜져 있습니다)을 켜 두면, 시간표 백업 파일 하나가 <strong>사용자 본인의 iCloud</strong>에 저장됩니다. 이 파일은 Apple이 사용자 계정에 보관하며, 개발자는 접근할 수 없습니다.</li>
+        <li>앱을 삭제하면 기기에 저장된 시간표도 함께 삭제됩니다. iCloud 백업을 꺼 두었다면 삭제 전에 <code>.supertimetable</code> 파일로 내보내 두세요.</li>
       </ul>
 
       <h2>2. 자동으로 수집되는 정보</h2>
