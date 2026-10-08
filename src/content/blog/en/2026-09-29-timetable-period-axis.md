@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T22:40:00+09:00
+date: 2026-10-09T01:55:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -357,7 +357,7 @@ The vertical axis used to be a one-time choice at creation. Now the display shee
 
 ![Right after tapping By Period — the same slot now holds the period rules card, with the first period starting where the events start](/blog/timetable-axis-switch/period-cards.png)
 
-Events are never converted: they are stored as real times in both modes, so only the axis changes — plus any event the new axis has no room for.
+Switching to periods never converts events: they are stored as real times in both modes, so only the axis changes — plus any event the new axis has no room for. (At first that held in both directions. Since Oct 9, going back to the time axis saves each event where the period grid was drawing it — see the last update.)
 
 | Direction | Axis | Events |
 |---|---|---|
@@ -538,6 +538,27 @@ Three lines did not fit before because of the 2pt line spacing, not the glyphs: 
 
 Moving still hops across lunch once the block's centre passes the row's centre; resistance shows only while it is held back. Position tests had passed all along, because the block always landed in the right place. The resistance value now has unit tests; the in-drag animation is still a device check.
 
+## Update, Oct 9 — blocks that sat on period lines came back a few minutes off
+
+A user switched a time-based timetable to periods and back, and sent two screenshots. On the period axis every block sat on a period line or a half-period line. Back on the time axis the same blocks started at 9:25 and ended at 10:55.
+
+Two earlier decisions met here. The period grid rounds both edges of an event to half-period lines **only when drawing**; the saved value is left alone until the next move or resize rewrites it. And switching the axis did not convert events. Inside the period grid that works: the screen is always tidy, and saved values catch up as blocks are touched. Leave without touching anything and there is no next write, and the time grid has no lines to round to. A draw-time rounding rule only holds on the screen that owns the grid.
+
+Now, leaving the period axis saves each event at the place it was being drawn. It is the two existing mappings back to back — real to virtual with half-period rounding, then virtual to real — so 9:25–10:55, drawn from the middle of Period 1 to the end of Period 2, becomes 9:25–10:50.
+
+| When | Saved times |
+|---|---|
+| Time → periods | unchanged |
+| While on the period axis | only blocks you move or resize |
+| Periods → time | all set to where they were drawn |
+| Undo, or the sheet's X | everything back, original times included |
+
+Rounding on the way *in* lost because the periods at that moment are a provisional set laid over the events, and the user goes on to adjust class and break lengths in the same sheet. Rounding at the checkmark gains nothing while you stay on periods. Rounding in the time grid is not possible; it has no periods.
+
+One case is excluded on purpose: events that overlap no period at all, such as an imported 9 pm event. The grid pulls those to the last half row so they stay on screen. That is a drawing clamp, not a position anyone chose, and saving it would move a 9 pm event into Period 7.
+
+The round-trip test that already existed used events that were on half-period lines from the start, so it passed either way. The new one runs with times that are off the lines and checks that what comes back matches what the period grid was showing.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -570,3 +591,4 @@ Moving still hops across lunch once the block's centre passes the row's centre; 
 - Oct 8, late night — the half-height lunch row's label gets a one-line start–end range ("12:50–1:50", no AM/PM), reversing the name-only label from earlier that day
 - Oct 8, later still — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
 - Oct 8, around midnight — lunch label back to the same three lines as periods (zero line spacing in that row) · blocked-drag feedback at the lunch row and above period 1 (missing wall, resize strength from the raw finger value)
+- Oct 9 — switching from periods back to time saves events where the period grid drew them (period and half-period lines); events outside the axis and the other direction are left alone
