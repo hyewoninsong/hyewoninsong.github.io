@@ -1,9 +1,9 @@
 ---
 title: "Opening the keyboard to search squashed the timetable card"
-date: 2026-10-07T00:48:49+09:00
+date: 2026-10-08T13:30:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Tapping the search field in the timetable list redrew each card at half height. The modifier meant to prevent that was already in the code, attached in a place where it never did anything. That evening the card view lost its search field altogether."
+summary: "Tapping the search field in the timetable list redrew each card at half height. The modifier meant to prevent that was already in the code, attached in a place where it never did anything. Later the field moved to the bottom toolbar, and the duplicate and delete buttons vanished while you searched."
 ---
 
 Tapping the search field in the timetable list was fixed to bring up the keyboard and nothing else: the card keeps its size and the keyboard covers its lower part. That same evening the card view lost the search field entirely; the last sections cover that.
@@ -47,7 +47,7 @@ In card view the "New Timetable" button was hidden while the keyboard was up; th
 
 On a real device the fixed screen showed a different problem. Card view had one row for close, title, view switch and edit, and a second row for the search field. Two header rows over a single card is busy.
 
-The search field now appears only in the title list. Card view is back to one row.
+The search field now appears only in the title list. Card view is back to one row. (Reversed two days later: the field moved to the bottom toolbar, shows in both views, and card view filters too. See the last section.)
 
 ![Card view with a single header row](/blog/timetable-list-search-keyboard/cards-no-search.png)
 
@@ -112,8 +112,29 @@ We missed it twice for the same reason. The original fix was checked with the sh
 
 We still do not know why. Measured on an iOS 27.2 simulator; scroll position after switching with many timetables is not yet captured.
 
+## 2026-10-08: with the field in the bottom toolbar, duplicate and delete vanished while searching
+
+Since then the search field moved into the system bottom toolbar: search, import and new timetable normally; duplicate, search and delete in edit mode. That ended the two-row header in card view, and card view now filters by the query too, reversing the rule above.
+
+But in edit mode, searching left you with nothing to do. Tapping the field made the duplicate and delete buttons disappear; typing to narrow the list to one row and checking it did not bring them back, and neither did the keyboard's search key. The only exit was the X next to the field, which also clears the query and the filtered result with it.
+
+![After submitting: the row is checked, the bottom bar has only the field and an X](/blog/timetable-list-search-edit-actions/search-submitted-buttons-gone.png)
+
+A search field in the system bottom toolbar folds every other item in that bar while it is presented; they leave the accessibility tree. The keyboard's search key dismisses the keyboard but keeps the presentation. Only X ends it, and X behaves like UIKit's search cancel: it clears the text. `.searchPresentationToolbarBehavior(.avoidHidingContent)` was already set, but as the name says it is about the navigation bar.
+
+The fix is to end the presentation ourselves. `.searchable(text:isPresented:)` exposes it, and we set it to false on submit, on a row tap in edit mode, on a card tap, and when the view mode switches. The query is untouched: the filtered list stays, and only the folded buttons come back.
+
+![After tapping the row: the query stays, duplicate and delete are back](/blog/timetable-list-search-edit-actions/row-picked-buttons-back.png)
+
+One more catch: dismissing programmatically left the collapsed field drawing its placeholder instead of the query. The binding still held the text, so the list stayed filtered while the field looked empty. Rebuilding the stack drew it correctly, so only the display was stale. When the presentation ends we append a space to the query and remove it on the next run loop; the field re-reads the binding, and since the filter trims whitespace the list never flickers.
+
+We missed it because, on the day the bottom bar became a system toolbar, we confirmed that the buttons fold during search and never checked when they return. The capture stopped at focus, typing and submit. Search UI checks now include the bottom bar after submit and after picking a result.
+
+Measured on an iOS 27.2 simulator; iPad windows not captured yet.
+
 ## History
 
 - 2026-10-05, midday: the card no longer shrinks when the search keyboard appears.
 - 2026-10-05, evening: search removed from card view, kept in the title list.
 - 2026-10-07: fixed the search field landing at the bottom when the sheet was opened in card view and switched.
+- 2026-10-08: the bottom-toolbar search folded duplicate and delete; the presentation now ends on submit and on picking a result.

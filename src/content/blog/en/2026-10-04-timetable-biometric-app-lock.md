@@ -1,6 +1,6 @@
 ---
 title: "Adding App Lock, one flag ended up covering two different moments"
-date: 2026-10-07T10:31:00+09:00
+date: 2026-10-08T11:20:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Added Face ID app lock. Hiding the app-switcher thumbnail and deciding whether to re-prompt on return are two different questions — they ended up collapsing into the same flag."
@@ -10,6 +10,9 @@ Once the app started holding friends' timetables too, there was a real reason to
 own, separate from the device's own lock screen. So App Lock shipped: Face ID / Touch ID / passcode,
 off by default. Turn it on, and leaving the app and coming back brings up a full-screen lock over
 everything.
+
+(2026-10-08: this feature was removed four days later; the app has no App Lock now — see the last
+section. What follows is the record of building and fixing it.)
 
 ## Authenticate for both directions
 
@@ -186,8 +189,60 @@ Not yet exercised: iPad multi-window, locking while an alarm is ringing, locking
 and a real device.
 
 
+## 2026-10-08 — Removed after four days: the grace period didn't hold on screen, and most unlock paths couldn't be tested
+
+App Lock is gone — the toggle, the lock-delay chips, the lock screen, the dedicated window. The
+settings card that was "Lock & Backup" is now "Backup" with a single iCloud row. Anyone who had the
+lock on simply opens the app without it after updating.
+
+### Why it wasn't fixed instead
+
+Two things showed up on a real device.
+
+**With a 5-minute delay, the lock screen still appeared once.** Leave briefly, come back, and the
+lock covers the app and then lifts. That is the design from the sections above, made visible: the
+cover has to go up at `.inactive` to beat the app-switcher snapshot, and the grace check can only
+run once the scene is `.active` again. The gap between them is on screen.
+
+**Only Face ID could be exercised automatically.** Unlock has to work with Face ID, Touch ID and the
+device passcode. The simulator test could drive a Face ID match; it cannot get past the passcode
+screen, and Touch ID needs that hardware. Both bug reports in four days came from paths no test had
+run. A lock that is wrong either keeps the owner out or lets someone else in — not a feature to
+keep with untested paths.
+
+Two alternatives lost. Skipping the cover inside the grace period leaves the timetable in the
+switcher thumbnail, and hiding that was half the point. Dropping the delay and keeping only
+"Immediately" removes the first problem and none of the second. And a timetable is already behind
+the device lock.
+
+### What went away with it — the settings sheet shrank and grew on toggle
+
+Toggling the lock made the whole settings sheet pull inward, showing its edges, then return.
+
+![Settings sheet during Face ID — the sheet fills the screen width](/blog/timetable-biometric-app-lock/sheet-during-auth.png)
+![Right after authentication — the Lock Delay row has appeared and the whole sheet has shrunk, edges floating](/blog/timetable-biometric-app-lock/sheet-shrunk-after-auth.png)
+
+The difference between the two frames is one row. The sheet measures its content and drives a
+`.height` detent from it; when the Lock Delay row appears the measured height changes and the
+detent moves. The content is taller than the screen, so both heights clamp to the same result — but
+while the selected detent changes, the iOS 26 sheet appears to pass through its floating
+partial-height shape and back.
+
+The row and the toggle no longer exist, so this path is gone. That reading comes from the
+screenshots and the code; it was not reproduced separately, and the underlying condition (a
+taller-than-screen sheet whose measured height changes) still exists elsewhere.
+
+### Where it stands
+
+The two mechanisms above — a system auth prompt deactivates the scene; a root layer sits under
+sheets — stay on record because they are true regardless. Bringing the lock back would need two
+things first: no visible lock frame on a return inside the grace period, and a way to exercise all
+three unlock methods.
+
+
 ## History
 
 - 2026-10-04 — added App Lock (Face ID/Touch ID/passcode), off by default.
 - 2026-10-05 — turning the lock off failed with "Authentication Failed"; covering and requiring authentication became separate states.
 - 2026-10-07 — the lock screen sat under open sheets and menus; it moved to a dedicated window.
+- 2026-10-08 — App Lock removed: the lock screen still flashed inside the grace period, and the Touch ID / passcode paths could not be verified.

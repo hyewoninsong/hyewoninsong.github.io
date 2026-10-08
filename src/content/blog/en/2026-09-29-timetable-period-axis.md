@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-07T11:54:42+09:00
+date: 2026-10-08T21:30:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -44,7 +44,7 @@ Early feedback: the time-or-period choice was text only, unlocked period rows we
 
 ![Unlocked period grid — rows 1.5x taller than when locked](/blog/timetable-period-axis/unlocked-period-rows.png)
 
-**Unlocking zooms period rows too**, 72pt to 108pt on iPhone (144pt since Oct 3), while snapping stays on the period grid.
+**Unlocking zooms period rows too**, 72pt to 108pt on iPhone (144pt from Oct 3, back to 108pt on Oct 8), while snapping stays on the period grid.
 
 One bug on the way: blocks selected but wouldn't drag. A tap gesture attached inside a drag gesture claimed the touch first. A single `DragGesture(minimumDistance: 0)` now handles both.
 
@@ -100,7 +100,7 @@ The word stays: for Korean students, university included, 교시 is still the wo
 
 The grid snapped to periods, but the event edit sheet still asked for start and end *times*. Putting a class in Period 2 meant remembering that Period 2 runs 10:00–10:50 and dialing two wheels.
 
-Now, in a period timetable, the sheet's Start and End rows show a period name in the capsule, with the real time in small type beside it. Tap a capsule and a wheel opens below it, each row reading "P2 10:00 – 10:50". Custom period names show up here too.
+Now, in a period timetable, the sheet's Start and End rows show a period name in the capsule, with the real time in small type beside it. Tap a capsule and a wheel opens below it, each row reading "P2 10:00 – 10:50" (since Oct 8 the wheel steps by half periods and shows one time per row — see below). Custom period names show up here too.
 
 ![New event sheet in a period timetable — Start shows 09:00 and a P1 capsule, the wheel below lists P1 09:00 – 09:50 and P2 10:00 – 10:50](/blog/timetable-period-axis/edit-sheet-period-wheel.png)
 
@@ -192,7 +192,7 @@ School-level preset chips (elementary to college) went in and came straight back
 
 ![Grid with a gray "Lunch 12:50–13:50" row between P4 and P5; a new block dragged down from Wednesday P4 stops above it](/blog/timetable-period-axis/period-lunch-row-clamp.png)
 
-The lunch row is a full row, not a half one — snapping and zoom work in whole rows, and a half row would knock every later period off the grid. Drawing a thin band on the boundary instead would have needed every vertical coordinate rewritten. Lunch position isn't stored separately; it's read from the periods, the same way the editor reads its rules, so there's one source of truth. Events that already span lunch are left alone rather than silently cut.
+The lunch row is a full row, not a half one (changed to a half row on Oct 8, see that update) — snapping and zoom work in whole rows, and a half row would knock every later period off the grid. Drawing a thin band on the boundary instead would have needed every vertical coordinate rewritten. Lunch position isn't stored separately; it's read from the periods, the same way the editor reads its rules, so there's one source of truth. Events that already span lunch are left alone rather than silently cut.
 
 ## Update, Sep 30 evening — clearer rules and an easier preview
 
@@ -244,7 +244,7 @@ University timetables mix 50-minute and 75-minute classes. Counted in 50-minute 
 
 ![Unlocked period grid — each period row is twice its locked height](/blog/timetable-period-axis/half-period-edit-rows.png)
 
-To make a half row easy to grab, unlocking now doubles the period row (144pt on iPhone, up from 1.5x at 108pt). A half row is now as tall as a full row when locked. The locked view stays at 72pt, so the day still fits on one screen.
+(Reverted to 1.5x on Oct 8 so period and time grids share one scale.) To make a half row easy to grab, unlocking now doubles the period row (144pt on iPhone, up from 1.5x at 108pt). A half row is now as tall as a full row when locked. The locked view stays at 72pt, so the day still fits on one screen.
 
 A half period is a fraction, not a fixed time. If Period 2 runs 10:00–10:50, half of it ends at 10:25. Dragging from the top of Period 1 to the middle of Period 2 opens a new event from 09:00 to 10:25.
 
@@ -254,7 +254,7 @@ Earlier that same day we went the other way. A resize could shrink a block to ha
 
 What lost: asking users to define 75-minute periods (breaks timetables that mix both lengths), minute-level dragging (drops the reason to pick periods), and pointing them to time-based timetables (drops the period axis they wanted).
 
-One more fix: saving used to stretch any event to at least 30 minutes. Half of a 50-minute period is 25, so it would spill into the break. Period timetables now use a 1-minute floor, matching the edit sheet. The edit sheet's period wheels still pick whole periods; a 1.5-period class stays as it is unless you turn them.
+One more fix: saving used to stretch any event to at least 30 minutes. Half of a 50-minute period is 25, so it would spill into the break. Period timetables now use a 1-minute floor, matching the edit sheet. At this point the edit sheet's period wheels still picked whole periods (they step by half periods since Oct 8); a 1.5-period class stays as it is unless you turn them.
 
 ## Update, Oct 3 evening — the period rules live in the display sheet; the editor is gone
 
@@ -386,7 +386,7 @@ The "Time → period" row in the table above describes the first version; period
 
 A second period timetable meant dialing in all six rules again, even with an identical schedule sitting in the timetable next to it. Custom period names and irregular periods from an imported file could not be rebuilt with the wheels at all.
 
-The period card in the display sheet now ends with "Import Periods from Another Timetable" (moved next to the card title a day later; see the Oct 7 update). It opens a picker, and Import brings over that timetable's periods as they are.
+The period card in the display sheet now ends with "Import Periods from Another Timetable" (moved next to the card title a day later, then back under the card on Oct 8; see the updates below). It opens a picker, and Import brings over that timetable's periods as they are.
 
 | Comes over | Stays put |
 |---|---|
@@ -424,7 +424,7 @@ Values people think of as a pair share a row. Each pill is its own button and op
 
 **A strip instead of a sentence.** On Oct 3 I wrote that the grid behind the sheet is the preview. On an iPhone the sheet covers nearly all of it. So the card now draws the day above the summary line: one bar per period, small gaps for breaks, a wide gap for lunch, and red bars from the point where the day runs past midnight. It is read-only. The minimap removed on Sep 30 was an editor's scrollbar and went away because hand edits and rules drifted apart; this strip only shows what the rules produce.
 
-**Import moved next to the title.** Yesterday's full-width row under the card is now a small button beside the "Periods" heading.
+**Import moved next to the title** (reversed a day later; see the Oct 8 night update). Yesterday's full-width row under the card is now a small button beside the "Periods" heading.
 
 What lost:
 
@@ -433,6 +433,76 @@ What lost:
 - **Big numbers above the card.** That header was removed on Oct 3.
 
 Everything down to the period card now fits one iPhone screen (the event text colour card, moved into this sheet the same day, sits below it). Locales with a long "after period N" phrase shrink the lunch label slightly; I have not looked at those on screen yet.
+
+## Update, Oct 8 — a period is as tall as an hour, lunch as tall as half of one
+
+Period grids now use the same scale as time grids: one period row is as tall as one hour, a half period as tall as 30 minutes. The lunch row on the axis shrank to half a row.
+
+![Locked period grid — the gray lunch row between Period 4 and Period 5 is half as tall as a period row](/blog/timetable-period-axis/lunch-half-row-locked.png)
+
+| | Before | Now |
+|---|---|---|
+| Unlocked period row (iPhone) | 144pt (2x) | 108pt (1.5x, same as time grids) |
+| Lunch row | a full row | half a row |
+| Lunch label | name, start, end | name + one line "12:50–1:50" (name only for a few hours — see the late-night update) |
+
+This reverses two earlier calls: the 2x unlock zoom from Oct 3 and the full-height lunch row from Sep 30. Switching between the two kinds of timetable and seeing the same hour at two heights turned out to bother more than a small half row, and a row nothing can be placed in was taking a whole class worth of screen.
+
+**What a half lunch row actually breaks.** Snapping moved to half periods on Oct 3, so period lines still land on the snap grid. Two other assumptions did not survive:
+
+- **Period lines sit on the hour.** After a 30-minute lunch, Period 5 starts at :30 in grid coordinates. Bold lines drawn "every hour" would cut periods in half and the edit stripes would flip after lunch. Lines now come from the list of row boundaries, stripes are drawn per period row.
+- **The grid ends on the hour.** Seven periods plus lunch is 7.5 hours. About thirty places measured height or clamped drags with `endHour * 60`. Rounding up leaves a rowless half hour under the last period, and an event dropped there collapses to zero length when converted back to real time. Those places now read one end-in-minutes value.
+
+![Unlocked period grid — stripes on the lower half of every period row, including the rows after lunch](/blog/timetable-period-axis/lunch-half-row-unlocked.png)
+
+**Two roads not taken.** Doubling the virtual scale (2 hours per period, 1 for lunch) keeps the end on the hour, but event times clamp to 0–24h, which caps the grid at 12 periods; the app allows 24. And shared images, prints, list previews and widgets still draw lunch as a full row, because they derive paper ratios and wallpaper band heights from a whole number of hours. So the list preview and the grid currently disagree on lunch height.
+
+The mapping is covered by tests and the screens by simulator captures; dragging in the rows after lunch has not been tried by hand yet.
+
+## Update, Oct 8 evening — half periods in the edit sheet, and long-press starts where a tap does
+
+The grid has snapped to half periods for five days, but the edit sheet's wheels still moved a whole period at a time. You couldn't make a 1.5-period class from the sheet, and touching the wheel on one snapped it back to period boundaries.
+
+The wheels now list P1, P1.5, P2, P2.5, and each row carries a single time.
+
+| Wheel | Row | Meaning |
+|---|---|---|
+| Start | P1  9:00 | from the start of P1 |
+| Start | P1.5  9:25 | from the middle of P1 |
+| End | P1  9:50 | through the end of P1 |
+| End | P1.5  10:25 | through the middle of P2 |
+
+The old rows read "P1 9:00 – 9:50", so picking a start meant reading an end time too. The Start wheel now shows start times only and the End wheel end times only.
+
+**Naming was the hard part.** Naming each half (P1 = first half, P1.5 = second half) turns every ordinary one-period class into "P3 to P3.5". Instead a name means "one period beginning at that spot": P1.5 begins mid-P1 and runs one period. A one-period class is still P3 to P3, and a 75-minute class is P1 to P1.5. The cost is that an event covering only the first half of P1 ends at "P0.5". That's rare enough to accept.
+
+**Long-press creation** changed with it. A tap creates an event at the start of the tapped period (or on the hour in a time timetable), but a long-press in the same cell started at the nearest half-hour line, so 9:40 gave 9:00 one way and 9:30 the other. Long-press now floors to the start of the pressed cell as well, or to the end of the event above if that cuts into the cell. The end still follows your finger. Rounding the anchor up for upward drags lost: the block would jump a cell whenever the drag changed direction.
+
+Names, times and the anchor are covered by tests; turning the wheel and dragging by hand on a device is still to do.
+
+## Update, Oct 8 night — one sheet, one look for "tap a value, get a wheel"
+
+Switching the axis inside the display sheet put the two layouts side by side, and the same action had two looks. On a time-based timetable the start and end values are grey pills, and the open one only turns its text blue. On a period timetable each pill carried an up-down chevron and its whole background turned blue when open.
+
+The period pills now match the time pills: no chevron, grey background at all times, blue text on the open value.
+
+![The period count row open: the pill stays grey and only the 8 is blue, with no chevron. The import row stands on its own under the card](/blog/timetable-period-axis/period-rules-plain-capsule.png)
+
+The up-down chevron is the mark of a row that opens a menu. A wheel is a panel that unfolds under its row, so the chevron made it read as a different kind of control, and only on one axis.
+
+**Import is a full row again.** The small text button beside the "Periods" heading went back to a one-row button card directly under the rules card, with its full label. It still sits outside the rules card: those rows edit values, this one replaces them all.
+
+## Update, Oct 8 late night — the lunch row says when lunch is
+
+When the lunch row shrank to half height earlier today, its label lost the start and end times: three lines don't fit in a half row, and the period above ends when lunch starts. On a real device that reasoning didn't hold. Lunch was the one row on the axis with no time on it, and reading it meant combining two numbers from the neighbouring rows.
+
+The label now has two lines: the name, and a range underneath — "Lunch / 12:50–1:50".
+
+![Locked period grid — the half-height lunch row between Period 4 and Period 5 reads "Lunch" with "12:50–1:50" on one line beneath it](/blog/timetable-period-axis/lunch-half-row-time-range.png)
+
+The arithmetic was right: a half row is 36pt on a locked iPhone grid, and the period label's three lines come to about 37pt. So the range shares one line. AM/PM is dropped — the axis is 44pt wide and "12:50 PM–1:50 PM" doesn't fit even scaled down. The now-capsule on the same axis already drops it for the same reason, so the lunch range uses the same compact form, and the period labels above and below still carry AM/PM. In 24-hour mode it reads "12:50–13:50", a little smaller but inside the band.
+
+Two alternatives lost: smaller text for just the lunch row would mix two type sizes on one axis, and a range with AM/PM has no room. Shared images, prints and list previews still draw lunch as a full row, so their label keeps the three lines.
 
 ## History
 
@@ -460,3 +530,7 @@ Everything down to the period card now fits one iPhone screen (the event text co
 - Oct 6, later — axis round trips restore the remembered period rules; switching to periods no longer deletes, the checkmark asks once
 - Oct 6, afternoon — import another period timetable's periods (times, names, lunch row) from the display sheet; reuses the free-time picker, lands in the draft (checkmark saves, X discards)
 - Oct 7 — period rules card from seven rows to four (class · break and lunch timing · length as paired pills), lunch-row switch inside the lunch panel, a day strip above the summary, import moved beside the card title
+- Oct 8 — a period row matches one hour on time grids (unlock zoom 2x → 1.5x), lunch row at half height with a name-only label; lines from row boundaries, stripes per period row, grid end in minutes
+- Oct 8, evening — edit-sheet period wheels step by half periods (start times on the Start wheel, end times on the End wheel); long-press creation floors to the hour / period start, like a tap
+- Oct 8, night — period rule pills match the time pills (no chevron, no blue background when open); import back to a button row under the card
+- Oct 8, late night — the half-height lunch row's label gets a one-line start–end range ("12:50–1:50", no AM/PM), reversing the name-only label from earlier that day

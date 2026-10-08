@@ -1,12 +1,12 @@
 ---
-title: "A share menu that reads like the Photos app — File, Image, Print, Calendar, Lock Screen"
-date: 2026-10-07T17:50:00+09:00
+title: "A share menu modeled on the Photos app, cut to three rows a day later"
+date: 2026-10-08T11:03:57+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Every way to get a timetable out of the app now lives under one Share submenu. The same afternoon one row came back out, and a swipe meant to close the options panel stopped closing the whole sheet."
+summary: "Every way to get a timetable out of the app went under one Share submenu. On a real phone the next day it was long and uneven, so Share kept the three rows that send something to someone else and the other two moved up a level."
 ---
 
-Tap **Share** in the `…` menu of a timetable and five rows unfold: File, Image, Print, Calendar, Lock Screen. (That morning there were six, with Add to Album. The afternoon section below says why it left.) Share used to open the image preview directly, with Print, Calendar and Lock Screen stacked below it as separate top-level rows. Five export paths in the first layer made the menu long, and the line between "share" and "export" never stopped being a question.
+Tap **Share** in the `…` menu of a timetable and three rows unfold: Image, File, Print. A day earlier there were five, with Calendar and Lock Screen, and the first part of this post is the record of building those five. The October 8 section at the end says why two came back out. (That morning there were six, with Add to Album. The afternoon section below says why it left.) Share used to open the image preview directly, with Print, Calendar and Lock Screen stacked below it as separate top-level rows. Five export paths in the first layer made the menu long, and the line between "share" and "export" never stopped being a question.
 
 ## Same jobs, same names as Photos
 
@@ -95,11 +95,13 @@ The collapsed panel is a single 28pt handle sitting right above the home indicat
 
 ### The first bottom-edge swipe now goes to the app
 
+(This deferral was removed the next day; see "a thicker handle" below.)
+
 While the panel accepts drags, the sheet sets `defersSystemGestures(on: .bottom)`. The first swipe up goes to the app, and a second one right after goes home. It was unclear whether this would reach the system from inside a sheet that is not full screen, so we ran both builds side by side in the simulator. Without it the first swipe shrinks the app into a switcher card. With it the app stays.
 
 The cost is two swipes to leave from these sheets, so the deferral is off whenever the drag is off (the iPad side column, or while typing a print size).
 
-Making the handle taller lost. People who swipe from the edge would still leave the app, and the preview would shrink.
+Making the handle taller lost that day. People who swipe from the edge would still leave the app, and the preview would shrink. A day later it won.
 
 ### Deferral alone turned "the app leaves" into "nothing happens"
 
@@ -109,8 +111,56 @@ The afternoon's check missed this because its synthesized drag started at the ce
 
 All of this was checked with synthesized drags in the simulator, not yet with a finger on a device.
 
+## 2026-10-08 — five rows were too many, and two of them were not sharing
+
+On a real phone the submenu covered the top half of the screen, and the five rows did not read as one group. Three reasons:
+
+- **Mixed kinds of words.** File and Image are formats, Print is an action, Calendar and Lock Screen are destinations.
+- **Two rows are not sharing.** File, Image and Print send the timetable to someone else. Calendar and Lock Screen put it somewhere else on your own phone. Photos lists "Use as Wallpaper" in its share sheet, but that is a twenty-row list; in a five-row menu the odd two stand out.
+- **One icon carried a badge.** `calendar.badge.plus` was the only symbol with a `+` on it.
+
+### The menu now
+
+- Settings
+- Share › Image · File · Print
+- Export to Calendar
+- Lock Screen Wallpaper
+- (divider) Find Free Time · Import from Another Timetable · Alarms ›
+- (divider) Replay Tutorial
+
+Share holds only what leaves through the system share sheet or the printer, with Image first because it is used most. The two promoted rows could not stay one-word nouns: without "Share" above them, "Calendar" alone does not say what the row does. They now use the title of the sheet they open, so the words you tap are the words you see next. The calendar icon lost its badge.
+
+### What lost
+
+- **Keep five rows, add a divider inside the submenu.** Groups them, but the menu is just as long and two non-sharing rows still sit under "Share".
+- **Promote Print too.** Share would hold two rows, hardly worth a submenu, and the top level would grow to nine.
+
+The cost is a top level of eight rows instead of six. Two dividers split it into three groups: getting the timetable out, working with other timetables, help.
+
+The `…` button also lost its circle the same day. iOS 26 toolbars already draw a glass circle behind each button, so a circled symbol showed two rings.
+
+This was checked with tests that pin the menu order, not yet by looking at the new menu on a device.
+
+## 2026-10-08, midday — a thicker handle instead of taking the home swipe
+
+![The collapsed share options panel, with room under the handle label and rounded top corners](/blog/timetable-share-submenu/handle-thick.png)
+
+The deferral lasted less than a day. While one of these sheets was up, leaving the app took two swipes, and that turned out to be the bigger annoyance. Pulling the panel is occasional. Going home happens everywhere.
+
+So `defersSystemGestures` is gone and yesterday's losing option is in. The collapsed handle keeps its 28pt label row and gains 20pt of room underneath, 48pt in all, which lifts the chevron off the bottom edge. The extra room is part of the handle, so it takes taps and drags. Expanded, the handle is 28pt again.
+
+Centering the label in the taller handle lost, because it only lifts the chevron by 10pt. The drag hit area still reaches the bottom of the window, so a slow drag that starts just under the handle opens the panel.
+
+A fast swipe from the very edge still goes home. That is the accepted cost. Gesture deferral suits apps whose whole screen is a gesture surface, and it was too expensive for one handle at the bottom of a sheet.
+
+The panel's top two corners are now rounded at 26pt, the same radius as the cards inside it, so it reads as a sheet rising from the bottom and not as a band. In the iPad side column the panel is a full-height pillar and stays square. The clip has to be applied after the ground is extended under the home indicator, or only the part above the safe area survives.
+
+Checked with simulator screenshots and a synthetic drag from the handle, not yet with a finger on a device.
+
 ## History
 
 - 2026-10-07, morning — Share becomes a submenu with Photos' names and symbols. Add to Album added.
 - 2026-10-07, afternoon — drag to collapse the panel, half-height cap, sheet stays after sharing, Add to Album removed.
 - 2026-10-07, evening — pulling the collapsed panel no longer sends the app home: bottom-edge gesture deferral, hit area down to the home indicator.
+- 2026-10-08 — Share holds Image · File · Print only. Export to Calendar and Lock Screen Wallpaper move to the top level, with two dividers.
+- 2026-10-08, midday — bottom-edge gesture deferral removed, collapsed handle grows to 48pt, panel top corners rounded.

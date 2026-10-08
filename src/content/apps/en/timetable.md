@@ -22,6 +22,6 @@ Put the week already in your head straight onto the screen. Drag across an empty
 - A timetable that leaves the screen, as a picture, a file, or on paper
 - Separate timetables for each semester and each person at home
 
-Your timetables stay on the device. No account, no sign-in.
+Your timetables are stored on the device and backed up to your own iCloud. No account, no sign-in.
 
 An Android version is in development — the same grid and the same feel, dressed in Material 3.
