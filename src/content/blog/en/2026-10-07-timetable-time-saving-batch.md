@@ -1,6 +1,6 @@
 ---
 title: "Nine time-saving features picked, three left out, one pulled back out"
-date: 2026-10-07T15:25:30+09:00
+date: 2026-10-08T11:30:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Nine features that cut the effort of building and editing a timetable, what we turned down, why biweekly classes went in and came out the same day, and the Shortcuts action."
@@ -17,7 +17,7 @@ In a timetable app, the slow part is not looking at it but building and fixing i
 | Title suggestions | Existing titles appear as chips while typing; picking one brings its color |
 | Shortcuts "Add class" | Add a class by voice without opening the app |
 | Auto color | Least-used palette color; same title, same color |
-| Import from another timetable | Pick from a checklist of title+color cards with time rows (the same list as calendar export); alarms are not copied, mismatched axis types are blocked |
+| Import from another timetable | Pick from a checklist of title+color cards with time rows (the same list as calendar export); alarms are not copied; works across axis types (blocked at first — see 2026-10-08 below) |
 | Two ways to duplicate | Option-drag on iPad; long-press Duplicate to copy to another day |
 | Biweekly (removed same day) | Odd-week and even-week classes. Pulled because alarms could not follow |
 | Live Activity | Today's remaining classes on the Lock Screen |
@@ -53,7 +53,20 @@ We tried to solve the alarm limit above and ended up removing the feature. Alarm
 
 Keeping "the class is biweekly but its alarm rings weekly" as a caption was no better: people would be turning off alarms on every off week. We did not want to pick between a missing alarm and a wrong one, so the feature went. Save-file version v19 stays as an empty version with no fields, so files written by that day's development build still read. Same rule as before: if people cannot trust it, cut it even when it saves typing.
 
+## 2026-10-08 — import across timetable types, and say what will not fit before you pick
+
+On day one we blocked importing between clock-based and period-based timetables, because we had not decided what happens to a class that falls between periods. A day later we decided.
+
+Period to clock needs nothing: both types store real times, so the schedule is copied as is and the visible hours widen if needed. Clock to period needs a fit. A 9:00–10:15 class going into 50-minute periods is snapped to the periods it overlaps, in the same half-period unit the grid uses, and the fitted time is what gets **saved**. Saving the original and only drawing it fitted would show "periods 1–2" on screen while alarms and calendar export read 9:00–10:15. Each row in the picker shows where it will land.
+
+![Picking schedules to import into a period-based timetable — each row shows the period it will land in; an already-present schedule and one outside the period range are dimmed with the reason written under them](/blog/timetable-time-saving-batch/import-unavailable-reasons.png)
+
+Some schedules cannot be fitted: a 17:00 swim class when the last period ends at 16:40, or something that only sits in the lunch gap. Those rows stay in the list, dimmed, with the reason on the row, including the period range when that is the cause. Exact duplicates get the same treatment. We dropped the alternative of reporting "3 were left out" in an alert afterwards; by then you can no longer see which three.
+
+One snag: SwiftUI's `.disabled` dims the whole row, including the reason you are supposed to read. We block touches instead and dim only the title and time.
+
 ## History
 
 - 2026-10-07 — first entry
 - 2026-10-07 — biweekly removed the same day (AlarmKit `.weekly` limit)
+- 2026-10-08 — cross-type import allowed; schedules that cannot fit are disabled with a reason
