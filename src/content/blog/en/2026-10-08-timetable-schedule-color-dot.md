@@ -6,7 +6,7 @@ tags: ["devlog", "design", "swiftui"]
 summary: "The class Live Activity used a color stripe, the alarm card a full color background, the watch card a colored ring. All of them now use one filled dot before the title, and the Live Activity shows the current and next event, each with its own dot."
 ---
 
-The class card on the Lock Screen now shows the event in progress and the next one on two lines, each with a dot in that event's color. The alarm card and the Apple Watch app use the same dot.
+The class card on the Lock Screen now shows the event in progress and the next one on two lines, each with a dot in that event's color. The alarm card and the Apple Watch app use the same dot. (2026-10-09: the next-event line was removed from the class card because it kept the card up all day. It now shows the event in progress with one dot; the dot rule stands.)
 
 ## The same color had four shapes
 
