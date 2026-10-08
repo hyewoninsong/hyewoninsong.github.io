@@ -14,6 +14,9 @@
 //     purchase bullet of 2026-09-28) would leave the other store locale stale
 //   - the SuperTimetable iOS policy discloses in-app purchase status under
 //     Firebase Analytics and says Apple handles payment (docs/specs/website.md §4.2)
+//   - the SuperTimetable iOS policy and app page disclose iCloud Backup (app
+//     1.2.0, on by default) and no longer claim device-only storage or "no
+//     cloud sync" (docs/decisions/2026-10-08-timetable-icloud-backup-disclosure.md)
 //
 // Run with: node --test "tests/**/*.test.mjs"
 
@@ -152,4 +155,32 @@ test('the SuperTimetable iOS policy discloses in-app purchase status, with Apple
     }
   }
   assert.deepEqual(missing, []);
+});
+
+test('the SuperTimetable iOS policy and app page disclose iCloud Backup, not device-only storage', () => {
+  const required = {
+    ko: [/iCloud 백업/, /사용자 본인의 iCloud/, /개발자는 접근할 수 없습니다/, /설정에서 끌 수 있/],
+    en: [/iCloud Backup/, /your own iCloud/, /the developer cannot access it/, /turn it off in Settings/],
+  };
+  // Wording of the 2026-09-28 policy that iCloud Backup made false.
+  const stale = {
+    ko: [/기기 안에만/, /클라우드 동기화 기능이 없습니다/],
+    en: [/stays? on (?:your|the) device/, /There is no cloud sync/],
+  };
+  const problems = [];
+  for (const locale of locales) {
+    const policy = readPage(locale, 'apps/timetable/privacy.astro');
+    for (const pattern of required[locale]) {
+      if (!pattern.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${pattern}`);
+    }
+    for (const pattern of stale[locale]) {
+      if (pattern.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: stale ${pattern}`);
+    }
+    const appPage = readFileSync(join(root, 'src', 'content', 'apps', locale, 'timetable.md'), 'utf8');
+    if (!/iCloud/.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: app page does not mention iCloud`);
+    for (const pattern of stale[locale]) {
+      if (pattern.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: stale ${pattern}`);
+    }
+  }
+  assert.deepEqual(problems, []);
 });
