@@ -1,6 +1,6 @@
 ---
 title: "Putting a timetable on the Lock Screen, when the app can't know where the clock is"
-date: 2026-10-07T16:44:11+09:00
+date: 2026-10-08T11:25:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "A Lock Screen wallpaper export. The clock, widgets and notifications can't be avoided precisely, so it starts in a safe band and lets you drag. The canvas isn't shrunk — only the hour rows get shorter. Now for any device, over a photo you can pinch into place, and in iPad landscape. The chips that pick what you drag sit outside the collapsible options."
@@ -39,7 +39,7 @@ The output is the device's native pixel size (`UIScreen.nativeBounds`, 1206×262
 
 ## The app saves it itself
 
-iOS apps can't set wallpaper, so the path is Photos. The bottom button is "Save to Photos": the image lands in Photos and an alert says how to set it (open it, Share → Use as Wallpaper). Sharing elsewhere moved to the top-right icon. The first version left saving to the share sheet, and that didn't work — see October 4 below.
+iOS apps can't set wallpaper, so the path is Photos. The bottom button is "Save to Photos": the image lands in Photos and an alert says how to set it (open it, Share → Use as Wallpaper). Sharing elsewhere moved to the top-right icon. (On October 8 this button was removed again; Share is now the only way out — see the last entry.) The first version left saving to the share sheet, and that didn't work — see October 4 below.
 
 Calendar export is premium; this stays free. Lock Screen screenshots travel, and that's marketing.
 
@@ -278,7 +278,7 @@ The saved image is unchanged — compositing still reads the hard limit only. Fe
 
 ## 2026-10-06 — See it at real size before saving
 
-There's now a full-screen preview button at the top right of the sheet, next to Share. It shows the clock and widget guide and the timetable card across the whole screen. When you're making a wallpaper for the device in your hand, the scale is exactly 1 — the size it will have on the Lock Screen.
+There's now a full-screen preview button at the top right of the sheet, next to Share (since October 8 it sits at the bottom right of the preview). It shows the clock and widget guide and the timetable card across the whole screen. When you're making a wallpaper for the device in your hand, the scale is exactly 1 — the size it will have on the Lock Screen.
 
 ![The wallpaper sheet — a two-arrow full-screen button sits left of Share at the top right](/blog/timetable-lock-screen-wallpaper/fullscreen-button.png)
 
@@ -370,6 +370,20 @@ In the simulator the preview frame is identical collapsed, expanded, and after a
 
 The lesson: don't let a measured 0 double as "not measured yet" when the container's contents are conditional, and test a "size stays the same" promise in the state with the least content.
 
+## 2026-10-08 — Save to Photos is gone, and full screen moved next to the preview
+
+The top right of the sheet now has one button: Share. The full-screen preview button moved down to the bottom right of the preview.
+
+![The wallpaper sheet — only Share at the top right; a two-arrow full-screen button outside the preview image at the bottom right, the background tile at the bottom left (captured in the Portuguese build)](/blog/timetable-lock-screen-wallpaper/share-only-fullscreen-corner.png)
+
+**One way out.** There were three buttons up there: full screen, Share, and a filled Save to Photos. Saving and sharing export the same image, and the share sheet already has Save Image. Two buttons for one job make you choose before you act. The direct-save button, its three alerts and the "Open Photos" shortcut are gone.
+
+This reverses the October 4 entry, so one thing stayed. That button existed because Save Image in the share sheet never reached Photos, and the cause was a missing photo-add usage string. The string arrived with the button, which makes it easy to delete with the button. Delete it and the same failure returns. With the share sheet now the only path to Photos, the string matters more. It stays in all eight languages, along with the test that checks for it.
+
+**Full screen sits beside what it enlarges.** The button's job is to make the preview bigger, yet it lived in the toolbar, as far from the preview as possible. The background tile already stands outside the image at the bottom left. The full-screen button is its mirror: same height, same 44pt size. Because the image's side margins were made symmetric when the tile moved out, the gutter on the right was already empty, and the preview didn't change size at all.
+
+Putting it on top of the image was ruled out again: nothing that isn't in the result should cover the picture.
+
 ## History
 
 - 2026-10-03 — first version: safe band + drag, shorter rows, save via share sheet
@@ -390,3 +404,4 @@ The lesson: don't let a measured 0 double as "not measured yet" when the contain
 - 2026-10-07 — Lifting one finger mid-pinch becomes a drag, touching again resumes the pinch (print preview too): amounts come from touch positions, SwiftUI gestures only arbitrate; two-finger move while zooming
 - 2026-10-07 — Background tile moved outside the preview image, bottom left (side margins 12 → 64pt); full-screen preview is no longer clipped to the device corners
 - 2026-10-07 — Preview lurched while dragging the options: after the save button left, the empty footer measured 0, was read as "not measured", and the stage followed the panel; measured-ness is now a separate flag
+- 2026-10-08 — Save to Photos removed, Share is the only export (the photo-add usage string stays); full-screen preview button moved from the toolbar to the bottom right of the preview
