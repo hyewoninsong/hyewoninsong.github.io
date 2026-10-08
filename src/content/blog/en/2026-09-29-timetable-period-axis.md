@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T19:45:00+09:00
+date: 2026-10-08T21:27:03+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -418,7 +418,7 @@ The display sheet looked heavy on a period timetable. A time-based timetable sho
 | Class · Break | two pills — 50m · 10m |
 | Lunch | two pills — after P4 · 1h (a single "None" when there is no lunch) |
 
-Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis now sits under the wheel when the lunch row is open.
+Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis moved under the wheel of the open lunch row here — and moved back a day later; it is a permanent row again (see the Oct 8 late-night update).
 
 ![The lunch row expanded — the 1h pill highlighted, its length wheel open underneath](/blog/timetable-period-axis/period-rules-lunch-panel.png)
 
@@ -492,6 +492,25 @@ The up-down chevron is the mark of a row that opens a menu. A wheel is a panel t
 
 **Import is a full row again.** The small text button beside the "Periods" heading went back to a one-row button card directly under the rules card, with its full label. It still sits outside the rules card: those rows edit values, this one replaces them all.
 
+## Update, Oct 8 late night — a switch inside a collapsed panel comes back as "it's gone"
+
+The "show lunch on the axis" switch is a permanent row of the period card again, directly under the lunch row. With no lunch set it dims; it does not disappear. The card has five rows.
+
+![Display sheet — the lunch switch sits as its own row under the lunch row, with nothing expanded](/blog/timetable-period-axis/lunch-switch-row.png)
+
+A day earlier the switch had moved into the panel that opens under the lunch row, below the wheel. Then came the report: the lunch toggle is gone. The code, the saved value and the grid were all fine. Two changes had overlapped:
+
+- The switch went into the panel, so it did not exist on screen until you tapped a lunch pill. At the time the sheet grew to fit its content, so tapping revealed it.
+- Then every sheet moved to the two system heights. At half height an opened wheel lands off screen, so the sheet scrolls to it with `ScrollViewReader`. The scroll target `.id` was added to single-pill rows and missed on two-pill rows. `scrollTo` does nothing, silently, for an id that is not in the tree.
+
+So the switch appeared only after a tap, and then below the fold.
+
+**What may live in a panel.** Adding the missing scroll target would have made it reachable again. That was not the fix. A panel can hold an editor whose current value is already shown on the row — a wheel under a pill that reads "1h". A switch is its own state, separate from lunch length and position, and once collapsed you cannot tell whether it is on. A third control on the lunch row was ruled out too: in Spanish and French two pills already shrink the label.
+
+**Why the tests stayed green.** Three UI tests tap this switch. When it moved, each got one extra line that taps the lunch pill first, and XCUITest's `tap()` scrolls an off-screen element into view on its own, so they kept passing at half height. Nothing asserted that the switch is there when the sheet first opens. That extra tap was the signal: if an existing test needs one more tap to pass, that tap is what the user now pays.
+
+Two checks guard it now: the switch is called exactly once, as a direct row of the card, and the number of expanding panels equals the number of scroll targets. The UI tests look for the switch without touching anything first.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -521,3 +540,4 @@ The up-down chevron is the mark of a row that opens a menu. A wheel is a panel t
 - Oct 8 — a period row matches one hour on time grids (unlock zoom 2x → 1.5x), lunch row at half height with a name-only label; lines from row boundaries, stripes per period row, grid end in minutes
 - Oct 8, evening — edit-sheet period wheels step by half periods (start times on the Start wheel, end times on the End wheel); long-press creation floors to the hour / period start, like a tap
 - Oct 8, night — period rule pills match the time pills (no chevron, no blue background when open); import back to a button row under the card
+- Oct 8, late night — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
