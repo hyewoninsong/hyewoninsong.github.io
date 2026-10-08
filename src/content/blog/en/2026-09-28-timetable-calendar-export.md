@@ -1,6 +1,6 @@
 ---
 title: "Before sending timetables to Calendar, we decided how you'd remove them"
-date: 2026-10-07T17:32:26+09:00
+date: 2026-10-08T23:20:11+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "SuperTimetable can now send a timetable to Apple Calendar or Google Calendar as weekly repeating events. What shaped the feature was not how to add them but how to clear a whole semester in one step."
@@ -113,7 +113,7 @@ When the timetable is already in Apple Calendar, the calendar picker is gone. A 
 
 ![Already-exported state: status card with a Move to Another Calendar row, Update Calendar button, and red Remove from Calendar at the bottom](/blog/timetable-calendar-export/already-exported.png)
 
-A "Move to Another Calendar" row under the status card opens the picker only on demand, minus the current calendar, and the button becomes "Move to This Calendar". Moving removes from the old place and adds to the new one without a second confirmation — choosing to move and picking a target is already two deliberate steps.
+A "Move to Another Calendar" row under the status card opens the picker only on demand, minus the current calendar, and the button becomes "Move to This Calendar". Moving validates the new destination and commits the old removal and new additions together, without a second confirmation — choosing to move and picking a target is already two deliberate steps.
 
 ![Moving: the row now reads Cancel, and the calendar picker and Move to This Calendar button are expanded](/blog/timetable-calendar-export/moving.png)
 
@@ -162,6 +162,18 @@ The popover's list is now a single shared view. Rules are unchanged from 2026-10
 The only difference is the check color, which follows each sheet's confirm button. Under the hood the picker now hands over event ids instead of titles, so the import math doesn't care how the list is grouped.
 
 
+## 2026-10-08 — A failed replacement must keep the previous export
+
+Updating or moving an export now keeps the existing calendar events until the replacement can be committed. An audit found a destructive ordering: the old export was deleted and committed before the new destination was checked. If that destination had disappeared or rejected writes, the error message arrived after the old events were already gone.
+
+The exporter now validates the destination first, stages removals and additions with EventKit's `commit: false`, then commits once. Any error, including an individual event save, resets the pending changes. Reusing the same calendar replaces its series without deleting the calendar itself.
+
+Checking the destination earlier was not enough: saving could still fail afterward. Deleting first and rebuilding on failure would need to recover identifiers and user settings, and recovery could fail too. EventKit already provides the pending-change boundary we needed. The Remove All path used it; replacement had missed it.
+
+Four tests execute the production exporter against a fake store: unavailable destination, failed event save, failed commit, and successful single-commit replacement. They pass in the iOS simulator. Real iCloud and Google Calendar account failure scenarios still need separate device checks.
+
+The test fixture exposed its own wrong assumption. Directly initializing a calendar subclass compiled but raised an Objective-C exception at runtime. The fixture now creates real calendar models through EventKit's supported factory and substitutes only the permission check and store I/O. A test double needs an actual run too.
+
 ## History
 
 - 2026-09-28 — first version of Export to Calendar
@@ -172,3 +184,5 @@ The only difference is the check color, which follows each sheet's confirm butto
 - 2026-10-03, evening — Export To moved from top chips to a dropdown under the event picker
 - 2026-10-04 — Remove Events from All Timetables (found by marker; only dedicated calendars removed whole)
 - 2026-10-07 — shared event picker; Import from another timetable uses the same grouping and order (selection by event id)
+
+- 2026-10-08 — validate replacement destinations and commit removals/additions together; failure-path tests
