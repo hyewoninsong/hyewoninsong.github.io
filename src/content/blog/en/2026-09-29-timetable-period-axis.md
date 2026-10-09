@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-09T01:55:00+09:00
+date: 2026-10-09T13:40:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -188,7 +188,7 @@ The rules editor worked but looked like a settings form: five − / + steppers s
 
 School-level preset chips (elementary to college) went in and came straight back out: values differ too much from school to school, and two wheel flicks do the same job.
 
-**Lunch on the axis.** With the new toggle on, the grid gets a gray "Lunch" row between periods, and nothing can go in it. Creating there does nothing; dragging down from P4 stops at the lunch row (below, the finger is far lower but the block ends at 12:50); moving snaps to the nearer period; resizing stops at the edge; the edit sheet's end-period wheel won't cross lunch.
+**Lunch on the axis.** With the new toggle on, the grid gets a gray "Lunch" row between periods, and nothing can go in it. Creating there does nothing; dragging down from P4 stops at the lunch row (below, the finger is far lower but the block ends at 12:50); moving snaps to the nearer period; resizing stops at the edge; the edit sheet's end-period wheel won't cross lunch. (Changed on Oct 9: the wall no longer depends on the toggle. See the Oct 9 afternoon update.)
 
 ![Grid with a gray "Lunch 12:50–13:50" row between P4 and P5; a new block dragged down from Wednesday P4 stops above it](/blog/timetable-period-axis/period-lunch-row-clamp.png)
 
@@ -559,6 +559,30 @@ One case is excluded on purpose: events that overlap no period at all, such as a
 
 The round-trip test that already existed used events that were on half-period lines from the start, so it passed either way. The new one runs with times that are off the lines and checks that what comes back matches what the period grid was showing.
 
+## Update, Oct 9 afternoon — lunch is a wall even when the lunch row is off
+
+A user switched a time-based timetable to periods and sent a screenshot: a block starting in period 4 ran straight through the gray lunch row into period 5. A second report came with it. Dragging a long event into a short gap shrinks it to fit, except when one side of the gap is lunch.
+
+**The wall was tied to a display switch.** The lunch wall existed only while "show lunch on the axis" was on. With it off, every caller got "no lunch", so a period 4 block could be stretched into period 5 and the edit sheet's end wheel turned past lunch. Turn the switch on afterwards and the row appears under a block that already crosses it. Switching axes came in through the same hole: a 12:00–14:40 event is period 4 through period 5, and the mapping into the grid rounded edges to half-period lines without looking at lunch.
+
+Whether lunch is drawn is a preference. Whether a class can span lunch is a rule of the period schedule.
+
+**The off side keeps a zero-length wall.** The wall is now read from the period rules. With the row on it is the row; with it off it is the line where period 4 ends and period 5 starts, returned as a range of length zero. Every existing check was "does the block start before the wall ends and end after it starts", which on a zero-length range reads as "does it cross this line". Move, resize, create, duplicate and the edit wheel stop on the off side without a line of change.
+
+| | Lunch row on | Lunch row off |
+|---|---|---|
+| Wall | The whole lunch row | The line between P4 and P5 |
+| Stretch a P4 block down | Stops above the row | Stops at the line |
+| Edit sheet end wheel | Up to P4 | Up to P4 |
+
+**Events that already cross are drawn on one side.** The side with the longer share wins; a tie goes to the side before lunch. The saved value stays as it was until the event is next moved or the timetable goes back to the time axis, the same rule as half-period rounding. The widget draws it the same way. Cutting the saved value at the moment of switching lost for the reason it lost earlier that day: the periods right after a switch are provisional. Splitting the event in two would create an event, and switching never creates or deletes one.
+
+One change users will notice: a P4–P5 event made while the row was off now shows as one period.
+
+**The gap measurement needed the wall too.** When a dragged block overlaps another event, the grid measures the free gap around the finger and shrinks the block to it. The gap's walls were neighbouring events and the grid edges only, so a two-period gap between an event and lunch read as a wide gap reaching past lunch. The block kept its length, landed across lunch, and the push-out step shoved it onto the neighbour. The finger's side of lunch is now a wall of the gap.
+
+**Why it was missed.** Every lunch wall test ran on an axis with the row on. And the shrink-to-gap code sits in the overlap branch, not the blocked branch, so it was not on the list checked whenever a wall was added. The gap calculation is now its own function with tests, including the zero-length wall. It was not verified by hand-dragging on a device this time.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -592,3 +616,4 @@ The round-trip test that already existed used events that were on half-period li
 - Oct 8, later still — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
 - Oct 8, around midnight — lunch label back to the same three lines as periods (zero line spacing in that row) · blocked-drag feedback at the lunch row and above period 1 (missing wall, resize strength from the raw finger value)
 - Oct 9 — switching from periods back to time saves events where the period grid drew them (period and half-period lines); events outside the axis and the other direction are left alone
+- Oct 9, afternoon — lunch is a wall with the lunch row off too (a zero-length range) · events crossing lunch are drawn on the longer side · shrink-to-gap works when one side of the gap is lunch
