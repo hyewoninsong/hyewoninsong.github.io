@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-09T14:20:00+09:00
+date: 2026-10-09T16:50:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -649,6 +649,18 @@ Events that don't overlap any row of the axis, such as a 9 pm event from an impo
 
 Unit tests compare alarm times to on-screen times using events that cross lunch or start in a break. We have not yet confirmed a real alarm ringing on a device, and we did not see the reporter's saved data directly; if it happens again on the fixed build, the registration log is the next place to look.
 
+## Update, Oct 9 evening — shrinking the day dragged lunch along; now it clears lunch
+
+Take a seven-period day with lunch after period 4 and the lunch row on, then cut it to two periods. The rules card quietly changed lunch to "after period 1", but the grid showed no lunch row at all. Go up to three periods and lunch moved again, to "after period 2". Nobody touched the lunch setting, and it changed twice.
+
+Now, cutting the period count to the lunch position or below sets lunch to None. Raising the count again does not bring it back; you pick lunch again if you want it.
+
+Two things were going on. The lunch position was only clamped **on read**: the stored value stayed 4, and the screen showed `min(4, count − 1)`, so the visible position followed the count around. And the grid axis does not know the rules — it re-reads lunch from the saved period times as "the largest gap that is longer than a break", where a break is the most common gap. With two periods there is one gap, so that 60-minute gap *is* the most common gap, nothing is longer than itself, and there is no lunch. The card said lunch, the axis said none.
+
+Teaching the axis to treat a single gap as lunch lost: there is no way to tell a break from lunch with one sample, and the position would still wander. Restoring lunch when the count goes back up lost too: a wheel passes through values you never chose. When lunch does survive a change, its visible position is now pinned, so adding periods leaves it where it was.
+
+The tests had checked the rules and the axis separately, never the round trip across different period counts. They do now. One gap remains: turning lunch on by hand in a two-period day still draws no lunch row, and fixing that means storing the lunch position instead of inferring it.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -685,3 +697,4 @@ Unit tests compare alarm times to on-screen times using events that cross lunch 
 - Oct 9, afternoon — lunch is a wall with the lunch row off too (a zero-length range) · events crossing lunch are drawn on the longer side · shrink-to-gap works when one side of the gap is lunch
 - Oct 9, afternoon (continued) — the edit sheet's second row is Duration, not End: from 0.5 periods up to what fits from the start (last period, before lunch), end time derived · the end time is fitted to a half-period line on open without counting as an edit — reverses the Oct 8 End wheel
 - Oct 9, late afternoon — period-timetable alarms were registered from the saved value (before lunch) instead of the time on screen and never rang. Alarms now use the drawn time · saved values in period timetables are fitted to period times (launch, import, add/edit, display-sheet confirm) — reverses "draw only, leave the saved value" and the Sep 29 "don't touch the wheel, nothing changes"
+- Oct 9, evening — cutting the period count to the lunch position or below clears lunch (it used to slide forward while the axis drew no lunch row) · a surviving lunch keeps its visible position · round-trip test between rules and axis
