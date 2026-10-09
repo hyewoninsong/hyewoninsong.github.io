@@ -1,12 +1,12 @@
 ---
 title: "It looked like the Live Activity ignored the weekday. It was ending with stale content."
-date: 2026-10-09T01:55:00+09:00
+date: 2026-10-09T20:02:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
-summary: "The class Live Activity showed an event from another weekday as in progress. The weekday filter was fine. The card was being ended with the content it already had. A day later the card was cut down to the one event in progress."
+summary: "The class Live Activity showed an event from another weekday as in progress. The weekday filter was fine. The card was being ended with the content it already had. A day later the card was cut down to the one event in progress, and that evening the feature was removed."
 ---
 
-Move a class that is in progress to another day and the lock screen card now closes right away. Before, the card kept saying "in class" until the moved event would have ended.
+A class in progress was moved to another day, and the lock screen card kept saying "in class" until the moved event would have ended. This post records that fix. By the end of it the card itself is gone: the app no longer has a class Live Activity.
 
 ## The report said "it ignores the weekday"
 
@@ -65,11 +65,38 @@ Both "keep alive" options leave the card up after class until the app is opened 
 
 The lesson above applies again: an ended activity cannot be fixed. The lookup that only saw live activities now sees everything not yet dismissed; otherwise every save would stack a new card on top of the visible one. There is no update path either. If the content changes, the old card is dismissed and a new one requested. Move the class to another day and there is no plan, so the card closes.
 
-### Where it stands
+### What was left then
 
-The card only appears if the app is opened during a class. The planning logic is unit tested; whether an ended card keeps its timer running, leaves on time, and accepts a second `end` still needs a check on a device.
+The card only appeared if the app was opened during a class. A device check was still pending, and it never got that far.
+
+## 2026-10-09, evening — The card is gone
+
+After half a day with the smaller card, the feature was removed: the Settings toggle, the card, and the planning code behind it. The alarm card that appears on the Lock Screen before an alarm fires is a separate feature and stays.
+
+The reason is short. A card that stays on the Lock Screen is the annoyance. That morning the complaint was read as "it is there all day", so the card was narrowed to class time. A class still runs one to three hours, and the same card sits on top every time the screen wakes. The person sitting in the class already knows which class it is.
+
+### What the card was answering
+
+The morning's table only compared when the card appears and when it leaves. Removing it was not a row. The better first question is what the card answers that nothing else does.
+
+| Question | Already answered by |
+|---|---|
+| What is next and when | Lock Screen widget, Watch complication |
+| What is in progress now | The same widget and the Watch app show the event in progress |
+| Tell me it is about to start | The event alarm |
+
+A widget sits where the user put it. A Live Activity is inserted at the top of the Lock Screen by the app. With the same information, the inserted one loses.
+
+### What moved
+
+The color dot view lived in the class card's file but the alarm card used it too, so it got its own file. A test that pins the Watch card's color dot was also living in the class card's test file and moved next to the alarm card tests. Check for tenants before deleting a file.
+
+Devices with a card on screen at update time needed nothing. Every card had been ended on request to leave at class end, so the system removes it without any code in the new build.
+
+The ActivityKit lesson above still holds for the alarm card: an ended activity cannot be fixed.
 
 ## History
 
 - 2026-10-08 — first entry
 - 2026-10-09 — card cut down to the event in progress, ended on request so it leaves at class end (Lock Screen only)
+- 2026-10-09 — removed the feature that evening; a persistent card was the problem, and widgets and the Watch already carry the same information
