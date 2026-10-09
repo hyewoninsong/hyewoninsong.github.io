@@ -1,6 +1,6 @@
 ---
 title: "The tutorial now starts inside the display settings sheet"
-date: 2026-10-07T10:04:00+09:00
+date: 2026-10-09T17:13:27+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The settings sheet and the tutorial used to appear on top of each other. The sheet is now step one of the tutorial. Along the way, a ring drawn 14pt off taught us that iOS 26 draws partial-height sheets at 0.96 scale."
@@ -14,7 +14,7 @@ Tapping Start on the welcome card opens the display sheet. A one-line hint sits 
 
 ![The display sheet with a tutorial hint capsule at the top and a blue ring and finger on the ✓ button](/blog/timetable-tutorial-display-sheet/sheet-step.png)
 
-That makes ten steps, or eleven for period-based timetables, which set their period rules in the same sheet.
+That made ten steps; period-based timetables set their period rules in the same sheet. (Since 2026-10-09 both kinds have eleven. See below.)
 
 ## Why the sheet became a step instead of being hidden
 
@@ -68,7 +68,34 @@ Two smaller changes went in with it. The highlight around the title field sat fl
 
 The blue glow that was fixed in the top-left of the coach card now drifts around inside it, driven by four sines with periods that never line up. With Reduce Motion on it stays where it used to be.
 
+## 2026-10-09 — The demo was showing a move you cannot make
+
+In a period-based timetable, the "create" demo drew its ghost block from period 4 straight through the lunch slot into period 5. Events cannot sit in lunch, and a real drag stops in front of it. Nothing was saved wrong; the guide was simply showing something you could not follow. The move and resize demos had the same problem.
+
+The demo picks a free spot from whatever is on screen. It already tried to avoid lunch by cutting the search range to "before lunch". But cutting a range only trims where a block may **start**. Period 4 is before lunch, so it stayed a candidate, and the end of a two-period block was only checked against the end of the grid.
+
+Each candidate is now checked from start to end. A two-period block that would touch lunch looks for two periods on the other side first, then falls back to one. The move demo skips targets that touch lunch, and the resize demo grows only up to it. This holds when the lunch slot is hidden too, because the boundary is still a line events cannot cross.
+
+![The dashed create ghost sits in periods 5 and 6, below lunch](/blog/timetable-tutorial-display-sheet/create-after-lunch.png)
+
+The tests missed it because the demo planner was only tested on a grid with no lunch, and captures were taken on an empty timetable where the lunch area never got picked. A calculation that saves nothing still says "you can put it here", so it has to see the same walls as the real gesture.
+
+## 2026-10-09 — Before locking, outline the whole day row and time column
+
+Tapping the day row or the time column opens the display settings. Only the period tutorial mentioned it, and it outlined a single period cell, which read as "only this cell is tappable".
+
+Both kinds of timetable now teach this in the step just before locking. One outline runs around the whole day row and the whole left column. A finger taps the row, then the column. Tapping either opens the sheet and moves on to the lock step. Both tutorials are eleven steps.
+
+![Period timetable: one blue outline joins the day row and the period column, with the coach card tucked inside the corner](/blog/timetable-tutorial-display-sheet/shortcut-outline-period.png)
+
+![Time timetable: the same outline, with the copy saying "times"](/blog/timetable-tutorial-display-sheet/shortcut-outline-time.png)
+
+The coach card normally sits at the top of the grid, on top of the day row, so it covered the thing it was pointing at. For this step it drops below the day row and to the right of the column. Moving it to the bottom lost because the next step's lock button is down there and the card would jump twice. Two separate outlines lost because they read as a choice between two things.
+
+Not yet checked by hand: the iPad layout, and a full run from the welcome card.
+
 ## History
 
 - 2026-10-05: tutorial starts in the display settings sheet; 0.96 scale correction for partial-height sheets
 - 2026-10-07: locked-tap copy covering the handles; roomier title highlight; drifting card glow
+- 2026-10-09: demos no longer cross lunch; the step before locking outlines the whole day row and time column
