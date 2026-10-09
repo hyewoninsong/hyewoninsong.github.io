@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-09T13:40:00+09:00
+date: 2026-10-09T13:45:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -463,6 +463,8 @@ The mapping is covered by tests and the screens by simulator captures; dragging 
 
 The grid has snapped to half periods for five days, but the edit sheet's wheels still moved a whole period at a time. You couldn't make a 1.5-period class from the sheet, and touching the wheel on one snapped it back to period boundaries.
 
+(The End wheel became a Duration wheel the next day — see the Oct 9 "you pick how long" update. The naming discussion below is the record up to then.)
+
 The wheels now list P1, P1.5, P2, P2.5, and each row carries a single time.
 
 | Wheel | Row | Meaning |
@@ -583,6 +585,27 @@ One change users will notice: a P4–P5 event made while the row was off now sho
 
 **Why it was missed.** Every lunch wall test ran on an axis with the row on. And the shrink-to-gap code sits in the overlap branch, not the blocked branch, so it was not on the list checked whenever a wall was added. The gap calculation is now its own function with tests, including the zero-length wall. It was not verified by hand-dragging on a device this time.
 
+## Update, Oct 9 afternoon, continued — you pick how long the class is, not where it ends
+
+On period timetables the edit sheet's second row changed from End to Duration. You choose how many periods the class takes; the app works out the end time.
+
+| Row | Pill | A wheel row |
+|---|---|---|
+| Start | P3 | P3  11:00 |
+| Duration | 1.5 periods | 1.5 periods  12:25 |
+
+The duration wheel steps by half a period from 0.5, and each row shows the time that length ends at.
+
+**The hardest name from yesterday is gone.** An End value of "P1.5" meant "ends in the middle of period 2", and an event using only the first half of period 1 ended at "P0.5". Consistent, but it needed explaining. As a length, 1.5 periods means one thing. Keeping the End wheel with the length as a caption lost because the input stays the same; showing unreachable lengths greyed out lost because it creates a way to block the checkmark.
+
+**Only what fits.** The longest length is the timetable's period count, but the wheel stops at the last period and before lunch. The change just above (the wall is read from the period rules, not the display switch) means it stops there with the lunch row off too.
+
+**The end time is fitted when the sheet opens.** Until now an untouched wheel never changed a time, so an imported 9:00–9:30 event survived opening and closing. With a duration input, a pill reading "0.5 periods" over a stored 9:30 is a mismatch, so opening the sheet moves the end, and only the end, to the half-period line the grid was already drawing. That alone does not count as an edit: swiping the sheet away asks nothing and saves nothing. Fitting every event at file load lost because events you never opened would change.
+
+**Plurals differ at 1.5.** English and Spanish say "1.5 periods"; French and Portuguese keep the singular below 2. Three string keys: exactly 1, the halves below 2, and 2 and up.
+
+The limits and the fitting are covered by tests. Turning the wheel on a device is still to do.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -617,3 +640,4 @@ One change users will notice: a P4–P5 event made while the row was off now sho
 - Oct 8, around midnight — lunch label back to the same three lines as periods (zero line spacing in that row) · blocked-drag feedback at the lunch row and above period 1 (missing wall, resize strength from the raw finger value)
 - Oct 9 — switching from periods back to time saves events where the period grid drew them (period and half-period lines); events outside the axis and the other direction are left alone
 - Oct 9, afternoon — lunch is a wall with the lunch row off too (a zero-length range) · events crossing lunch are drawn on the longer side · shrink-to-gap works when one side of the gap is lunch
+- Oct 9, afternoon (continued) — the edit sheet's second row is Duration, not End: from 0.5 periods up to what fits from the start (last period, before lunch), end time derived · the end time is fitted to a half-period line on open without counting as an edit — reverses the Oct 8 End wheel
