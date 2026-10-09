@@ -1,9 +1,9 @@
 ---
 title: "The confirm button grows into the confirm sheet — except when you save"
-date: 2026-10-09T19:45:00+09:00
+date: 2026-10-09T20:10:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "The batch-change sheet now zooms out of the ✓ button and shrinks back into it on cancel. The system zoom transition is two lines; the save path left a lone ✓ floating over the grid."
+summary: "The batch-change sheet now zooms out of the ✓ button and shrinks back into it on cancel. The system zoom transition is two lines; the save path left a lone ✓ floating over the grid. Later the same day: the before block was also changing colour on that path."
 ---
 
 When you change an event's color or title and tap ✓, SuperTimetable asks whether to apply the change to the other events that share that style. That small sheet now grows out of the ✓ button and shrinks back into it when you cancel, so the button you tapped and the sheet you got read as one object.
@@ -43,3 +43,18 @@ One more thing: while the zoom is active the source button is gone from the acce
 ## Where it stands
 
 All three paths are verified frame by frame on iPhone. The iPad edit popover's ✓ carries the same source, but has not been captured there yet.
+
+## Later on 2026-10-09 — "Change all" turned the before block into the after block
+
+With the blocks now large, something else showed. Tap "Change all" and, while the sheet slides down, the before block takes on the after colour and title. "This one only" was fine.
+
+Dismissing only starts the animation. The sheet's content stays on screen until it finishes and redraws whenever a `@State` it reads changes. "Change all" saved, then updated the "original style" variable to the style just saved — reasonable, since that variable is the baseline for change detection. But the before block was drawing that same variable. One of the two uses must move on save; the other must not.
+
+The before block now draws its own copy, taken the moment ✓ is tapped. The baseline can change whenever it likes. Deleting the baseline update would also have fixed it today, but the picture would still be reading the baseline. A timer that delays the update until after the dismissal was not considered a fix.
+
+That line had been there for six months. The save tests checked what got written, and the frame-by-frame review of the zoom looked only for the stray ✓. When a button saves and dismisses, compare the state it writes with the state the closing view draws. This fix is pinned by a source-contract test; the dismissal was not re-recorded.
+
+## History
+
+- 2026-10-09 evening — zoom from the ✓, toolbar X, before/after blocks fill the remaining height
+- 2026-10-09 night — the before block keeps the before style while the sheet closes on save
