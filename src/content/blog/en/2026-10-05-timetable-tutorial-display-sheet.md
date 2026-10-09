@@ -1,6 +1,6 @@
 ---
 title: "The tutorial now starts inside the display settings sheet"
-date: 2026-10-09T17:13:27+09:00
+date: 2026-10-09T20:28:41+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The settings sheet and the tutorial used to appear on top of each other. The sheet is now step one of the tutorial. Along the way, a ring drawn 14pt off taught us that iOS 26 draws partial-height sheets at 0.96 scale."
@@ -84,7 +84,7 @@ The tests missed it because the demo planner was only tested on a grid with no l
 
 Tapping the day row or the time column opens the display settings. Only the period tutorial mentioned it, and it outlined a single period cell, which read as "only this cell is tappable".
 
-Both kinds of timetable now teach this in the step just before locking. One outline runs around the whole day row and the whole left column. A finger taps the row, then the column. Tapping either opens the sheet and moves on to the lock step. Both tutorials are eleven steps.
+Both kinds of timetable now teach this in the step just before locking. One outline runs around the whole day row and the whole left column. A finger taps the row, then the column. Tapping either opens the sheet, and closing that sheet with ✓ moves on to the lock step. (At first the step ended the moment the sheet opened; see below.) Both tutorials are eleven steps.
 
 ![Period timetable: one blue outline joins the day row and the period column, with the coach card tucked inside the corner](/blog/timetable-tutorial-display-sheet/shortcut-outline-period.png)
 
@@ -94,8 +94,27 @@ The coach card normally sits at the top of the grid, on top of the day row, so i
 
 Not yet checked by hand: the iPad layout, and a full run from the welcome card.
 
+## 2026-10-09 — The step ends when the sheet closes, not when it opens
+
+The same evening, on a real phone: tap the day row, the sheet slides halfway up, and behind it the coach card already reads "Step 11 of 11 · Lock — tap the lock button". The lock button is under the sheet, and the sheet itself says nothing. There was no way to tell what to do.
+
+The first call was "this step only teaches where the sheet lives, so opening it is done". The completion rule was fine; the next screen was not. When the action that finishes a step puts a cover on screen, the next instruction starts behind that cover.
+
+Now the step ends when the sheet is closed. A hint at the top of the sheet says "This is where you change how your timetable is displayed. Take a look, then tap ✓ to close," and a finger taps ✓ on a loop, as in step one. The card behind stays on step 10, and the outline around the day row steps aside while the sheet is up, so there is one place to look.
+
+![The sheet opened from the day row shows a hint asking to tap ✓ to close, with a ring and finger on ✓; the card behind is still step 10](/blog/timetable-tutorial-display-sheet/shortcut-sheet-hint.png)
+
+Tapping ✓ closes the sheet and brings up the lock card, with the lock button in view.
+
+![After closing: the step 11 lock card and a finger pointing at the lock button](/blog/timetable-tutorial-display-sheet/shortcut-then-lock.png)
+
+The alternative was to advance on open but hold the lock card back until the sheet closed. That means carrying a state where the step is 11 and the screen is 10, and the sheet still would not say how to leave. Step one already uses "the sheet saved and closed" as its signal, so this step uses the same one. The X button is hidden here for the same reason as in step one: closing with X does not save, and the step would never finish.
+
+Captures of the step cards alone could not show this. We had step 10 and step 11, but nothing with the sheet up in between. Checked on iPhone with both kinds of timetable; iPad is still to do.
+
 ## History
 
 - 2026-10-05: tutorial starts in the display settings sheet; 0.96 scale correction for partial-height sheets
 - 2026-10-07: locked-tap copy covering the handles; roomier title highlight; drifting card glow
 - 2026-10-09: demos no longer cross lunch; the step before locking outlines the whole day row and time column
+- 2026-10-09: the shortcut step ends when the opened sheet is closed with ✓ (reversing advance-on-open)
