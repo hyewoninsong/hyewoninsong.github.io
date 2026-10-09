@@ -1,9 +1,9 @@
 ---
 title: "Opening the keyboard to search squashed the timetable card"
-date: 2026-10-08T13:30:00+09:00
+date: 2026-10-09T22:52:39+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Tapping the search field in the timetable list redrew each card at half height. The modifier meant to prevent that was already in the code, attached in a place where it never did anything. Later the field moved to the bottom toolbar, and the duplicate and delete buttons vanished while you searched."
+summary: "Tapping the search field in the timetable list redrew each card at half height. The modifier meant to prevent that was already in the code, attached in a place where it never did anything. Later the field moved to the bottom toolbar, and the duplicate and delete buttons vanished while you searched. Search also reads event titles and notes again."
 ---
 
 Tapping the search field in the timetable list was fixed to bring up the keyboard and nothing else: the card keeps its size and the keyboard covers its lower part. That same evening the card view lost the search field entirely; the last sections cover that.
@@ -132,9 +132,39 @@ We missed it because, on the day the bottom bar became a system toolbar, we conf
 
 Measured on an iOS 27.2 simulator; iPad windows not captured yet.
 
+## 2026-10-09: search reads event titles and notes again, from two characters
+
+List search now matches the events inside a timetable, by title or by note, as well as the timetable's name. You can find which timetable holds "Math" without opening each one.
+
+This is the second time. Search shipped matching all three. Four days later it was cut to names only, because a single character matched nearly every timetable through some event and the name could no longer narrow anything. A day after that the request came back: there is no other place to look an event up.
+
+Restoring it as it was would restore the problem, so it came back with two rules.
+
+| Rule | What it prevents |
+|---|---|
+| Event titles and notes are searched only when the query has two or more characters | One character matching almost everything |
+| Timetables matched by name come first, those matched only by an event after | Event matches burying the timetable you were looking for by name |
+
+A timetable matched through an event says why. One line under its name lists the matching event titles with the matched part in bold, up to three and then "and N more". A note match shows the title of the event that carries the note.
+
+![Card view, searching an event title: the matching event appears on one line under the timetable name](/blog/timetable-list-search-content/cards-caption.png)
+
+![Title list, searching a note: the event that carries the note is shown under the name](/blog/timetable-list-search-content/titles-memo-caption.png)
+
+![One character: no timetable has it in its name, so there are no results](/blog/timetable-list-search-content/one-char-no-result.png)
+
+Tapping a result opens the timetable and scrolls to the first matching event, selected.
+
+Two options lost. Restoring the original with no length floor and no ordering brings back the reason it was cut. A separate event search on another screen adds an entrance and makes people choose which search box to type in.
+
+Results used to keep the original order always. Now they form two groups, name matches then event matches, each in its original order. Reordering is locked while filtering, so the displayed order never fights the stored one.
+
+The floor counts characters, so a one-character word in Korean or Chinese will not match events; we will revisit per language if that hurts. The filter rules are unit tested and the screens were captured on an iOS simulator, not yet on a device.
+
 ## History
 
 - 2026-10-05, midday: the card no longer shrinks when the search keyboard appears.
 - 2026-10-05, evening: search removed from card view, kept in the title list.
 - 2026-10-07: fixed the search field landing at the bottom when the sheet was opened in card view and switched.
 - 2026-10-08: the bottom-toolbar search folded duplicate and delete; the presentation now ends on submit and on picking a result.
+- 2026-10-09: search matches event titles and notes again, from two characters, with name matches first.
