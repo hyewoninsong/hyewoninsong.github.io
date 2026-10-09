@@ -1,6 +1,6 @@
 ---
 title: "We merged, split, and re-merged the settings sheet in ten days"
-date: 2026-10-07T11:46:25+09:00
+date: 2026-10-09T01:31:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Should app-wide settings and per-timetable settings share a sheet? We changed the answer three times. The final answer is both: one sheet from the menu, a quick sheet from the grid."
@@ -58,7 +58,7 @@ Settings now holds app-wide values only, in three cards: Screen, Sounds & Haptic
 
 ![Display sheet — vertical axis, days, hours, and schedule text color at the bottom](/blog/timetable-settings-sheet-scope/display-sheet-text-color.png)
 
-The Display sheet holds every per-timetable value. Text color is back as its last card and fits without scrolling on iPhone.
+The Display sheet holds every per-timetable value. Text color is back as its last card.
 
 | Path | Sheet | Contents |
 |---|---|---|
@@ -71,7 +71,26 @@ The reason for keeping text color out of the Display sheet had also weakened. Th
 
 Tapping the "Display" row closes Settings and opens the Display sheet once the dismissal finishes. Stacking a second sheet on top, or pushing inside Settings, would hide the grid that serves as the live preview. In SwiftUI the next sheet is presented from `onDismiss` of `.sheet(isPresented:onDismiss:)`, guarded by a flag set only by the row, so ✓ and swipe-to-dismiss chain nothing.
 
+## October 9, 2026 — the text color card got a title, and stayed where it was
+
+Two days later a different question came in: the Display sheet looks like the place to adjust the day header and the time axis, yet schedule text color sits at the bottom. Should it move to the schedule editor?
+
+The unease was fair. Three of the four cards had titles, and all three were about axes. The untitled last card was about blocks, so it read like a stray row.
+
+![Bottom of the Display sheet — a "Schedules" title above a single "Text Color" row](/blog/timetable-settings-sheet-scope/display-sheet-schedule-title.png)
+
+We kept the position and added a "Schedules" title above the card. The row label shrank from "Schedule Text Color" to "Text Color" so the title and the row don't repeat each other. The Print and Share sheets use the same row without a card title, so they keep the long label.
+
+What lost:
+
+- The schedule editor. Text color is one value per timetable. In a sheet that edits one schedule, changing it for Math would change every class. Making it per-schedule would bring back a feature we removed in August because it made the editor heavy.
+- The color popover. Same reason: it picks one schedule's color.
+- Back to Settings. The section above is the story of moving it out.
+
+The value was in the right place; the place just had no name.
+
 ## History
 
 - 2026-09-25 — Merged Settings into two areas (all timetables / this timetable); the Display sheet kept days and hours only.
 - 2026-10-07 — Removed per-timetable values from Settings and added a "Display" row on top. Text color moved to the Display sheet; the app-wide card became three.
+- 2026-10-09 — Added a "Schedules" title to the text color card in the Display sheet and shortened the row to "Text Color". It did not move to the schedule editor.

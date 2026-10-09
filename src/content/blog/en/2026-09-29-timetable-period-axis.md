@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-08T21:30:00+09:00
+date: 2026-10-09T17:05:02+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -108,7 +108,7 @@ Move the start and the end follows, keeping how many periods the event spans. It
 
 ![After moving the start to the last period, start and end both read P7](/blog/timetable-period-axis/edit-sheet-period-follow.png)
 
-Times are still stored as real clock times. If you don't touch the wheel, nothing changes, so imported events that don't line up with period boundaries stay exactly as they are. The 30-minute minimum is dropped for period timetables, since a period can be as short as five minutes. We also considered a row of period chips (too many periods to fit, and range-by-tapping is guesswork) and a single row with a period-count stepper (you couldn't pick the end directly). Along the way we fixed a draft box that jumped far down the grid when you changed the time in the new-event sheet. That path was handing real times to a grid that draws in virtual period hours.
+Times are still stored as real clock times. At this point, not touching the wheel changed nothing, so imported events that didn't line up with period boundaries stayed as they were (since late on Oct 9, saving fits them to period times — see the last section). The 30-minute minimum is dropped for period timetables, since a period can be as short as five minutes. We also considered a row of period chips (too many periods to fit, and range-by-tapping is guesswork) and a single row with a period-count stepper (you couldn't pick the end directly). Along the way we fixed a draft box that jumped far down the grid when you changed the time in the new-event sheet. That path was handing real times to a grid that draws in virtual period hours.
 
 ## Update, Sep 29 midnight — the whole day in a minimap, and auto-scroll at the edges
 
@@ -188,7 +188,7 @@ The rules editor worked but looked like a settings form: five − / + steppers s
 
 School-level preset chips (elementary to college) went in and came straight back out: values differ too much from school to school, and two wheel flicks do the same job.
 
-**Lunch on the axis.** With the new toggle on, the grid gets a gray "Lunch" row between periods, and nothing can go in it. Creating there does nothing; dragging down from P4 stops at the lunch row (below, the finger is far lower but the block ends at 12:50); moving snaps to the nearer period; resizing stops at the edge; the edit sheet's end-period wheel won't cross lunch.
+**Lunch on the axis.** With the new toggle on, the grid gets a gray "Lunch" row between periods, and nothing can go in it. Creating there does nothing; dragging down from P4 stops at the lunch row (below, the finger is far lower but the block ends at 12:50); moving snaps to the nearer period; resizing stops at the edge; the edit sheet's end-period wheel won't cross lunch. (Changed on Oct 9: the wall no longer depends on the toggle. See the Oct 9 afternoon update.)
 
 ![Grid with a gray "Lunch 12:50–13:50" row between P4 and P5; a new block dragged down from Wednesday P4 stops above it](/blog/timetable-period-axis/period-lunch-row-clamp.png)
 
@@ -357,7 +357,7 @@ The vertical axis used to be a one-time choice at creation. Now the display shee
 
 ![Right after tapping By Period — the same slot now holds the period rules card, with the first period starting where the events start](/blog/timetable-axis-switch/period-cards.png)
 
-Events are never converted: they are stored as real times in both modes, so only the axis changes — plus any event the new axis has no room for.
+Switching to periods never converts events: they are stored as real times in both modes, so only the axis changes — plus any event the new axis has no room for. (At first that held in both directions. Since Oct 9, going back to the time axis saves each event where the period grid was drawing it — see the last update.)
 
 | Direction | Axis | Events |
 |---|---|---|
@@ -418,7 +418,7 @@ The display sheet looked heavy on a period timetable. A time-based timetable sho
 | Class · Break | two pills — 50m · 10m |
 | Lunch | two pills — after P4 · 1h (a single "None" when there is no lunch) |
 
-Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis now sits under the wheel when the lunch row is open.
+Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis moved under the wheel of the open lunch row here — and moved back a day later; it is a permanent row again (see the last Oct 8 update).
 
 ![The lunch row expanded — the 1h pill highlighted, its length wheel open underneath](/blog/timetable-period-axis/period-rules-lunch-panel.png)
 
@@ -444,7 +444,7 @@ Period grids now use the same scale as time grids: one period row is as tall as 
 |---|---|---|
 | Unlocked period row (iPhone) | 144pt (2x) | 108pt (1.5x, same as time grids) |
 | Lunch row | a full row | half a row |
-| Lunch label | name, start, end | name + one line "12:50–1:50" (name only for a few hours — see the late-night update) |
+| Lunch label | name, start, end | name, start, end (name only for a few hours, then a one-line range, then back to three lines — see the later updates) |
 
 This reverses two earlier calls: the 2x unlock zoom from Oct 3 and the full-height lunch row from Sep 30. Switching between the two kinds of timetable and seeing the same hour at two heights turned out to bother more than a small half row, and a row nothing can be placed in was taking a whole class worth of screen.
 
@@ -462,6 +462,8 @@ The mapping is covered by tests and the screens by simulator captures; dragging 
 ## Update, Oct 8 evening — half periods in the edit sheet, and long-press starts where a tap does
 
 The grid has snapped to half periods for five days, but the edit sheet's wheels still moved a whole period at a time. You couldn't make a 1.5-period class from the sheet, and touching the wheel on one snapped it back to period boundaries.
+
+(The End wheel became a Duration wheel the next day — see the Oct 9 "you pick how long" update. The naming discussion below is the record up to then.)
 
 The wheels now list P1, P1.5, P2, P2.5, and each row carries a single time.
 
@@ -496,13 +498,178 @@ The up-down chevron is the mark of a row that opens a menu. A wheel is a panel t
 
 When the lunch row shrank to half height earlier today, its label lost the start and end times: three lines don't fit in a half row, and the period above ends when lunch starts. On a real device that reasoning didn't hold. Lunch was the one row on the axis with no time on it, and reading it meant combining two numbers from the neighbouring rows.
 
-The label now has two lines: the name, and a range underneath — "Lunch / 12:50–1:50".
+The label now has two lines: the name, and a range underneath — "Lunch / 12:50–1:50". (An hour later this became the same three lines as a period — see the midnight update.)
 
 ![Locked period grid — the half-height lunch row between Period 4 and Period 5 reads "Lunch" with "12:50–1:50" on one line beneath it](/blog/timetable-period-axis/lunch-half-row-time-range.png)
 
 The arithmetic was right: a half row is 36pt on a locked iPhone grid, and the period label's three lines come to about 37pt. So the range shares one line. AM/PM is dropped — the axis is 44pt wide and "12:50 PM–1:50 PM" doesn't fit even scaled down. The now-capsule on the same axis already drops it for the same reason, so the lunch range uses the same compact form, and the period labels above and below still carry AM/PM. In 24-hour mode it reads "12:50–13:50", a little smaller but inside the band.
 
 Two alternatives lost: smaller text for just the lunch row would mix two type sizes on one axis, and a range with AM/PM has no room. Shared images, prints and list previews still draw lunch as a full row, so their label keeps the three lines.
+
+## Update, Oct 8 later still — a switch inside a collapsed panel comes back as "it's gone"
+
+The "show lunch on the axis" switch is a permanent row of the period card again, directly under the lunch row. With no lunch set it dims; it does not disappear. The card has five rows.
+
+![Display sheet — the lunch switch sits as its own row under the lunch row, with nothing expanded](/blog/timetable-period-axis/lunch-switch-row.png)
+
+A day earlier the switch had moved into the panel that opens under the lunch row, below the wheel. Then came the report: the lunch toggle is gone. The code, the saved value and the grid were all fine. Two changes had overlapped:
+
+- The switch went into the panel, so it did not exist on screen until you tapped a lunch pill. At the time the sheet grew to fit its content, so tapping revealed it.
+- Then every sheet moved to the two system heights. At half height an opened wheel lands off screen, so the sheet scrolls to it with `ScrollViewReader`. The scroll target `.id` was added to single-pill rows and missed on two-pill rows. `scrollTo` does nothing, silently, for an id that is not in the tree.
+
+So the switch appeared only after a tap, and then below the fold.
+
+**What may live in a panel.** Adding the missing scroll target would have made it reachable again. That was not the fix. A panel can hold an editor whose current value is already shown on the row — a wheel under a pill that reads "1h". A switch is its own state, separate from lunch length and position, and once collapsed you cannot tell whether it is on. A third control on the lunch row was ruled out too: in Spanish and French two pills already shrink the label.
+
+**Why the tests stayed green.** Three UI tests tap this switch. When it moved, each got one extra line that taps the lunch pill first, and XCUITest's `tap()` scrolls an off-screen element into view on its own, so they kept passing at half height. Nothing asserted that the switch is there when the sheet first opens. That extra tap was the signal: if an existing test needs one more tap to pass, that tap is what the user now pays.
+
+Two checks guard it now: the switch is called exactly once, as a direct row of the card, and the number of expanding panels equals the number of scroll targets. The UI tests look for the switch without touching anything first.
+
+## Update, Oct 8 around midnight — lunch reads like a period, and a blocked drag says so
+
+The one-line range from an hour earlier is gone. Periods showed two lines with AM/PM; lunch alone showed "12:50–1:50". Lunch now uses the same three lines as every period.
+
+![Locked period grid — the half-height lunch row shows "Lunch / 12:50 PM / 1:50 PM" in the same format as the periods around it](/blog/timetable-period-axis/lunch-label-three-lines.png)
+
+Three lines did not fit before because of the 2pt line spacing, not the glyphs: 34.6pt of text in a 36pt row. The lunch row drops the spacing and keeps the font size.
+
+**A drag that stops must say why.** Blocks bulge, the handle squashes and a haptic fires when a drag hits another event or the grid edge. At the lunch row the block just stopped, which read as a bug. Two causes:
+
+- Placement clamped against three walls (neighbour, grid edge, lunch); the resistance check only read the first two. Both now read one wall value.
+- Resize measured resistance from the **snapped** value, so nothing showed until the finger crossed half a snap step. That is a few points on the time grid, but tens of points on the period grid (half-period snap) — above period 1 that distance is inside the day header. It now uses the raw finger position, as moves already did.
+
+Moving still hops across lunch once the block's centre passes the row's centre; resistance shows only while it is held back. Position tests had passed all along, because the block always landed in the right place. The resistance value now has unit tests; the in-drag animation is still a device check.
+
+## Update, Oct 9 — blocks that sat on period lines came back a few minutes off
+
+A user switched a time-based timetable to periods and back, and sent two screenshots. On the period axis every block sat on a period line or a half-period line. Back on the time axis the same blocks started at 9:25 and ended at 10:55.
+
+Two earlier decisions met here. The period grid rounds both edges of an event to half-period lines **only when drawing**; the saved value is left alone until the next move or resize rewrites it. And switching the axis did not convert events. Inside the period grid that works: the screen is always tidy, and saved values catch up as blocks are touched. Leave without touching anything and there is no next write, and the time grid has no lines to round to. A draw-time rounding rule only holds on the screen that owns the grid.
+
+Now, leaving the period axis saves each event at the place it was being drawn. It is the two existing mappings back to back — real to virtual with half-period rounding, then virtual to real — so 9:25–10:55, drawn from the middle of Period 1 to the end of Period 2, becomes 9:25–10:50.
+
+| When | Saved times |
+|---|---|
+| Time → periods | unchanged |
+| While on the period axis | only blocks you move or resize |
+| Periods → time | all set to where they were drawn |
+| Undo, or the sheet's X | everything back, original times included |
+
+Rounding on the way *in* lost because the periods at that moment are a provisional set laid over the events, and the user goes on to adjust class and break lengths in the same sheet. Rounding at the checkmark gains nothing while you stay on periods. Rounding in the time grid is not possible; it has no periods.
+
+One case is excluded on purpose: events that overlap no period at all, such as an imported 9 pm event. The grid pulls those to the last half row so they stay on screen. That is a drawing clamp, not a position anyone chose, and saving it would move a 9 pm event into Period 7.
+
+The round-trip test that already existed used events that were on half-period lines from the start, so it passed either way. The new one runs with times that are off the lines and checks that what comes back matches what the period grid was showing.
+
+## Update, Oct 9 afternoon — lunch is a wall even when the lunch row is off
+
+A user switched a time-based timetable to periods and sent a screenshot: a block starting in period 4 ran straight through the gray lunch row into period 5. A second report came with it. Dragging a long event into a short gap shrinks it to fit, except when one side of the gap is lunch.
+
+**The wall was tied to a display switch.** The lunch wall existed only while "show lunch on the axis" was on. With it off, every caller got "no lunch", so a period 4 block could be stretched into period 5 and the edit sheet's end wheel turned past lunch. Turn the switch on afterwards and the row appears under a block that already crosses it. Switching axes came in through the same hole: a 12:00–14:40 event is period 4 through period 5, and the mapping into the grid rounded edges to half-period lines without looking at lunch.
+
+Whether lunch is drawn is a preference. Whether a class can span lunch is a rule of the period schedule.
+
+**The off side keeps a zero-length wall.** The wall is now read from the period rules. With the row on it is the row; with it off it is the line where period 4 ends and period 5 starts, returned as a range of length zero. Every existing check was "does the block start before the wall ends and end after it starts", which on a zero-length range reads as "does it cross this line". Move, resize, create, duplicate and the edit wheel stop on the off side without a line of change.
+
+| | Lunch row on | Lunch row off |
+|---|---|---|
+| Wall | The whole lunch row | The line between P4 and P5 |
+| Stretch a P4 block down | Stops above the row | Stops at the line |
+| Edit sheet end wheel | Up to P4 | Up to P4 |
+
+**Events that already cross are drawn on one side.** The side with the longer share wins; a tie goes to the side before lunch. The saved value stays as it was until the event is next moved or the timetable goes back to the time axis, the same rule as half-period rounding. The widget draws it the same way. Cutting the saved value at the moment of switching lost for the reason it lost earlier that day: the periods right after a switch are provisional. Splitting the event in two would create an event, and switching never creates or deletes one.
+
+One change users will notice: a P4–P5 event made while the row was off now shows as one period.
+
+**The gap measurement needed the wall too.** When a dragged block overlaps another event, the grid measures the free gap around the finger and shrinks the block to it. The gap's walls were neighbouring events and the grid edges only, so a two-period gap between an event and lunch read as a wide gap reaching past lunch. The block kept its length, landed across lunch, and the push-out step shoved it onto the neighbour. The finger's side of lunch is now a wall of the gap.
+
+**Why it was missed.** Every lunch wall test ran on an axis with the row on. And the shrink-to-gap code sits in the overlap branch, not the blocked branch, so it was not on the list checked whenever a wall was added. The gap calculation is now its own function with tests, including the zero-length wall. It was not verified by hand-dragging on a device this time.
+
+## Update, Oct 9 afternoon, continued — you pick how long the class is, not where it ends
+
+On period timetables the edit sheet's second row changed from End to Duration. You choose how many periods the class takes; the app works out the end time.
+
+| Row | Pill | A wheel row |
+|---|---|---|
+| Start | P3 | P3  11:00 |
+| Duration | 1.5 periods | 1.5 periods  12:25 |
+
+The duration wheel steps by half a period from 0.5, and each row shows the time that length ends at.
+
+**The hardest name from yesterday is gone.** An End value of "P1.5" meant "ends in the middle of period 2", and an event using only the first half of period 1 ended at "P0.5". Consistent, but it needed explaining. As a length, 1.5 periods means one thing. Keeping the End wheel with the length as a caption lost because the input stays the same; showing unreachable lengths greyed out lost because it creates a way to block the checkmark.
+
+**Only what fits.** The longest length is the timetable's period count, but the wheel stops at the last period and before lunch. The change just above (the wall is read from the period rules, not the display switch) means it stops there with the lunch row off too.
+
+**The end time is fitted when the sheet opens.** Until now an untouched wheel never changed a time, so an imported 9:00–9:30 event survived opening and closing. With a duration input, a pill reading "0.5 periods" over a stored 9:30 is a mismatch, so opening the sheet moves the end, and only the end, to the half-period line the grid was already drawing. That alone does not count as an edit: swiping the sheet away asks nothing and saves nothing. Fitting every event at file load lost because events you never opened would change.
+
+**Plurals differ at 1.5.** English and Spanish say "1.5 periods"; French and Portuguese keep the singular below 2. Three string keys: exactly 1, the halves below 2, and 2 and up.
+
+The limits and the fitting are covered by tests. Turning the wheel on a device is still to do.
+
+## Update, Oct 9 late afternoon — the screen said period 5, the alarm was set before lunch
+
+A report came in: an event starting right when lunch ends, with alarms 30 and 10 minutes before, and neither rang. An on-time alarm didn't ring either. Alarms in a period timetable now ring at the period time shown on screen, and the saved value is that time too.
+
+### Nothing failed, so nothing noticed
+
+Registration worked. Permission, scheduling, and the check that re-reads the system alarm list all passed. Only the time was wrong.
+
+Events are saved as clock times and the grid draws them in period rows. Since then, "draw it differently" was added three times: edges rounded to half-period lines, events crossing lunch drawn on the longer side only, events starting inside a break drawn at the next period's start. Each time the saved value was left alone "until the next move or resize".
+
+So an event saved as 12:25–15:40 is drawn from 13:50, the start of period 5. The edit sheet reads the same drawing rule and says "Period 5 · 13:50". The alarm read the saved value and scheduled a weekly `Alarm.Schedule.Relative`: on-time at 12:25, 30 minutes before at 11:55. Set during lunch, both are already past, and a weekly repeat quietly moves to next week.
+
+| | Screen and edit sheet | Alarm |
+|---|---|---|
+| Reads | where the grid draws it | the saved value |
+| Start | 13:50 (period 5) | 12:25 |
+| 10-minute alarm | expected 13:40 | registered 12:15 |
+
+An alarm at the wrong time is not a failure. No alert, no log line, no broken invariant. Every alarm test used time-based events.
+
+### Fix the reader, or fix the data
+
+The first fix was the reader: alarms are now given events at the times the grid draws them. One line, and the save file is untouched.
+
+That fixes one consumer. The next-class widget, the watch, Siri and calendar export read the saved value too, and every future reader would need the same conversion. The user's version was shorter: in a period timetable, shouldn't the event's times be period times?
+
+So the rule changed. In a period timetable, **the saved value is the shown time**. It is fitted in four places.
+
+| When | What |
+|---|---|
+| Launch, restore from backup | period timetables are fitted once and saved if anything moved |
+| File import | the incoming timetable is fitted |
+| Adding or editing an event | even an alarm-only edit saves period times |
+| Confirming the display sheet | events that just came over from a time timetable get period times here |
+
+One exception stays. A timetable just switched from time to periods keeps its original times while the display sheet is open, because during that window the events are the reference and the period rules move under them. Confirming fits them, in the same undo step. The reader fix stays in place for that window.
+
+Events that don't overlap any row of the axis, such as a 9 pm event from an imported file, are left alone. The grid pulls those to the last half-row to draw them, which is not where the user saw them. A test also holds that fitting twice changes nothing.
+
+### Where it stands
+
+Unit tests compare alarm times to on-screen times using events that cross lunch or start in a break. We have not yet confirmed a real alarm ringing on a device, and we did not see the reporter's saved data directly; if it happens again on the fixed build, the registration log is the next place to look.
+
+## Update, Oct 9 evening — shrinking the day dragged lunch along; now it clears lunch
+
+Take a seven-period day with lunch after period 4 and the lunch row on, then cut it to two periods. The rules card quietly changed lunch to "after period 1", but the grid showed no lunch row at all. Go up to three periods and lunch moved again, to "after period 2". Nobody touched the lunch setting, and it changed twice.
+
+Now, cutting the period count to the lunch position or below sets lunch to None. Raising the count again does not bring it back; you pick lunch again if you want it.
+
+Two things were going on. The lunch position was only clamped **on read**: the stored value stayed 4, and the screen showed `min(4, count − 1)`, so the visible position followed the count around. And the grid axis does not know the rules — it re-reads lunch from the saved period times as "the largest gap that is longer than a break", where a break is the most common gap. With two periods there is one gap, so that 60-minute gap *is* the most common gap, nothing is longer than itself, and there is no lunch. The card said lunch, the axis said none.
+
+Teaching the axis to treat a single gap as lunch lost: there is no way to tell a break from lunch with one sample, and the position would still wander. Restoring lunch when the count goes back up lost too: a wheel passes through values you never chose. When lunch does survive a change, its visible position is now pinned, so adding periods leaves it where it was.
+
+The tests had checked the rules and the axis separately, never the round trip across different period counts. They do now. One gap was left at this point: turning lunch on by hand in a two-period day still drew no lunch row. Fixing that meant storing the lunch position instead of inferring it, which happened that night (next section).
+
+## Update, Oct 9 night — the lunch position is stored, not re-read
+
+The gap left above closed the same day. A two-period day with lunch now draws its lunch row on the grid and on the widget, and so does a day whose lunch is as short as its breaks.
+
+The fix was to stop inferring. The file used to hold only each period's start and end, and every reader guessed lunch from gap lengths. The guess failed with one gap, failed when lunch was no longer than a break, and — worst — the rules card made the same guess on reopening, so the lunch you had just picked came back as "60-minute break, no lunch".
+
+Lunch is now a mark on the period itself: "lunch follows this one". A single number on the timetable looked simpler, but the period list already travels through the live preview, save, undo, importing from another timetable, the remembered periods of an axis switch, and the widget. A separate number needs a twin on each of those paths and gets lost on the one you forget — which is exactly how the lunch-row switch went missing twice. A mark on the period goes wherever the period goes.
+
+Old files are left alone. A file with no marks reads as "unknown" and is still inferred; one mark anywhere and the marks are trusted. Nothing is back-filled on launch, and since this only adds a field the save version did not change. Marks a shared file could carry but the app cannot produce — on the last period, or on a zero-minute gap — are ignored.
 
 ## History
 
@@ -534,3 +701,11 @@ Two alternatives lost: smaller text for just the lunch row would mix two type si
 - Oct 8, evening — edit-sheet period wheels step by half periods (start times on the Start wheel, end times on the End wheel); long-press creation floors to the hour / period start, like a tap
 - Oct 8, night — period rule pills match the time pills (no chevron, no blue background when open); import back to a button row under the card
 - Oct 8, late night — the half-height lunch row's label gets a one-line start–end range ("12:50–1:50", no AM/PM), reversing the name-only label from earlier that day
+- Oct 8, later still — the lunch-on-axis switch back from the lunch panel to a permanent row (five rows); scroll targets on paired-pill panels too; a test that panels and scroll targets match in number
+- Oct 8, around midnight — lunch label back to the same three lines as periods (zero line spacing in that row) · blocked-drag feedback at the lunch row and above period 1 (missing wall, resize strength from the raw finger value)
+- Oct 9 — switching from periods back to time saves events where the period grid drew them (period and half-period lines); events outside the axis and the other direction are left alone
+- Oct 9, afternoon — lunch is a wall with the lunch row off too (a zero-length range) · events crossing lunch are drawn on the longer side · shrink-to-gap works when one side of the gap is lunch
+- Oct 9, afternoon (continued) — the edit sheet's second row is Duration, not End: from 0.5 periods up to what fits from the start (last period, before lunch), end time derived · the end time is fitted to a half-period line on open without counting as an edit — reverses the Oct 8 End wheel
+- Oct 9, late afternoon — period-timetable alarms were registered from the saved value (before lunch) instead of the time on screen and never rang. Alarms now use the drawn time · saved values in period timetables are fitted to period times (launch, import, add/edit, display-sheet confirm) — reverses "draw only, leave the saved value" and the Sep 29 "don't touch the wheel, nothing changes"
+- Oct 9, evening — cutting the period count to the lunch position or below clears lunch (it used to slide forward while the axis drew no lunch row) · a surviving lunch keeps its visible position · round-trip test between rules and axis
+- Oct 9, night — the lunch position is stored as a mark on each period (gap-length inference only for files without marks) · lunch rows for two-period days and break-length lunches on grid and widget · save version unchanged

@@ -1,12 +1,12 @@
 ---
 title: "New timetables start with the type, and Return creates them"
-date: 2026-10-06T23:19:44+09:00
+date: 2026-10-09T01:45:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The New Timetable sheet now opens with nothing selected. Pick the vertical axis and the name field appears; Return creates the timetable. Tapping outside only lowers the keyboard — and building that showed that a blocked sheet stays silent when you tap its dimmed backdrop."
 ---
 
-Creating a timetable in SuperTimetable now goes in one order: pick the vertical axis (by time or by period), then type a name. Pressing Return creates the timetable instead of just closing the keyboard.
+On Oct 5, creating a timetable in SuperTimetable went in one order: pick the vertical axis (by time or by period), then type a name, and Return created the timetable. On Oct 9 that sheet became a name-only alert and the axis is picked in the Display sheet that opens right after — see the last section. The sections in between are kept as they were written.
 
 ## The sheet opens with nothing selected
 
@@ -98,7 +98,34 @@ Focus is now given 0.1s after the pick, so the sheet grows first. Why the taller
 
 The first capture almost got waved through: a fresh simulator shows a typing-tips panel on its first keyboard, and that looked like the cause. Dismissing it and capturing the unchanged code the same way settled it.
 
+## 2026-10-09 — The type sheet is gone: name only, pick the type after
+
+Four days later this flipped again. The `+` button now shows a small alert with one name field, Cancel and Add. It does not ask for the vertical axis. Add creates a by-time timetable and the Display sheet opens right away; if you want periods, you pick that on the tiles at the top of that sheet.
+
+![The Display sheet that opens right after creating a timetable — By Time is selected on the vertical-axis tiles, and tapping By Period switches in place](/blog/timetable-new-sheet-kind-first/display-sheet-after-create.png)
+
+| | Oct 5 | Now |
+|---|---|---|
+| Tapping `+` | A sheet with two tiles | An alert asking only for a name |
+| Vertical axis | Pick it to reveal the name field | Not asked; created by time |
+| Want periods | Choose while creating | Choose in the sheet that opens next |
+
+The Oct 6 section already described the problem: creating a timetable opens the Display sheet, which has the same tiles. Back then we made the two look alike. Once they looked alike, what remained was the same question asked twice, two seconds apart.
+
+Type-first rested on "a heavy decision should not hide behind a light input". The weight is gone: the axis can be changed any time, and a fresh, empty timetable has nothing to lose, so switching does not even ask for confirmation.
+
+What lost:
+
+- **Keep the sheet, preselect By Time** — tried on Sep 29 and dropped; the tiles still show up twice.
+- **Do not ask for a name either** — fastest, but the Display sheet has no name field, so renaming means a trip to the list.
+- **Put the name into the Display sheet** — that sheet also opens from the day header, so the field would always be there.
+
+The store event card for "new period timetable" is still the exception: same alert, created by period.
+
+Eight UI tests used to tap the period tile in the old sheet. Their fixture schedules are seeded only when a timetable is created as a period timetable, so those tests now enter through the same deep link the event card uses.
+
 ## History
 
 - 2026-10-05 — Type first, Return creates. Backdrop taps are caught separately.
 - 2026-10-06 — One axis tile shared with the Display sheet; fixed the name field hiding behind the keyboard.
+- 2026-10-09 — Type sheet replaced by a name alert; created by time, axis picked in the Display sheet.
