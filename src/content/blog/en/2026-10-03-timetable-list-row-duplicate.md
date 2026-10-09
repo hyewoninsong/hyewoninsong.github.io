@@ -1,6 +1,6 @@
 ---
 title: "Switch the list to titles and Duplicate was gone"
-date: 2026-10-08T03:37:00+09:00
+date: 2026-10-09T17:47:47+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The title-only view of the timetable list had no duplicate button — the action only lived in a long-press menu. Each row now has its own, and two other placements lost."
@@ -142,6 +142,55 @@ Both normal buttons add a timetable; they now sit together on the right and the 
 In code, the whole item order now branches on edit mode instead of swapping buttons inside fixed end items: where `DefaultToolbarItem(kind: .search, placement: .bottomBar)` is written is where the field lands. A `ToolbarSpacer(.fixed)` between the two normal buttons keeps them as separate circles. Measured frames match across both views. Still not captured on iPad.
 
 
+## 2026-10-09 — Switching views fades out, swaps, and fades in
+
+The timetable list can be shown as swipeable preview cards or as a plain list of titles. Until now, tapping the toggle swapped one for the other instantly. Now the old content fades out and the new content rises in.
+
+### Only the content moves
+
+![Four frames of the switch from cards to the title list: the card, the card fading, the list row rising in, the settled list](/blog/2026-10-03-timetable-list-row-duplicate/style-switch-fade-frames.png)
+
+The frames come from a build slowed down ten times. At real speed the whole thing takes under 0.4 seconds.
+
+| Beat | Length | What happens |
+|---|---|---|
+| Out | 0.12s | Cards (or rows) and the page dots fade |
+| Swap | 0.05s | The view style changes while hidden; the toggle icon changes too |
+| In | 0.22s | New content grows from 0.97 to full size as it appears |
+
+The title, the close button, and the bottom search bar stay still. Tapping the toggle again during the fade-out cancels the switch and brings the original view back.
+
+### A crossfade had nowhere to live
+
+The usual SwiftUI answer is `withAnimation` plus `.transition(.opacity)`. That needs the old and new views to exist in the same tree for a moment.
+
+Here they never do. The `NavigationStack` is recreated with `.id` whenever the style changes, because the search field's placement is decided when the stack is first built. Two alternatives lost:
+
+- **Crossfading the whole stack** makes the navigation bar and bottom toolbar flicker along with the content.
+- **Morphing a card into a row** with `matchedGeometryEffect` needs both sides in one tree, and the card preview is a pre-rendered image with no in-between shape.
+
+So the transition is split into three beats driven by one flag that lives *outside* the stack. Content inside the stack reads the flag for its opacity and scale. When the stack is rebuilt, the flag is still set, so the new content is born hidden and then revealed.
+
+```swift
+withAnimation(.easeIn(duration: 0.12)) { isContentHidden = true }
+Task { @MainActor in
+    try? await Task.sleep(for: .seconds(0.12))
+    listStyle = newStyle                      // no animation, while hidden
+    try? await Task.sleep(for: .milliseconds(50))
+    withAnimation(.easeOut(duration: 0.22)) { isContentHidden = false }
+}
+```
+
+### What the 50ms gap is for
+
+A view revealed in the same update it was inserted in simply appears opaque; nothing animates. The reveal has to come one beat later. The gap also hides the title list scrolling to the open timetable's row, which happens one run loop after the list appears.
+
+With Reduce Motion on, the scale change is dropped and the fade stays.
+
+### What's left
+
+The timings were chosen in the simulator. They still need to be felt on a real device.
+
 ## History
 
 - 2026-10-03 — A duplicate button on every title row
@@ -149,3 +198,4 @@ In code, the whole item order now branches on edit mode instead of swapping butt
 - 2026-10-06 — Per-row duplicate removed; one button bar for both views, plus file import
 - 2026-10-07 — Bottom bar becomes two round buttons with search between; leaving edit mode is an X
 - 2026-10-08 — Normal bar reordered to search, import, new timetable (edit keeps search in the middle)
+- 2026-10-09 — View switch animation (hide, swap, reveal)
