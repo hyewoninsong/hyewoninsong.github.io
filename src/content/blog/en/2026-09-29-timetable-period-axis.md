@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-09T13:45:00+09:00
+date: 2026-10-09T14:20:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -108,7 +108,7 @@ Move the start and the end follows, keeping how many periods the event spans. It
 
 ![After moving the start to the last period, start and end both read P7](/blog/timetable-period-axis/edit-sheet-period-follow.png)
 
-Times are still stored as real clock times. If you don't touch the wheel, nothing changes, so imported events that don't line up with period boundaries stay exactly as they are. The 30-minute minimum is dropped for period timetables, since a period can be as short as five minutes. We also considered a row of period chips (too many periods to fit, and range-by-tapping is guesswork) and a single row with a period-count stepper (you couldn't pick the end directly). Along the way we fixed a draft box that jumped far down the grid when you changed the time in the new-event sheet. That path was handing real times to a grid that draws in virtual period hours.
+Times are still stored as real clock times. At this point, not touching the wheel changed nothing, so imported events that didn't line up with period boundaries stayed as they were (since late on Oct 9, saving fits them to period times — see the last section). The 30-minute minimum is dropped for period timetables, since a period can be as short as five minutes. We also considered a row of period chips (too many periods to fit, and range-by-tapping is guesswork) and a single row with a period-count stepper (you couldn't pick the end directly). Along the way we fixed a draft box that jumped far down the grid when you changed the time in the new-event sheet. That path was handing real times to a grid that draws in virtual period hours.
 
 ## Update, Sep 29 midnight — the whole day in a minimap, and auto-scroll at the edges
 
@@ -606,6 +606,49 @@ The duration wheel steps by half a period from 0.5, and each row shows the time 
 
 The limits and the fitting are covered by tests. Turning the wheel on a device is still to do.
 
+## Update, Oct 9 late afternoon — the screen said period 5, the alarm was set before lunch
+
+A report came in: an event starting right when lunch ends, with alarms 30 and 10 minutes before, and neither rang. An on-time alarm didn't ring either. Alarms in a period timetable now ring at the period time shown on screen, and the saved value is that time too.
+
+### Nothing failed, so nothing noticed
+
+Registration worked. Permission, scheduling, and the check that re-reads the system alarm list all passed. Only the time was wrong.
+
+Events are saved as clock times and the grid draws them in period rows. Since then, "draw it differently" was added three times: edges rounded to half-period lines, events crossing lunch drawn on the longer side only, events starting inside a break drawn at the next period's start. Each time the saved value was left alone "until the next move or resize".
+
+So an event saved as 12:25–15:40 is drawn from 13:50, the start of period 5. The edit sheet reads the same drawing rule and says "Period 5 · 13:50". The alarm read the saved value and scheduled a weekly `Alarm.Schedule.Relative`: on-time at 12:25, 30 minutes before at 11:55. Set during lunch, both are already past, and a weekly repeat quietly moves to next week.
+
+| | Screen and edit sheet | Alarm |
+|---|---|---|
+| Reads | where the grid draws it | the saved value |
+| Start | 13:50 (period 5) | 12:25 |
+| 10-minute alarm | expected 13:40 | registered 12:15 |
+
+An alarm at the wrong time is not a failure. No alert, no log line, no broken invariant. Every alarm test used time-based events.
+
+### Fix the reader, or fix the data
+
+The first fix was the reader: alarms are now given events at the times the grid draws them. One line, and the save file is untouched.
+
+That fixes one consumer. The next-class widget, the watch, Siri and calendar export read the saved value too, and every future reader would need the same conversion. The user's version was shorter: in a period timetable, shouldn't the event's times be period times?
+
+So the rule changed. In a period timetable, **the saved value is the shown time**. It is fitted in four places.
+
+| When | What |
+|---|---|
+| Launch, restore from backup | period timetables are fitted once and saved if anything moved |
+| File import | the incoming timetable is fitted |
+| Adding or editing an event | even an alarm-only edit saves period times |
+| Confirming the display sheet | events that just came over from a time timetable get period times here |
+
+One exception stays. A timetable just switched from time to periods keeps its original times while the display sheet is open, because during that window the events are the reference and the period rules move under them. Confirming fits them, in the same undo step. The reader fix stays in place for that window.
+
+Events that don't overlap any row of the axis, such as a 9 pm event from an imported file, are left alone. The grid pulls those to the last half-row to draw them, which is not where the user saw them. A test also holds that fitting twice changes nothing.
+
+### Where it stands
+
+Unit tests compare alarm times to on-screen times using events that cross lunch or start in a break. We have not yet confirmed a real alarm ringing on a device, and we did not see the reporter's saved data directly; if it happens again on the fixed build, the registration log is the next place to look.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -641,3 +684,4 @@ The limits and the fitting are covered by tests. Turning the wheel on a device i
 - Oct 9 — switching from periods back to time saves events where the period grid drew them (period and half-period lines); events outside the axis and the other direction are left alone
 - Oct 9, afternoon — lunch is a wall with the lunch row off too (a zero-length range) · events crossing lunch are drawn on the longer side · shrink-to-gap works when one side of the gap is lunch
 - Oct 9, afternoon (continued) — the edit sheet's second row is Duration, not End: from 0.5 periods up to what fits from the start (last period, before lunch), end time derived · the end time is fitted to a half-period line on open without counting as an edit — reverses the Oct 8 End wheel
+- Oct 9, late afternoon — period-timetable alarms were registered from the saved value (before lunch) instead of the time on screen and never rang. Alarms now use the drawn time · saved values in period timetables are fitted to period times (launch, import, add/edit, display-sheet confirm) — reverses "draw only, leave the saved value" and the Sep 29 "don't touch the wheel, nothing changes"
