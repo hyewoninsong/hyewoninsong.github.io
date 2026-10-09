@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-09T16:50:00+09:00
+date: 2026-10-09T17:05:02+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -659,7 +659,17 @@ Two things were going on. The lunch position was only clamped **on read**: the s
 
 Teaching the axis to treat a single gap as lunch lost: there is no way to tell a break from lunch with one sample, and the position would still wander. Restoring lunch when the count goes back up lost too: a wheel passes through values you never chose. When lunch does survive a change, its visible position is now pinned, so adding periods leaves it where it was.
 
-The tests had checked the rules and the axis separately, never the round trip across different period counts. They do now. One gap remains: turning lunch on by hand in a two-period day still draws no lunch row, and fixing that means storing the lunch position instead of inferring it.
+The tests had checked the rules and the axis separately, never the round trip across different period counts. They do now. One gap was left at this point: turning lunch on by hand in a two-period day still drew no lunch row. Fixing that meant storing the lunch position instead of inferring it, which happened that night (next section).
+
+## Update, Oct 9 night — the lunch position is stored, not re-read
+
+The gap left above closed the same day. A two-period day with lunch now draws its lunch row on the grid and on the widget, and so does a day whose lunch is as short as its breaks.
+
+The fix was to stop inferring. The file used to hold only each period's start and end, and every reader guessed lunch from gap lengths. The guess failed with one gap, failed when lunch was no longer than a break, and — worst — the rules card made the same guess on reopening, so the lunch you had just picked came back as "60-minute break, no lunch".
+
+Lunch is now a mark on the period itself: "lunch follows this one". A single number on the timetable looked simpler, but the period list already travels through the live preview, save, undo, importing from another timetable, the remembered periods of an axis switch, and the widget. A separate number needs a twin on each of those paths and gets lost on the one you forget — which is exactly how the lunch-row switch went missing twice. A mark on the period goes wherever the period goes.
+
+Old files are left alone. A file with no marks reads as "unknown" and is still inferred; one mark anywhere and the marks are trusted. Nothing is back-filled on launch, and since this only adds a field the save version did not change. Marks a shared file could carry but the app cannot produce — on the last period, or on a zero-minute gap — are ignored.
 
 ## History
 
@@ -698,3 +708,4 @@ The tests had checked the rules and the axis separately, never the round trip ac
 - Oct 9, afternoon (continued) — the edit sheet's second row is Duration, not End: from 0.5 periods up to what fits from the start (last period, before lunch), end time derived · the end time is fitted to a half-period line on open without counting as an edit — reverses the Oct 8 End wheel
 - Oct 9, late afternoon — period-timetable alarms were registered from the saved value (before lunch) instead of the time on screen and never rang. Alarms now use the drawn time · saved values in period timetables are fitted to period times (launch, import, add/edit, display-sheet confirm) — reverses "draw only, leave the saved value" and the Sep 29 "don't touch the wheel, nothing changes"
 - Oct 9, evening — cutting the period count to the lunch position or below clears lunch (it used to slide forward while the axis drew no lunch row) · a surviving lunch keeps its visible position · round-trip test between rules and axis
+- Oct 9, night — the lunch position is stored as a mark on each period (gap-length inference only for files without marks) · lunch rows for two-period days and break-length lunches on grid and widget · save version unchanged
