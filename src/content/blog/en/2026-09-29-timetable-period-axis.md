@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-10T17:08:50+09:00
+date: 2026-10-11T02:40:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -10,7 +10,7 @@ School timetables are read as "Period 2", not "10:00". New timetables now start 
 
 ## You set the periods; the rows stack at equal height
 
-A new period timetable opens the display sheet, where a period-rules card takes the place of the time range (since Oct 3 — before that a "Periods" row led to a separate editor; see the last update). The default is seven 50-minute periods with 10-minute breaks and an hour for lunch. You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
+A new period timetable opens the display sheet, where a period-rules card takes the place of the time range (since Oct 3 — before that a "Periods" row led to a separate editor; see the last update). The default is seven 50-minute periods with 10-minute breaks and no lunch (since Oct 11 — before that it included an hour of lunch after period 4; see the last update). You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
@@ -695,6 +695,25 @@ One detail: a wheel treats every value it passes as picked. Spin the position wh
 
 The save format is unchanged. Checked in the simulator, not yet on a device.
 
+## Update, Oct 11 — a duplicated class skipped half a row, and lunch left the defaults
+
+Duplicate a class that runs from period 3 to the middle of period 4, and the copy did not land right below. It left the second half of period 4 empty and started at period 5.
+
+That timetable had lunch after period 4 with the lunch row hidden. Lunch is a wall either way. The duplicate rule had one answer for a wall: if the copy touches it at all, move the whole copy below it. The copy's start, one period down, was still above the wall. Only its last half period crossed, and that was enough to send it past lunch.
+
+The rule was borrowed from dragging, where your finger has actually crossed the wall. A button press crosses nothing, so the rule is now split.
+
+| Where the copy starts, one period down | Where it lands |
+|---|---|
+| At least half a period is left before lunch | It starts there and ends at lunch (it may get shorter) |
+| It touches lunch or sits inside the lunch row | It skips lunch and keeps its length |
+
+The first row matches what already happens at the end of the grid. Starting the copy where the original ends would avoid overlap, but then the offset would depend on the class length.
+
+The same day, lunch came out of the default rules. New period timetables used to start with lunch after period 4 and the lunch row hidden, which made an invisible wall the default. Now the default is seven periods from 9:00 to 15:50 with no lunch, and the lunch-row switch starts on. Pick a lunch position and the row appears on the axis right away.
+
+Existing timetables keep their saved periods, and the save format is unchanged. Covered by unit tests, not yet checked on screen.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -734,3 +753,4 @@ The save format is unchanged. Checked in the simulator, not yet on a device.
 - Oct 9, evening — cutting the period count to the lunch position or below clears lunch (it used to slide forward while the axis drew no lunch row) · a surviving lunch keeps its visible position · round-trip test between rules and axis
 - Oct 9, night — the lunch position is stored as a mark on each period (gap-length inference only for files without marks) · lunch rows for two-period days and break-length lunches on grid and widget · save version unchanged
 - Oct 10 — lunch "None" moved from the length wheel to the top of the position wheel (length now starts at 5 min) · the length pill is hidden when there is no lunch · switching lunch off and on in the position wheel restores the previous length
+- Oct 11 — a duplicate whose tail crosses lunch now ends at lunch instead of skipping it (partly reversing Oct 9) · lunch removed from the default rules (9:00–15:50), with the lunch-row switch on by default
