@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-10T22:11:52+09:00
+date: 2026-10-11T01:38:23+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -70,7 +70,7 @@ Why it slipped through: the checklist covered "force quit and reopen", which alw
 
 ## 2026-10-10 — A welcome page in front, swipe enabled, and a finger inside the clips
 
-The tour now opens on a welcome page: six store screenshots tilted into a collage that fades into the background, a one-line tagline, "Welcome to SuperTimetable", and one full-width Continue button. The reference was another app's onboarding, which also carries a "40 million users" banner; we have no such number, so there is none. The collage images come from a script that downscales the store captures — never hand-made.
+The tour now opens on a welcome page: store screenshots tilted into a collage that fades into the background (six at first, cut to a fan of three the next day — below), a one-line tagline, "Welcome to SuperTimetable", and one full-width Continue button. The reference was another app's onboarding, which also carries a "40 million users" banner; we have no such number, so there is none. The collage images come from a script that downscales the store captures — never hand-made.
 
 ![The welcome page — a collage of store captures above "Welcome to SuperTimetable" and Continue](/blog/timetable-feature-intro/welcome-collage.jpg)
 
@@ -94,11 +94,11 @@ Starting the same flow with a long-press-and-release selection instead of a tap 
 
 The evening's verdict was "it feels random". Each page looped its own clip in place, swiping slid the phone out while an identical phone slid in, and after the last page there was nothing but a Start button. Three asks: no broken flow, one story that ends, and an ending page to match the welcome page.
 
-The tour is now one clip, played once from start to finish, and the four chapters are time ranges inside it. Crossing a chapter boundary leaves the phone where it is; only the headline above and the caption below change. The current chapter's dot fills with playback progress, so the hand-off is announced. When the clip reaches its end the ending page arrives by itself: the last frame stays in the phone, and the text changes to "Siwoo's week is complete / Now it's your turn", with Back and Start below. No new artwork was needed — the end of the clip is the ending picture.
+The tour is now one clip, played once from start to finish, and the four chapters are time ranges inside it. Crossing a chapter boundary leaves the phone where it is; only the headline above and the caption below change. The current chapter's dot fills with playback progress, so the hand-off is announced. When the clip reaches its end the ending page arrives by itself: the last frame stays in the phone, and the text changes to "Siwoo's week is complete / Now it's your turn", with Back and Start below. No new artwork was needed — the end of the clip is the ending picture (the next day that phone got a tilt and an app icon in front — below).
 
 ![Just after the automatic hand-off to chapter two — the phone still shows the timetable chapter one filled, only the headline and caption changed, and the third dot is filling with progress](/blog/timetable-feature-intro/chapter-auto-advance.png)
 
-That needed a new order. The list chapter moved ahead of the period chapter: fill Siwoo's timetable, color it, open the list, swipe cards, search by name and open the computer-science timetable, show the period axis and switch it to time, then return to the list and reopen Siwoo. The story starts on an empty week and ends on a finished one, and the list is the bridge between the two timetables. Redo now follows undo at the end of the style chapter so the finished week keeps its new color; duplicating a timetable and the list-style toggle as scenes of their own were cut. The repeated Thursday and Friday duplicate-and-move is compressed 4× between two recording marks — the viewer's rhythm is one action per caption, and repetition should fly by. The whole thing runs a little over a minute at 2×.
+That needed a new order. The list chapter moved ahead of the period chapter: fill Siwoo's timetable, color it, open the list, swipe cards, search by name and open the computer-science timetable, show the period axis and switch it to time, then return to the list and reopen Siwoo. The story starts on an empty week and ends on a finished one, and the list is the bridge between the two timetables. Redo now follows undo at the end of the style chapter so the finished week keeps its new color; duplicating a timetable and the list-style toggle as scenes of their own were cut. The repeated Thursday and Friday duplicate-and-move is compressed 4× between two recording marks — the viewer's rhythm is one action per caption, and repetition should fly by. The whole thing ran a little over a minute at 2×; trimming idle gaps the next day brought it to 52 seconds (below).
 
 ![The ending page — the finished week stays in the phone, only the text changed to "Now it's your turn"; no speed chip, Back and Start](/blog/timetable-feature-intro/ending-finished-week.png)
 
@@ -108,9 +108,30 @@ The probe caught one thing. Pressing Next in the last chapter landed on the endi
 
 The clip is still Korean only; the other seven languages get their own headlines and captions over the Korean footage.
 
+## 2026-10-11 — Idle gaps cut, seconds remaining shown, and an ending with some weight
+
+Four notes came back on the one-clip tour. The waits between actions are too long. Show how much is left in each step. The ending should land like the opening does — one phone in the middle is flat, maybe put the app icon in. And the welcome collage is cluttered, too many tilted images.
+
+The waits first. Shortening the recording test's `pause` calls looked like the fix, but measuring showed most of the dead time was XCUITest itself: every element query, tap and round trip costs half a second to a second, and that stays even with every pause at zero. So the cutting script uses the recorder's own quirk instead. The simulator recorder only writes a frame when the screen changes, which means the gaps between frames in the raw video are exactly the moments where nothing happened. The script reads frame timestamps with `ffprobe` and, for any gap over one second, keeps the first second and drops the rest. The dropped frames are identical to the kept one, so there is no seam. Re-cutting the same raw removed 52 seconds across 39 gaps: 153 seconds became 103, which is 52 at 2×. Nothing was re-recorded. The cap is one second because at 2× that is half a second, enough for the headline crossfade (0.42 s) to finish before the next finger moves.
+
+Time remaining is a single number beside the page dots: "15s" next to the filling dot, counting down each second. It is the clip time left in the chapter divided by the playback rate, so switching to 1× doubles it. A sentence like "next in 15s" has a different width in each of eight languages and crowds the dot row; a number beside a filling dot reads without explanation, and VoiceOver gets the sentence. The first attempt overlaid the number on the dot row with an alignment guide, and the simulator screenshot showed it sitting on top of the last two dots. It is now a symmetric row — the same label hidden on the left, visible on the right — so the dots stay centred.
+
+![The style chapter — "15s" beside the page dots, counting down as the third dot fills](/blog/timetable-feature-intro/chapter-auto-advance.png)
+
+The ending keeps its rule that the last frame is the picture, and builds on it: as the ending page arrives the phone shrinks to 0.84 and tilts six degrees, and the app icon tile pops out of its lower-right corner and overlaps it. The finished timetable sits like a finished thing with the app in front of it. The icon is not a bitmap — the new icon format cannot be loaded with `UIImage(named:)` — but the thank-you card already drew the seven bars as a view, so that view moved to a shared file.
+
+![The ending page — the phone with the finished week tilted, the app icon overlapping its corner](/blog/timetable-feature-intro/ending-phone-icon.png)
+
+The welcome page lost weight. Six screenshots at six angles with colour chips between them became a fan of three: the grid in front, upright; style and list behind it, nine degrees each way. Front, back, left, right — nothing else for the eye to chase. The first version hid the side cards almost entirely behind the centre one; a screenshot showed it, and the sides moved out.
+
+![The welcome page — three store captures fanned behind the headline](/blog/timetable-feature-intro/welcome-three-cards.jpg)
+
+When the pacing feels slow now, the first thing to read is the script's "N idle gaps, M seconds dropped" line, before re-recording. Slowness the cap cannot catch is the action itself — a slow drag, typing — and that is when the test changes.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
 - 2026-10-10 — Clip now resumes after leaving the app and returning
 - 2026-10-10 — Welcome page, swipe paging, finger baked into clips, page 1 as "fill the school slots", undo moved to page 2; tap-select → duplicate → drag bug found
 - 2026-10-10 — Four looping clips became one clip with auto-advancing chapters, an ending page, the list chapter ahead of periods, and end seeks at duration − 0.1 s
+- 2026-10-11 — Idle gaps capped at one second (103 s) · seconds remaining per chapter · ending with a tilted phone and the app icon · three-card welcome collage
