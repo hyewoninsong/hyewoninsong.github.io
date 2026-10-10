@@ -1,16 +1,16 @@
 ---
 title: "Only the people who tapped the button missed the rating prompt"
-date: 2026-10-10T20:56:49+09:00
+date: 2026-10-11T03:23:16+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Our thank-you card asks for a rating 2.5 seconds after it appears. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt. The same evening, the big heart and confetti gave way to a short letter from the developer."
+summary: "Our thank-you card asked for a rating 2.5 seconds after it appeared. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt. We fixed the button, turned the card into a letter, and a day later dropped the timer: the prompt now comes when the card closes."
 ---
 
-After a few days of regular use, SuperTimetable shows a thank-you card. Tapping its button now brings up the system rating prompt right away. Before, it only closed the card. The card's look changed again the same evening — a letter from the developer instead of a big heart and confetti; see the last section.
+After a few days of regular use, SuperTimetable shows a thank-you card. Closing it — with the button or by tapping outside — brings up the system rating prompt. At first the button only closed the card. This is the story of that bug; the 2.5-second timer and the "outside tap stays quiet" rule it left behind were removed the next day (last section). The card's look changed in between too — a letter from the developer instead of a big heart and confetti.
 
 ## The card waited 2.5 seconds; people did not
 
-The card never asks for stars itself. It says thanks, leaves 2.5 seconds to read, then calls `requestReview`. Steering only happy users to the rating prompt is against App Store review guidelines, so the card has a single button.
+The card never asks for stars itself. It said thanks, left 2.5 seconds to read, then called `requestReview`. Steering only happy users to the rating prompt is against App Store review guidelines, so the card has a single button.
 
 The wait lived in the card's `.task`: `Task.sleep`, then the request. The button dismissed the card. When the card left the view tree SwiftUI cancelled the task, the sleep threw, and the request never ran.
 
@@ -32,7 +32,7 @@ We had treated the last two rows as one.
 
 ## The button now runs the follow-up early
 
-The button requests the review and then closes the card. Cancellation stays on the outside tap only. Since the timer and the button now trigger the same thing, a flag keeps it to once per card.
+The button was changed to request the review and then close the card. That day, cancellation stayed on the outside tap (it went the next day). Since the timer and the button now trigger the same thing, a flag keeps it to once per card.
 
 We considered relabelling the button and sending people to the App Store's write-a-review page. A card that appears on its own should not push anyone out of the app, and the system prompt enforces its own three-per-year cap.
 
@@ -42,7 +42,7 @@ The test case for this card read: "close with the button as soon as it appears �
 
 ## Where it stands
 
-For any screen that does something after a short delay, we now list every way out and what happens to the follow-up on each. If the delay is longer than it takes to read the screen, most people will tap first. Expected results come from what the button's label promises, not from the code.
+For any screen that does something after a short delay, we now list every way out and what happens to the follow-up on each. If the delay is longer than it takes to read the screen, most people will tap first. Expected results come from what the button's label promises, not from the code. And when the rows of that list disagree, we first ask whether the follow-up can hang on closing instead of on a timer — which is what we did a day later.
 
 ## 2026-10-10, evening — a letter instead of a heart
 
@@ -62,9 +62,28 @@ Two things bit on the way. The app icon is an Icon Composer `.icon` bundle and c
 
 ![Dark mode — same ink card, lifted off the black grid by its shadow](/blog/timetable-review-card-button/letter-card-dark.jpg)
 
-With the confetti gone, the Reduce Motion branch went too. The rating-prompt behaviour above is unchanged.
+With the confetti gone, the Reduce Motion branch went too. Up to this point the prompt behaviour was still: 2.5 seconds, immediately on the button, never on an outside tap.
+
+## 2026-10-11 — no timer; the prompt comes when the card closes
+
+A day of use made the table above feel wrong. Tap outside right away and no prompt; close three seconds later and it is already up. Same gesture, different result depending on timing. Fixing only the button had cut the inconsistency from three rows to two.
+
+So the timer is gone. Nothing happens while the card is up; closing it requests the review. The button and the outside tap run the same function.
+
+| How it closes | Oct 8 | Oct 10 | Now |
+|---|---|---|---|
+| Waiting | after 2.5 s | after 2.5 s | nothing — appears on close |
+| The button | no prompt | prompt | prompt |
+| Tapping outside | no prompt | no prompt | prompt |
+
+"Tapping outside means getting rid of it" was our distinction, not the user's. To them both are closing, and the system prompt has its own "Not Now". Every way out leads to the same prompt, so nobody is being filtered toward it.
+
+One side benefit: the prompt no longer covers the letter mid-read. The letter is longer than the old three-line card, and 2.5 seconds does not reach the signature.
+
+The once-per-card flag stays, for a second tap while the card animates out.
 
 ## History
 
 - 2026-10-10, afternoon — the button no longer cancels the rating-prompt timer.
 - 2026-10-10, evening — heart and confetti replaced by the developer's letter card.
+- 2026-10-11 — timer removed; the rating prompt is requested when the card closes (button or outside tap).
