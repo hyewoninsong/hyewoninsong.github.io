@@ -1,6 +1,6 @@
 ---
 title: "The tutorial now starts inside the display settings sheet"
-date: 2026-10-09T20:28:41+09:00
+date: 2026-10-10T20:49:50+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The settings sheet and the tutorial used to appear on top of each other. The sheet is now step one of the tutorial. Along the way, a ring drawn 14pt off taught us that iOS 26 draws partial-height sheets at 0.96 scale."
@@ -10,7 +10,7 @@ Opening a timetable for the first time now begins with choosing which days and h
 
 ## Set the frame first, then add events
 
-Tapping Start on the welcome card opens the display sheet. A one-line hint sits at the top, and a finger taps the ✓ button on a loop. Pick days and hours, tap ✓, and the sheet closes straight into step two, creating an event.
+Tapping Get started on the welcome card opens the display sheet. A one-line hint sits at the top, and a finger taps the ✓ button on a loop. Pick days and hours, tap ✓, and the sheet closes straight into step two, creating an event.
 
 ![The display sheet with a tutorial hint capsule at the top and a blue ring and finger on the ✓ button](/blog/timetable-tutorial-display-sheet/sheet-step.png)
 
@@ -100,7 +100,7 @@ The same evening, on a real phone: tap the day row, the sheet slides halfway up,
 
 The first call was "this step only teaches where the sheet lives, so opening it is done". The completion rule was fine; the next screen was not. When the action that finishes a step puts a cover on screen, the next instruction starts behind that cover.
 
-Now the step ends when the sheet is closed. A hint at the top of the sheet says "This is where you change how your timetable is displayed. Take a look, then tap ✓ to close," and a finger taps ✓ on a loop, as in step one. The card behind stays on step 10, and the outline around the day row steps aside while the sheet is up, so there is one place to look.
+Now the step ends when the sheet is closed. A hint at the top of the sheet says "This is Timetable Settings. Look around, then close with ✓," (wording as of 2026-10-10, see below) and a finger taps ✓ on a loop, as in step one. The card behind stays on step 10, and the outline around the day row steps aside while the sheet is up, so there is one place to look.
 
 ![The sheet opened from the day row shows a hint asking to tap ✓ to close, with a ring and finger on ✓; the card behind is still step 10](/blog/timetable-tutorial-display-sheet/shortcut-sheet-hint.png)
 
@@ -112,9 +112,28 @@ The alternative was to advance on open but hold the lock card back until the she
 
 Captures of the step cards alone could not show this. We had step 10 and step 11, but nothing with the sheet up in between. Checked on iPhone with both kinds of timetable; iPad is still to do.
 
+## 2026-10-10 — Say what happens, not "give it a try"
+
+Every line of the eleven-step tutorial was rewritten, in all eight languages.
+
+- **Welcome** — before: Welcome to Super Timetable / It only takes a moment. Learn by doing, right on your timetable. → after: One minute, hands on / Create, move, and shape a schedule — right on your timetable.
+- **Create** — before: Press and hold an empty slot, then drag down to add a schedule. → after: Press and hold an empty slot, then drag down. A schedule takes shape where you draw it.
+- **Undo** — before: Changed your mind? Tap undo at the bottom left to bring the deleted schedule back. → after: Nothing is lost. Tap Undo at the bottom left to bring the deleted schedule back.
+- **Lock** — before: Tap the lock button to protect your timetable from accidental edits. → after: Lock the grid so a finished timetable stays exactly as you left it.
+- **Done** — before: The week is yours → after: Now, draw your week
+
+The Korean original was the real problem: more than ten lines ended in the same coaxing "give it a try", with "it's okay to make mistakes" in between. It read as copy for a child. The new rule is one sentence per step: **one action, then what it produces.** "Drag down, and a schedule takes shape." Lock does not mention the button at all — the finger demo already shows where to tap, so the text only has to say why.
+
+The welcome card stopped greeting. Since 2026-10-09 a four-page feature intro runs before the tutorial and does the welcome. A second hello right after it is noise, so the card now makes a promise instead: how long it takes and what you will learn. The app name went with it.
+
+Three options lost. A more formal register in Korean clashed with every other screen in the app; polish comes from fewer sentences, not from grammar. Naming where to replay the tutorial on the done card was dropped two days ago as awkward, and the place it would have named was wrong anyway. And keeping the start button as plain "Start" was not possible without touching other screens: that label is a shared string used by the feature intro too, so the tutorial got its own, "Get started".
+
+Each language was written to the same rule rather than translated. Whether "Commencer" and "Começar" fit the half-width button still needs a look on the smallest iPhone.
+
 ## History
 
 - 2026-10-05: tutorial starts in the display settings sheet; 0.96 scale correction for partial-height sheets
 - 2026-10-07: locked-tap copy covering the handles; roomier title highlight; drifting card glow
 - 2026-10-09: demos no longer cross lunch; the step before locking outlines the whole day row and time column
 - 2026-10-09: the shortcut step ends when the opened sheet is closed with ✓ (reversing advance-on-open)
+- 2026-10-10: every step rewritten as action → outcome; welcome makes a promise instead of a greeting; start button gets its own label
