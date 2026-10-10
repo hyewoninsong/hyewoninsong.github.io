@@ -1,9 +1,9 @@
 ---
 title: "The sheet opened from the weekday row didn't show the weekday card — the flag arrived stale"
-date: 2026-10-10T15:57:10+09:00
+date: 2026-10-10T16:06:29+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker moved into the vertical-axis group as a single row that opens a dropdown."
+summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker moved into the vertical-axis group as a single row of radio buttons."
 ---
 
 (Update, 2026-10-10: this sheet is now called Timetable Settings and the order changed again — see the last section. What follows is the October 9 story.)
@@ -89,8 +89,17 @@ An inline `Picker` inside the menu lets the system reserve the checkmark column,
 
 The "write after it closes" rule stays. A menu does not report when it has closed, so the write waits 0.3 s for the glass to clear; otherwise the confirmation alert collides with the dismissing menu and the lifted row label may not settle back.
 
+## 2026-10-10, evening — In the end nothing opens at all
+
+The dropdown did not last either. It shared the popover's flaw: you tap once just to see the other option. With only two values, we put both on the row as radio buttons.
+
+![Now — "By time" and "By period" radio buttons side by side at the top of the vertical-axis group](/blog/2026-10-09-timetable-display-sheet-card-order/kind-radio.png)
+
+A tap switches in place. With nothing presented, the "write after it closes" rule is gone too: a confirmation alert appears immediately when events would be lost, and cancelling leaves the radio where it was. The lesson: when there are two short values, show both instead of opening something.
+
 ## History
 
 - 2026-10-09 — Order axis → hours → weekdays; weekday row opens at the weekday card; stale state in the sheet closure.
 - 2026-10-10 — Renamed Timetable Settings; horizontal → vertical → events; a row plus a side-by-side popover instead of tiles.
 - 2026-10-10, afternoon — Popover replaced by a system dropdown; inline Picker for checkmark alignment, descriptions dropped.
+- 2026-10-10, evening — Dropdown removed; two inline radio buttons in the vertical-axis group, switching on tap.
