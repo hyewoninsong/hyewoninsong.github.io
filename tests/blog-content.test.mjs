@@ -12,6 +12,11 @@
 //     renders, but as a bare slug with no icon, name or app-page link
 //   - every BLOG_APPS `appSlug` is a real apps-collection entry, so the
 //     app-page link it produces is not a 404
+//   - a ko/en pair references the same images — a follow-up session merged
+//     into one language only would leave the other without its screenshots
+//   - every image has alt text, and `date` is not in the future (a typo'd
+//     merge timestamp would pin the post to the top of the list)
+//   - a link to /{lang}/blog/<slug> points at a post that exists
 //
 // Translation itself is optional (docs/specs/website.md §4.3), so a post that
 // exists in only one language is not a failure.
@@ -154,4 +159,57 @@ test("a post's app is a BLOG_APPS key, and every BLOG_APPS appSlug is a real app
     if (!appSlugs.includes(slug)) bad.push(`BLOG_APPS appSlug "${slug}" has no src/content/apps/ko entry`);
   }
   assert.deepEqual(bad, []);
+});
+
+test('a post written in both languages references the same images', () => {
+  const en = new Set(postFiles('en'));
+  const mismatched = [];
+  for (const file of postFiles('ko').filter((f) => en.has(f))) {
+    const ko = [...new Set(imageRefs(readPost('ko', file)))].sort();
+    const enRefs = [...new Set(imageRefs(readPost('en', file)))].sort();
+    if (JSON.stringify(ko) !== JSON.stringify(enRefs)) {
+      const only = (a, b) => a.filter((x) => !b.includes(x));
+      mismatched.push(`${file}: ko-only=${only(ko, enRefs)} en-only=${only(enRefs, ko)}`);
+    }
+  }
+  assert.deepEqual(mismatched, []);
+});
+
+test('every markdown image in a post has alt text', () => {
+  const bare = [];
+  for (const locale of locales) {
+    for (const file of postFiles(locale)) {
+      const body = readPost(locale, file).replace(/^(```|~~~)[\s\S]*?^\1/gm, '');
+      for (const m of body.matchAll(/!\[([^\]]*)\]\(([^)\s]+)/g)) {
+        if (!m[1].trim()) bare.push(`${locale}/${file}: ${m[2]}`);
+      }
+    }
+  }
+  assert.deepEqual(bare, []);
+});
+
+test("a post's date is not in the future", () => {
+  // Devlog sessions stamp the Korean time of the merge; allow a day of clock skew.
+  const limit = Date.now() + 24 * 60 * 60 * 1000;
+  const future = [];
+  for (const locale of locales) {
+    for (const file of postFiles(locale)) {
+      const date = field(readPost(locale, file), 'date');
+      if (Date.parse(date ?? '') > limit) future.push(`${locale}/${file}: ${date}`);
+    }
+  }
+  assert.deepEqual(future, []);
+});
+
+test('a link to another blog post points at a post that exists', () => {
+  const dead = [];
+  for (const locale of locales) {
+    for (const file of postFiles(locale)) {
+      const body = readPost(locale, file).replace(/^(```|~~~)[\s\S]*?^\1/gm, '');
+      for (const m of body.matchAll(/\]\(\/(ko|en)\/blog\/([a-z0-9-]+)\/?(?:[#?][^)]*)?\)/g)) {
+        if (!existsSync(join(blogDir(m[1]), `${m[2]}.md`))) dead.push(`${locale}/${file}: /${m[1]}/blog/${m[2]}`);
+      }
+    }
+  }
+  assert.deepEqual(dead, []);
 });

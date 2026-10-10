@@ -9,6 +9,14 @@
 //   - an Android policy does not carry the iOS policy's IDFA / ATT / privacy
 //     manifest wording (docs/references/privacy-policy-host-and-platform-pitfall.md)
 //   - a policy states its effective date, and ko/en state the same one
+//   - a policy has the same section / list structure in both languages — a
+//     disclosure added to one language only (e.g. the SuperTimetable in-app
+//     purchase bullet of 2026-09-28) would leave the other store locale stale
+//   - the SuperTimetable iOS policy discloses in-app purchase status under
+//     Firebase Analytics and says Apple handles payment (docs/specs/website.md §4.2)
+//   - the SuperTimetable iOS policy and app page disclose iCloud Backup (app
+//     1.2.0, on by default) and no longer claim device-only storage or "no
+//     cloud sync" (docs/decisions/2026-10-08-timetable-icloud-backup-disclosure.md)
 //
 // Run with: node --test "tests/**/*.test.mjs"
 
@@ -116,4 +124,63 @@ test('a Korean policy is written in 합니다체', { todo: 'musicnote Android po
     if (endings.length > 0 || !text.includes('니다.')) casual.push(`${file}: ${endings.length} 해체 endings`);
   }
   assert.deepEqual(casual, []);
+});
+
+test('a policy has the same section and list structure in both languages', () => {
+  const count = (source, tag) => (source.match(new RegExp(`<${tag}[\\s>]`, 'g')) ?? []).length;
+  const uneven = [];
+  for (const file of policyPages('ko')) {
+    if (!existsSync(join(pagesDir('en'), file))) continue;
+    const ko = readPage('ko', file);
+    const en = readPage('en', file);
+    for (const tag of ['h2', 'h3', 'li']) {
+      if (count(ko, tag) !== count(en, tag)) uneven.push(`${file}: <${tag}> ko=${count(ko, tag)} en=${count(en, tag)}`);
+    }
+  }
+  assert.deepEqual(uneven, []);
+});
+
+test('the SuperTimetable iOS policy discloses in-app purchase status, with Apple handling payment', () => {
+  const wording = {
+    ko: [/앱 내 구매 여부/, /Apple이 처리/],
+    en: [/In-app purchase status/, /handled by Apple/],
+  };
+  const missing = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/timetable/privacy.astro');
+    const analytics = source.slice(source.indexOf('Firebase Analytics'), source.indexOf('Firebase Crashlytics'));
+    assert.ok(analytics.length > 0, `${locale}: Firebase Analytics section not found`);
+    for (const pattern of wording[locale]) {
+      if (!pattern.test(analytics)) missing.push(`${locale}/apps/timetable/privacy.astro: ${pattern}`);
+    }
+  }
+  assert.deepEqual(missing, []);
+});
+
+test('the SuperTimetable iOS policy and app page disclose iCloud Backup, not device-only storage', () => {
+  const required = {
+    ko: [/iCloud 백업/, /사용자 본인의 iCloud/, /개발자는 접근할 수 없습니다/, /설정에서 끌 수 있/],
+    en: [/iCloud Backup/, /your own iCloud/, /the developer cannot access it/, /turn it off in Settings/],
+  };
+  // Wording of the 2026-09-28 policy that iCloud Backup made false.
+  const stale = {
+    ko: [/기기 안에만/, /클라우드 동기화 기능이 없습니다/],
+    en: [/stays? on (?:your|the) device/, /There is no cloud sync/],
+  };
+  const problems = [];
+  for (const locale of locales) {
+    const policy = readPage(locale, 'apps/timetable/privacy.astro');
+    for (const pattern of required[locale]) {
+      if (!pattern.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${pattern}`);
+    }
+    for (const pattern of stale[locale]) {
+      if (pattern.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: stale ${pattern}`);
+    }
+    const appPage = readFileSync(join(root, 'src', 'content', 'apps', locale, 'timetable.md'), 'utf8');
+    if (!/iCloud/.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: app page does not mention iCloud`);
+    for (const pattern of stale[locale]) {
+      if (pattern.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: stale ${pattern}`);
+    }
+  }
+  assert.deepEqual(problems, []);
 });

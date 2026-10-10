@@ -4,10 +4,12 @@
 
 |항목   |내용                                                 |
 |-----|---------------------------------------------------|
-|기반 문서|website-spec.md (홈페이지 기획서)                         |
+|기반 문서|`docs/specs/website.md` (홈페이지 기획서)                         |
 |기술 스택|Astro + Markdown Content Collections + Tailwind CSS|
 |호스팅  |GitHub Pages (GitHub Actions CI/CD)                |
 |진행 방식|마일스톤 → 스텝 순차 진행, 각 스텝마다 테스트 및 컨펌 후 다음 스텝 진행        |
+
+> **현재 상태 (2026-10-05):** 이 문서는 첫 구축 때의 계획서다. 마일스톤 M1~M8 은 모두 끝나 사이트가 운영 중이며, 지금의 구조·규칙은 `docs/specs/website.md` 가 기준이다. 아래 단계에 적힌 파일 이름 가운데 `src/content/config.ts`(실제는 `src/content.config.ts`), `MarkdownLayout`·`BlogPost` 레이아웃, `TagList`·`Pagination` 컴포넌트, apps 의 `status` 필드(실제는 `platforms`·`appStoreUrl`·`releaseDate`·`comingSoon`), FontBox(지금의 SuperFont)는 구축 중 바뀌어 실제 저장소와 다르다.
 
 ## 진행 규칙
 
@@ -384,11 +386,11 @@
 
 |마일스톤|내용             |상태  |
 |----|---------------|----|
-|M1  |프로젝트 초기 세팅     |⬜ 대기|
-|M2  |공통 레이아웃 및 네비게이션|⬜ 대기|
-|M3  |회사 소개 페이지      |⬜ 대기|
-|M4  |앱 소개 페이지       |⬜ 대기|
-|M5  |개발 블로그         |⬜ 대기|
-|M6  |디자인 다듬기 및 SEO  |⬜ 대기|
-|M7  |GitHub Pages 배포|⬜ 대기|
-|M8  |콘텐츠 최종 정리 및 런칭 |⬜ 대기|
+|M1  |프로젝트 초기 세팅     |✅ 완료|
+|M2  |공통 레이아웃 및 네비게이션|✅ 완료|
+|M3  |회사 소개 페이지      |✅ 완료|
+|M4  |앱 소개 페이지       |✅ 완료|
+|M5  |개발 블로그         |✅ 완료|
+|M6  |디자인 다듬기 및 SEO  |✅ 완료|
+|M7  |GitHub Pages 배포|✅ 완료|
+|M8  |콘텐츠 최종 정리 및 런칭 |✅ 완료|
