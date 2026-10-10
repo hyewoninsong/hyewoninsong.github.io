@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-11T02:40:00+09:00
+date: 2026-10-11T03:30:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -708,11 +708,30 @@ The rule was borrowed from dragging, where your finger has actually crossed the 
 | At least half a period is left before lunch | It starts there and ends at lunch (it may get shorter) |
 | It touches lunch or sits inside the lunch row | It skips lunch and keeps its length |
 
-The first row matches what already happens at the end of the grid. Starting the copy where the original ends would avoid overlap, but then the offset would depend on the class length.
+The first row matched what happened at the end of the grid. Starting the copy where the original ends would avoid overlap, but then the offset would depend on the class length. This table changed again the same afternoon: a copy no longer gets shorter and no longer skips lunch. See the next update.
 
 The same day, lunch came out of the default rules. New period timetables used to start with lunch after period 4 and the lunch row hidden, which made an invisible wall the default. Now the default is seven periods from 9:00 to 15:50 with no lunch, and the lunch-row switch starts on. Pick a lunch position and the row appears on the axis right away.
 
 Existing timetables keep their saved periods, and the save format is unchanged. Covered by unit tests, not yet checked on screen.
+
+## Update, Oct 11 afternoon — a duplicate keeps its length and backs up from whatever blocks it
+
+The morning fix left a different oddity: the copy could be shorter than the original. Duplicate a 14:00–17:00 event on a grid that ends at 17:00 and you got 14:30–17:00. Duplicate a 1.5-period class ending just before lunch and you got one period.
+
+Now a blocked copy keeps the original length and is placed by measuring upward from the obstacle.
+
+| Original | Before | Now |
+|---|---|---|
+| 14:00–17:00, grid ends at 17:00 | 14:30–17:00 | 14:00–17:00 (on top of the original) |
+| 15:00–16:30, one-hour step | 16:00–17:00 | 15:30–17:00 |
+| Period 3 to mid-period 4, lunch after 4 | Period 4 only | Mid-period 3 to end of period 4 |
+| Period 4, lunch row shown | Period 5 | Period 4 (on top of the original) |
+
+If there is less than one step of room, the copy moves down by that much. If there is none, it lands exactly on the original and never above it. The copy is created selected, so you can drag it away at once.
+
+The end of the grid and lunch now follow one rule, and skipping past lunch is gone. One case looks like an exception: with the lunch row hidden, a copy of period 4 lands on period 5. The hidden wall is a zero-length line, and a copy that starts right below it does not cross it.
+
+Sending a fully overlapping copy to the next day lost: it changes what "duplicate" means, and long-pressing the button already offers other days. Covered by unit tests, not yet checked on screen.
 
 ## History
 
@@ -754,3 +773,4 @@ Existing timetables keep their saved periods, and the save format is unchanged. 
 - Oct 9, night — the lunch position is stored as a mark on each period (gap-length inference only for files without marks) · lunch rows for two-period days and break-length lunches on grid and widget · save version unchanged
 - Oct 10 — lunch "None" moved from the length wheel to the top of the position wheel (length now starts at 5 min) · the length pill is hidden when there is no lunch · switching lunch off and on in the position wheel restores the previous length
 - Oct 11 — a duplicate whose tail crosses lunch now ends at lunch instead of skipping it (partly reversing Oct 9) · lunch removed from the default rules (9:00–15:50), with the lunch-row switch on by default
+- Oct 11, afternoon — a blocked duplicate keeps its length and backs up from the end of the grid or lunch, landing on the original when there is no room · skipping past lunch removed (reversing the morning's shortening and the Oct 9 skip)
