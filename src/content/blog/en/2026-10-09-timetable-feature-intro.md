@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-10T02:40:00+09:00
+date: 2026-10-10T11:53:34+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a phone-shaped mockup now plays the real app demonstrating four things SuperTimetable can do. The hand-drawn first version was dropped the same day — it showed screens the app doesn't have."
@@ -50,3 +50,25 @@ All three were found by pulling frames from the video, not from test results. A 
 The tour appears automatically only on a fresh install. For now there is also a "Replay Feature Tour" row in the menu, behind a build flag. The clips are light mode only, so in dark mode the mockup still shows a light app — it is a video.
 
 Only the Korean clips ship first. Checking them on a real device before recording the other seven languages saves re-recording; until then, other languages get their own headlines and captions over the Korean app footage. The earlier foreign-language clips from the old three-page scenario were removed rather than left in: a clip that disagrees with its captions plays without any warning, so none is better than wrong.
+
+## 2026-10-10 — The clip froze after leaving the app and coming back
+
+With the tour on screen, going Home and returning left the mockup on a frozen frame. The caption below froze too, because it follows the clip's playback time. Moving to the next page started things again, which made it look intermittent.
+
+The clip loops with `AVQueuePlayer` and `AVPlayerLooper`. When the app goes to the background the system pauses a player attached to the screen — intended, and we had set the policy explicitly. What was missing was the other half. A pause is just the rate going to zero, and the system does not restore it on return. The looper, despite its name, does not restart anything: it queues the next copy when one ends, and a paused player never reaches the end.
+
+The fix is a few lines. The view that owns the player listens for `didBecomeActive` and calls `play()` if the player is paused. Speed needs no extra handling because the x2/x1 toggle sets `defaultRate` along with `rate`, and `play()` uses it. With `rate` alone, the clip would have come back at 1x.
+
+We measured it rather than eyeballing it: show the tour, go Home, return after three seconds, take screenshots 1.5 seconds apart, and compare the share of changed pixels inside the mockup.
+
+| | Before leaving | After return, first gap | Second gap |
+|---|---|---|---|
+| Before the fix | 10.82% | 0.0% | 0.0% |
+| After the fix | 10.82% | 0.29% | 0.55% |
+
+Why it slipped through: the checklist covered "force quit and reopen", which always works because reopening builds a new player. Leaving and returning looks similar but keeps the old player alive. Anything that runs by itself on screen — video, timers, looping animation — now gets that path checked separately.
+
+## History
+
+- 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
+- 2026-10-10 — Clip now resumes after leaving the app and returning
