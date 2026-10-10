@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-09T17:05:02+09:00
+date: 2026-10-10T17:08:50+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -416,7 +416,7 @@ The display sheet looked heavy on a period timetable. A time-based timetable sho
 | First period start | one pill |
 | Periods | one pill |
 | Class · Break | two pills — 50m · 10m |
-| Lunch | two pills — after P4 · 1h (a single "None" when there is no lunch) |
+| Lunch | two pills — after P4 · 1h (a single "None" when there is no lunch — since Oct 10 you pick "None" on the first pill, see below) |
 
 Values people think of as a pair share a row. Each pill is its own button and opens only its own wheel under the row. Nothing you could adjust before is gone. The switch that puts lunch on the axis moved under the wheel of the open lunch row here — and moved back a day later; it is a permanent row again (see the last Oct 8 update).
 
@@ -671,6 +671,30 @@ Lunch is now a mark on the period itself: "lunch follows this one". A single num
 
 Old files are left alone. A file with no marks reads as "unknown" and is still inferred; one mark anywhere and the marks are trusted. Nothing is back-filled on launch, and since this only adds a field the save version did not change. Marks a shared file could carry but the app cannot produce — on the last period, or on a zero-minute gap — are ignored.
 
+## Update, Oct 10 — "None" lived on the second pill, and people tap the first one
+
+A request came in: let period timetables have no lunch. They already could. The option was just somewhere nobody looked.
+
+The lunch row has two pills: position ("after P4") and length ("1h"). "None" was the top value of the **length** wheel, because that is how it is stored: a lunch of zero minutes. People tap the left pill first, see "after P1" through "after P6", and conclude lunch has to go somewhere.
+
+| | Before | Now |
+|---|---|---|
+| First pill (position) | after P1 … after P6 | **None**, after P1 … after P6 |
+| Second pill (length) | **None**, 5 min … 3 h | 5 min … 3 h |
+| Row with no lunch | one length pill reading "None" | one position pill reading "None" |
+
+![The position wheel open with "None" at the top; the length pill is gone and the day strip has no lunch gap](/blog/timetable-period-axis/lunch-position-none.png)
+
+The first pill decides whether there is a lunch; the second only sets its value, and disappears when there is none. The card keeps its height because only the number of pills in the row changes.
+
+![After picking "after P3" again: the length pill is back at one hour, and its wheel has no "None"](/blog/timetable-period-axis/lunch-length-no-none.png)
+
+Two alternatives lost. "None" on both wheels is findable from either side, but then two controls switch the same thing off and each has to decide what to show after the other did it. A separate lunch switch adds a row and sits right above the "show lunch on the axis" switch, where the two would be confused.
+
+One detail: a wheel treats every value it passes as picked. Spin the position wheel past "None" and a 45-minute lunch is briefly switched off, which in storage means its length is gone. The sheet now remembers the length from just before lunch was switched off and restores it when a position is picked again, for as long as the sheet is open. Shrinking the period count still clears lunch for good, as described yesterday.
+
+The save format is unchanged. Checked in the simulator, not yet on a device.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -709,3 +733,4 @@ Old files are left alone. A file with no marks reads as "unknown" and is still i
 - Oct 9, late afternoon — period-timetable alarms were registered from the saved value (before lunch) instead of the time on screen and never rang. Alarms now use the drawn time · saved values in period timetables are fitted to period times (launch, import, add/edit, display-sheet confirm) — reverses "draw only, leave the saved value" and the Sep 29 "don't touch the wheel, nothing changes"
 - Oct 9, evening — cutting the period count to the lunch position or below clears lunch (it used to slide forward while the axis drew no lunch row) · a surviving lunch keeps its visible position · round-trip test between rules and axis
 - Oct 9, night — the lunch position is stored as a mark on each period (gap-length inference only for files without marks) · lunch rows for two-period days and break-length lunches on grid and widget · save version unchanged
+- Oct 10 — lunch "None" moved from the length wheel to the top of the position wheel (length now starts at 5 min) · the length pill is hidden when there is no lunch · switching lunch off and on in the position wheel restores the previous length
