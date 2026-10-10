@@ -1,9 +1,9 @@
 ---
 title: "The sheet opened from the weekday row didn't show the weekday card — the flag arrived stale"
-date: 2026-10-10T15:14:20+09:00
+date: 2026-10-10T16:06:29+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker moved into the vertical-axis group as a single row."
+summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker moved into the vertical-axis group as a single row of radio buttons."
 ---
 
 (Update, 2026-10-10: this sheet is now called Timetable Settings and the order changed again — see the last section. What follows is the October 9 story.)
@@ -73,7 +73,33 @@ In a half-height sheet there is no room for two rows under that row, so the popo
 
 One more rule: the choice is written only **after** the popover has closed. Switching can drop events that no longer fit, which raises a confirmation alert, and an alert cannot present over a popover that is still dismissing.
 
+## 2026-10-10, afternoon — The popover became a dropdown half a day later
+
+The popover above shipped in the morning and was removed in the afternoon. For a choice between two values it was heavy, and having to manage its direction and size inside a half-height sheet was the hint. The row now opens a system menu in place.
+
+![Now — a menu opening at the row, both names aligned, a checkmark on the current basis](/blog/2026-10-09-timetable-display-sheet-card-order/kind-menu.png)
+
+What we lost is the large artwork; a menu cannot carry it. The icon stays on the row, and this is a value people pick once when they create a timetable.
+
+The menu items took one fix as well. Buttons with a name, a subtitle, and a checkmark image on the selected one indent only the checked row.
+
+![First attempt — only the checked row is indented, so the two names do not line up](/blog/2026-10-09-timetable-display-sheet-card-order/kind-menu-misaligned.png)
+
+An inline `Picker` inside the menu lets the system reserve the checkmark column, so the names align. The cost: picker items drop the second line, so the description is gone from the menu and lives on as the VoiceOver hint.
+
+The "write after it closes" rule stays. A menu does not report when it has closed, so the write waits 0.3 s for the glass to clear; otherwise the confirmation alert collides with the dismissing menu and the lifted row label may not settle back.
+
+## 2026-10-10, evening — In the end nothing opens at all
+
+The dropdown did not last either. It shared the popover's flaw: you tap once just to see the other option. With only two values, we put both on the row as radio buttons.
+
+![Now — "By time" and "By period" radio buttons side by side at the top of the vertical-axis group](/blog/2026-10-09-timetable-display-sheet-card-order/kind-radio.png)
+
+A tap switches in place. With nothing presented, the "write after it closes" rule is gone too: a confirmation alert appears immediately when events would be lost, and cancelling leaves the radio where it was. The lesson: when there are two short values, show both instead of opening something.
+
 ## History
 
 - 2026-10-09 — Order axis → hours → weekdays; weekday row opens at the weekday card; stale state in the sheet closure.
 - 2026-10-10 — Renamed Timetable Settings; horizontal → vertical → events; a row plus a side-by-side popover instead of tiles.
+- 2026-10-10, afternoon — Popover replaced by a system dropdown; inline Picker for checkmark alignment, descriptions dropped.
+- 2026-10-10, evening — Dropdown removed; two inline radio buttons in the vertical-axis group, switching on tap.
