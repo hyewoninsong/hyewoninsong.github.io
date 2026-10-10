@@ -1,12 +1,12 @@
 ---
 title: "Only the people who tapped the button missed the rating prompt"
-date: 2026-10-10T17:45:18+09:00
+date: 2026-10-10T20:56:49+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Our thank-you card asks for a rating 2.5 seconds after it appears. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt."
+summary: "Our thank-you card asks for a rating 2.5 seconds after it appears. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt. The same evening, the big heart and confetti gave way to a short letter from the developer."
 ---
 
-After a few days of regular use, SuperTimetable shows a thank-you card with confetti. Tapping its button now brings up the system rating prompt right away. Before, it only closed the card.
+After a few days of regular use, SuperTimetable shows a thank-you card. Tapping its button now brings up the system rating prompt right away. Before, it only closed the card. The card's look changed again the same evening — a letter from the developer instead of a big heart and confetti; see the last section.
 
 ## The card waited 2.5 seconds; people did not
 
@@ -43,3 +43,28 @@ The test case for this card read: "close with the button as soon as it appears �
 ## Where it stands
 
 For any screen that does something after a short delay, we now list every way out and what happens to the follow-up on each. If the delay is longer than it takes to read the screen, most people will tap first. Expected results come from what the button's label promises, not from the code.
+
+## 2026-10-10, evening — a letter instead of a heart
+
+A few hours after the button fix the card itself looked unfinished: a white card, one big pink heart, confetti, two centred lines of thanks. The heart said nothing about the content, the confetti read as a party, and centred text left the card looking empty.
+
+Three mockups at phone size, one chosen:
+
+- **Record** — two big numbers ("14 days / 27 events"). Fitness-summary feel, but someone who just met the threshold (3 days, 5 events) gets small numbers.
+- **Your week** — a thumbnail of the user's own timetable with a caption. The most on-brand, but less serious than a letter.
+- **Letter** — an ink-black card with the app icon mark, "A note from the developer", the title "Day 14 together. Thank you for being here.", a short body and a signature. This won: for a one-person app a note from that person is the most sincere, and the only dark surface on a light app pulls the eye to one place.
+
+![The ink letter card — app icon mark, developer note header, "Day 14" title, signature, full-width white glass button over a blurred grid](/blog/timetable-review-card-button/letter-card-14days.jpg)
+
+"Day 14" is the real count of days the app was opened. The card only appears on its own after three days, but a fresh install can force it from a menu, so below three days the title drops the number.
+
+Two things bit on the way. The app icon is an Icon Composer `.icon` bundle and cannot be loaded with `UIImage(named:)`, so the seven bars are drawn in SwiftUI. And a glass button on an ink ground renders as dark glass, the same colour as the card — a 14 % white tint makes it a button again. The card keeps the same ink in light and dark mode; text colours come from pinning `colorScheme` to dark on the card rather than hard-coding white.
+
+![Dark mode — same ink card, lifted off the black grid by its shadow](/blog/timetable-review-card-button/letter-card-dark.jpg)
+
+With the confetti gone, the Reduce Motion branch went too. The rating-prompt behaviour above is unchanged.
+
+## History
+
+- 2026-10-10, afternoon — the button no longer cancels the rating-prompt timer.
+- 2026-10-10, evening — heart and confetti replaced by the developer's letter card.
