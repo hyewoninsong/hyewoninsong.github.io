@@ -1,12 +1,12 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-10T11:53:34+09:00
+date: 2026-10-10T15:05:05+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "On first launch, a phone-shaped mockup now plays the real app demonstrating four things SuperTimetable can do. The hand-drawn first version was dropped the same day — it showed screens the app doesn't have."
+summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
 ---
 
-Open SuperTimetable for the first time and, before the empty timetable, you get a four-page tour. Inside a phone-shaped frame an event is created, moved, recolored, timetables are switched, and a line underneath says what is happening. What plays inside the frame is a recording of the real app. The first version was a drawing.
+Open SuperTimetable for the first time and, before the empty timetable, you get a welcome page and a four-page tour. Inside a phone-shaped frame an event is created, moved, recolored, timetables are switched, and a line underneath says what is happening. What plays inside the frame is a recording of the real app. The first version was a drawing.
 
 ## Show what the app can do before asking anyone to try it
 
@@ -14,14 +14,14 @@ The old first run was an empty grid with a "start the tutorial?" card. The tutor
 
 | Page | What it shows |
 |---|---|
-| Just Drag | Drag on empty time → move → resize → duplicate → delete → undo → redo |
-| Your Style | Pick an event, change its color, create a custom color, apply to matching events |
+| Just Drag | Fill the empty school slots — drag one on Monday → duplicate → drag to the next day → resize, through Friday (changed 10-10, below) |
+| Your Style | Pick an event, change its color, create a custom color, apply to matching events → undo brings every color back |
 | By Period or by Time | A computer-science timetable with rooms, switched from periods to a time axis |
 | Multiple Timetables | Swipe cards → title list → search → duplicate |
 
 ![Pages 1 and 2 — the real app moving a just-created event, and picking a color in the real style popover. A line under the mockup describes the current action; the x2 chip is the playback speed](/blog/timetable-feature-intro/pair-real-clips.png)
 
-Two buttons, Back and Next, no Skip. Headlines use the App Store cards' copy and markup — the bracketed keyword gets the same highlighter band in the same accent color — captions come from the preview video, and the backdrop is the store screenshots' 3D bars. The real app is slow to watch, so playback defaults to 2× with an x2 chip on the mockup that toggles to 1×; the rate lives in the player, so captions stay in sync. The caption line lost its step number: a new sentence rises from below while the old one leaves upward, and that motion already says "next step".
+No Skip. Pages move with Back and Next and, since 10-10, by swiping. Headlines use the App Store cards' copy and markup — the bracketed keyword gets the same highlighter band in the same accent color — captions come from the preview video, and the backdrop is the store screenshots' 3D bars. The real app is slow to watch, so playback defaults to 2× with an x2 chip on the mockup that toggles to 1×; the rate lives in the player, so captions stay in sync. The caption line lost its step number: a new sentence rises from below while the old one leaves upward, and that motion already says "next step".
 
 ## The drawn version did not survive the day
 
@@ -68,7 +68,30 @@ We measured it rather than eyeballing it: show the tour, go Home, return after t
 
 Why it slipped through: the checklist covered "force quit and reopen", which always works because reopening builds a new player. Leaving and returning looks similar but keeps the old player alive. Anything that runs by itself on screen — video, timers, looping animation — now gets that path checked separately.
 
+## 2026-10-10 — A welcome page in front, swipe enabled, and a finger inside the clips
+
+The tour now opens on a welcome page: six store screenshots tilted into a collage that fades into the background, a one-line tagline, "Welcome to SuperTimetable", and one full-width Continue button. The reference was another app's onboarding, which also carries a "40 million users" banner; we have no such number, so there is none. The collage images come from a script that downscales the store captures — never hand-made.
+
+![The welcome page — a collage of store captures above "Welcome to SuperTimetable" and Continue](/blog/timetable-feature-intro/welcome-collage.jpg)
+
+Swiping between pages had been left out on purpose: a demo finger moving inside the mockup and the user's finger swiping the same surface seemed confusing. That worry went away once the finger moved **into the video** — it lives behind the mockup glass, the user's finger in front. So the pages are now a `TabView` pager; dots and buttons stay fixed below. Neighbouring pages keep a player parked on its first frame and only the visible page plays, so at most one HEVC decoder runs at a time instead of four.
+
+The finger is the tutorial's: a ring fills while pressing, pops when the long press lands, a circle follows a drag, a ripple marks a tap. Two ways to get it into the clips: overlay it at playback from exported touch coordinates, or have the app draw it during recording so it is baked into the video. The overlay would have to match the clip scale and each language's recording timing, and any drift makes the finger press thin air. Baking it means the video is the whole story and other languages come out right automatically. One debug launch argument installs a window-level gesture recognizer that never recognizes plus a transparent layer drawing the finger at every real touch; sheets rise in the same window, so the layer is brought to the front each time it draws. XCUITest's synthesized touches take the same path.
+
+![Page 1 — the finger dragging a duplicated school block to Tuesday, with the drag circle and time capsule](/blog/timetable-feature-intro/clip-finger-drag.png)
+
+Page 1 tells a different story now. Instead of listing operations on a Saturday swim slot, it starts from a timetable whose school slots are empty, creates Monday's, duplicates it, drags the copy to Tuesday, resizes it, and fills the week. Same four operations, but with a goal. Delete, undo and redo left page 1; undo now closes page 2, where one tap returns all five schools from the custom color to the original.
+
+## Three recordings passed, and Monday kept a stray block
+
+Pulling frames from the re-recorded page 1 showed Tuesday to Friday correct and Monday wrong: a school starting at 09:30 was left over and the original was gone. Three recordings, three passes, same result.
+
+The scenario taps a block to select it, duplicates it (the copy lands 30 minutes lower, selected), then long-presses the copy and drags it to the next day. A probe dumping each block's accessibility value after every step showed that the **original** was dragged, with the vertical movement lost, while the copy stayed. The drag preview shows the copy, so the video looks right. Grabbing the copy where it does not overlap turned into a resize of the original instead.
+
+Starting the same flow with a long-press-and-release selection instead of a tap works. The tap leaves an "editing schedule" snapshot that duplication does not update, and the drag commits to that snapshot — a guard added so a drag survives losing its selection mid-way now writes to the wrong event once the selection has changed. It is a real user-facing bug; the recording works around it with long-press selection, and the fix (commit to the event grabbed at drag start) is separate. Two lessons: no automated flow had ever gone tap-select → duplicate → drag, and eyes are fooled by previews — one line of value dumps beat ten frames. One more: a five-hour copy dragged onto Friday was pushed up to 08:00 by the 13:00 event below it, so Friday is filled from Monday's four-hour block.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
 - 2026-10-10 — Clip now resumes after leaving the app and returning
+- 2026-10-10 — Welcome page, swipe paging, finger baked into clips, page 1 as "fill the school slots", undo moved to page 2; tap-select → duplicate → drag bug found
