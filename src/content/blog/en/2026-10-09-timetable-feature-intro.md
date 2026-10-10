@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T01:38:23+09:00
+date: 2026-10-11T03:21:48+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -70,13 +70,13 @@ Why it slipped through: the checklist covered "force quit and reopen", which alw
 
 ## 2026-10-10 — A welcome page in front, swipe enabled, and a finger inside the clips
 
-The tour now opens on a welcome page: store screenshots tilted into a collage that fades into the background (six at first, cut to a fan of three the next day — below), a one-line tagline, "Welcome to SuperTimetable", and one full-width Continue button. The reference was another app's onboarding, which also carries a "40 million users" banner; we have no such number, so there is none. The collage images come from a script that downscales the store captures — never hand-made.
+The tour now opens on a welcome page: app captures tilted into a collage that fades into the background (six at first, a fan of three the next day, then a tilted grid of nine that evening — below), a one-line tagline, "Welcome to SuperTimetable", and one full-width Continue button. The reference was another app's onboarding, which also carries a "40 million users" banner; we have no such number, so there is none. The collage images come from a script that downscales the store captures — never hand-made.
 
 ![The welcome page — a collage of store captures above "Welcome to SuperTimetable" and Continue](/blog/timetable-feature-intro/welcome-collage.jpg)
 
 Swiping between pages had been left out on purpose: a demo finger moving inside the mockup and the user's finger swiping the same surface seemed confusing. That worry went away once the finger moved **into the video** — it lives behind the mockup glass, the user's finger in front. So the pages became a `TabView` pager, with dots and buttons fixed below. That pager was removed again the same evening (below): the phone sliding out while an identical phone slides in was exactly the "broken flow" we were asked to fix. Swiping stayed, and now jumps to a chapter start.
 
-The finger is the tutorial's: a ring fills while pressing, pops when the long press lands, a circle follows a drag, a ripple marks a tap. Two ways to get it into the clips: overlay it at playback from exported touch coordinates, or have the app draw it during recording so it is baked into the video. The overlay would have to match the clip scale and each language's recording timing, and any drift makes the finger press thin air. Baking it means the video is the whole story and other languages come out right automatically. One debug launch argument installs a window-level gesture recognizer that never recognizes plus a transparent layer drawing the finger at every real touch; sheets rise in the same window, so the layer is brought to the front each time it draws. XCUITest's synthesized touches take the same path.
+The finger is the tutorial's (that day it only appeared during touches; the next day it became permanent — below): a ring fills while pressing, pops when the long press lands, a circle follows a drag, a ripple marks a tap. Two ways to get it into the clips: overlay it at playback from exported touch coordinates, or have the app draw it during recording so it is baked into the video. The overlay would have to match the clip scale and each language's recording timing, and any drift makes the finger press thin air. Baking it means the video is the whole story and other languages come out right automatically. One debug launch argument installs a window-level gesture recognizer that never recognizes plus a transparent layer drawing the finger at every real touch; sheets rise in the same window, so the layer is brought to the front each time it draws. XCUITest's synthesized touches take the same path.
 
 ![Page 1 — the finger dragging a duplicated school block to Tuesday, with the drag circle and time capsule](/blog/timetable-feature-intro/clip-finger-drag.png)
 
@@ -122,11 +122,27 @@ The ending keeps its rule that the last frame is the picture, and builds on it: 
 
 ![The ending page — the phone with the finished week tilted, the app icon overlapping its corner](/blog/timetable-feature-intro/ending-phone-icon.png)
 
-The welcome page lost weight. Six screenshots at six angles with colour chips between them became a fan of three: the grid in front, upright; style and list behind it, nine degrees each way. Front, back, left, right — nothing else for the eye to chase. The first version hid the side cards almost entirely behind the centre one; a screenshot showed it, and the sides moved out.
+The welcome page lost weight. Six screenshots at six angles with colour chips between them became a fan of three (replaced again that evening by a tilted grid — below): the grid in front, upright; style and list behind it, nine degrees each way. Front, back, left, right — nothing else for the eye to chase. The first version hid the side cards almost entirely behind the centre one; a screenshot showed it, and the sides moved out.
 
 ![The welcome page — three store captures fanned behind the headline](/blog/timetable-feature-intro/welcome-three-cards.jpg)
 
 When the pacing feels slow now, the first thing to read is the script's "N idle gaps, M seconds dropped" line, before re-recording. Slowness the cap cannot catch is the action itself — a slow drag, typing — and that is when the test changes.
+
+## 2026-10-11 evening — Two real timetables, a tilted grid, and a finger that never leaves
+
+Three more changes the same evening. First, data. The computer-science timetable the period chapter opened was made up for the fixture; the user sent two of their own files instead: Hyewon (music school, 8 periods) and Insong (computer science, 12 periods), both period-based with 75-minute classes that end on half-period lines. They went into the capture fixture as-is. Hyewon replaced the fake Hyewon in the third slot; Insong was appended at the end, because the third slot is what the widget capture picks by number. The tour fixture now holds only the unfinished Siwoo, and the period chapter opens Insong. The search term is "Insong" — a person's name never matches a course title.
+
+Second, the welcome page. The morning's fan of three became, that evening, what the user had pointed at in another app's onboarding: nine captures in a three-column grid, the whole grid tilted nine degrees, columns staggered so the cards flow diagonally from top to bottom. Four timetables, the style popover, the custom-colour editor, the list, batch edit, a dark grid. Two conditions: no status bar or Dynamic Island in the captures, and clean white borders. So the store captures lose their top 62 pt and bottom 34 pt and keep only app content, and each card gets a 3 pt white border that stands in for the phone outline. No widget images — widgets only ever appear as real home-screen captures, and the welcome page has no reason to show one. One stumble: `sips` pads with black when the crop window leaves the image, so the first build had black blocks under every card. `ffmpeg`'s `crop` replaced it.
+
+![The welcome page — nine app captures in a tilted grid flowing diagonally, content only, white borders](/blog/timetable-feature-intro/welcome-tilted-grid.jpg)
+
+Third, the finger. "Sometimes it's there, sometimes it isn't" was accurate: it appeared on touch-down and faded 0.3 s after release. Now it is always there. Before the first touch it rests near the lower middle of the screen; when a touch comes it glides from where it was to the touch point in 0.22 s, and only then does the ring fill or the ripple spread. On release it lifts slightly and stays, and the next touch starts from there. Only the effects change with context: ring for a long press, circle for a drag, ripple for a tap.
+
+That uncovered one more thing. Frames from the re-recorded clip showed no finger while colours were being tapped inside the style popover. Both the finger layer and the touch-spying recognizer were attached to the app window, and sheets and popovers are presented in a **different window**: touches there never reached the recognizer, and the layer sat underneath. When the finger disappeared between touches anyway, nobody noticed. The fix scans the scene's windows every 0.1 s, adds a recognizer to each new window and moves the layer to the topmost non-keyboard window. Every window spans the screen, so coordinates line up. For the few seconds the keyboard is up, the finger is behind it; that stays.
+
+![The style chapter — the finger tapping orange inside the style popover, drawn over a popover that lives in another window](/blog/timetable-feature-intro/finger-over-popover.png)
+
+Four re-recordings that day, three of them for the finger. Each one was found by pulling frames; the test passed every time.
 
 ## History
 
@@ -135,3 +151,4 @@ When the pacing feels slow now, the first thing to read is the script's "N idle 
 - 2026-10-10 — Welcome page, swipe paging, finger baked into clips, page 1 as "fill the school slots", undo moved to page 2; tap-select → duplicate → drag bug found
 - 2026-10-10 — Four looping clips became one clip with auto-advancing chapters, an ending page, the list chapter ahead of periods, and end seeks at duration − 0.1 s
 - 2026-10-11 — Idle gaps capped at one second (103 s) · seconds remaining per chapter · ending with a tilted phone and the app icon · three-card welcome collage
+- 2026-10-11 evening — Hyewon and Insong user timetables · nine-card tilted-grid welcome (no status bar, white borders, no widgets) · persistent finger, also over sheet windows
