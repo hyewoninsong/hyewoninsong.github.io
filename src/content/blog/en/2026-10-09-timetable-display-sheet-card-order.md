@@ -1,12 +1,14 @@
 ---
 title: "The sheet opened from the weekday row didn't show the weekday card — the flag arrived stale"
-date: 2026-10-09T19:18:45+09:00
+date: 2026-10-10T15:14:20+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "We reordered the display sheet so the axis picker sits right above the values it changes, then made the weekday row open the sheet scrolled to the weekday card. The scroll failed because of stale state in the sheet closure, not timing."
+summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker moved into the vertical-axis group as a single row."
 ---
 
-The display sheet starts with a "By time | By period" picker. The values for that axis now sit directly under it, and the weekday card moved below. In exchange, tapping the weekday row in the grid opens the sheet already scrolled to the weekday card.
+(Update, 2026-10-10: this sheet is now called Timetable Settings and the order changed again — see the last section. What follows is the October 9 story.)
+
+The display sheet started with a "By time | By period" picker. The values for that axis now sit directly under it, and the weekday card moved below. In exchange, tapping the weekday row in the grid opens the sheet already scrolled to the weekday card.
 
 ## The picker was changing a card one slot away
 
@@ -48,3 +50,30 @@ The fix is to pass a binding instead of a value; a binding reads storage at the 
 ## Where it stands
 
 Both entry points were captured on both timetable types. The lesson we kept: when a silent call does nothing, print the input before touching the timing.
+
+## 2026-10-10 — Once the picker moved inside its group, weekdays went back on top
+
+A day later we reworked the sheet again. It is now called Timetable Settings, and its groups use the grid's own words: weekdays are the **horizontal axis**, hours and periods the **vertical axis**.
+
+![Timetable Settings — horizontal axis group, then the vertical axis group led by the basis row](/blog/2026-10-09-timetable-display-sheet-card-order/axis-groups.png)
+
+Yesterday's reason for pushing weekdays down was that nothing should sit between the picker and the card it changes. That premise is gone: the tile pair at the top was replaced by a single "By time / By period" row at the head of the vertical-axis group. Picker and result now live in the same group, so weekdays return to the top, matching how the grid reads.
+
+The open-at-the-right-place mechanism stays, with the target flipped: opening from the time axis now brings the vertical-axis group to the top. The binding fix above still carries the flag.
+
+### The popover behind the row
+
+Tapping the row opens a popover anchored to it. The first version was a two-row list, pinned to open below the row.
+
+![First version — a short popover below the row, text clipped at its edges](/blog/2026-10-09-timetable-display-sheet-card-order/kind-popover-clipped.png)
+
+In a half-height sheet there is no room for two rows under that row, so the popover was squeezed and the text clipped. Letting the system choose the direction moved it above the row, where there is space. The list still looked cramped against the glass edge, so we made it taller and put the two choices side by side: large icon, name, description, radio.
+
+![Now — the popover above the row with both choices side by side](/blog/2026-10-09-timetable-display-sheet-card-order/kind-popover.png)
+
+One more rule: the choice is written only **after** the popover has closed. Switching can drop events that no longer fit, which raises a confirmation alert, and an alert cannot present over a popover that is still dismissing.
+
+## History
+
+- 2026-10-09 — Order axis → hours → weekdays; weekday row opens at the weekday card; stale state in the sheet closure.
+- 2026-10-10 — Renamed Timetable Settings; horizontal → vertical → events; a row plus a side-by-side popover instead of tiles.
