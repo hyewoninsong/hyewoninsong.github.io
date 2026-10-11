@@ -200,6 +200,8 @@ That spot is the Delete Event button. Screenshots have no finger, so it never ma
 
 Recordings now use their own helper. It reads the title field's measured frame and taps 14 pt above it, in the empty strip between the header row and the title. Screenshot and preview-video tests keep the old helper.
 
+The last frame had the same problem. The ending page holds the clip's final frame in the phone mockup, and with an always-visible finger that frame had a finger resting on the finished timetable. Hiding it after a long idle would also hide it during pauses mid-clip, so the recording test sends the app a signal after its last action and the finger fades out over 0.3 s. The two seconds after that are the ending picture.
+
 The period chapter's copy was trimmed the same day. The headline names two modes, by period and by time, and now both words carry the highlighter band instead of only the first. The first caption is down to one sentence. Two sheets that appear in the clip had changed shape, so the whole clip was recorded again.
 
 ## History
@@ -212,4 +214,4 @@ The period chapter's copy was trimmed the same day. The headline names two modes
 - 2026-10-11 evening — Hyewon and Insong user timetables · nine-card tilted-grid welcome (no status bar, white borders, no widgets) · persistent finger, also over sheet windows · later that night the grid flows upward along its tilt
 - 2026-10-11 midday — fourth welcome column (event editor, Hyewon time grid, print) overflowing the frame to fill the top-right corner the tilt left bare
 - 2026-10-11 afternoon — no 3D bars on the welcome page · one flowing card spins a full turn into the phone mockup · school finishes on the built-in red · period chapter runs time → period and adds the missing class · removal transitions are never chosen by state
-- 2026-10-11 evening — dismissing tap moved off the Delete Event button to empty space under the header · period chapter copy trimmed, both headline keywords banded · clip re-recorded with the updated sheets
+- 2026-10-11 evening — dismissing tap moved off the Delete Event button to empty space under the header · period chapter copy trimmed, both headline keywords banded · clip re-recorded with the updated sheets · finger removed from the ending frame
