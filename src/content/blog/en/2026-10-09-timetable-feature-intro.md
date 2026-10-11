@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T13:20:00+09:00
+date: 2026-10-11T15:37:58+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -158,6 +158,38 @@ The fix is one more column on the right: three cards (the event editor, Hyewon's
 
 Three alternatives lost. Widening the frame to four columns and centring it moves the rotation centre right, shoving all nine cards left and cutting the first column. Shrinking the cards to fit four columns makes the captures unreadable. Reducing the tilt or scaling up: the tilt is the whole point borrowed from the reference onboarding, and more scale pushes cards down into the headline.
 
+## 2026-10-11 afternoon — One card spins into the phone, and the period chapter runs the other way
+
+The welcome page and the tour used to slide past each other. Now, when you tap Continue, one of the flowing collage cards lifts off where it is, spins a full turn around its vertical axis, turns into the phone mockup on the way, and settles where the phone belongs. The clip starts right there. The floating 3D bars behind the welcome page are gone from that page; they fade in as the tour begins. Collage plus bars made the first screen busy.
+
+![One welcome card lifts, spins and lands as the phone mockup — at the tap, 0.55 s, 0.75 s, and landed](/blog/timetable-feature-intro/hero-flight.png)
+
+No card is fixed in advance. The collage scrolls, so any given picture is sometimes off screen. At the tap we pick, among the cards wholly inside the top 78% of the frame, the one closest to top-center. Card positions arrive 30 times a second; keeping them in view state would redraw the whole intro every frame, so they live in a reference-type box that is read once at the tap.
+
+A full turn still ends on the phone on purpose. Half a turn is a flip, not a spin; a full turn back to the card cannot become a phone. At 90° the back face is the phone; past 270° the front is the phone too. Both swaps happen when the card is edge-on, zero pixels wide. The back face is the clip's frame at 0 s, pulled ahead of time with `AVAssetImageGenerator`, and the real player sits paused on that same frame until the card lands. A spring with overshoot would pass 360° and flash the card again, so the curve has none.
+
+### The removal transition could not depend on state
+
+While the card flies, the welcome page must fade in place; if it slides, the phone's target slides with it. So the welcome page's transition was chosen by state: fade when a card is flying, slide otherwise. Recorded frames showed it sliding left. The state change that lifts the card and the one that switches pages were committed in one render, and the departing view left with the "no card" transition.
+
+Deferring the page switch with `DispatchQueue.main.async` did not help: a block dispatched from a tap handler runs in the same run-loop turn, before the commit. Deferring from `onChange` did not help either; the lifted card and the switched page landed in the same frame. The fix was to stop choosing the removal transition by state at all and fix it with `.asymmetric(insertion:removal:)`. Insertion reads the value at the update that inserts it, so that side can still depend on state. The difference between fade and slide is 0.4 s; it was invisible in code and obvious in 10 ms frame strips.
+
+### The period chapter now goes time → period
+
+The period chapter used to take a college timetable from periods to a time axis, and the moment of change was flat: snug blocks simply scattered. Reversed, a college timetable opens on a time axis with 75-minute classes floating, then snaps into 1st, 2nd, 3rd period when Timetable Settings switches it to By Period. Then an empty Wednesday first period is dragged to add the class that was missing, with the same red as Monday's and the room in the memo.
+
+![The period chapter — opened by time, switched to periods, Wednesday's missing class added](/blog/timetable-feature-intro/period-flip.png)
+
+The recording fixture enters as "just converted from periods to time": same minutes, one Wednesday class removed. The app remembers the period rules when converting a timetable to time and restores them on the way back, and the fixture carries that memory too, so switching back brings all 12 periods with nothing deleted.
+
+### School ends on the built-in red
+
+The styling chapter used to finish on a custom navy. A custom color as the final look reads as "do I have to make that?" Now the custom color is only made and added; the save goes back to the Basic tab's red, and after undo and redo the school blocks are the built-in red, the same red the period chapter uses for the added class.
+
+![The ending — a finished week with five school blocks in the built-in red](/blog/timetable-feature-intro/final-week-red.png)
+
+That one tap dropped out of the recording twice. Right after tapping the Basic tab, the red swatch existed in the accessibility tree, but the page was still sliding in from the left and its frame was off screen; tapping that point counted as a tap outside the popover, which closed, and the test passed anyway. Waiting for the swatch frame to be inside the popover was not enough: the tab switch itself was gated on "the basic swatch does not exist", and a pager keeps hidden pages alive, so it always existed. The gate is now the segment's `isSelected`. A green recording test and a correct video are still two different things.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -167,3 +199,4 @@ Three alternatives lost. Widening the frame to four columns and centring it move
 - 2026-10-11 — Idle gaps capped at one second (103 s) · seconds remaining per chapter · ending with a tilted phone and the app icon · three-card welcome collage
 - 2026-10-11 evening — Hyewon and Insong user timetables · nine-card tilted-grid welcome (no status bar, white borders, no widgets) · persistent finger, also over sheet windows · later that night the grid flows upward along its tilt
 - 2026-10-11 midday — fourth welcome column (event editor, Hyewon time grid, print) overflowing the frame to fill the top-right corner the tilt left bare
+- 2026-10-11 afternoon — no 3D bars on the welcome page · one flowing card spins a full turn into the phone mockup · school finishes on the built-in red · period chapter runs time → period and adds the missing class · removal transitions are never chosen by state
