@@ -1,12 +1,12 @@
 ---
 title: "The sheet opened from the weekday row didn't show the weekday card — the flag arrived stale"
-date: 2026-10-10T16:06:29+09:00
+date: 2026-10-11T15:58:52+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker moved into the vertical-axis group as a single row of radio buttons."
+summary: "We reordered the display sheet and opened it at the card you tapped; the scroll failed because of stale state in the sheet closure. A day later the sheet became Timetable Settings and the axis picker became a single row of radio buttons. Two days later that row got its own Type group at the top of the sheet."
 ---
 
-(Update, 2026-10-10: this sheet is now called Timetable Settings and the order changed again — see the last section. What follows is the October 9 story.)
+(Update: this sheet is now called Timetable Settings and the order has changed twice more since. The current shape is in the 2026-10-11 section at the end. What follows is the October 9 story.)
 
 The display sheet started with a "By time | By period" picker. The values for that axis now sit directly under it, and the weekday card moved below. In exchange, tapping the weekday row in the grid opens the sheet already scrolled to the weekday card.
 
@@ -97,9 +97,35 @@ The dropdown did not last either. It shared the popover's flaw: you tap once jus
 
 A tap switches in place. With nothing presented, the "write after it closes" rule is gone too: a confirmation alert appears immediately when events would be lost, and cancelling leaves the radio where it was. The lesson: when there are two short values, show both instead of opening something.
 
+## 2026-10-11 — Order by importance, not by reading order
+
+One more day of use and the order changed again. The row that picks time-based or period-based now has its own group, Type, at the very top of the sheet.
+
+![Now — the Type group with the basis radios on top; the group below is titled after the choice](/blog/2026-10-09-timetable-display-sheet-card-order/period-first.png)
+
+The October 10 order followed how you read the grid: weekdays across the top, hours down the side. But the choices do not weigh the same. The basis swaps the whole card below it and decides the shape of the grid. Weekdays come after that. On a half-height sheet the most important choice sat below the weekday card.
+
+| | October 10 | Now |
+|---|---|---|
+| 1 | Horizontal axis (weekdays) | Type — the basis row |
+| 2 | Vertical axis — basis row plus hours or period rules | Hours (or Periods) |
+| 3 | Events | Days |
+| 4 | | Events |
+
+The group titles went back too. "Horizontal axis" and "Vertical axis" were accurate but did not say what was inside. The group under Type is titled Hours or Periods after the chosen basis, and the next is Days.
+
+The first version put the basis row inside that Hours/Periods group. It lasted minutes. "Periods" names the result of the choice, so a row offering "By time | By period" under it has the title answering before you pick. The picker and its result needed separate groups.
+
+The open-at target flipped for the third time. Tapping the time axis opens at the top, where Type and that group already are. Tapping the weekday row opens scrolled down to the Days group, as it did on October 9.
+
+![Opened from the weekday row — scrolled down to the Days group](/blog/2026-10-09-timetable-display-sheet-card-order/days-revealed.png)
+
+The rule we wrote down: whichever group is on top needs no scroll, and the entry point of the group below gets the target. Because the flag was already a binding, this change was one renamed flag and one condition.
+
 ## History
 
 - 2026-10-09 — Order axis → hours → weekdays; weekday row opens at the weekday card; stale state in the sheet closure.
 - 2026-10-10 — Renamed Timetable Settings; horizontal → vertical → events; a row plus a side-by-side popover instead of tiles.
 - 2026-10-10, afternoon — Popover replaced by a system dropdown; inline Picker for checkmark alignment, descriptions dropped.
 - 2026-10-10, evening — Dropdown removed; two inline radio buttons in the vertical-axis group, switching on tap.
+- 2026-10-11 — Basis row moved to its own Type group at the top, then Hours or Periods and Days; axis names dropped; the weekday row opens at the Days group again.
