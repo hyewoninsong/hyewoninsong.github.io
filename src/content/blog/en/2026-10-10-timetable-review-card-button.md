@@ -1,9 +1,9 @@
 ---
 title: "Only the people who tapped the button missed the rating prompt"
-date: 2026-10-11T03:23:16+09:00
+date: 2026-10-11T13:16:40+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Our thank-you card asked for a rating 2.5 seconds after it appeared. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt. We fixed the button, turned the card into a letter, and a day later dropped the timer: the prompt now comes when the card closes."
+summary: "Our thank-you card asked for a rating 2.5 seconds after it appeared. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt. We fixed the button, turned the card into a letter, and a day later dropped the timer: the prompt now comes when the card closes. That afternoon we also caught that the icon on the card was not the real icon."
 ---
 
 After a few days of regular use, SuperTimetable shows a thank-you card. Closing it — with the button or by tapping outside — brings up the system rating prompt. At first the button only closed the card. This is the story of that bug; the 2.5-second timer and the "outside tap stays quiet" rule it left behind were removed the next day (last section). The card's look changed in between too — a letter from the developer instead of a big heart and confetti.
@@ -58,7 +58,7 @@ Three mockups at phone size, one chosen:
 
 "Day 14" is the real count of days the app was opened. The card only appears on its own after three days, but a fresh install can force it from a menu, so below three days the title drops the number.
 
-Two things bit on the way. The app icon is an Icon Composer `.icon` bundle and cannot be loaded with `UIImage(named:)`, so the seven bars are drawn in SwiftUI. And a glass button on an ink ground renders as dark glass, the same colour as the card — a 14 % white tint makes it a button again. The card keeps the same ink in light and dark mode; text colours come from pinning `colorScheme` to dark on the card rather than hard-coding white.
+Two things bit on the way. The app icon is an Icon Composer `.icon` bundle and cannot be loaded with `UIImage(named:)`, so the bars are drawn in SwiftUI (the seven bars drawn here turned out not to be the real icon — see the last section). And a glass button on an ink ground renders as dark glass, the same colour as the card — a 14 % white tint makes it a button again. The card keeps the same ink in light and dark mode; text colours come from pinning `colorScheme` to dark on the card rather than hard-coding white.
 
 ![Dark mode — same ink card, lifted off the black grid by its shadow](/blog/timetable-review-card-button/letter-card-dark.jpg)
 
@@ -82,8 +82,23 @@ One side benefit: the prompt no longer covers the letter mid-read. The letter is
 
 The once-per-card flag stays, for a second tap while the card animates out.
 
+## 2026-10-11, afternoon — the icon on the card was not our icon
+
+Look at the two captures above: a white tile with seven thin bars. The SuperTimetable icon on the home screen has five thick blocks — red, orange, yellow, green, blue. For a day the thank-you card and the last page of the first-run intro showed the wrong one.
+
+The icon definition holds two layers: the five blocks in use, and an older seven-bar alternative switched off with `hidden`. The script that renders the artwork keeps both sets of dimensions side by side. An Icon Composer icon cannot be loaded as an image inside the app, so it had to be redrawn as a view — and the dimensions copied were the hidden layer's.
+
+![The corrected card — the same five blocks as the home screen icon, and a one-sentence body](/blog/timetable-review-card-button/letter-card-real-icon.png)
+
+Why a screenshot did not catch it: a white tile with coloured bars reads as "our icon" when nothing sits next to it. Nobody counted against the original, and the manual test case described the copy ("seven-bar icon"), turning the wrong picture into the expected result.
+
+The view now uses the visible layer's geometry, and a test reads which layer is not hidden and compares the script's constants with the view's. The test case now says "same picture as the home screen icon".
+
+The body lost a sentence the same day. The title already says thank you; what remains is the promise: "I'll pay you back with a better app."
+
 ## History
 
 - 2026-10-10, afternoon — the button no longer cancels the rating-prompt timer.
 - 2026-10-10, evening — heart and confetti replaced by the developer's letter card.
 - 2026-10-11 — timer removed; the rating prompt is requested when the card closes (button or outside tap).
+- 2026-10-11, afternoon — the card's app icon corrected to the real five-block icon; body cut to one sentence.
