@@ -1,6 +1,6 @@
 ---
 title: "Only the people who tapped the button missed the rating prompt"
-date: 2026-10-11T13:16:40+09:00
+date: 2026-10-11T13:37:10+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Our thank-you card asked for a rating 2.5 seconds after it appeared. Its one button cancelled that timer, so answering the card was the surest way to never see the prompt. We fixed the button, turned the card into a letter, and a day later dropped the timer: the prompt now comes when the card closes. That afternoon we also caught that the icon on the card was not the real icon."
@@ -94,6 +94,10 @@ Why a screenshot did not catch it: a white tile with coloured bars reads as "our
 
 The view now uses the visible layer's geometry, and a test reads which layer is not hidden and compares the script's constants with the view's. The test case now says "same picture as the home screen icon".
 
+The intro's last page got the same picture, and lost its tilt: the phone still leans, but the icon stands upright as it does on the home screen.
+
+![Last page of the intro — the five-block icon upright at the lower right of the tilted phone](/blog/timetable-review-card-button/intro-ending-upright-icon.png)
+
 The body lost a sentence the same day. The title already says thank you; what remains is the promise: "I'll pay you back with a better app."
 
 ## History
@@ -101,4 +105,4 @@ The body lost a sentence the same day. The title already says thank you; what re
 - 2026-10-10, afternoon — the button no longer cancels the rating-prompt timer.
 - 2026-10-10, evening — heart and confetti replaced by the developer's letter card.
 - 2026-10-11 — timer removed; the rating prompt is requested when the card closes (button or outside tap).
-- 2026-10-11, afternoon — the card's app icon corrected to the real five-block icon; body cut to one sentence.
+- 2026-10-11, afternoon — the card's app icon corrected to the real five-block icon; body cut to one sentence; the intro's closing icon no longer tilts.
