@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T15:37:58+09:00
+date: 2026-10-11T17:55:02+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -190,6 +190,20 @@ The styling chapter used to finish on a custom navy. A custom color as the final
 
 That one tap dropped out of the recording twice. Right after tapping the Basic tab, the red swatch existed in the accessibility tree, but the page was still sliding in from the left and its frame was off screen; tapping that point counted as a tap outside the popover, which closed, and the test passed anyway. Waiting for the swatch frame to be inside the popover was not enough: the tab switch itself was gated on "the basic swatch does not exist", and a pager keeps hidden pages alive, so it always existed. The gate is now the segment's `isSelected`. A green recording test and a correct video are still two different things.
 
+## 2026-10-11 evening — When the finger is visible, where a tap lands is content
+
+In the styling chapter the tour picks a color and then dismisses the popover. Any tap outside closes it, and the popover swallows that tap. So the recording test reused the screenshot helper, which taps 24 pt below the popover.
+
+That spot is the Delete Event button. Screenshots have no finger, so it never mattered. The clip has the finger baked in, and it looked like someone picked a color and then pressed delete. Nothing is deleted, but a viewer cannot know that.
+
+![Left: the old clip, with the dismissing tap landing on Delete Event. Right: the new clip, tapping empty space under the header](/blog/timetable-feature-intro/popover-dismiss-finger.png)
+
+Recordings now use their own helper. It reads the title field's measured frame and taps 14 pt above it, in the empty strip between the header row and the title. Screenshot and preview-video tests keep the old helper.
+
+The last frame had the same problem. The ending page holds the clip's final frame in the phone mockup, and with an always-visible finger that frame had a finger resting on the finished timetable. Hiding it after a long idle would also hide it during pauses mid-clip, so the recording test sends the app a signal after its last action and the finger fades out over 0.3 s. The two seconds after that are the ending picture.
+
+The period chapter's copy was trimmed the same day. The headline names two modes, by period and by time, and now both words carry the highlighter band instead of only the first. The first caption is down to one sentence. Two sheets that appear in the clip had changed shape, so the whole clip was recorded again.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -200,3 +214,4 @@ That one tap dropped out of the recording twice. Right after tapping the Basic t
 - 2026-10-11 evening — Hyewon and Insong user timetables · nine-card tilted-grid welcome (no status bar, white borders, no widgets) · persistent finger, also over sheet windows · later that night the grid flows upward along its tilt
 - 2026-10-11 midday — fourth welcome column (event editor, Hyewon time grid, print) overflowing the frame to fill the top-right corner the tilt left bare
 - 2026-10-11 afternoon — no 3D bars on the welcome page · one flowing card spins a full turn into the phone mockup · school finishes on the built-in red · period chapter runs time → period and adds the missing class · removal transitions are never chosen by state
+- 2026-10-11 evening — dismissing tap moved off the Delete Event button to empty space under the header · period chapter copy trimmed, both headline keywords banded · clip re-recorded with the updated sheets · finger removed from the ending frame
