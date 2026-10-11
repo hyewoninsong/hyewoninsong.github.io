@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T17:55:02+09:00
+date: 2026-10-11T21:08:33+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -21,7 +21,7 @@ The old first run was an empty grid with a "start the tutorial?" card. The tutor
 
 ![Pages 1 and 2 — the real app moving a just-created event, and picking a color in the real style popover. A line under the mockup describes the current action; the x2 chip is the playback speed](/blog/timetable-feature-intro/pair-real-clips.png)
 
-No Skip. Chapters advance on their own with the clip, and Back, Next and swiping (since 10-10) jump between them. Headlines use the App Store cards' copy and markup — the bracketed keyword gets the same highlighter band in the same accent color — captions come from the preview video, and the backdrop is the store screenshots' 3D bars. The real app is slow to watch, so playback defaults to 2× with an x2 chip on the mockup that toggles to 1×; the rate lives in the player, so captions stay in sync. The caption line lost its step number: a new sentence rises from below while the old one leaves upward, and that motion already says "next step".
+No Skip. Chapters advance on their own with the clip, and Back, Next and swiping (since 10-10) jump between them. Headlines use the App Store cards' copy and markup — the bracketed keyword gets the same highlighter band in the same accent color — captions come from the preview video. The backdrop started as the store screenshots' 3D bars and was removed late on 10-11. The real app is slow to watch, so playback defaults to 2× with an x2 chip on the mockup that toggles to 1×; the rate lives in the player, so captions stay in sync. The caption line lost its step number: a new sentence rises from below while the old one leaves upward, and that motion already says "next step".
 
 ## The drawn version did not survive the day
 
@@ -160,7 +160,7 @@ Three alternatives lost. Widening the frame to four columns and centring it move
 
 ## 2026-10-11 afternoon — One card spins into the phone, and the period chapter runs the other way
 
-The welcome page and the tour used to slide past each other. Now, when you tap Continue, one of the flowing collage cards lifts off where it is, spins a full turn around its vertical axis, turns into the phone mockup on the way, and settles where the phone belongs. The clip starts right there. The floating 3D bars behind the welcome page are gone from that page; they fade in as the tour begins. Collage plus bars made the first screen busy.
+The welcome page and the tour used to slide past each other. Now, when you tap Continue, one of the flowing collage cards lifts off where it is, spins a full turn around its vertical axis, turns into the phone mockup on the way, and settles where the phone belongs. The clip starts right there. The floating 3D bars behind the welcome page are gone from that page; they fade in as the tour begins. That night they were removed from every page. Collage plus bars made the first screen busy.
 
 ![One welcome card lifts, spins and lands as the phone mockup — at the tap, 0.55 s, 0.75 s, and landed](/blog/timetable-feature-intro/hero-flight.png)
 
@@ -204,6 +204,12 @@ The last frame had the same problem. The ending page holds the clip's final fram
 
 The period chapter's copy was trimmed the same day. The headline names two modes, by period and by time, and now both words carry the highlighter band instead of only the first. The first caption is down to one sentence. Two sheets that appear in the clip had changed shape, so the whole clip was recorded again.
 
+## 2026-10-11 night — The 3D bars and the replay hint are gone
+
+The tour has one less moving thing. The 3D bars and dots that drifted along the edges behind the tour and the ending are removed, and the background is the plain app surface. They were there to carry the store artwork into first launch, but next to a phone mockup playing the real app, motion at the edges competed for attention. What moves now is the clip and the welcome collage.
+
+The ending page no longer says the tour can be replayed from the menu. That menu row exists only while the tour is being tuned and is hidden in release builds, so the hint would point at a row that is not there. The caption chip fades out on the ending page but keeps its space, because collapsing it would drop the phone above it.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -215,3 +221,4 @@ The period chapter's copy was trimmed the same day. The headline names two modes
 - 2026-10-11 midday — fourth welcome column (event editor, Hyewon time grid, print) overflowing the frame to fill the top-right corner the tilt left bare
 - 2026-10-11 afternoon — no 3D bars on the welcome page · one flowing card spins a full turn into the phone mockup · school finishes on the built-in red · period chapter runs time → period and adds the missing class · removal transitions are never chosen by state
 - 2026-10-11 evening — dismissing tap moved off the Delete Event button to empty space under the header · period chapter copy trimmed, both headline keywords banded · clip re-recorded with the updated sheets · finger removed from the ending frame
+- 2026-10-11 night — 3D bars and dots removed from the tour and ending backdrop · replay hint removed from the ending page, since release builds hide that menu row
