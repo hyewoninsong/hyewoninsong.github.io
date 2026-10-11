@@ -1,6 +1,6 @@
 ---
 title: "A sheet that popped in instead of sliding up — measuring its height was cancelling the transition"
-date: 2026-10-08T19:12:45+09:00
+date: 2026-10-11T14:50:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui"]
 summary: "A content-sized sheet had no present animation. Its height was being rewritten twice while it was still rising, and getting the initial estimate right does not fix it."
@@ -113,7 +113,19 @@ Expanding a wheel used to grow the sheet. Now the sheet stays put and scrolls ju
 
 There is a cost. Short sheets such as New timetable leave empty space below. The display sheet covers about 50% of the screen instead of 77%, so more timetable shows and the lower cards need a scroll. A content-fitted height still looks better. It cost three pitfalls in two days.
 
-A test guards it: any `.height`, `.fraction` or `.custom` detent in the source fails. The period-based wheel scroll and iPad were not captured this time.
+A test guards it: any `.height`, `.fraction` or `.custom` detent in the source fails (three days later numeric literals were allowed again — see below). The period-based wheel scroll and iPad were not captured this time.
+
+## 2026-10-11 — The thing to ban was a moving value, not a number
+
+The style confirmation sheet from the table above came back three days later. It is the sheet that asks "four more events share this style, change them too?" when you save a title or colour. It holds a before/after block pair, one line of text and two buttons, and at `.medium` the blocks swallowed the spare height and grew past 120pt. A small confirmation had become half the edit sheet.
+
+There is no step below `.medium`. So the rule got a second reading. All three pitfalls shared the condition "the detent changes while the sheet is up", and what changed it was a measurement or arithmetic derived from one. A detent written as a number in code, `.height(340)`, is as fixed as `.medium`. The ban belonged on computed detents, not numeric ones.
+
+The rule was narrowed: `.height` built from a variable, a constant or an expression, `.custom`, and the measuring helpers stay banned; a numeric literal is allowed for sizes below `.medium`. The source scan changed from "any `.height` fails" to "any `.height` whose argument is not a numeric literal fails". Constants are banned too — on one line a constant looks the same as a computed value, and the day it starts receiving a measurement the test would still pass.
+
+![The batch-change confirmation sits on the edit sheet as a small window with both blocks, the line and the two buttons in view](/blog/timetable-sheet-detent-present/fixed-340-confirm.png)
+
+The number was added by hand: navigation bar 44, two lines of text, two buttons 108, spacing, home indicator 34, about 285, plus room for a one-line title in the blocks, 340. The blocks are capped at two lines with less vertical padding. Sheets whose content changes still use `.medium` and `.large` only; when a number no longer fits the content the answer is scrolling, and the moment the number starts following the content, the 2026-10-08 condition is back.
 
 ## History
 
@@ -121,3 +133,4 @@ A test guards it: any `.height`, `.fraction` or `.custom` detent in the source f
 - 2026-10-08 — Height changes while open jumped. Old and new heights share the set and the selection moves a tick later.
 - 2026-10-08 — Sheets taller than the screen shrank and grew back. Heights over the screen limit collapse to `.large`.
 - 2026-10-08 — Measured-height detents removed. Every sheet uses `.medium` or `.large` only.
+- 2026-10-11 — Ban narrowed to computed detents. Numeric literals allowed below `.medium`; the style confirmation sheet is 340pt.
