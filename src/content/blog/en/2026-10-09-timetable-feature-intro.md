@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T21:08:33+09:00
+date: 2026-10-11T22:50:27+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -210,6 +210,16 @@ The tour has one less moving thing. The 3D bars and dots that drifted along the 
 
 The ending page no longer says the tour can be replayed from the menu. That menu row exists only while the tour is being tuned and is hidden in release builds, so the hint would point at a row that is not there. The caption chip fades out on the ending page but keeps its space, because collapsing it would drop the phone above it.
 
+## 2026-10-11 night — The flying card froze where it lifted
+
+On a real device, now and then, tapping Continue left one collage card hovering in place. The tour text appeared, the phone mockup did not, and Next changed nothing.
+
+The structure was the problem. While the card is in the air the phone is hidden and the clip is paused, and the card only lands at the end of a chain: lift, scene change, then the new page reporting the phone's frame through `onGeometryChange`. Miss one link and the card stays up forever. A decoration was holding the gate to the real content.
+
+I could not find which link dropped; six back-and-forth runs in the simulator never showed it. A debug switch that blocks only the landing reproduces the reported screen exactly, so the fix does not depend on the cause. If the card is still up two seconds after lifting, it is removed and the phone appears. A normal flight takes 0.9 s, so the timer usually does nothing. The geometry callback now only records the frame, and the landing starts on the next run-loop turn.
+
+Every check so far had asked whether the card flies well. None asked what happens when the signal never comes.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -222,3 +232,4 @@ The ending page no longer says the tour can be replayed from the menu. That menu
 - 2026-10-11 afternoon — no 3D bars on the welcome page · one flowing card spins a full turn into the phone mockup · school finishes on the built-in red · period chapter runs time → period and adds the missing class · removal transitions are never chosen by state
 - 2026-10-11 evening — dismissing tap moved off the Delete Event button to empty space under the header · period chapter copy trimmed, both headline keywords banded · clip re-recorded with the updated sheets · finger removed from the ending frame
 - 2026-10-11 night — 3D bars and dots removed from the tour and ending backdrop · replay hint removed from the ending page, since release builds hide that menu row
+- 2026-10-11 night — flying card could freeze between welcome and tour: two-second watchdog, geometry callback only records, debug switch to force the stuck state
