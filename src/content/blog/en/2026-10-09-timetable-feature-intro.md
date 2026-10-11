@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T03:21:48+09:00
+date: 2026-10-11T13:20:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -144,6 +144,18 @@ That uncovered one more thing. Frames from the re-recorded clip showed no finger
 
 Four re-recordings that day, three of them for the finger. Each one was found by pulling frames; the test passed every time.
 
+## 2026-10-11 — The top-right of the tilted grid was empty
+
+Opening the welcome page again from the replay menu, the top-right corner looked bare. Tilting the whole nine-card grid nine degrees pushes its right edge upward, so the grid's top-right corner barely reaches the screen edge and the background shows past the rounded corner and shadow of the third column. With the grid drifting upward, the gap breathes.
+
+![The welcome page — bare background above and right of the Ria card](/blog/timetable-feature-intro/welcome-top-right-empty.png)
+
+The fix is one more column on the right: three cards (the event editor, Hyewon's time-based grid, the print screen) cropped from store captures the same way. The point is that the original nine do not move. The grid frame keeps the three-column width, aligned top-leading, and the fourth column **overflows** it to the right. Rotation centre and scale are unchanged, so the nine cards stay exactly where they were and the new column only fills the corner the tilt lifted; its lower part is clipped off-screen. It is shifted further up than the third column so it reaches the corner.
+
+![The welcome page — Hyewon's colourful grid now fills the top-right, with the print screen's close button below it](/blog/timetable-feature-intro/welcome-fourth-column.png)
+
+Three alternatives lost. Widening the frame to four columns and centring it moves the rotation centre right, shoving all nine cards left and cutting the first column. Shrinking the cards to fit four columns makes the captures unreadable. Reducing the tilt or scaling up: the tilt is the whole point borrowed from the reference onboarding, and more scale pushes cards down into the headline.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -152,3 +164,4 @@ Four re-recordings that day, three of them for the finger. Each one was found by
 - 2026-10-10 — Four looping clips became one clip with auto-advancing chapters, an ending page, the list chapter ahead of periods, and end seeks at duration − 0.1 s
 - 2026-10-11 — Idle gaps capped at one second (103 s) · seconds remaining per chapter · ending with a tilted phone and the app icon · three-card welcome collage
 - 2026-10-11 evening — Hyewon and Insong user timetables · nine-card tilted-grid welcome (no status bar, white borders, no widgets) · persistent finger, also over sheet windows
+- 2026-10-11 midday — fourth welcome column (event editor, Hyewon time grid, print) overflowing the frame to fill the top-right corner the tilt left bare
