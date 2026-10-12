@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-11T22:50:27+09:00
+date: 2026-10-12T10:20:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -216,9 +216,23 @@ On a real device, now and then, tapping Continue left one collage card hovering 
 
 The structure was the problem. While the card is in the air the phone is hidden and the clip is paused, and the card only lands at the end of a chain: lift, scene change, then the new page reporting the phone's frame through `onGeometryChange`. Miss one link and the card stays up forever. A decoration was holding the gate to the real content.
 
-I could not find which link dropped; six back-and-forth runs in the simulator never showed it. A debug switch that blocks only the landing reproduces the reported screen exactly, so the fix does not depend on the cause. If the card is still up two seconds after lifting, it is removed and the phone appears. A normal flight takes 0.9 s, so the timer usually does nothing. The geometry callback now only records the frame, and the landing starts on the next run-loop turn.
+I could not find which link dropped that night (found the next day, see below); six back-and-forth runs in the simulator never showed it. A debug switch that blocks only the landing reproduces the reported screen exactly, so the fix does not depend on the cause. If the card is still up two seconds after lifting, it is removed and the phone appears. A normal flight takes 0.9 s, so the timer usually does nothing. The geometry callback now only records the frame, and the landing starts on the next run-loop turn.
 
 Every check so far had asked whether the card flies well. None asked what happens when the signal never comes.
+
+## 2026-10-12 — The cause was a revived view
+
+The report came back with one more detail: it happens when you flick **quickly** between the welcome page and the first tour page.
+
+Continue clears the last known phone frame and waits for the tour page to report a new one through `onGeometryChange`. But if you go back and tap Continue again before the 0.4 s removal transition finishes, SwiftUI does not build a new tour page. It revives the one that was leaving. Same view, same frame, so the callback never fires again, and the card waits for a value that is not coming.
+
+![A tilted collage card hovering over the tour text with no phone mockup](/blog/timetable-feature-intro/hero-card-stuck.png)
+
+That is also why clicking in the simulator never showed it: the gap has to be under 0.4 s. So the app now presses its own buttons. A debug argument sends Continue, Back 0.4 s later, then Continue again after a given number of milliseconds. Run at 0 and 150 with screenshots from launch, it showed the card stuck for two seconds until the watchdog removed it.
+
+The fix is to put a flight number into the reported value. Same frame, different flight, different value, so the callback fires. The landing completion and the watchdog use the same number to clean up only their own flight.
+
+One guess was wrong. I first blamed `onChange` keyed on the card's slot. Reverting only that and rerunning the probe did not freeze, so it stays as hardening, not as the cause.
 
 ## History
 
@@ -233,3 +247,4 @@ Every check so far had asked whether the card flies well. None asked what happen
 - 2026-10-11 evening — dismissing tap moved off the Delete Event button to empty space under the header · period chapter copy trimmed, both headline keywords banded · clip re-recorded with the updated sheets · finger removed from the ending frame
 - 2026-10-11 night — 3D bars and dots removed from the tour and ending backdrop · replay hint removed from the ending page, since release builds hide that menu row
 - 2026-10-11 night — flying card could freeze between welcome and tour: two-second watchdog, geometry callback only records, debug switch to force the stuck state
+- 2026-10-12 — cause found: a revived tour page never re-reports the phone frame · flight number in the measured value · debug argument that drives the fast back-and-forth
