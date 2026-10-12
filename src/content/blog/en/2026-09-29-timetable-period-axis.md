@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-11T03:30:00+09:00
+date: 2026-10-12T19:58:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -10,11 +10,11 @@ School timetables are read as "Period 2", not "10:00". New timetables now start 
 
 ## You set the periods; the rows stack at equal height
 
-A new period timetable opens the display sheet, where a period-rules card takes the place of the time range (since Oct 3 — before that a "Periods" row led to a separate editor; see the last update). The default is seven 50-minute periods with 10-minute breaks and no lunch (since Oct 11 — before that it included an hour of lunch after period 4; see the last update). You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
+A new period timetable opens the display sheet, where a period-rules card takes the place of the time range (since Oct 3 — before that a "Periods" row led to a separate editor; see the last update). The default is seven 60-minute periods with no breaks and no lunch (since Oct 12 — before that 50-minute classes with 10-minute breaks, and lunch left on Oct 11; see the last update). You don't set periods one by one: pick when the first period starts, the class, break and lunch lengths, and how many periods — they fill in (see the Sep 30 update; the per-period drag editor described in earlier updates is gone).
 
 ![Period axis grid — seven equal rows, one event spanning periods 2–3 on Monday](/blog/timetable-period-axis/period-grid.png)
 
-Each period is one equal-height row labeled with its name and times. Long-press and drag to create an event as before; it snaps to period boundaries. Dragging across periods 2–3 above saves an event from 10:00 to 11:50. Moving and resizing work in half periods (whole periods until the Oct 3 update below).
+Each period is one equal-height row labeled with its name and times. Long-press and drag to create an event as before; it snaps to period boundaries. Dragging across periods 2–3 above saves an event from 10:00 to 11:50. Moving and resizing work in half periods when the timetable has no breaks, and in whole periods when it does (whole for everyone until Oct 3, half for everyone until Oct 12 — see both updates below).
 
 ## Why equal rows, and why not minutes
 
@@ -240,7 +240,7 @@ The checks must cover an irregular day: save without editing, open a wheel witho
 
 ## Update, Oct 3 — half periods, for 75-minute classes
 
-University timetables mix 50-minute and 75-minute classes. Counted in 50-minute periods, a 75-minute class is 1.5 periods, and period timetables had no way to draw it. The period grid now snaps to **half periods**: creating, moving and resizing all work in half rows.
+University timetables mix 50-minute and 75-minute classes. Counted in 50-minute periods, a 75-minute class is 1.5 periods, and period timetables had no way to draw it. The period grid now snaps to **half periods**: creating, moving and resizing all work in half rows. (Since Oct 12 this holds only for timetables without breaks — see that update.)
 
 ![Unlocked period grid — each period row is twice its locked height](/blog/timetable-period-axis/half-period-edit-rows.png)
 
@@ -733,6 +733,29 @@ The end of the grid and lunch now follow one rule, and skipping past lunch is go
 
 Sending a fully overlapping copy to the next day lost: it changes what "duplicate" means, and long-pressing the button already offers other days. Covered by unit tests, not yet checked on screen.
 
+## Update, Oct 12 — with breaks between periods there are no half periods, and a new period timetable starts as a university one
+
+Half periods came in on Oct 3 for 75-minute university classes. Put one on a school timetable with breaks and the arithmetic goes odd: a class from period 1 lasting 1.5 periods and a class from period 1.5 lasting 1 period both end mid-period 2, but with 50-minute classes and 10-minute breaks the first is 85 minutes and the second 60. "One period long" means different minutes depending on where you start. And no school has a class starting 25 minutes into a period.
+
+University timetables, where half periods are common, have no breaks at all. Period 1 is 9:00–10:00, period 2 is 10:00–11:00: a period is a one-hour slot and a 50-minute lecture just leaves the last ten minutes empty. Half a slot is exactly 30 minutes, and every edge lands on :00 or :30.
+
+So the rule is now: **with breaks, edges sit on period lines and lengths are whole periods; without breaks, half periods as before.** Double periods still cross a break — that is the most common shape in a school — only edges on half lines are gone.
+
+| | No breaks (university) | Breaks (school) |
+|---|---|---|
+| Drag, resize, minimum | half a period | one period |
+| Start wheel | P1 · P1.5 · P2 … | P1 · P2 · P3 … |
+| Length wheel | half-period steps | whole-period steps, counting the breaks in between |
+| Edit-mode stripes | lower half of each row | alternate rows |
+
+The default rules changed with it: **60-minute periods, no breaks, no lunch.** A new timetable starts as a time timetable and switches to periods in settings, so these defaults are the first thing every period timetable looks like. University users keep them; school users type 50-minute classes and 10-minute breaks and the grid switches to whole periods.
+
+### The half-height lunch row broke whole-period snapping
+
+The lunch row has been half a row since Oct 8, so periods after lunch start at virtual minute 270, 330 and so on. Snapping to multiples of 60 put every post-lunch block half a row off. Rather than make lunch a full row again, the axis now owns a list of **lines** (row boundaries, plus row midpoints when half periods are allowed), and both the grid and the drawing quantization snap to the nearest line — ties go backward for a start and forward for an end. A 25-minute class in either half of period 1 becomes period 1; one running from period 1.5 to mid-period 2 becomes periods 1–2.
+
+Existing half-period events on a timetable with breaks settle onto period lines when it opens, as saved values have since Oct 9. Raising the break from 0 to 10 minutes in settings shows the result live, and the confirm alert adds a line saying how many events will be aligned to whole periods; X still reverts everything. Eleven tests that asserted half periods on 50/10 fixtures moved to break-free fixtures, and new ones pin the whole-period behavior. Not yet checked on a simulator screen.
+
 ## History
 
 - Sep 29, early — period axis introduced
@@ -774,3 +797,4 @@ Sending a fully overlapping copy to the next day lost: it changes what "duplicat
 - Oct 10 — lunch "None" moved from the length wheel to the top of the position wheel (length now starts at 5 min) · the length pill is hidden when there is no lunch · switching lunch off and on in the position wheel restores the previous length
 - Oct 11 — a duplicate whose tail crosses lunch now ends at lunch instead of skipping it (partly reversing Oct 9) · lunch removed from the default rules (9:00–15:50), with the lunch-row switch on by default
 - Oct 11, afternoon — a blocked duplicate keeps its length and backs up from the end of the grid or lunch, landing on the original when there is no room · skipping past lunch removed (reversing the morning's shortening and the Oct 9 skip)
+- Oct 12 — timetables with breaks have no half periods (drag, minimum, wheels all in whole periods; narrows Oct 3 to break-free timetables) · snapping to the axis's lines instead of multiples (post-lunch period lines) · confirm alert line when breaks are added · defaults 60-minute periods, no breaks, no lunch (9:00–16:00)
