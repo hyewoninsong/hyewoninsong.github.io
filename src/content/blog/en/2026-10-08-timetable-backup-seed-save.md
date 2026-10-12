@@ -1,6 +1,6 @@
 ---
 title: "On a new device, the first launch was erasing the backup before offering to restore it"
-date: 2026-10-13T03:31:14+09:00
+date: 2026-10-13T04:57:26+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Before the app could offer to restore, the empty timetable it creates on first launch had already replaced the iCloud backup. Two reasonable rules met at the seed save."
@@ -91,7 +91,44 @@ A write/read round trip cannot exercise these sequences. Start with a healthy re
 
 These are changes under review. Controlled temporary-file checks are not evidence of validation against a live iCloud account. Protecting the only recovery copy requires checking what can still write after a read or transfer has stopped halfway.
 
+## October 13, 2026 — The same question, widened to the save file and mode switching
+
+A second review the same day took the same worry through the whole codebase: whether period-based timetables could corrupt the save file, what breaks when switching between period and time mode, and whether there were more ways to lose the iCloud backup. The confirmed findings shipped as one change. Its backup protection draws the line slightly differently from the proposal above; review decides which stays.
+
+### Define protection by what releases it, not by what arms it
+
+Following the "existing device fails to read" case above into code, the mechanism was short. The protection flag was only set when there was no save file *and* the first-run offer had not been answered. That is: fresh installs only. On a device that had answered the offer once, a corrupt file was quarantined, a default timetable was created and saved, and with no previous write to wait on, the backup was replaced immediately.
+
+The fix lives in the file loader. A read failure, a whole-file quarantine, and a partially decoded file now raise one signal, and that signal re-arms protection regardless of the first-run answer. The offer appears with different wording: there was a problem reading your timetables; if you don't restore, the current state becomes the next backup. Choosing "Not now" there does restart backups from the current state, because the user answered that sentence. The proposal above does not read "Not now" as consent. That one line is the difference between the two.
+
+### Missing on disk is not missing in iCloud
+
+On a new device, iCloud delivers the file list before the file contents. Meanwhile the folder holds a `.icloud` placeholder or nothing at all. Reading that as "no backup" releases protection and brings back the first-launch loss.
+
+With a placeholder present, the app starts the download and answers "unavailable". With nothing present it asks iCloud through `NSMetadataQuery` and releases protection only on a confirmed absence. No answer (offline, 20-second timeout) keeps protection and asks again next launch. The grid re-evaluates the offer when an answer arrives, and retries six times at five-second intervals while protection is pending with no answer.
+
+One thing bit here. Notifying the grid on "unknown" made it ask again, get "unknown" again, and notify again. The test host is the real app, so the grid was live, and with the synchronous probe the tests inject this became infinite recursion that hung the test process. In production it would have re-asked every 20 seconds forever. "Unknown" no longer notifies, and re-probing waits 60 seconds. A hung test was the tell for a production waste.
+
+### A load that rewrites stored values bumps the version even without new fields
+
+The save-file finding was not a crash but a missing copy. A period timetable settles each event's stored time onto the period grid at every launch and saves if anything moved. That rule changed twice, on October 9 (stored value equals shown time) and October 12 (axes with breaks have no half-periods), and both shipped without a version bump because no field was added.
+
+But the one-shot copy taken before migration runs only on the first load after the version changes. Same version, no copy. The October 12 rule merges two classes that sat in the front and back half of one period into a single slot, and nothing anywhere could undo that. The version is now 15. Nothing migrates; the bump exists so an older device's first load keeps a copy before the rewrite. As a rule: the save version is a generation of what load does to the file, not of the file's shape.
+
+Silent fallbacks got reports while we were there. A broken period list opened as a time timetable and the next save erased the periods, with nothing logged to match a "my periods vanished" complaint against. And 24 periods with a lunch cell pushed the virtual axis to 1,470 minutes against a 1,440 clamp; at the maximum period count the cell is simply not drawn.
+
+### Overlaps stay; alarms are pinned
+
+Mode switching produced three findings. Going time → period → time shrank a 6–22 visible range to 9–16, because period mode overwrote the range with the period span and the way back only widened from there. The range is now remembered alongside the period list and restored on return.
+
+Adjacent classes overlapping was left alone. On a 60-minute, no-break axis, settling 9:00–9:45 and 9:45–10:30 sends the end 9:45 up to 10:00 and the start 9:45 down to 9:30 (ties round outward), a 30-minute overlap. Changing the tie rule moves other cases instead. Overlaps show as hatching and that is acceptable. What got pinned by a test is that alarms fire at each class's settled start, period 1 and period 1.5, because an alarm that disagrees with the block on screen reads as "it didn't ring".
+
+### Where it stands
+
+The simulator still cannot show a backup arriving late from iCloud. The probe was injected to check the three answers, found, absent and unknown, one by one. Opening the app right after signing in on a new device and timing the offer remains a hardware task.
+
 ## History
 
 - October 8, 2026 — Hold backup writes before a fresh install creates its default timetable.
 - October 13, 2026 — Preserve nested decode failures, hold backups after local recovery loss, protect undownloaded backups, and keep the newest queued snapshot through unavailable periods.
+- October 13, 2026 — Lossy-load protection, metadata-confirmed absence, save version 15, remembered visible range, overlaps kept with alarms pinned (second review).
