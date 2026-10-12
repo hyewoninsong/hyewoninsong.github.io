@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-09-26T14:30:00+09:00
+date: 2026-10-12T14:14:11+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -60,3 +60,26 @@ The poster frame moved too. The still shown before playback was the 22-second ma
 Neither change can reach the live 1.0.1 listing. Once a version is on sale, even a request that only changes the poster time code is rejected as not acceptable for the current resource state. The next version inherits the old previews, so the upload script gained a mode that deletes them and uploads the new set.
 
 Both were missed for the same reason: we checked the file and the processing state, never the video inside a store card. Now a frame goes into an 886×1925 black card before upload, and the poster is chosen before release.
+
+## 2026-10-12 — Re-recording for the new UI, and two ways the recording was quietly wrong
+
+By then the video had changed once more: the set shipped at the end of September sits on a white ground with a black-bezel phone mock-up, and the six scenes end with duplicate/delete and undo/redo instead of a timetable swipe. The app's toolbar, colour editor and duplicate rule had moved since, so the Korean preview was recorded again. Same scenes, same captions, new footage — one compose command, in theory. It took five recordings.
+
+The first run passed and produced 14 of 25 markers. The style and batch-edit scenes were simply gone. The test found the "School" block by searching for its title text, and the block's accessibility had changed in the meantime: to make VoiceOver read the day and time, each block became one `.accessibilityElement(children: .combine)`, which removes the title `Text` from the accessibility tree. The query returned nothing, and the branch written to skip when the block is missing skipped both scenes without a word. Capture tests are compiled but belong to no test plan, so the accessibility change turned nothing red. The block is now located by its own identifier and label prefix, and the marker count is checked against the plan before composing — "passed" proves nothing in this test.
+
+From the second run the markers were complete but the cut was wrong: the home screen where the duplicate scene should be, undo inside the batch-edit scene. In the raw footage the early scenes matched and the later ones ran ahead of the markers — the confirmation sheet logged at 186 s appeared at 172 s, the app quit at 202 s against a marker at 216 s. The file was as long as the wall clock; the missing 14 seconds sat at the end as home screen. The machine was running other jobs at a load average of 70–110, the test took 193 s instead of its usual 72, and one hue-bar drag alone took 51 s. The recorder's media clock did not follow those stalls.
+
+A single offset would not fix it: zero at 56 s, one second at 76 s, 2.4 at 127, 4.6 at 146, and not a constant ratio either. The recording made when the one-minute load dropped to 17 lined up at the usual 0.4–1.7 s per tap type.
+
+One seam moved after composing. The batch confirmation range ended at marker +2.05 s, and in this recording the sheet started to dismiss at +1.9 s, leaving the last frame half-way down and the next frames with the lime strip from the section above.
+
+![Right after the batch confirmation sheet closes — a cut ending at +2.05 s leaves the sheet's top edge as a lime strip (left); +1.6 s is clean (right)](/blog/timetable-promo-video/sheet-edge-residue.png)
+
+Ending at +1.6 s jumps from the still sheet straight to the grid. At 2 fps the strip looked like the toolbar shadow; only a 260 px crop of the bottom, frame by frame, showed it.
+
+Three checks now come before trusting a recording: a test that takes more than twice its last duration, a raw frame at the last marker that is not the app, or a home-screen tail of 15 seconds instead of two. Any one of them means re-record on a quieter machine, not correct.
+
+## History
+
+- 2026-09-26 — First video; the same day, black ground for the store-card letterbox and the poster moved to 1.5 s.
+- 2026-10-12 — Korean re-recording for the new UI. Block lookup broken by accessibility `.combine`; recorder clock drifted up to 14 s under load. Confirmation cut end +2.05 → +1.6.
