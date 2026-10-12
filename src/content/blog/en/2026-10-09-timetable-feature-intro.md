@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-12T10:20:00+09:00
+date: 2026-10-13T00:55:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -49,7 +49,7 @@ All three were found by pulling frames from the video, not from test results. A 
 
 The tour appears automatically only on a fresh install. For now there is also a "Replay Feature Tour" row in the menu, behind a build flag. The clips are light mode only, so in dark mode the mockup still shows a light app — it is a video.
 
-Only the Korean clips ship first. Checking them on a real device before recording the other seven languages saves re-recording; until then, other languages get their own headlines and captions over the Korean app footage. The earlier foreign-language clips from the old three-page scenario were removed rather than left in: a clip that disagrees with its captions plays without any warning, so none is better than wrong.
+Only the Korean clips shipped at first; checking them on a real device before recording the other seven languages saves re-recording. English arrived on 2026-10-12 (below). The earlier foreign-language clips from the old three-page scenario were removed rather than left in: a clip that disagrees with its captions plays without any warning, so none is better than wrong.
 
 ## 2026-10-10 — The clip froze after leaving the app and coming back
 
@@ -106,7 +106,7 @@ Two alternatives lost. Keeping one clip per page and auto-advancing at the end s
 
 The probe caught one thing. Pressing Next in the last chapter landed on the ending page with the computer-science timetable still showing instead of the finished week. The jump sought to the clip's exact duration, where there is no frame, so `AVPlayerLayer` kept the old picture. Reaching the end naturally was fine because the last frame had already been drawn; only the manual jump was wrong. The end is now 0.1 s before the duration, a unit test checks that an end seek stops short of it, and the probe keeps screenshots of all four ways to reach the ending. One more: right after a seek the periodic observer delivers one sample from before the jump, which flashed the old caption back, so samples are dropped until one arrives near the target.
 
-The clip is still Korean only; the other seven languages get their own headlines and captions over the Korean footage.
+At this point the clip was Korean only; the English recording arrived on 2026-10-12.
 
 ## 2026-10-11 — Idle gaps cut, seconds remaining shown, and an ending with some weight
 
@@ -234,6 +234,32 @@ The fix is to put a flight number into the reported value. Same frame, different
 
 One guess was wrong. I first blamed `onChange` keyed on the card's slot. Reverting only that and rerunning the probe did not freeze, so it stays as hardening, not as the cause.
 
+## 2026-10-12 night — An English recording, and a check that had been off
+
+Until now there was one clip, recorded in Korean. An English user read "Just Drag" above a phone typing a Korean word. The strings, the recording test and the sample timetables were already per-language; only the recordings were missing, so we recorded all seven other languages, about 130 s each.
+
+![End frames of the eight clips — the same finished week in each language](/blog/timetable-feature-intro/eight-languages.png)
+
+### Eight recorded, two kept
+
+Each clip is 2.6 MB. Seven more would add 18.7 MB to the bundle, HEVC that the App Store cannot shrink further, and a user watches one of them, once. The next morning's call: **ship Korean and English, and every other locale plays the English clip.** A Japanese caption over "Choose Style" is a mismatch, but a smaller one than Korean footage, and English reads everywhere. The bundle grows by 2.6 MB.
+
+Three alternatives lost: re-encode all eight at a lower resolution (about half the size, quality to be checked by eye); bundle English only and download the user's language on first run (smallest, but first run needs a network); and replace the video with the real app driven by a script inside the mockup. The last one fails because the editor sheet, style popover, list and keyboard are full-window system presentations that cannot be confined to a small phone frame, so they would have to be redrawn, which is the mockup we threw away on October 9. A test now requires exactly two clips: a missing one falls back silently, an extra one costs 2.6 MB.
+
+### The test passed and the last frame was the home screen
+
+The recording test logs a timestamp before each action and the clip is cut at those marks. Under load the recorder's clock runs ahead of the wall clock, so marks and picture drift apart. The promo pipeline has a check for that: the last scene change (app closing to the home screen) must sit within 1.5 s of the end mark.
+
+The tour recording reuses that script, but the check looked for a mark named `end` and this test ends with `tour_end`. It failed every time with "no end mark", and the wrapper only looked for `passed`. A check that always fails and is always ignored is no check.
+
+Once the name matched, two clips were rejected: French was 5.3 s off, Portuguese 4 s. Their last frame, the one the ending page holds in the phone mockup, was the simulator home screen.
+
+![Left: last frame of a drifted recording. Right: the re-recorded one](/blog/timetable-feature-intro/drift-home-end.png)
+
+(Neither clip ships in the end, but the check had been off.) The cause was video compositing from another job on the same machine. The rejected takes started with a one-minute load average of 6–17, under the gate, while the five-minute average was near 100. Load at the start is a precondition, not a verdict. The seven kept recordings all land at +0.75 to +1.05 s, the length of the app's closing animation.
+
+The welcome collage stays Korean: its cards shrink text to 2–5 pt.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -248,3 +274,5 @@ One guess was wrong. I first blamed `onChange` keyed on the card's slot. Reverti
 - 2026-10-11 night — 3D bars and dots removed from the tour and ending backdrop · replay hint removed from the ending page, since release builds hide that menu row
 - 2026-10-11 night — flying card could freeze between welcome and tour: two-second watchdog, geometry callback only records, debug switch to force the stuck state
 - 2026-10-12 — cause found: a revived tour page never re-reports the phone frame · flight number in the measured value · debug argument that drives the fast back-and-forth
+- 2026-10-12 night — seven more languages recorded · drift check switched on (it had been looking for the wrong end mark) · two rejected clips re-recorded
+- 2026-10-13 — size (+18.7 MB for eight) → ship Korean and English only, other locales play the English clip
