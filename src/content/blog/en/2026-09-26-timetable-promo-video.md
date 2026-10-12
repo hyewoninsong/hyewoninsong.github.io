@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-10-12T14:14:11+09:00
+date: 2026-10-12T18:14:40+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -77,9 +77,18 @@ One seam moved after composing. The batch confirmation range ended at marker +2.
 
 Ending at +1.6 s jumps from the still sheet straight to the grid. At 2 fps the strip looked like the toolbar shadow; only a 260 px crop of the bottom, frame by frame, showed it.
 
-Three checks now come before trusting a recording: a test that takes more than twice its last duration, a raw frame at the last marker that is not the app, or a home-screen tail of 15 seconds instead of two. Any one of them means re-record on a quieter machine, not correct.
+Two checks now come before trusting a recording: a raw frame at the last marker that is not the app, or a home-screen tail of 15 seconds. Either one means re-record on a quieter machine, not correct.
+
+## 2026-10-12 — Same afternoon: the judgement moved from eyes to the script
+
+Seven more locales were coming, so the recording script now does it. Before recording it reads the one-minute load average and waits while it is above 20. After recording it runs ffmpeg scene detection to find the moment the app quits to the home screen and compares that with the last marker the test logged. More than 1.5 s apart is drift, and nothing gets composed. The marker count is checked against the plan too.
+
+The thresholds were set by running the check on a good and a bad recording, because the first two conditions failed on the good one. The home-screen tail is 0.9 s, not two, and test duration separates nothing: the aligned recording took 124 s, a drifted one 125 s. The "twice the duration" rule above is gone for that reason. One judgement remains, the app-to-home transition against the last marker, +0.5 s on a good recording, which is the length of the quit animation.
+
+One more Korean recording went through the gate at load 9: 27 markers, +0.51 s at the end, the same per-marker delays as before. The load average briefly passed 140 while the simulator booted mid-recording and the result still aligned. Load decides whether to start; the scene transition decides whether to trust.
 
 ## History
 
 - 2026-09-26 — First video; the same day, black ground for the store-card letterbox and the poster moved to 1.5 s.
 - 2026-10-12 — Korean re-recording for the new UI. Block lookup broken by accessibility `.combine`; recorder clock drifted up to 14 s under load. Confirmation cut end +2.05 → +1.6.
+- 2026-10-12 — Load gate and drift judgement moved into the recording script. Duration rule dropped; app-to-home transition against the last marker is the one check.
