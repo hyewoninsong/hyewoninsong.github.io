@@ -1,6 +1,6 @@
 ---
 title: "On a new device, the first launch was erasing the backup before offering to restore it"
-date: 2026-10-13T04:57:26+09:00
+date: 2026-10-13T05:09:39+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Before the app could offer to restore, the empty timetable it creates on first launch had already replaced the iCloud backup. Two reasonable rules met at the seed save."
@@ -93,21 +93,23 @@ These are changes under review. Controlled temporary-file checks are not evidenc
 
 ## October 13, 2026 — The same question, widened to the save file and mode switching
 
-A second review the same day took the same worry through the whole codebase: whether period-based timetables could corrupt the save file, what breaks when switching between period and time mode, and whether there were more ways to lose the iCloud backup. The confirmed findings shipped as one change. Its backup protection draws the line slightly differently from the proposal above; review decides which stays.
+A second review the same day took the same worry through the whole codebase: whether period-based timetables could corrupt the save file, what breaks when switching between period and time mode, and whether there were more ways to lose the iCloud backup. The backup proposal above landed first; this change sits on top of it, adopts it where the two overlapped, and adds only what it lacked.
 
 ### Define protection by what releases it, not by what arms it
 
 Following the "existing device fails to read" case above into code, the mechanism was short. The protection flag was only set when there was no save file *and* the first-run offer had not been answered. That is: fresh installs only. On a device that had answered the offer once, a corrupt file was quarantined, a default timetable was created and saved, and with no previous write to wait on, the backup was replaced immediately.
 
-The fix lives in the file loader. A read failure, a whole-file quarantine, and a partially decoded file now raise one signal, and that signal re-arms protection regardless of the first-run answer. The offer appears with different wording: there was a problem reading your timetables; if you don't restore, the current state becomes the next backup. Choosing "Not now" there does restart backups from the current state, because the user answered that sentence. The proposal above does not read "Not now" as consent. That one line is the difference between the two.
+The proposal above extended protection to existing installs. What this change adds is the **reason**. The file loader raises one signal for a read failure, a quarantine, or a partially decoded file, and protection armed by that signal uses different wording in the offer: there was a problem reading your timetables; if you don't restore, the current state becomes the next backup. Same alert as the "backup from a previous device" offer, but it says what happened. Turning the backup toggle on is still not consent; that decision from the proposal above stands.
 
 ### Missing on disk is not missing in iCloud
 
-On a new device, iCloud delivers the file list before the file contents. Meanwhile the folder holds a `.icloud` placeholder or nothing at all. Reading that as "no backup" releases protection and brings back the first-launch loss.
+On a new device, iCloud delivers the file list before the file contents. Reading that as "no backup" releases protection and brings back the first-launch loss. The proposal above added metadata discovery that waits for the download and never releases on an empty result. Safe, with one leftover: on an account that has never had a backup, **every** fresh install sees "backup check needed" and must tap "Start new backup" in Settings before automatic backups begin.
 
-With a placeholder present, the app starts the download and answers "unavailable". With nothing present it asks iCloud through `NSMetadataQuery` and releases protection only on a confirmed absence. No answer (offline, 20-second timeout) keeps protection and asks again next launch. The grid re-evaluates the offer when an answer arrives, and retries six times at five-second intervals while protection is pending with no answer.
+This change adds one absence condition on top of that discovery: when metadata gathering has finished and five seconds pass with no item, treat the backup as absent and release. A list that arrived without a backup in it, and stayed that way for five seconds, is not a pending download. Offline or an unfinished gather keeps protection. Never releasing versus releasing after five seconds is a policy difference; review decides. Neither reads "missing on disk" as "missing".
 
-One thing bit here. Notifying the grid on "unknown" made it ask again, get "unknown" again, and notify again. The test host is the real app, so the grid was live, and with the synchronous probe the tests inject this became infinite recursion that hung the test process. In production it would have re-asked every 20 seconds forever. "Unknown" no longer notifies, and re-probing waits 60 seconds. A hung test was the tell for a production waste.
+Rejecting a restore when one timetable inside the backup fails to decode was adopted from the proposal above. The first instinct was to restore what reads, but a restore replaces everything, and a partial result leaves the user unable to tell what is gone. Refusing and saying "damaged" is better.
+
+The rest on the backup side is small. Dates carry fractional seconds (two events edited within the same second swapped order after a restore). The container URL is resolved once in the background at launch (every save was calling an API on the main thread that can be slow on first use). An account change drops pending writes and re-arms protection. The background flush was tied to the analytics session timestamp, so a second window could skip it; it is decoupled now.
 
 ### A load that rewrites stored values bumps the version even without new fields
 
@@ -115,7 +117,7 @@ The save-file finding was not a crash but a missing copy. A period timetable set
 
 But the one-shot copy taken before migration runs only on the first load after the version changes. Same version, no copy. The October 12 rule merges two classes that sat in the front and back half of one period into a single slot, and nothing anywhere could undo that. The version is now 15. Nothing migrates; the bump exists so an older device's first load keeps a copy before the rewrite. As a rule: the save version is a generation of what load does to the file, not of the file's shape.
 
-Silent fallbacks got reports while we were there. A broken period list opened as a time timetable and the next save erased the periods, with nothing logged to match a "my periods vanished" complaint against. And 24 periods with a lunch cell pushed the virtual axis to 1,470 minutes against a 1,440 clamp; at the maximum period count the cell is simply not drawn.
+Silent fallbacks got reports while we were there. A broken period list opened as a time timetable and the next save erased the periods, with nothing logged to match a "my periods vanished" complaint against. A string where the kind should be made the app drop the timetable while the widget showed it as time-based; the app now matches the widget. The 24-period-plus-lunch-cell case, where the virtual axis reached 1,470 minutes against a 1,440 clamp, was solved first by the proposal above with a separate grid-coordinate constructor; this change only adds the regression test.
 
 ### Overlaps stay; alarms are pinned
 
@@ -125,10 +127,10 @@ Adjacent classes overlapping was left alone. On a 60-minute, no-break axis, sett
 
 ### Where it stands
 
-The simulator still cannot show a backup arriving late from iCloud. The probe was injected to check the three answers, found, absent and unknown, one by one. Opening the app right after signing in on a new device and timing the offer remains a hardware task.
+The simulator still cannot show a backup arriving late from iCloud. Which way "gather finished plus five quiet seconds" falls on real hardware, and how many seconds after signing in on a new device the offer appears, remain hardware tasks.
 
 ## History
 
 - October 8, 2026 — Hold backup writes before a fresh install creates its default timetable.
 - October 13, 2026 — Preserve nested decode failures, hold backups after local recovery loss, protect undownloaded backups, and keep the newest queued snapshot through unavailable periods.
-- October 13, 2026 — Lossy-load protection, metadata-confirmed absence, save version 15, remembered visible range, overlaps kept with alarms pinned (second review).
+- October 13, 2026 — Lossy-load wording, gather-finished-plus-quiet absence, save version 15, remembered visible range, overlaps kept with alarms pinned (second review, on top of the proposal above).
