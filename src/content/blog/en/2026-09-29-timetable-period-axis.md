@@ -1,6 +1,6 @@
 ---
 title: "A class-period axis for the timetable — real times underneath, period rows on screen"
-date: 2026-10-12T22:49:39+09:00
+date: 2026-10-13T00:10:16+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "When you create a timetable you now pick time-based or period-based. Period timetables stack equal-height rows for Period 1, 2, … and events snap to them as you drag."
@@ -768,13 +768,29 @@ The count had one test: events whose settled value differs from their stored val
 
 The fix splits the count. The axis answers, for one event, "would drawing this cut it at the lunch wall?" using the same two steps the grid uses to draw — quantize to the axis lines, then clip at lunch — so the alert cannot disagree with what the grid shows. The lunch line counts on every axis. The whole-period line still counts only on axes with breaks, and skips events the lunch line already counted. Each event lands in one line.
 
-The alert gained a fourth line: "N schedule(s) spanning lunch will keep only the longer side of it." With nothing deleted the button stays "Continue", and X still reverts everything. Add breaks and lunch in one go and both lines appear.
+The alert gained a fourth line: "N schedule(s) spanning lunch will keep only the longer side of it." With nothing deleted the button stays "Continue", and X still reverts everything. Add breaks and lunch in one go and both lines appear. (These per-cause lines were folded into one sentence a few hours later — see the Oct 13 update.)
 
 ### Why not one broader sentence
 
 "N schedules change because of breaks or lunch" would have been less code. It leaves the university axis silent, and the point of the alert is to say what changes before it does. Dropping the breaks gate instead would also count the quiet cleanup where a 9:10 event from a time timetable settles onto a half-period line — the cleanup this morning decided not to announce. So: lunch line ungated, whole-period line gated as before.
 
 The migration edge-case tests written this morning surfaced it. Pinning where events go across breaks × lunch for time → period, rule changes, period → time and load left one note on the university-plus-lunch row: the model clips, the view does not count. The user hit the wording side on the school axis the same evening. Same root. The rule going forward: a new reason for settling to change a value gets its own line, not a seat in an existing count.
+
+## Update, Oct 13 — the per-cause lines are gone: "N deleted, M repositioned"
+
+Splitting out the lunch line raised the obvious next question: what if everything applies at once? Up to four lines — deleted, shortened to remaining periods, aligned to whole periods because of breaks, cut by lunch — each explaining its cause, with the view keeping every event in exactly one line. The user cut through it: **the cause is the setting you just changed.** Shrink the days and the events outside them go; turn lunch on and the events across it shrink. The alert does not need to say so.
+
+So the three alerts — the time grid's "Delete Out-of-Range Schedules", the period grid's "Change Periods", and "Change Vertical Axis" when switching — keep their titles and share one body: "2 schedule(s) will be deleted and 3 will be repositioned.", with a zero side dropped, then "You can undo or redo this afterward." (true for all three, since each confirm is one undo group; the user asked for the line on all of them), then "Continue?". Buttons as before: red Delete if anything is deleted, otherwise Continue.
+
+### One count, shared with the thing that changes
+
+With no causes to name, one count suffices: events that are not deleted and whose settled value differs from the stored one. Half-period lines vanishing, lunch cutting, a 9:10 from a time timetable landing on 9:00 — all the same number. Only the Oct 3 "shortened to remaining periods" is added separately, because that comes from deleting periods, not from settling.
+
+One more fix came out of it. The alert count called `realize(virtualize(x))` directly, while the settle used by confirm and load has an extra guard that leaves alone events touching no row (a lunch-gap event on an axis with the lunch row off, a night event). Two implementations drift into "1 repositioned" with nothing actually moving. The axis now has one `settled`, and both read it — what is counted is what changes. Events that simply follow a moved period (first period 9:00 → 9:10 shifts everything) are not counted: their moved value already sits on a period line.
+
+### Three reversals in one day
+
+The same spot changed three times today: the breaks line at noon, the lunch line at night, one sentence late at night. The first two were "say precisely what changes and why"; the last was "the user already knows why". On a sheet whose grid previews the result live, the alert's whole job is to count and pause once. A new reason for settling to move an event will not add a line; it falls into the count on its own.
 
 ## History
 
@@ -819,3 +835,4 @@ The migration edge-case tests written this morning surfaced it. Pinning where ev
 - Oct 11, afternoon — a blocked duplicate keeps its length and backs up from the end of the grid or lunch, landing on the original when there is no room · skipping past lunch removed (reversing the morning's shortening and the Oct 9 skip)
 - Oct 12 — timetables with breaks have no half periods (drag, minimum, wheels all in whole periods; narrows Oct 3 to break-free timetables) · snapping to the axis's lines instead of multiples (post-lunch period lines) · confirm alert line when breaks are added · defaults 60-minute periods, no breaks, no lunch (9:00–16:00)
 - Oct 12, night — the confirm alert counts lunch-cut events on their own line ("spanning lunch will keep only the longer side", on every axis) and the whole-period line only counts events on break axes that lunch did not cut — one count had blamed breaks on school axes and said nothing on university axes · migration edge-case tests across breaks × lunch
+- Oct 13 — the three confirm alerts (range, periods, axis switch) share one body: "N deleted, M repositioned" + undo hint + question; per-cause lines (Oct 3 shortened, Oct 12 noon breaks, Oct 12 night lunch) retired; the count reads the same `settled` the confirm uses
