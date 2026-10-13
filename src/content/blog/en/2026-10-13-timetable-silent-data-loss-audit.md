@@ -1,8 +1,8 @@
 ---
 title: "How saved data disappears quietly — eleven holes from one audit"
-date: 2026-10-13T16:30:00+09:00
+date: 2026-10-13T19:51:49+09:00
 app: "timetable"
-tags: ["devlog", "data"]
+tags: ["devlog", "data", "android"]
 summary: "A day spent reading the save-file path and the time/period switch in the timetable app turned up eleven ways user data could change or vanish. None crashed. Every one ended as a success."
 ---
 
@@ -81,8 +81,31 @@ The fix is one guard: the commit function refuses to save from `onDisappear` whe
 
 Two more went in with it. Undoing a period change restores a whole-timetable snapshot, and the snapshot carried the list order, so a reorder made in between snapped back and collided with another timetable. And an event added through Shortcuts was not on the undo stack, so undoing an earlier period change removed it.
 
+## 2026-10-13, night — the Android port keeps the rules and changes three mechanisms
+
+The Android app now closes the same holes. An unreadable save file is kept aside and announced once, a failed save raises one alert, a partly broken timetable file is rejected whole, and a period timetable holds no time outside its periods. Three things were not copied as they are.
+
+| Where | iOS | Android |
+|---|---|---|
+| Recovery after a failed read | restores from a last-good mirror | no mirror; the original is moved aside and that copy is the record |
+| Remembering "announce once" | decided at launch | a marker file in the save folder |
+| Type switch + ✓ as one undo | an undo group | the tap pushes nothing; ✓ pushes the pre-switch timetable once |
+
+The mirror lost on cost: a second write on every save brings its own corruption cases, and the Android app has not launched, so there is no installed base to protect. It comes back if read failures show up in reports.
+
+The marker file exists because of the widget. Android widgets read the save file directly. If the widget reads the broken file first and moves it aside, the next app launch looks exactly like a first run. With only an in-memory flag, the app would save a default timetable and cancel every alarm.
+
+Alarms are left alone in that state. The screen shows an empty timetable, but registered alarms stay until the user changes something and that save succeeds. Selecting a timetable does not count as a change, because a widget tap or a link selects one too. One limit remains: a reboot in this state loses the alarms, since the system clears them and there is nothing readable to re-register from.
+
+Undo was not ported as a group. A grouping API has to be closed on every way out of the sheet (✓, X, back, swipe, alert, process death), and one missed path merges everything after it. The type tap now writes without touching the undo stack, and ✓ applies the rules, deletions and settling in one write, pushing the timetable the sheet opened with. Quit before ✓ and the next launch shows the timetable from before the switch.
+
+The port finished with every group's tests green. The first unfiltered run of all 1,723 found two red: an older test expecting the previous error type, and a new test comparing file bytes that contain a save timestamp. Group runs execute only their own files, so a test in a file no group owned had never run. The procedure is being changed so the last stage runs everything once.
+
+On a device I have seen only that a fresh install launches and relaunches after a force stop. The read-failure alert, alarms after relaunch and reboot, and the save-failed alert rest on tests and code reading; manual cases are filed.
+
 ## History
 
 - 2026-10-13 — save/load and kind-switch audit, eleven holes
 - 2026-10-13, evening — two more from the full suite; off-axis times removed
 - 2026-10-13, final pass — invariant fuzz tests; save-on-disappear bypassing the confirmation
+- 2026-10-13, night — Android port: kept copy instead of a mirror, marker file, one undo without grouping
