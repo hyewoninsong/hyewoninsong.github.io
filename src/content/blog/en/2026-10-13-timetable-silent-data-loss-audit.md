@@ -1,6 +1,6 @@
 ---
 title: "How saved data disappears quietly — eleven holes from one audit"
-date: 2026-10-13T16:08:00+09:00
+date: 2026-10-13T16:30:00+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "A day spent reading the save-file path and the time/period switch in the timetable app turned up eleven ways user data could change or vanish. None crashed. Every one ended as a success."
@@ -62,7 +62,27 @@ Two alternatives lost. Guarding only the edit sheet is small but leaves a block 
 
 The cost is that it cannot be undone; after settling, 19:00 survives only in the backup copy and the original file. So one more path changed with it: tapping "Period" to preview and then "Time" again, without ✓, no longer snaps anything. Only ✓ settles.
 
+## 2026-10-13, final pass — a sheet that saves on close also closes without the user
+
+One more walk over the same three paths, this time with invariants instead of cases. A fixed-seed generator builds random timetables and period rules and checks that what is saved is what loads, that switching kind and back keeps every event and id, and that the events removed by a period-rule change are exactly the ones the alert counted. 40 files, 1,500 switches, 400 rule changes. Storage and counting held; a build with the counter deliberately broken failed in 162 places.
+
+The hole was in the sheet. The timetable settings sheet has no cancel: closing it saves. Only when a narrower range would delete events does it ask first, and it did that by blocking the swipe-to-dismiss gesture. That blocks the user's way out, nothing else.
+
+| How the sheet goes away | Confirmation |
+|---|---|
+| ✓ | shown |
+| Swipe down | blocked, alert shown |
+| A widget or file opens another timetable | **none** |
+| The iPad window resizes and the layout shell changes | **none** |
+
+In the last two, the screen that presented the sheet is rebuilt, and the content's `onDisappear` runs "closed, so save". Narrow the range to 9–18, tap another timetable's widget, and the 7:00 and 22:00 classes are gone without a prompt.
+
+The fix is one guard: the commit function refuses to save from `onDisappear` when the change needs confirmation. It does not cancel either, because sheet content can detach and reattach; doing nothing is the only choice safe in both cases. The gate belonged in the function, not on the gesture. This path was found by reading code and has not been reproduced on a device; the test covers the commit function and a manual case is filed.
+
+Two more went in with it. Undoing a period change restores a whole-timetable snapshot, and the snapshot carried the list order, so a reorder made in between snapped back and collided with another timetable. And an event added through Shortcuts was not on the undo stack, so undoing an earlier period change removed it.
+
 ## History
 
 - 2026-10-13 — save/load and kind-switch audit, eleven holes
 - 2026-10-13, evening — two more from the full suite; off-axis times removed
+- 2026-10-13, final pass — invariant fuzz tests; save-on-disappear bypassing the confirmation
