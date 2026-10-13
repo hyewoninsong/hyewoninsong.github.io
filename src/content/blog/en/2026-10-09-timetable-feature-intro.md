@@ -1,12 +1,12 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-13T12:22:58+09:00
+date: 2026-10-13T14:17:51+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
 ---
 
-Open SuperTimetable for the first time and, before the empty timetable, you get a welcome page, one tour clip that runs through four chapters, and an ending page. Inside a phone-shaped frame an event is created, moved, recolored, timetables are switched, and a line underneath says what is happening. What plays inside the frame is a recording of the real app. The first version was a drawing.
+Open SuperTimetable for the first time and, before the empty timetable, you get a welcome page, one tour clip that runs through four chapters, and an ending page. Inside a phone-shaped frame an event is created, moved, recolored, timetables are switched, and a speech bubble on the screen says what is happening, right where it happens (it began as a line under the phone and moved on 10-13, below). What plays inside the frame is a recording of the real app. The first version was a drawing.
 
 ## Show what the app can do before asking anyone to try it
 
@@ -268,6 +268,22 @@ Creating, duplicating, moving and resizing still get their first explanation. On
 
 The choice follows the video's playback time. Returning to an earlier demonstration restores its instruction, while the repeated section keeps its single caption.
 
+## 2026-10-13 — The caption moved from under the phone to next to the finger
+
+The caption chip under the phone mockup is gone. The explanation now sits on the phone screen as a speech bubble whose tail points at the spot the clip is touching. "Long-press an empty cell and drag…" floats just above the finger on Monday 9:00; when it is time to duplicate, the bubble moves to the Duplicate button. A line under the phone makes the eye travel between video and text; a bubble at the finger reads as "this, now". The phone also grew into the space the chip left.
+
+![First action of the fill chapter — the bubble sits right above the finger pressing Monday 9:00, tail pointing at it; under the phone only the page dots and buttons remain](/blog/timetable-feature-intro/bubble-create-above.png)
+
+The question was where the positions come from. Typing coordinates by hand fails quickly: duplicate and move land on a different day each time, and a re-recording shifts everything a little. The recording test already knows where it taps, so the marks it prints before each action now carry the touch point as a screen fraction. The cutting script adds x·y to the "from this second, this sentence" list, and the app maps the fraction into the mockup's screen. Fractions survive a different recording device.
+
+Three placement rules. Above the touch point by default, 22pt clear of the baked-in finger. Below when there is no room above — the save checkmark, the list-style toggle, the list button. Horizontally the box is pushed inside the screen while the tail keeps pointing at the touch; pressing the time axis at the left edge leaves the box inside and only the tail off-center. Box and tail are one path, so the translucent fill has no seam.
+
+![List chapter — the list-style toggle is at the top of the screen, so the bubble hangs below it with the tail pointing up](/blog/timetable-feature-intro/bubble-search-below.png)
+
+What a sentence is about is not the same as what gets tapped next: "swipe through the cards" points at the middle of the screen where the cards move, not at the list button. In the repeated fill section the sentence stays the same while the bubble follows wherever the current duplicate or move happens.
+
+The bundled Korean and English clips were not re-recorded. The video is unchanged and only the positions were missing, so the same test ran once per language without recording and its logged positions were merged into the existing lists in chapter order. An old list without positions still works — the bubble just sits at the bottom centre without a tail.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -285,3 +301,4 @@ The choice follows the video's playback time. Returning to an earlier demonstrat
 - 2026-10-12 night — seven more languages recorded · drift check switched on (it had been looking for the wrong end mark) · two rejected clips re-recorded
 - 2026-10-13 — size (+18.7 MB for eight) → ship Korean and English only, other locales play the English clip
 - 2026-10-13 — Explain each action once, then keep one caption for the remaining events
+- 2026-10-13 — caption chip removed; a speech bubble on the phone screen points at the touch spot, positions carried by the recording marks as screen fractions
