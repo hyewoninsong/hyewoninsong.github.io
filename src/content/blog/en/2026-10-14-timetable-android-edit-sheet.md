@@ -1,6 +1,6 @@
 ---
 title: "The Android edit sheet was vanishing in a single frame"
-date: 2026-10-14T04:16:02+09:00
+date: 2026-10-14T04:35:36+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Tapping the check mark did not slide the sheet away; it deleted it. The library has no setting for sheet speed, so we place the sheet ourselves, and brought its rows and colours in line with the iPhone sheet while there."
@@ -51,7 +51,7 @@ Touch targets did not shrink: a capsule draws at 34 and still takes touches at 4
 
 ## What is left
 
-The motion and cards started on the edit sheet alone and reached Settings, Timetable Settings and the timetable list the same day (section below). Sheets with a preview, like share and print, still have the old ones. And because the placement leans on how the library positions the sheet, each library upgrade gets a screen recording stepped frame by frame. A screenshot of the settled sheet shows none of these problems.
+The motion and cards started on the edit sheet alone and reached Settings, Timetable Settings and the timetable list the same day (section below). Sheets with a preview, like share and print, moved over later (last section). And because the placement leans on how the library positions the sheet, each library upgrade gets a screen recording stepped frame by frame. A screenshot of the settled sheet shows none of these problems.
 
 ## 2026-10-14 — Settings, Timetable Settings and the list became the same sheet
 
@@ -63,7 +63,7 @@ Choices used to take two lines each: a label, then a full-width segmented button
 
 ### One switch instead of a second set of components
 
-The share, print and calendar sheets use the same cards and rows, and they are still on a white ground where a white card has no edge. So the components were not copied. One value says "this content is on the grey ground"; the cards, dividers, titles, choice rows and header read it and pick their look. No call site changed.
+The share, print and calendar sheets use the same cards and rows, and at that point they were still on a white ground where a white card has no edge. So the components were not copied. One value says "this content is on the grey ground"; the cards, dividers, titles, choice rows and header read it and pick their look. No call site changed.
 
 ### A sheet that stops half way cannot aim for "fully open"
 
@@ -105,8 +105,39 @@ The day row changed too. Switching day used to fade the old cell out while the n
 
 Custom colours still scroll vertically rather than paging twenty at a time as on iPhone; paging would need edge-flipping for the reorder drag.
 
+## 2026-10-14 — Image export, print and calendar export moved over too
+
+Three sheets on the ⋯ menu were left. They now share the grey ground, the white cards, the capsule chips and the same rise and exit.
+
+![The old image export sheet: the preview is a small thumbnail in the middle of the stage](/blog/timetable-android-edit-sheet/export-share-before.png)
+
+![The new image export sheet: the preview fills the width and four chip rows sit in one card on the panel](/blog/timetable-android-edit-sheet/export-share-after.png)
+
+Image export and print have a preview on top and an options panel below. The stage under the preview is one step darker than the panel, so in both themes a lighter sheet floats above. Print's single card became the two the iPhone has: the page (paper, orientation, size, copies per page) and the picture (time format, appearance, text colour, black and white, title).
+
+![The print sheet: four timetables on a landscape A5 page, the "4" chip picked with a blue ring](/blog/timetable-android-edit-sheet/export-print.png)
+
+Calendar export has no preview, so it is a plain form like Settings: grey capsules for dates, capsule chips for the end presets.
+
+![The calendar export sheet: period, schedules and destination as titled white cards](/blog/timetable-android-edit-sheet/export-calendar.png)
+
+### The panel is not glass
+
+On iPhone the panel is translucent and blurs the timetable behind it. Android has no good way to blur what is behind a view, and translucency without blur lets the grid lines run sharply between the option labels. So the panel is opaque, and each card gets a hairline border so its edge reads even though panel and card are close in brightness.
+
+The panel colour has to reach the bottom gesture strip. Painting the whole sheet in the stage colour left a dark band under the panel; the sheet is now the panel colour, and the grabber and title bar paint the stage colour themselves.
+
+### `fillMaxWidth` does not enlarge the picture
+
+The old preview was about 40% of the width, although the code said `fillMaxWidth()`. `Image` defaults to `ContentScale.Fit`, and inside a vertically scrolling column there is no height limit, so the box becomes "screen width by the bitmap's pixel height" and the picture stays at pixel size. The preview bitmap was rendered at one pixel per dp, which is 40% of a 2.6-density screen.
+
+The fix is `ContentScale.FillWidth` plus rendering the preview at device density, as the export already did. The layout values looked right the whole time; only a screenshot showed it.
+
+The lock-screen wallpaper and free-time sheets still have the old look. They share the panel component, which only draws the new look inside a grey-ground sheet.
+
 ## History
 
 - 2026-10-14 — Edit sheet: fixed the one-frame exit, grey ground and white cards
 - 2026-10-14 — Extended to Settings, Timetable Settings and the timetable list; half-height stop
 - 2026-10-14 — Style popover dropping back to the palette on touch, the selection ring that never showed, the popover's look, the sliding day capsule.
+- 2026-10-14 — Extended to image export, print and calendar export; opaque panel; the preview that drew too small.
