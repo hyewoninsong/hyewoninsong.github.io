@@ -1,6 +1,6 @@
 ---
 title: "Tapping a class on a locked timetable now shows its notes"
-date: 2026-10-06T02:45:16+09:00
+date: 2026-10-14T02:38:10+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperTimetable opens locked, so most of the time you are just looking. Tapping a class used to show only its start and end time. Now a card slides up with its color, title, day and time, alerts, and notes."
@@ -64,6 +64,20 @@ The block's position is captured once, at the tap. The Find Free Time grid scrol
 
 ![Find Free Time with a slot selected that runs from late morning to evening. The card sits under the weekday row rather than above the options panel.](/blog/timetable-locked-info/free-time-card-above.png)
 
+## 2026-10-14 — The Android card lets the grid show through too
+
+The Android card had the same content but a different look: an opaque grey surface with a shadow, and Material's default text colors, so the title was a dark blue-grey rather than black. On iPhone the timetable shows through the card; on Android it read as a slab cut out of the grid.
+
+The surface is now translucent — white at 82% in light, black at 72% in dark — so grid lines, time labels, and block colors stay faintly visible. Text uses the same two levels as iPhone: pure black (white in dark) for the title, alerts, and notes; a lighter grey for the day and time line and the sound name. The notes box and the copy button sit on the same grey as iOS `tertiarySystemFill`, and the copy icon is now the app's blue.
+
+![Locked grid in light appearance. The 17:00 label and grid lines show faintly through the card.](/blog/timetable-locked-info/android-translucent-light.png)
+
+![The same screen in dark appearance: translucent black card, white title, lighter grey day and time line.](/blog/timetable-locked-info/android-translucent-dark.png)
+
+The shadow is gone. Under a translucent surface a shadow bleeds through and muddies the whole card, so a hairline border at 12% of the text color defines the edge instead.
+
+It is not iPhone's glass: glass blurs what is behind it, this only tints. Blurring would mean drawing the grid a second time, and the effect does not exist on Android 11 and below. At 82% the text stays clear of whatever sits behind it.
+
 ## What's left
 
 This hasn't been checked on a wide iPad window yet. The card still hides an hour or two of the grid — just not the class you tapped. In the Find Free Time list view the card always sits above the panel.
@@ -73,3 +87,4 @@ This hasn't been checked on a wide iPad window yet. The card still hides an hour
 - 2026-09-29 — Info card for locked taps, tinted notes box, day and time line
 - 2026-10-03 — Time pills removed from locked taps, copy button on the card
 - 2026-10-06 — Card moves under the weekday row when it would cover the selection (Find Free Time card too)
+- 2026-10-14 — Android card: translucent surface, iPhone text colors
