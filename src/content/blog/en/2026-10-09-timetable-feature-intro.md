@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-13T00:55:00+09:00
+date: 2026-10-13T12:22:58+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -260,6 +260,14 @@ Once the name matched, two clips were rejected: French was 5.3 s off, Portuguese
 
 The welcome collage stays Korean: its cards shrink text to 2–5 pt.
 
+## 2026-10-13 — Explain each action once
+
+The opening chapter repeats duplication and movement to fill the remaining days. Its captions kept switching between instructions the viewer had already read.
+
+Creating, duplicating, moving and resizing still get their first explanation. Once the actions repeat, one caption stays through the rest of the chapter: **“Fill in the rest of your week.”** Repeating the instructions added no information; removing them entirely would lose the purpose of the sequence. The caption now describes what is being completed.
+
+The choice follows the video's playback time. Returning to an earlier demonstration restores its instruction, while the repeated section keeps its single caption.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -276,3 +284,4 @@ The welcome collage stays Korean: its cards shrink text to 2–5 pt.
 - 2026-10-12 — cause found: a revived tour page never re-reports the phone frame · flight number in the measured value · debug argument that drives the fast back-and-forth
 - 2026-10-12 night — seven more languages recorded · drift check switched on (it had been looking for the wrong end mark) · two rejected clips re-recorded
 - 2026-10-13 — size (+18.7 MB for eight) → ship Korean and English only, other locales play the English clip
+- 2026-10-13 — Explain each action once, then keep one caption for the remaining events
