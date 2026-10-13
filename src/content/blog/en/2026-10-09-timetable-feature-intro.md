@@ -1,12 +1,12 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-12T10:20:00+09:00
+date: 2026-10-13T16:52:33+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
 ---
 
-Open SuperTimetable for the first time and, before the empty timetable, you get a welcome page, one tour clip that runs through four chapters, and an ending page. Inside a phone-shaped frame an event is created, moved, recolored, timetables are switched, and a line underneath says what is happening. What plays inside the frame is a recording of the real app. The first version was a drawing.
+Open SuperTimetable for the first time and, before the empty timetable, you get a welcome page, one tour clip that runs through four chapters, and an ending page. Inside a phone-shaped frame an event is created, moved, recolored, timetables are switched, and a speech bubble on the screen says what is happening, right where it happens (it began as a line under the phone and moved on 10-13, below). What plays inside the frame is a recording of the real app. The first version was a drawing.
 
 ## Show what the app can do before asking anyone to try it
 
@@ -49,7 +49,7 @@ All three were found by pulling frames from the video, not from test results. A 
 
 The tour appears automatically only on a fresh install. For now there is also a "Replay Feature Tour" row in the menu, behind a build flag. The clips are light mode only, so in dark mode the mockup still shows a light app — it is a video.
 
-Only the Korean clips ship first. Checking them on a real device before recording the other seven languages saves re-recording; until then, other languages get their own headlines and captions over the Korean app footage. The earlier foreign-language clips from the old three-page scenario were removed rather than left in: a clip that disagrees with its captions plays without any warning, so none is better than wrong.
+Only the Korean clips shipped at first; checking them on a real device before recording the other seven languages saves re-recording. English arrived on 2026-10-12 (below). The earlier foreign-language clips from the old three-page scenario were removed rather than left in: a clip that disagrees with its captions plays without any warning, so none is better than wrong.
 
 ## 2026-10-10 — The clip froze after leaving the app and coming back
 
@@ -106,7 +106,7 @@ Two alternatives lost. Keeping one clip per page and auto-advancing at the end s
 
 The probe caught one thing. Pressing Next in the last chapter landed on the ending page with the computer-science timetable still showing instead of the finished week. The jump sought to the clip's exact duration, where there is no frame, so `AVPlayerLayer` kept the old picture. Reaching the end naturally was fine because the last frame had already been drawn; only the manual jump was wrong. The end is now 0.1 s before the duration, a unit test checks that an end seek stops short of it, and the probe keeps screenshots of all four ways to reach the ending. One more: right after a seek the periodic observer delivers one sample from before the jump, which flashed the old caption back, so samples are dropped until one arrives near the target.
 
-The clip is still Korean only; the other seven languages get their own headlines and captions over the Korean footage.
+At this point the clip was Korean only; the English recording arrived on 2026-10-12.
 
 ## 2026-10-11 — Idle gaps cut, seconds remaining shown, and an ending with some weight
 
@@ -234,6 +234,86 @@ The fix is to put a flight number into the reported value. Same frame, different
 
 One guess was wrong. I first blamed `onChange` keyed on the card's slot. Reverting only that and rerunning the probe did not freeze, so it stays as hardening, not as the cause.
 
+## 2026-10-12 night — An English recording, and a check that had been off
+
+Until now there was one clip, recorded in Korean. An English user read "Just Drag" above a phone typing a Korean word. The strings, the recording test and the sample timetables were already per-language; only the recordings were missing, so we recorded all seven other languages, about 130 s each.
+
+![End frames of the eight clips — the same finished week in each language](/blog/timetable-feature-intro/eight-languages.png)
+
+### Eight recorded, two kept
+
+Each clip is 2.6 MB. Seven more would add 18.7 MB to the bundle, HEVC that the App Store cannot shrink further, and a user watches one of them, once. The next morning's call: **ship Korean and English, and every other locale plays the English clip.** A Japanese caption over "Choose Style" is a mismatch, but a smaller one than Korean footage, and English reads everywhere. The bundle grows by 2.6 MB.
+
+Three alternatives lost: re-encode all eight at a lower resolution (about half the size, quality to be checked by eye); bundle English only and download the user's language on first run (smallest, but first run needs a network); and replace the video with the real app driven by a script inside the mockup. The last one fails because the editor sheet, style popover, list and keyboard are full-window system presentations that cannot be confined to a small phone frame, so they would have to be redrawn, which is the mockup we threw away on October 9. A test now requires exactly two clips: a missing one falls back silently, an extra one costs 2.6 MB.
+
+### The test passed and the last frame was the home screen
+
+The recording test logs a timestamp before each action and the clip is cut at those marks. Under load the recorder's clock runs ahead of the wall clock, so marks and picture drift apart. The promo pipeline has a check for that: the last scene change (app closing to the home screen) must sit within 1.5 s of the end mark.
+
+The tour recording reuses that script, but the check looked for a mark named `end` and this test ends with `tour_end`. It failed every time with "no end mark", and the wrapper only looked for `passed`. A check that always fails and is always ignored is no check.
+
+Once the name matched, two clips were rejected: French was 5.3 s off, Portuguese 4 s. Their last frame, the one the ending page holds in the phone mockup, was the simulator home screen.
+
+![Left: last frame of a drifted recording. Right: the re-recorded one](/blog/timetable-feature-intro/drift-home-end.png)
+
+(Neither clip ships in the end, but the check had been off.) The cause was video compositing from another job on the same machine. The rejected takes started with a one-minute load average of 6–17, under the gate, while the five-minute average was near 100. Load at the start is a precondition, not a verdict. The seven kept recordings all land at +0.75 to +1.05 s, the length of the app's closing animation.
+
+The welcome collage stays Korean: its cards shrink text to 2–5 pt.
+
+## 2026-10-13 — Explain each action once
+
+The opening chapter repeats duplication and movement to fill the remaining days. Its captions kept switching between instructions the viewer had already read.
+
+Creating, duplicating, moving and resizing still get their first explanation. Once the actions repeat, one caption stays through the rest of the chapter: **“Fill in the rest of your week.”** Repeating the instructions added no information; removing them entirely would lose the purpose of the sequence. The caption now describes what is being completed.
+
+The choice follows the video's playback time. Returning to an earlier demonstration restores its instruction, while the repeated section keeps its single caption.
+
+## 2026-10-13 — The caption moved from under the phone to next to the finger
+
+The caption chip under the phone mockup is gone. The explanation now sits on the phone screen as a speech bubble whose tail points at the spot the clip is touching. "Long-press an empty cell and drag…" floats just above the finger on Monday 9:00; when it is time to duplicate, the bubble moves to the Duplicate button. A line under the phone makes the eye travel between video and text; a bubble at the finger reads as "this, now". The phone also grew into the space the chip left.
+
+![First action of the fill chapter — the bubble sits right above the finger pressing Monday 9:00, tail pointing at it; under the phone only the page dots and buttons remain](/blog/timetable-feature-intro/bubble-create-above.png)
+
+The question was where the positions come from. Typing coordinates by hand fails quickly: duplicate and move land on a different day each time, and a re-recording shifts everything a little. The recording test already knows where it taps, so the marks it prints before each action now carry the touch point as a screen fraction. The cutting script adds x·y to the "from this second, this sentence" list, and the app maps the fraction into the mockup's screen. Fractions survive a different recording device.
+
+Three placement rules. Above the touch point by default, 22pt clear of the baked-in finger. Below when there is no room above — the save checkmark, the list-style toggle, the list button. Horizontally the box is pushed inside the screen while the tail keeps pointing at the touch; pressing the time axis at the left edge leaves the box inside and only the tail off-center. Box and tail are one path, so the translucent fill has no seam.
+
+![List chapter — the list-style toggle is at the top of the screen, so the bubble hangs below it with the tail pointing up](/blog/timetable-feature-intro/bubble-search-below.png)
+
+What a sentence is about is not the same as what gets tapped next: "swipe through the cards" points at the middle of the screen where the cards move, not at the list button. In the repeated fill section the sentence stays the same, and at first the bubble followed wherever the current duplicate or move happened (reversed the same afternoon — see below; it now appears once, at the first repeat).
+
+The bundled Korean and English clips were not re-recorded. The video is unchanged and only the positions were missing, so the same test ran once per language without recording and its logged positions were merged into the existing lists in chapter order. An old list without positions still works — the bubble just sits at the bottom centre without a tail.
+
+## 2026-10-13 afternoon — The bubble stays only long enough to read
+
+On a real device the verdict was: the first position is right, but after that the bubble sits on top of the controls the clip is using. It did. A bubble stayed until the next mark, and the mark after "press and hold an empty slot" is the duplicate 14 seconds later, so the caption covered the title field of the new-event sheet the whole time. The fill caption re-appeared at every duplicate and move, over the middle of the grid.
+
+![The new-event sheet is up but the create caption still covers its title field](/blog/timetable-feature-intro/bubble-covers-sheet.png)
+
+Now a bubble stays **three seconds** from its mark and then fades in place over 0.8 s. The caption names the current action; once the action is done the video speaks for itself. Three seconds is fixed, not derived from text length — a Korean sentence of ~25 characters and an English one of ~60 both read in that time, and a per-locale formula would need per-locale tuning. The fill caption appears once, at the first repeated mark; showing it at every repeat would cover the grid every three seconds and defeat the point.
+
+![Six seconds in — the bubble is gone and the sheet title "School" is visible](/blog/timetable-feature-intro/bubble-faded-sheet.png)
+
+The three seconds are measured in **clip time**, not with a timer: the bubble is held while clip time minus mark time is under three seconds times the playback rate. At x2 clip time runs twice as fast, so the wall-clock hold is the same, and rewinding with Back or a swipe makes the same test true again, so the bubble comes back. Nothing to reconcile after the app returns from the background. A timer would have needed re-arming on every seek and rescaling whenever the speed changed.
+
+The exit transition changed too. The old bubble used to shrink toward its tail; for a caption that has been read, shrinking reads as "something closed". Bubbles still bloom from the tail on the way in and now only fade on the way out.
+
+One overlap remained: at x2 the new-event sheet rises about two seconds after the drag, so the first bubble shared the title field for roughly 1.5 s. We left it as a trade-off against reading time. That evening a real device showed it was not just the first bubble (below).
+
+## 2026-10-13 evening — When the thing it points at is gone, the bubble goes too
+
+A fixed three seconds only works while the screen holds still. Eight device screenshots came back with a bubble sitting on a sheet, a style palette, a colour picker, or a list under a freshly raised keyboard. A bubble points at a touch spot. If a sheet or popover opens right after the touch, the target is no longer on screen: the tail points at something buried, and the box covers what just appeared.
+
+![The timetable settings sheet is up and the bubble is still there, its tail pointing at the time axis behind the sheet](/blog/timetable-feature-intro/bubble-tail-over-sheet.png)
+
+Now a bubble leaves **when the screen changes** inside its three seconds, with a 0.3 s fade. Actions that leave the screen alone (duplicate, move, resize) keep the full three seconds.
+
+The change time comes from the video, not from new recording marks. Marks would have meant re-recording both clips and hand-placing "the screen changes here" on 23 captions. Instead a script shrinks the clip to 66x143 greyscale at ten frames a second and, per caption, records the first moment more than 14% of pixels differ from the frame at the mark. One block appearing or moving is about 10%; a popover is 15–25%, the keyboard 27%, a sheet over 40%. No re-recording, and the script runs right after the clip is cut on future recordings.
+
+A single threshold can be wrong, and undo does trip it (every block changes colour at once, 20%). So a wrong call is cheap: a false hit shows the bubble for 1.5 s instead of three, a miss falls back to three. There is no per-action exception list.
+
+That 1.5 s floor is the second decision. Around ten captions see the screen change within half a second of their mark, because a tap opens a sheet immediately. Leaving at that instant would make them flash. Tight for a long sentence, but better than three seconds over a screen the caption no longer describes. The proper fix is to raise the bubble before the touch, which needs a gap in the recording and waits for the next re-record.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -248,3 +328,9 @@ One guess was wrong. I first blamed `onChange` keyed on the card's slot. Reverti
 - 2026-10-11 night — 3D bars and dots removed from the tour and ending backdrop · replay hint removed from the ending page, since release builds hide that menu row
 - 2026-10-11 night — flying card could freeze between welcome and tour: two-second watchdog, geometry callback only records, debug switch to force the stuck state
 - 2026-10-12 — cause found: a revived tour page never re-reports the phone frame · flight number in the measured value · debug argument that drives the fast back-and-forth
+- 2026-10-12 night — seven more languages recorded · drift check switched on (it had been looking for the wrong end mark) · two rejected clips re-recorded
+- 2026-10-13 — size (+18.7 MB for eight) → ship Korean and English only, other locales play the English clip
+- 2026-10-13 — Explain each action once, then keep one caption for the remaining events
+- 2026-10-13 — caption chip removed; a speech bubble on the phone screen points at the touch spot, positions carried by the recording marks as screen fractions
+- 2026-10-13 afternoon — bubble holds three real seconds from its mark then fades in place (clip-time test, returns on rewind) · fill caption once at the first repeat
+- 2026-10-13 evening — bubble leaves when the screen changes within its three seconds (sheet, popover, keyboard), 0.3 s fade · change time measured from clip frame differences, no re-recording · 1.5 s floor

@@ -1,6 +1,6 @@
 ---
 title: "Rebuilding the Android timetable from scratch instead of patching it"
-date: 2026-10-11T16:47:40+09:00
+date: 2026-10-13T05:43:16+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "The March port had drifted half a year behind iOS. Rather than layer features onto it, the Android app is being rebuilt: Material 3 on the outside, the iOS grid physics on the inside. The first piece, the grid itself, is in."
@@ -50,7 +50,7 @@ Create, move, resize, duplicate, delete, undo — all on the grid. Seven languag
 
 This time we ported iOS #830–#974 by **final behaviour**, not commit by commit. Features that arrived and were removed again inside the range (location, biweekly, import from another timetable) were skipped; following the history would have built and deleted them on Android.
 
-The biggest piece is the period axis. The lunch row is now **half a period** tall (30 minutes) and its position is stored as a `lunchFollows` mark on the periods rather than a field on the timetable. The default rule has no lunch; turning it on starts at 60 minutes after period 4. On a period timetable a schedule is now **stored at the time the grid shows**, which fixes a class drawn at 13:50 ringing at 12:25. The edit sheet picks a half-period start and a duration.
+The biggest piece is the period axis. The lunch row is now **half a period** tall (30 minutes) and its position is stored as a `lunchFollows` mark on the periods rather than a field on the timetable. The default rule has no lunch; turning it on starts at 60 minutes after period 4. On a period timetable a schedule is now **stored at the time the grid shows**, which fixes a class drawn at 13:50 ringing at 12:25. The edit sheet picks a half-period start and a duration (whole periods only once the timetable has a break; see 2026-10-13).
 
 ![Editing a period-timetable schedule: start 3.5, duration one hour](/blog/timetable-android-rebuild/period-edit-panel.png)
 
@@ -78,7 +78,38 @@ Also: an unreadable `timetables.json` is moved aside before the first save inste
 
 On the emulator (Pixel Fold, Korean, compact and regular layouts), 7 of 10 flows passed; 3 failed, were fixed and re-run. The last fix round has unit tests only. Not checked on a device: haptics, the real Play review sheet, TalkBack, 12-hour format, light theme, locales other than Korean, drags with the lunch row hidden, calendar export after revoking permission. `lintDebug` reports 36 errors, with the same kinds in files this work did not touch.
 
+## 2026-10-13 — No half periods once there is a break
+
+The half period added two days earlier became conditional. On a timetable with a break between periods, or with lunch, schedules snap to **period lines only**. A class starting at period 3.5 can now exist only on a timetable with no breaks at all. This is iOS #975–#1000, again ported by final behaviour.
+
+The reason is what a half period points at. With 50-minute classes and 10-minute breaks, half a period past 3.5 lands in the middle of a break, and neither the grid nor the edit sheet could explain a block ending there. So an axis with gaps moves in whole periods, the edit wheels list whole periods, and the lunch gap counts as a break. Schedules already stored on a half period are moved onto a line when the file is read.
+
+The default rule for a new period timetable changed with it: 60-minute periods, no break, no lunch. A fresh period timetable has the same scale as a clock timetable and keeps half periods until a break is added.
+
+![Timetable Settings: Type on top, default period rule of one hour and no break](/blog/timetable-android-rebuild/period-rules-default.png)
+
+Timetable Settings is reordered too: Type first, then Hours or Periods, then Days. The "Horizontal Axis" and "Vertical Axis" titles are gone. The confirmation shown when a rule change deletes or moves schedules is now one sentence that counts the two separately, and schedules clipped by lunch count as moved. The ripple on a locked grid lost its colour; iOS uses a glass material, Android draws a light ring with a faint edge.
+
+### What lost
+
+- **Half periods on every period timetable**: with breaks, the end of a half period falls inside a break, not inside a class.
+- **No half periods anywhere**: without breaks a half period is exactly 30 minutes and useful, and that is the default rule.
+- **Keep 50 + 10 as the default rule**: right for schools, but a new timetable would lose half periods immediately.
+
+### The events counted taps, not completions
+
+Share and print events fired on the button tap, so opening the share sheet and closing it counted as a share. Android has no single "completed" callback for either.
+
+Sharing passes an `IntentSender` to `Intent.createChooser`; a non-exported receiver hears the moment a target is chosen. Whether the target app actually sent anything is unknowable, so the event means "a share target was chosen".
+
+Printing took two tries. The first version counted a print in `PrintDocumentAdapter.onFinish` unless the job was cancelled or failed. Review caught it: when the user closes the preview, the `PrintJob` is not yet cancelled at the time `onFinish` runs, so every cancel counted. The rule was inverted: count only once the job reaches an **accepted** state (queued, started, blocked, completed), re-checking every 250 ms for about 5 seconds. That fix introduced a crash when the system started no job at all, caught in the next review round.
+
+### Not verified
+
+On the emulator (Pixel Fold, Korean) we saw the app launch, the new settings order and the default period rule. Everything else rests on 1409 unit tests and reading the code: the feel of period-line snapping, the whole-period wheels, where settled schedules land, the alert in eight languages, the chooser callback with a real target, and whether "Save as PDF" counts as a print.
+
 ## History
 
 - 2026-09-26 — grid, gestures and save-file migration, first piece
 - 2026-10-11 — catching up with 146 iOS commits: period axis, stored times, timetable settings, list search
+- 2026-10-13 — whole periods when there is a break, 60-minute default rule, settings order, share and print events counted on completion

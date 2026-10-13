@@ -157,30 +157,18 @@ test('the SuperTimetable iOS policy discloses in-app purchase status, with Apple
   assert.deepEqual(missing, []);
 });
 
-test('the SuperTimetable iOS policy and app page disclose iCloud Backup, not device-only storage', () => {
-  const required = {
-    ko: [/iCloud 백업/, /사용자 본인의 iCloud/, /개발자는 접근할 수 없습니다/, /설정에서 끌 수 있/],
-    en: [/iCloud Backup/, /your own iCloud/, /the developer cannot access it/, /turn it off in Settings/],
-  };
-  // Wording of the 2026-09-28 policy that iCloud Backup made false.
-  const stale = {
-    ko: [/기기 안에만/, /클라우드 동기화 기능이 없습니다/],
-    en: [/stays? on (?:your|the) device/, /There is no cloud sync/],
-  };
+test('the SuperTimetable iOS policy and app page do not mention iCloud and say data stays on the device', () => {
+  // iCloud Backup was removed from the app on 2026-10-13
+  // (docs/decisions/2026-10-13-timetable-icloud-backup-removed.md).
+  const required = { ko: /기기 안에만 저장/, en: /stored only on your device/ };
   const problems = [];
   for (const locale of locales) {
     const policy = readPage(locale, 'apps/timetable/privacy.astro');
-    for (const pattern of required[locale]) {
-      if (!pattern.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${pattern}`);
-    }
-    for (const pattern of stale[locale]) {
-      if (pattern.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: stale ${pattern}`);
-    }
     const appPage = readFileSync(join(root, 'src', 'content', 'apps', locale, 'timetable.md'), 'utf8');
-    if (!/iCloud/.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: app page does not mention iCloud`);
-    for (const pattern of stale[locale]) {
-      if (pattern.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: stale ${pattern}`);
-    }
+    if (!required[locale].test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${required[locale]}`);
+    if (!/stay on the device|기기 안에만/.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: no device-only sentence`);
+    if (/icloud/i.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: mentions iCloud`);
+    if (/icloud/i.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: mentions iCloud`);
   }
   assert.deepEqual(problems, []);
 });

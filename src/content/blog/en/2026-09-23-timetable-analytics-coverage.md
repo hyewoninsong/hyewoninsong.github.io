@@ -1,6 +1,6 @@
 ---
 title: "The event list looked complete. Four features weren't being counted."
-date: 2026-09-23
+date: 2026-10-13T02:05:00+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Auditing SuperTimetable's analytics for 'can we actually learn something from this'. All 31 events were registered in GA4 — and the tutorial, printing, the alarm permission prompt and every failure path had zero events. The gaps show up in the feature list, not the event enum."
@@ -43,3 +43,22 @@ Alarm permission can only be logged where the prompt state is known. The caller 
 ## Where it stands
 
 Ten new event-scoped dimensions and three user-scoped ones are registered and read back. The registration spec lives in the repo so the next event gets registered in the same PR as its code — registration isn't retroactive, and "later" is exactly that much of a hole. Reports take a day or two to fill.
+
+## 2026-10-13 — Nobody had checked *when* the events fire
+
+This audit and the two after it all asked the same question: is there an event? In early October we added "opened" events for print, calendar export and the lock-screen wallpaper so each had an entrance-to-completion pair. The completion rate came out near 100%. That wasn't people finishing. **The completion events weren't completions.**
+
+`timetable_shared`, `image_exported`, the `.ics` export, and both free-time share events sat on the line right after `present` on a `UIActivityViewController`. `present` returns synchronously, before the user has chosen anything; whether anything was actually sent is known only to `completionWithItemsHandler`'s `completed` — `false` when they tap outside, `true` after an AirDrop or "Save Image" finishes. Print was the same: `timetable_printed` fired the moment the `UIPrintInteractionController` dialog appeared, and the handler's `(completed, error)` that says whether Print was tapped went unread. Opening the share sheet and closing it counted as a share. Cancelling the print dialog counted as a print.
+
+The fix is small. Every share-family event moved inside the completion callback under `completed == true`; print under `completed && error == nil`. The entrance events stay, so entrance minus completion is finally the cancel count — no separate cancel event needed. The wrapper that presents the share sheet now takes the callback, and a source-scan test pins that **every** call site passes it. One call without the callback is the next event that fires on presentation.
+
+The same shape turned up once more the same day. Schedules enter the store through one `insertSchedule`, whether created, duplicated, or restored by undo — and `schedule_created` sat at the end of that function. A duplicate counted twice (once as created, once as duplicated); undoing a delete counted a schedule that was never created. The route is now an argument, the function logs one event per route, and a restore logs nothing.
+
+Why three audits missed it: all three had "is there an event" as their only column. A log on the line after `present` reads as "we shared, so we log" in review; nothing at the call site says the API reports its result later. Even in DebugView the check stopped at "the event showed up" — nobody cancelled and looked again. Coverage and timing are different tables. Every completion event needed one more column: *does it still fire if I cancel?*
+
+The first-run feature intro also got its events — the app's first screen, with zero telemetry, exactly as the tutorial had been in September. There's no skip, so the funnel is two events, shown and started, plus the seconds between them as a metric: the clip runs about ninety seconds, and that number says whether people watch it through.
+
+## History
+
+- 2026-09-23 — coverage audit from the feature list: tutorial funnel, failure paths, user properties
+- 2026-10-13 — timing audit: share and print completions moved into completion callbacks, schedule insert routes split, feature-intro funnel

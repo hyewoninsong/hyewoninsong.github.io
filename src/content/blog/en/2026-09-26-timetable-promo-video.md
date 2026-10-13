@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-10-12T18:14:40+09:00
+date: 2026-10-12T23:16:07+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -87,8 +87,13 @@ The thresholds were set by running the check on a good and a bad recording, beca
 
 One more Korean recording went through the gate at load 9: 27 markers, +0.51 s at the end, the same per-marker delays as before. The load average briefly passed 140 while the simulator booted mid-recording and the result still aligned. Load decides whether to start; the scene transition decides whether to trust.
 
+The same night the other seven languages went through the same path and onto the store. Each language records on a throwaway simulator whose system language is switched too, and only recordings that pass the judgement are composed. Seven of eight aligned first time. Simplified Chinese drifted 7.7 s from a start load of 5.8, because another job on the machine started a test build mid-recording. Start load is a precondition; drift comes from load during the recording. What helped most was not the script but asking: once the other sessions on the machine agreed to hold their builds while recording ran, seven recordings aligned in a row.
+
+The upload had one too. Setting the poster frame right after upload is refused as an asset not in a complete state, and the video stays up with its poster frozen at five seconds and one frame, the same freeze noted in late September. The refusal continues for a few minutes after the delivery state reads complete. The script now uploads without a poster, treats the refusal as still processing and retries every 30 s, then compares the read-back checksum with the local file. An "uploaded" line only means delivered.
+
 ## History
 
 - 2026-09-26 — First video; the same day, black ground for the store-card letterbox and the poster moved to 1.5 s.
 - 2026-10-12 — Korean re-recording for the new UI. Block lookup broken by accessibility `.combine`; recorder clock drifted up to 14 s under load. Confirmation cut end +2.05 → +1.6.
 - 2026-10-12 — Load gate and drift judgement moved into the recording script. Duration rule dropped; app-to-home transition against the last marker is the one check.
+- 2026-10-12 — All eight languages re-recorded and replaced on the store. Drift comes from load during recording; the poster frame is set after processing, with retries.
