@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-13T15:06:16+09:00
+date: 2026-10-13T16:52:33+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -298,7 +298,21 @@ The three seconds are measured in **clip time**, not with a timer: the bubble is
 
 The exit transition changed too. The old bubble used to shrink toward its tail; for a caption that has been read, shrinking reads as "something closed". Bubbles still bloom from the tail on the way in and now only fade on the way out.
 
-One overlap remains: at x2 the new-event sheet rises about two seconds after the drag, so the first bubble shares the title field for roughly 1.5 s. That is the trade-off against reading time; it is one constant if it needs to move.
+One overlap remained: at x2 the new-event sheet rises about two seconds after the drag, so the first bubble shared the title field for roughly 1.5 s. We left it as a trade-off against reading time. That evening a real device showed it was not just the first bubble (below).
+
+## 2026-10-13 evening — When the thing it points at is gone, the bubble goes too
+
+A fixed three seconds only works while the screen holds still. Eight device screenshots came back with a bubble sitting on a sheet, a style palette, a colour picker, or a list under a freshly raised keyboard. A bubble points at a touch spot. If a sheet or popover opens right after the touch, the target is no longer on screen: the tail points at something buried, and the box covers what just appeared.
+
+![The timetable settings sheet is up and the bubble is still there, its tail pointing at the time axis behind the sheet](/blog/timetable-feature-intro/bubble-tail-over-sheet.png)
+
+Now a bubble leaves **when the screen changes** inside its three seconds, with a 0.3 s fade. Actions that leave the screen alone (duplicate, move, resize) keep the full three seconds.
+
+The change time comes from the video, not from new recording marks. Marks would have meant re-recording both clips and hand-placing "the screen changes here" on 23 captions. Instead a script shrinks the clip to 66x143 greyscale at ten frames a second and, per caption, records the first moment more than 14% of pixels differ from the frame at the mark. One block appearing or moving is about 10%; a popover is 15–25%, the keyboard 27%, a sheet over 40%. No re-recording, and the script runs right after the clip is cut on future recordings.
+
+A single threshold can be wrong, and undo does trip it (every block changes colour at once, 20%). So a wrong call is cheap: a false hit shows the bubble for 1.5 s instead of three, a miss falls back to three. There is no per-action exception list.
+
+That 1.5 s floor is the second decision. Around ten captions see the screen change within half a second of their mark, because a tap opens a sheet immediately. Leaving at that instant would make them flash. Tight for a long sentence, but better than three seconds over a screen the caption no longer describes. The proper fix is to raise the bubble before the touch, which needs a gap in the recording and waits for the next re-record.
 
 ## History
 
@@ -319,3 +333,4 @@ One overlap remains: at x2 the new-event sheet rises about two seconds after the
 - 2026-10-13 — Explain each action once, then keep one caption for the remaining events
 - 2026-10-13 — caption chip removed; a speech bubble on the phone screen points at the touch spot, positions carried by the recording marks as screen fractions
 - 2026-10-13 afternoon — bubble holds three real seconds from its mark then fades in place (clip-time test, returns on rewind) · fill caption once at the first repeat
+- 2026-10-13 evening — bubble leaves when the screen changes within its three seconds (sheet, popover, keyboard), 0.3 s fade · change time measured from clip frame differences, no re-recording · 1.5 s floor
