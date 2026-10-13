@@ -1,6 +1,6 @@
 ---
 title: "On a new device, the first launch was erasing the backup before offering to restore it"
-date: 2026-10-13T09:32:48+09:00
+date: 2026-10-13T09:59:44+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Before the app could offer to restore, the empty timetable it creates on first launch had already replaced the iCloud backup. Two reasonable rules met at the seed save."
@@ -105,7 +105,7 @@ The proposal above extended protection to existing installs. What this change ad
 
 On a new device, iCloud delivers the file list before the file contents. Reading that as "no backup" releases protection and brings back the first-launch loss. The proposal above added metadata discovery that waits for the download and never releases on an empty result. Safe, with one leftover: on an account that has never had a backup, **every** fresh install sees "backup check needed" and must tap "Start new backup" in Settings before automatic backups begin.
 
-That review briefly added a release condition: a completed metadata gather followed by five quiet seconds. A follow-up the same day removed it. A quiet local query is not a server acknowledgement that no backup exists. The current policy keeps protection on empty results and requires a successful restore or explicit permission to start a new backup.
+That review added a release condition: a completed metadata gather followed by five quiet seconds. A follow-up the same day objected that a quiet local query is not a server acknowledgement that no backup exists (see "A local write is not a completed backup" below). What ships is the five-second rule, paired with a second check at the first write for the case where it was wrong — see the last section.
 
 Rejecting a restore when one timetable inside the backup fails to decode was adopted from the proposal above. The first instinct was to restore what reads, but a restore replaces everything, and a partial result leaves the user unable to tell what is gone. Refusing and saying "damaged" is better.
 
@@ -127,7 +127,7 @@ Adjacent classes overlapping was left alone. On a 60-minute, no-break axis, sett
 
 ### Where it stands
 
-Temporary-folder tests cannot establish real iCloud delivery. Download and upload completion after signing in on a new device remain hardware checks. The automatic release after a quiet query was removed in the follow-up below.
+Temporary-folder tests cannot establish real iCloud delivery. Download and upload completion after signing in on a new device remain hardware checks. The follow-up below argued against the automatic release after a quiet query; the review after that kept it and added an existence check at the first write.
 
 ## October 13, 2026 — A local write is not a completed backup
 
@@ -137,7 +137,7 @@ Someone replacing a phone needs a copy that reached the server. Writing into the
 
 The earlier five-second rule tried to spare first-time users an extra choice. But a query finishing with no results describes the device's observed list, not an authoritative server response. Waiting longer does not change that distinction.
 
-Empty results and timeouts now keep recovery protection. A successful restore or explicit confirmation to start a new backup releases it. A truly new account needs an extra choice; an undiscovered recovery copy stays protected.
+This review proposed keeping protection on empty results and timeouts, releasing only on a successful restore or explicit confirmation to start a new backup, at the cost of an extra choice for a truly new account. That proposal did not ship as written; the last section below settles on "a timeout is not absence, a confirmed absence releases, and the first write checks again".
 
 ### Cached addresses do not make file access nonblocking
 
@@ -159,6 +159,42 @@ After the local restore commit succeeds, the old undo and redo histories are cle
 
 Verification must include delayed file access, newer saves arriving during a write, pending and failed uploads, and undo after restoration. None of those local tests proves delivery between real iCloud devices. Offline editing followed by upload, download, and restoration on two signed devices using the same account remains a separate check.
 
+## October 13, 2026 — An account switched while the app was closed never sends a notification
+
+The reviews above stopped a less complete copy from writing over a more complete one. Walking the backup and restore path end to end once more turned up three ways a perfectly good copy could land in **someone else's slot**.
+
+### The account-change notification only arrives while the app is alive
+
+An earlier section says an account change drops pending writes and re-arms protection. That was a subscription to `NSUbiquityIdentityDidChange`, which is delivered only while the process is running. People switch Apple accounts in the Settings app, with the timetable app closed. On the next launch there is no notification, the container URL now belongs to the new account, and the first save writes immediately. Whatever backup another device had left in that account is replaced by this device's timetables.
+
+Apple's documentation covers exactly this: archive `ubiquityIdentityToken` and compare it at launch. The app now does that, and the same handler runs for the launch comparison and the notification.
+
+One more thing got fixed on the way. The old handler treated a `nil` token (signed out) the same as a different account. Sign out and back in to the same account, and the app offered its own backup as "from a previous device"; tap "Not now" and automatic backup stayed paused. The classification is now four-way: first observed (store only, so an upgraded install gets no false hold), unchanged, signed out (drop queued writes, keep the stored token so the account coming back reads as unchanged), switched (hold). `nil` is not "a different value".
+
+### A hold released by "absent" gets a second check at the first write
+
+Two opinions on the five-second rule collided the same day. The objection is right: five seconds is a guess, and a longer guess is still a guess. Going back to one extra choice for every new account was not attractive either. The question that separates them is what remains when the guess is wrong. If the problem is that the first backup written on a wrong guess cannot be undone, make the first write undoable.
+
+When discovery releases the hold, the app records that discovery, not a person, released it. The first write under that record that finds a file already at the destination does not write and re-arms the hold; the next launch offers restore as usual. A user choosing "Start new backup", a successful restore, or any successful write clears the record. It defaults to off, so long-standing installs keep writing over their own backup. The grace period lowers the odds; the existence check closes the window. They are a pair, not substitutes.
+
+### A restore is not a save
+
+A successful restore used to go down the same path as a successful save: refresh widgets, re-register alarms, schedule a backup. First write after launch, so no sixty-second wait. The app was rewriting the backup it had just read, and not with the original bytes but with the normalized copy, clamped to the visible range and settled onto period lines. Pointless at best. In one case it was a loss: device A on the newer app backs up, device B on the older app restores, B reads unknown fields as defaults, and that downgraded copy replaces A's backup. Reset A and A is gone too.
+
+Restore now touches widgets and alarms and leaves the backup alone. The last-write time is set to now so the next edit waits the usual interval, and the "last backup" shown in Settings is the backup's own saved date. The "saved by a newer version of the app" notice that the local loader and the file importer already show is attached to cloud restore too; the decoder silently accepts unknown versions, so the JSON has to be scanned separately. The undo clearing described in the previous section landed with this change.
+
+### A third choice next to "Not now"
+
+![The restore offer with three buttons, Start a new backup from this device, Restore, Not now, and the line "Automatic backup stays paused until you decide"](/blog/timetable-backup-seed-save/offer-three-choices.png)
+
+"Not now" keeping the hold stays as decided. What was missing came after it: while the hold stands, automatic backup is paused and the same question returns on every launch, and nothing said so. Someone who never intended to restore had to find "Start new backup" in Settings before backups resumed. Lose the phone a few weeks later and there is no backup.
+
+The alert now has "Start a new backup from this device" as a third option and ends with "Automatic backup stays paused until you decide." The third button calls the same function as the Settings row: release the hold, save on the spot so the first backup is written now, and re-arm if the save fails. It is destructive, so it is red and the system puts it first.
+
+### Where it stands
+
+Account switches and late metadata cannot be proven on the simulator. The classification is a pure function tested across all four combinations, and the first-write guard is tested with a file placed in a temporary folder first: no write, hold re-armed, original bytes intact. The two-device, two-account sequence stays a hardware check. Conflict versions that iCloud keeps when devices alternate writes are still not consulted; this file is a one-way recovery copy, not sync, and that decision stands.
+
 ## History
 
 - October 8, 2026 — Hold backup writes before a fresh install creates its default timetable.
@@ -166,3 +202,4 @@ Verification must include delayed file access, newer saves arriving during a wri
 - October 13, 2026 — Lossy-load wording, gather-finished-plus-quiet absence, save version 15, remembered visible range, overlaps kept with alarms pinned (second review, on top of the proposal above).
 
 - October 13, 2026 — Remove quiet-query auto-release, move coordinated I/O off the UI actor, distinguish upload completion, and clear pre-restore undo/redo.
+- October 13, 2026 — Compare the account token at every launch (sign-out is not a switch), check for an existing file at the first write after a discovery release, never rewrite the backup right after a restore and warn on newer-app backups, add "Start a new backup from this device" to the offer.
