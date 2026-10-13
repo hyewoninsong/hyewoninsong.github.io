@@ -1,6 +1,6 @@
 ---
 title: "On Android, a class block teleported between day columns because its spring was 0.08 s"
-date: 2026-10-14T00:20:00+09:00
+date: 2026-10-14T01:50:00+09:00
 app: "timetable"
 tags: ["devlog", "android", "gesture"]
 summary: "Dragging a block to another day looked too fast and smeared. The block follows the snapped cell, not the finger, and the spring that should draw the gap finished in three frames. It now uses the same 0.35 / 0.75 spring as iOS."
@@ -49,3 +49,34 @@ There is a frame mid-crossing and a 24 px overshoot, as a 0.75-damped spring sho
 ## Where it stands
 
 On a fast drag the block arrives about 0.3 s after the finger and overshoots slightly. The saved position is the snapped cell, so dropping mid-glide lands where the guides pointed. Android still leaves a translucent copy at the original place, which iOS does not; that is unchanged.
+
+## 2026-10-14 — Blocked blocks now squash where you can see it
+
+A second report the same day, same root: pushing a block into another class or the edge of the timetable should squash it, and nothing seemed to happen. The resistance was computed, applied and unit-tested.
+
+Holding the finger down and capturing the screen showed the value was being drawn. A one-hour block pushed 20 minutes past its neighbour was 15 px shorter, and that was all. It read as "slightly shorter", not "pressed".
+
+![Before: the blocked block is a little shorter at the top and otherwise unchanged](/blog/timetable-android-drag-follow-spring/squash-before.png)
+
+Next to the iPhone version, three things were missing.
+
+- **The swell was on the wrong edge.** Android pushed the edge touching the wall outward by 3 dp, where the neighbour and the selection ring hide it. A pressed object gets wider, not longer: on iOS the sides swell near the wall and the contact corners flatten.
+- **There was no impact.** Depth came only from the distance past the wall, under 2 dp at five minutes. iOS presses deeper for about 0.07 s in proportion to the finger's speed, then bounces.
+- **Resize had nothing instead.** A resize must not move the end you are not holding, so it is not squeezed. iOS presses the handle under the finger flat and wide.
+
+Same mistake as the spring above: the numbers (8 %, 6 %) were ported, the shape and the moment were not.
+
+![After, move: the sides swell near the neighbour below and the bottom corners are flat](/blog/timetable-android-drag-follow-spring/squash-move.png)
+
+![After, resize: the top edge stays at 11:00, the sides swell and the bottom handle is pressed flat](/blog/timetable-android-drag-follow-spring/squash-resize.png)
+
+A move now squashes around the wall end (8 % of the height, capped at 6 dp) while the sides spread between finger and wall; the title is not squeezed. A resize keeps its length and answers with the side swell and the handle. Letting go bounces back once on a 0.32 / 0.55 spring.
+
+Squeezing a resize too, as the report literally asked, lost: the far end would drift toward the wall, which is jitter we removed on purpose. Simply deepening the squeeze lost as well; it still reads as "shorter".
+
+The manual test already said "resistance is visible" and was passing. An expectation without a shape passes when nothing shows, so it now says which side changes and how. For an effect that exists only while the finger is down, a frame captured mid-gesture is the only evidence.
+
+## History
+
+- 2026-10-14 — Drag-follow spring set to 0.35 / 0.75.
+- 2026-10-14 — Wall squash matches iOS: side swell, impact and rebound, pressed resize handle.
