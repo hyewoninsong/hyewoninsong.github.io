@@ -1,6 +1,6 @@
 ---
 title: "On Android, a class block teleported between day columns because its spring was 0.08 s"
-date: 2026-10-14T01:50:00+09:00
+date: 2026-10-14T03:57:37+09:00
 app: "timetable"
 tags: ["devlog", "android", "gesture"]
 summary: "Dragging a block to another day looked too fast and smeared. The block follows the snapped cell, not the finger, and the spring that should draw the gap finished in three frames. It now uses the same 0.35 / 0.75 spring as iOS."
@@ -48,7 +48,7 @@ There is a frame mid-crossing and a 24 px overshoot, as a 0.75-damped spring sho
 
 ## Where it stands
 
-On a fast drag the block arrives about 0.3 s after the finger and overshoots slightly. The saved position is the snapped cell, so dropping mid-glide lands where the guides pointed. Android still leaves a translucent copy at the original place, which iOS does not; that is unchanged.
+While dragging, the block stays just behind the finger and overshoots slightly when the finger stops. (When this was first written it arrived about 0.3 s late; that was the way the spring was run, not its value, and the third section below fixes it.) The saved position is the snapped cell, so dropping mid-glide lands where the guides pointed. Android still leaves a translucent copy at the original place, which iOS does not; that is unchanged.
 
 ## 2026-10-14 — Blocked blocks now squash where you can see it
 
@@ -76,7 +76,35 @@ Squeezing a resize too, as the report literally asked, lost: the far end would d
 
 The manual test already said "resistance is visible" and was passing. An expectation without a shape passes when nothing shows, so it now says which side changes and how. For an effect that exists only while the finger is down, a frame captured mid-gesture is the only evidence.
 
+## 2026-10-14 — Same numbers as iOS, still slower: the spring was restarted on every change
+
+With the spring at 0.35 / 0.75 the opposite report came in: the block follows the finger too slowly. Side by side with the iOS code, the snapping maths and the spring values matched. The difference was how the spring was run.
+
+Android called `Animatable.animateTo` again whenever the snapped target changed, and `animateTo` spends its first frame at play time 0, where the value is still the start value. A 5-minute snap step is a few dp, so under a moving finger the target changes on almost every frame, and every frame is a first frame.
+
+Measured with a real `Animatable` on a frame clock, 60 Hz, 15 px per frame for 24 frames (360 px):
+
+| Target changes | Distance covered after 24 frames |
+|---|---|
+| every frame | 0 px |
+| every 2nd frame | 62 px |
+| every 3rd frame | 127 px |
+| one uninterrupted spring | about 285 px (75 px behind the finger) |
+
+The block stood still while the finger moved and set off once it stopped. The old 0.08 s spring had hidden this by covering the distance in whatever frames it got. SwiftUI's `.animation(.spring, value:)` merges a new value into the running spring, so iOS never had the problem.
+
+One frame loop now drives the spring from drag start until the block settles after the drop, stepping from the current position and velocity toward the current target every frame. The numbers are unchanged.
+
+![Three frames mid-drag: the block's top edge sits at the time shown above it each time (12:25, 12:45, 13:00)](/blog/timetable-android-drag-follow-spring/follow-mid-drag.png)
+
+What lost: tightening the spring again (hides the stall, brings back the teleport), changing the target less often (adds delay to fix delay), and following the raw finger (guides and block disagree).
+
+The fix had its own trap. The loop outlives recomposition, and I handed it the coordinate maths as a reference to a local function. The compiler creates that reference once; when the grid zoom changed (1.5x after unlocking), the loop kept the old zoom and drew the dragged block 300 px above the finger. Every unit test passed and the first recording "moved". It showed up while picking frames for this post: the block was not on the row its time label named. Logging target against drawn position per frame showed the two drifting apart by a fixed ratio. The loop now receives values, and the image above was captured after that.
+
+For motion that exists only mid-drag, "it moves" is not a check. Compare target and drawn position as numbers, on a screen that is not in its default state.
+
 ## History
 
 - 2026-10-14 — Drag-follow spring set to 0.35 / 0.75.
 - 2026-10-14 — Wall squash matches iOS: side swell, impact and rebound, pressed resize handle.
+- 2026-10-14 — Drag-follow spring runs as one uninterrupted frame loop, so the block follows a moving finger.
