@@ -1,6 +1,6 @@
 ---
 title: "On a new device, the first launch was erasing the backup before offering to restore it"
-date: 2026-10-13T05:09:39+09:00
+date: 2026-10-13T09:32:48+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Before the app could offer to restore, the empty timetable it creates on first launch had already replaced the iCloud backup. Two reasonable rules met at the seed save."
@@ -105,7 +105,7 @@ The proposal above extended protection to existing installs. What this change ad
 
 On a new device, iCloud delivers the file list before the file contents. Reading that as "no backup" releases protection and brings back the first-launch loss. The proposal above added metadata discovery that waits for the download and never releases on an empty result. Safe, with one leftover: on an account that has never had a backup, **every** fresh install sees "backup check needed" and must tap "Start new backup" in Settings before automatic backups begin.
 
-This change adds one absence condition on top of that discovery: when metadata gathering has finished and five seconds pass with no item, treat the backup as absent and release. A list that arrived without a backup in it, and stayed that way for five seconds, is not a pending download. Offline or an unfinished gather keeps protection. Never releasing versus releasing after five seconds is a policy difference; review decides. Neither reads "missing on disk" as "missing".
+That review briefly added a release condition: a completed metadata gather followed by five quiet seconds. A follow-up the same day removed it. A quiet local query is not a server acknowledgement that no backup exists. The current policy keeps protection on empty results and requires a successful restore or explicit permission to start a new backup.
 
 Rejecting a restore when one timetable inside the backup fails to decode was adopted from the proposal above. The first instinct was to restore what reads, but a restore replaces everything, and a partial result leaves the user unable to tell what is gone. Refusing and saying "damaged" is better.
 
@@ -127,10 +127,42 @@ Adjacent classes overlapping was left alone. On a 60-minute, no-break axis, sett
 
 ### Where it stands
 
-The simulator still cannot show a backup arriving late from iCloud. Which way "gather finished plus five quiet seconds" falls on real hardware, and how many seconds after signing in on a new device the offer appears, remain hardware tasks.
+Temporary-folder tests cannot establish real iCloud delivery. Download and upload completion after signing in on a new device remain hardware checks. The automatic release after a quiet query was removed in the follow-up below.
+
+## October 13, 2026 — A local write is not a completed backup
+
+Someone replacing a phone needs a copy that reached the server. Writing into the local iCloud folder cannot make that promise by itself. This review separates the steps after local storage and removes editing history that no longer belongs to the restored data.
+
+### Quiet metadata is still incomplete evidence
+
+The earlier five-second rule tried to spare first-time users an extra choice. But a query finishing with no results describes the device's observed list, not an authoritative server response. Waiting longer does not change that distinction.
+
+Empty results and timeouts now keep recovery protection. A successful restore or explicit confirmation to start a new backup releases it. A truly new account needs an extra choice; an undiscovered recovery copy stays protected.
+
+### Cached addresses do not make file access nonblocking
+
+The container URL was already resolved in the background. `NSFileCoordinator` can still wait, and encoding and file access remain synchronous operations. The complete coordinated operation now runs off the UI actor on a serial path, publishing only its result back to the interface.
+
+Operations also need generations. A late completion must not discard a newer pending save or update the state of a different account. The earlier rule—record the newest snapshot before checking availability—stays in place.
+
+### Pending upload is shown as pending
+
+A successful local write leaves an upload for iCloud to complete. Offline access or an upload error can leave another device without the new file. Updating the successful-backup timestamp immediately would imply recovery is already possible.
+
+Local staging is now distinct from confirmed upload. The local write time is recorded, but pending or unconfirmed uploads are not displayed as completed backups. Completion must belong to the staged revision; an older file's acknowledgement cannot certify the next save.
+
+### Restoring ends the previous undo history
+
+A whole-store restore replaces the dataset, but old undo commands can still refer to records from before it. Running one after restoration can bring those records back, including from another window.
+
+After the local restore commit succeeds, the old undo and redo histories are cleared. Failed restoration preserves both current data and editing history. The pre-restore snapshot remains a separate recovery copy.
+
+Verification must include delayed file access, newer saves arriving during a write, pending and failed uploads, and undo after restoration. None of those local tests proves delivery between real iCloud devices. Offline editing followed by upload, download, and restoration on two signed devices using the same account remains a separate check.
 
 ## History
 
 - October 8, 2026 — Hold backup writes before a fresh install creates its default timetable.
 - October 13, 2026 — Preserve nested decode failures, hold backups after local recovery loss, protect undownloaded backups, and keep the newest queued snapshot through unavailable periods.
 - October 13, 2026 — Lossy-load wording, gather-finished-plus-quiet absence, save version 15, remembered visible range, overlaps kept with alarms pinned (second review, on top of the proposal above).
+
+- October 13, 2026 — Remove quiet-query auto-release, move coordinated I/O off the UI actor, distinguish upload completion, and clear pre-restore undo/redo.
