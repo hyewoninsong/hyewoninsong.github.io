@@ -1,6 +1,6 @@
 ---
 title: "The Android edit sheet was vanishing in a single frame"
-date: 2026-10-14T03:20:00+09:00
+date: 2026-10-14T04:10:00+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Tapping the check mark did not slide the sheet away; it deleted it. The library has no setting for sheet speed, so we place the sheet ourselves, and brought its rows and colours in line with the iPhone sheet while there."
@@ -51,4 +51,41 @@ Touch targets did not shrink: a capsule draws at 34 and still takes touches at 4
 
 ## What is left
 
-Only the edit sheet has the new motion and cards; settings and share sheets still have the old ones. And because the placement leans on how the library positions the sheet, each library upgrade gets a screen recording stepped frame by frame. A screenshot of the settled sheet shows none of these problems.
+The motion and cards started on the edit sheet alone and reached Settings, Timetable Settings and the timetable list the same day (section below). Sheets with a preview, like share and print, still have the old ones. And because the placement leans on how the library positions the sheet, each library upgrade gets a screen recording stepped frame by frame. A screenshot of the settled sheet shows none of these problems.
+
+## 2026-10-14 — Settings, Timetable Settings and the list became the same sheet
+
+With only the edit sheet changed, the three sheets beside it looked like another app. All three now share the grey ground, the white cards and the same rise and exit.
+
+![The Settings sheet: white cards on a grey ground, appearance and time format as capsule chips beside their labels, green switches](/blog/timetable-android-edit-sheet/settings-grouped.png)
+
+Choices used to take two lines each: a label, then a full-width segmented button. Now the chips sit beside the label on one row, and only the picked chip is filled. Chip width is fixed at the bold width, so picking one never nudges its neighbours.
+
+### One switch instead of a second set of components
+
+The share, print and calendar sheets use the same cards and rows, and they are still on a white ground where a white card has no edge. So the components were not copied. One value says "this content is on the grey ground"; the cards, dividers, titles, choice rows and header read it and pick their look. No call site changed.
+
+### A sheet that stops half way cannot aim for "fully open"
+
+Timetable Settings opens at half height so the timetable behind stays visible. The placement trick assumed the resting place was the fully open one, which would have made the sheet rise all the way and then drop.
+
+![Timetable Settings pulled up to full height, the end-time capsule in blue and its wheel open inside the card](/blog/timetable-android-edit-sheet/timetable-settings-wheel.png)
+
+Rising now aims for the stop the library is heading to; leaving starts from wherever the sheet stands.
+
+### The buttons are still there for 0.4 s
+
+A sheet that slides away instead of vanishing leaves its buttons on screen. In Timetable Settings the X means "revert everything", so an X right after the ✓ would undo what was just confirmed. A sheet on its way out now ignores a second ✓, a late X and a type switch.
+
+### List cards lost their face
+
+![The timetable list: the name centred on the grey ground, the preview below with a thick black outline and a check badge](/blog/timetable-android-edit-sheet/list-cards.png)
+
+The name stands on the ground and only the preview has an outline and a soft shadow. The open timetable's ring and check are ink, not blue: blue already means "tappable", so "this one" needed another colour.
+
+One deliberate difference from iOS: Settings keeps its close button at the top left, as every sheet in the Android app does. Dark mode and the period rules card were not checked on a device this time.
+
+## History
+
+- 2026-10-14 — Edit sheet: fixed the one-frame exit, grey ground and white cards
+- 2026-10-14 — Extended to Settings, Timetable Settings and the timetable list; half-height stop
