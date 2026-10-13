@@ -83,7 +83,7 @@ A sheet that slides away instead of vanishing leaves its buttons on screen. In T
 
 The name stands on the ground and only the preview has an outline and a soft shadow. The open timetable's ring and check are ink, not blue: blue already means "tappable", so "this one" needed another colour.
 
-One deliberate difference from iOS: Settings keeps its close button at the top left, as every sheet in the Android app does. Dark mode and the period rules card were not checked on a device this time.
+The Settings header was reversed once: it first kept the app's "close at the top left" rule, but Settings applies live and has nothing to cancel, so it now has a single ✓ at the right, as on iOS. Dark mode and the period rules card were not checked on a device this time.
 
 ## History
 
