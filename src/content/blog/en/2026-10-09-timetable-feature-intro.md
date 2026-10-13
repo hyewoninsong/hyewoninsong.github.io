@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-13T14:17:51+09:00
+date: 2026-10-13T15:06:16+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -280,9 +280,25 @@ Three placement rules. Above the touch point by default, 22pt clear of the baked
 
 ![List chapter — the list-style toggle is at the top of the screen, so the bubble hangs below it with the tail pointing up](/blog/timetable-feature-intro/bubble-search-below.png)
 
-What a sentence is about is not the same as what gets tapped next: "swipe through the cards" points at the middle of the screen where the cards move, not at the list button. In the repeated fill section the sentence stays the same while the bubble follows wherever the current duplicate or move happens.
+What a sentence is about is not the same as what gets tapped next: "swipe through the cards" points at the middle of the screen where the cards move, not at the list button. In the repeated fill section the sentence stays the same, and at first the bubble followed wherever the current duplicate or move happened (reversed the same afternoon — see below; it now appears once, at the first repeat).
 
 The bundled Korean and English clips were not re-recorded. The video is unchanged and only the positions were missing, so the same test ran once per language without recording and its logged positions were merged into the existing lists in chapter order. An old list without positions still works — the bubble just sits at the bottom centre without a tail.
+
+## 2026-10-13 afternoon — The bubble stays only long enough to read
+
+On a real device the verdict was: the first position is right, but after that the bubble sits on top of the controls the clip is using. It did. A bubble stayed until the next mark, and the mark after "press and hold an empty slot" is the duplicate 14 seconds later, so the caption covered the title field of the new-event sheet the whole time. The fill caption re-appeared at every duplicate and move, over the middle of the grid.
+
+![The new-event sheet is up but the create caption still covers its title field](/blog/timetable-feature-intro/bubble-covers-sheet.png)
+
+Now a bubble stays **three seconds** from its mark and then fades in place over 0.8 s. The caption names the current action; once the action is done the video speaks for itself. Three seconds is fixed, not derived from text length — a Korean sentence of ~25 characters and an English one of ~60 both read in that time, and a per-locale formula would need per-locale tuning. The fill caption appears once, at the first repeated mark; showing it at every repeat would cover the grid every three seconds and defeat the point.
+
+![Six seconds in — the bubble is gone and the sheet title "School" is visible](/blog/timetable-feature-intro/bubble-faded-sheet.png)
+
+The three seconds are measured in **clip time**, not with a timer: the bubble is held while clip time minus mark time is under three seconds times the playback rate. At x2 clip time runs twice as fast, so the wall-clock hold is the same, and rewinding with Back or a swipe makes the same test true again, so the bubble comes back. Nothing to reconcile after the app returns from the background. A timer would have needed re-arming on every seek and rescaling whenever the speed changed.
+
+The exit transition changed too. The old bubble used to shrink toward its tail; for a caption that has been read, shrinking reads as "something closed". Bubbles still bloom from the tail on the way in and now only fade on the way out.
+
+One overlap remains: at x2 the new-event sheet rises about two seconds after the drag, so the first bubble shares the title field for roughly 1.5 s. That is the trade-off against reading time; it is one constant if it needs to move.
 
 ## History
 
@@ -302,3 +318,4 @@ The bundled Korean and English clips were not re-recorded. The video is unchange
 - 2026-10-13 — size (+18.7 MB for eight) → ship Korean and English only, other locales play the English clip
 - 2026-10-13 — Explain each action once, then keep one caption for the remaining events
 - 2026-10-13 — caption chip removed; a speech bubble on the phone screen points at the touch spot, positions carried by the recording marks as screen fractions
+- 2026-10-13 afternoon — bubble holds three real seconds from its mark then fades in place (clip-time test, returns on rewind) · fill caption once at the first repeat
