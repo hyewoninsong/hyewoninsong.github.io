@@ -149,7 +149,7 @@ Operations also need generations. A late completion must not discard a newer pen
 
 A successful local write leaves an upload for iCloud to complete. Offline access or an upload error can leave another device without the new file. Updating the successful-backup timestamp immediately would imply recovery is already possible.
 
-Local staging, pending upload, failure, and confirmed completion are now separate states. Completion must belong to the staged revision; an older file's acknowledgement cannot certify the next save.
+Local staging is now distinct from confirmed upload. The local write time is recorded, but pending or unconfirmed uploads are not displayed as completed backups. Completion must belong to the staged revision; an older file's acknowledgement cannot certify the next save.
 
 ### Restoring ends the previous undo history
 
