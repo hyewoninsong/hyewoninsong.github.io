@@ -1,6 +1,6 @@
 ---
 title: "On Android, a class block teleported between day columns because its spring was 0.08 s"
-date: 2026-10-14T03:57:37+09:00
+date: 2026-10-14T04:10:18+09:00
 app: "timetable"
 tags: ["devlog", "android", "gesture"]
 summary: "Dragging a block to another day looked too fast and smeared. The block follows the snapped cell, not the finger, and the spring that should draw the gap finished in three frames. It now uses the same 0.35 / 0.75 spring as iOS."
@@ -103,8 +103,29 @@ The fix had its own trap. The loop outlives recomposition, and I handed it the c
 
 For motion that exists only mid-drag, "it moves" is not a check. Compare target and drawn position as numbers, on a screen that is not in its default state.
 
+## 2026-10-14 — A tick for every step, so the hand feels the snap too
+
+With the motion matched, what was left was feel: moving or resizing a class did not seem to click into the cells. iOS plays a light impact each time the dragged block's start or end time changes. Android only vibrated on pick-up, on the first wall contact and on the first overlap.
+
+Now creating, moving and resizing all tick once per snap line crossed, by the same rule as iOS.
+
+| During a drag | Tick |
+|---|---|
+| Start or end time moves to the next step | once |
+| Finger moves inside one step | none |
+| Same time, another day | none |
+| Held by a wall, time no longer changing | none (only the firm hit on contact) |
+| Just picked up | none |
+
+The comparison is on the previewed times, not the finger, so the tick lands exactly when the block on screen moves a step.
+
+What lost: the softer tick Android offers for dense sliders (the complaint was the lack of a click), throttling ticks (it drops exactly the steps of a fast drag), and ticking on a day change (already visible; iOS compares times only).
+
+One catch: Android's "segment tick" constant exists from version 14, and older versions silently do nothing when handed a constant they do not know. Below 14 the app sends an older constant that plays the same effect. An emulator cannot vibrate, so tests pin when the tick fires; its strength still needs a real phone.
+
 ## History
 
 - 2026-10-14 — Drag-follow spring set to 0.35 / 0.75.
 - 2026-10-14 — Wall squash matches iOS: side swell, impact and rebound, pressed resize handle.
 - 2026-10-14 — Drag-follow spring runs as one uninterrupted frame loop, so the block follows a moving finger.
+- 2026-10-14 — A haptic tick for every step the times take during a drag.
