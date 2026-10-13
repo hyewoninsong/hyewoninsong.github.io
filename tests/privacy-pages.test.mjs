@@ -117,3 +117,19 @@ test('a Korean policy is written in 합니다체', { todo: 'musicnote Android po
   }
   assert.deepEqual(casual, []);
 });
+
+test('the SuperTimetable iOS policy and app page do not mention iCloud and say data stays on the device', () => {
+  // iCloud Backup was removed from the app on 2026-10-13
+  // (docs/decisions/2026-10-13-timetable-icloud-backup-removed.md).
+  const required = { ko: /기기 안에만 저장/, en: /stored only on your device/ };
+  const problems = [];
+  for (const locale of locales) {
+    const policy = readPage(locale, 'apps/timetable/privacy.astro');
+    const appPage = readFileSync(join(root, 'src', 'content', 'apps', locale, 'timetable.md'), 'utf8');
+    if (!required[locale].test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${required[locale]}`);
+    if (!/stay on the device|기기 안에만/.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: no device-only sentence`);
+    if (/icloud/i.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: mentions iCloud`);
+    if (/icloud/i.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: mentions iCloud`);
+  }
+  assert.deepEqual(problems, []);
+});
