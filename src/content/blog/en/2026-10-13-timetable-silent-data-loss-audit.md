@@ -1,6 +1,6 @@
 ---
 title: "How saved data disappears quietly — eleven holes from one audit"
-date: 2026-10-13T14:52:00+09:00
+date: 2026-10-13T16:08:00+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "A day spent reading the save-file path and the time/period switch in the timetable app turned up eleven ways user data could change or vanish. None crashed. Every one ended as a success."
@@ -42,4 +42,27 @@ Each change passed its own tests. Quarantine tests covered persistence and never
 
 ## What remains
 
-Each fix ran only its own tests; a full-suite run on merged main is pending. Evening classes after the last period are still pulled into the last half-slot on open, pinned by an October 9 decision and judged separately.
+There is still no way to pull the quarantined and backup copies out through the Files app; the alert only says they are kept in the app's documents folder. Turning on file sharing and letting import accept a whole save file is next.
+
+## 2026-10-13, evening — the full suite found two more, and off-axis times are gone
+
+With all eleven merged, the full suite of 2,204 tests ran on main. Two failed: one change renamed the quarantine copy to keep several, and another change's test still read the fixed `.corrupt` name. Parallel fixes collide first on append-only lists (test-case IDs, report-code tables) and then in the gap left by "I ran my own tests". Everything passes now.
+
+The deferred evening-class case is decided too. On a seven-period timetable (9:00–16:00), an imported 19:00 class lived in three places at once.
+
+| Where | Time |
+|---|---|
+| The block on the grid | 15:30 (drawn in the last half-slot) |
+| Stored value and alarm | 19:00 |
+| Open the edit sheet and tap ✓ | stored value becomes 15:30 |
+
+The rule we chose: **a period timetable has no time outside its periods**. The function that settles stored values now pulls off-axis classes to where they were drawn and counts them, and importing a file shows "Events Moved to Fit Periods" once with the count.
+
+Two alternatives lost. Guarding only the edit sheet is small but leaves a block at 15:30 with an alarm at 19:00. Drawing off-axis classes in a separate band loses nothing, but keeps clock-time data inside a period model, and the grid, export canvas and widget would all need to learn the new row.
+
+The cost is that it cannot be undone; after settling, 19:00 survives only in the backup copy and the original file. So one more path changed with it: tapping "Period" to preview and then "Time" again, without ✓, no longer snaps anything. Only ✓ settles.
+
+## History
+
+- 2026-10-13 — save/load and kind-switch audit, eleven holes
+- 2026-10-13, evening — two more from the full suite; off-axis times removed
