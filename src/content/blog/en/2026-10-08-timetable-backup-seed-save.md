@@ -1,6 +1,6 @@
 ---
 title: "On a new device, the first launch was erasing the backup before offering to restore it"
-date: 2026-10-13T09:59:44+09:00
+date: 2026-10-13T10:11:43+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Before the app could offer to restore, the empty timetable it creates on first launch had already replaced the iCloud backup. Two reasonable rules met at the seed save."
@@ -195,6 +195,20 @@ The alert now has "Start a new backup from this device" as a third option and en
 
 Account switches and late metadata cannot be proven on the simulator. The classification is a pure function tested across all four combinations, and the first-write guard is tested with a file placed in a temporary folder first: no write, hold re-armed, original bytes intact. The two-device, two-account sequence stays a hardware check. Conflict versions that iCloud keeps when devices alternate writes are still not consulted; this file is a one-way recovery copy, not sync, and that decision stands.
 
+## October 13, 2026 — The prompt and the write gate were reading different state
+
+The first-launch hold arms when the local store is empty at launch. One kind of device never matched: an install from before the hold existed, opened once and left alone. Its default timetable was already saved, so the store was not empty.
+
+The restore offer has a second trigger, though: tutorial unfinished, one empty timetable, offer never answered. That device matched it. It showed "Restore from your previous device?" and accepted "Not now" — while the only thing that blocks a write, the hold flag, was off. The next edit replaced the backup.
+
+Aligning the two conditions would fix this case and leave the next one. So the write path now asks its own question: did this install create that file? Overwrite permission is stored separately from the hold. It is granted by a successful restore, an explicit "Start a new backup", or this install's own successful write, and revoked whenever the hold re-arms. Without it, a write that finds a file at the destination does not write and arms the hold instead. With no file there, it writes as before.
+
+The earlier first-write check marked one specific release path. This one does not care how the hold came to be off.
+
+Installs with no recorded permission are treated as owners when they have a last-backup time or a resolved offer, so existing users keep backing up. The check only sees metadata that has reached the device; it is a second line behind the hold, not proof of remote absence.
+
+One test lesson: the helper used to plant "another device's backup" also stamped this device's last-backup time, which made the guard see an owner. The fixture was erasing the state under test; the pre-fix failure only reproduced after clearing it.
+
 ## History
 
 - October 8, 2026 — Hold backup writes before a fresh install creates its default timetable.
@@ -203,3 +217,4 @@ Account switches and late metadata cannot be proven on the simulator. The classi
 
 - October 13, 2026 — Remove quiet-query auto-release, move coordinated I/O off the UI actor, distinguish upload completion, and clear pre-restore undo/redo.
 - October 13, 2026 — Compare the account token at every launch (sign-out is not a switch), check for an existing file at the first write after a discovery release, never rewrite the backup right after a restore and warn on newer-app backups, add "Start a new backup from this device" to the offer.
+- October 13, 2026 — Separate overwrite permission from the hold; an install that never wrote does not replace an existing backup (installs that predate the hold).
