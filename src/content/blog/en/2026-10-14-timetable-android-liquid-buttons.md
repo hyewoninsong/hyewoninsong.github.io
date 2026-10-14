@@ -1,6 +1,6 @@
 ---
 title: "On Android, the + button now splits in two instead of being swapped out"
-date: 2026-10-14T02:48:10+09:00
+date: 2026-10-14T09:35:16+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Selecting a class used to make + vanish and two new buttons appear. Now one shape stretches, necks, and pinches off into duplicate and delete. iOS gets this from the system; on Android the outline is drawn by hand."
@@ -43,3 +43,24 @@ The locked-class info card had just become translucent, which left the buttons b
 ## Where it stands
 
 The shape was checked from frames recorded on a software-rendered emulator; frame rate on a real device has not been measured yet. The tablet layout keeps these actions in the top bar and is unchanged. Refraction and highlights are not imitated, only the way the shape joins, parts, and bounces.
+
+## 2026-10-14 — The same neck, on the timetable list's bottom bar
+
+![Five frames: duplicate separates from the left end of the search field while import and + run together into a trash button](/blog/timetable-android-liquid-buttons/list-bar-frames.png)
+
+The timetable list sheet has search, import and `+` along the bottom; in edit mode that row becomes duplicate, search, delete. It was still a swap: one frame, whole row replaced.
+
+This row has both directions at once. On the right, import slides onto `+` and the two become one red trash button. On the left, the search field's end pulls back by one button and the circle left behind is duplicate. The field's rounded end is a circle, so the grid's two-circles-and-a-neck math applied unchanged, with the same spring and the same break point.
+
+The whole bar is a pure function of two values: how far into edit mode, and how focused the search field is. Focus spreads the field over the buttons. The outline is a single union of the field and both pairs of circles, so the hairline never cuts across the fill.
+
+The search field had to be rebuilt. Material's outlined field will not go below 56 dp, so matching the buttons meant a bare text field with the magnifier and clear button placed by hand.
+
+### One diameter for every round button
+
+Measuring turned up five sizes: 44 at the top of the grid, 48 at the bottom, 40 for sheet header buttons, 48 in the list bar next to a 56 search field. On iPhone none of these numbers exist in app code. They are all system toolbar items, 44pt everywhere, so everything is 44 now. The 48 dp touch-target guideline is about the hit area, not the visible circle, and Compose already widens a smaller button's hit area to 48.
+
+## History
+
+- 2026-10-14 — The grid's `+` splits into duplicate and delete as one outline; translucent fills.
+- 2026-10-14 — Same neck on the timetable list's bottom bar; every round button is 44 dp.
