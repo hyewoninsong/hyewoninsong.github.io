@@ -1,8 +1,8 @@
 ---
 title: "Stacked sheets were closing in two beats"
-date: 2026-10-08T21:35:00+09:00
+date: 2026-10-14T10:02:00+09:00
 app: "timetable"
-tags: ["devlog", "swiftui", "uikit"]
+tags: ["devlog", "swiftui", "uikit", "android"]
 summary: "Confirming with a popover or a second sheet on top closed the top one, then the bottom one, taking over a second. One dismiss call on the bottom sheet takes both down together."
 ---
 
@@ -48,3 +48,27 @@ XCUITest waits for the app to go idle after each tap, so one transition or two b
 ## Where it stands
 
 Tapping the editor's close button with the popover open still only closes the popover; forwarding that one makes it too easy to discard a choice by accident. New stacked presentations get the recording check before they ship.
+
+## 2026-10-14 — On Android it was two taps, not two beats
+
+The Android app has the same spot: open the style popover from the event editor, pick a color, tap the editor's checkmark. There it was not slow, it simply did not close. The first tap closed the popover and a second one saved. Now one tap saves and both go away.
+
+The root is the same as on iOS. A focusable Compose `Popup` receives every touch in its window and spends an outside tap on its own dismissal, so the checkmark underneath never hears about it. And `onDismissRequest` only says "dismiss me" - it does not say where the finger landed, so there was nothing to forward.
+
+The popup's window does know. The `ACTION_DOWN` that decides the dismissal is delivered to the popup's host view, so a touch listener there reads the screen position (`rawX`, `rawY`) and the dismiss callback that follows passes it along. The editor keeps the checkmark's on-screen bounds and, when the tap is inside them, runs its ordinary save. The position is dropped as soon as that touch is over; otherwise a later back press would save from a stale tap.
+
+| Tapped with the popover open | Result |
+|---|---|
+| The editor's checkmark | Saves; popover and editor close together |
+| A disabled checkmark (invalid time) | Only the popover closes |
+| Close button, a weekday, anywhere else, back | Only the popover closes |
+| Checkmark, and other events share the style | The popover closes and the "change those too?" question appears |
+
+Two approaches lost. A non-focusable popup lets outside taps fall through, but all of them: the close button discards the event, a weekday chip changes the day, and the hex field cannot take the keyboard. A window-sized popup with its own transparent scrim works with public API only, but the popover then has to own its placement, its entrance animation and its keyboard insets. Too much moved for one tap.
+
+The chosen one has a cost. The listener leans on Compose's internal layout - the popup content's parent being the popup host view. If that changes, the listener hears nothing and the behavior quietly returns to two taps. No crash, no wrong save, which is exactly why it would go unnoticed, so it is now a manual check after every Compose upgrade.
+
+## History
+
+- 2026-10-08 — iOS: editor + color popover and list + new-timetable sheet close in one beat
+- 2026-10-14 — Android: the checkmark tapped over the style popover saves and closes in one tap
