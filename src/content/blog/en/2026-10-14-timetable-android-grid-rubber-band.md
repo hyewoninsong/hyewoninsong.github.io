@@ -1,6 +1,6 @@
 ---
 title: "On Android, the timetable now moves when you pull past the edge instead of stretching"
-date: 2026-10-14T09:54:49+09:00
+date: 2026-10-14T20:20:48+09:00
 app: "timetable"
 tags: ["devlog", "android", "gesture"]
 summary: "Android stretched the grid at its scroll edge. In a timetable the height of a row is the time, so a stretched grid is a wrong picture. The grid now uses the iPhone rubber band, and the official Compose slot turned out not to work for a timetable that fits the screen."
@@ -33,7 +33,7 @@ The numbers are the ones the iPhone scroll view uses. For a finger `x` past the 
 - **Rubber band everywhere.** Sheets and lists are close to system surfaces. Changing them too makes the whole app move unlike the platform.
 - **No edge response.** A pull that gets no answer reads as a stuck scroll.
 
-So it started with the grid, and settings sheets and lists of text still stretch. Two exceptions arrived the same day: the image export preview and the card preview in the timetable list, both pictures of the timetable (see the sections below).
+So it started with the grid; settings sheets and lists of text were left alone at first, a line that was gone by the end of the day (last section). Two exceptions arrived the same day: the image export preview and the card preview in the timetable list, both pictures of the timetable (see the sections below).
 
 ## The official slot ignores content that fits
 
@@ -59,7 +59,7 @@ A scroll inside a sheet raises a question the grid never had. Is a finger draggi
 
 | Drag | Response |
 |---|---|
-| Down, starting with the picture resting at its top | The sheet follows the finger and can be dismissed |
+| Down, starting with the picture resting at its top | The sheet follows the finger and can be dismissed (reversed later that day, last section) |
 | Down, after scrolling reached the top in the same drag | The sheet stays, the picture pulls against resistance |
 | Up at the bottom | The picture pulls |
 | Fling into the top | The picture bounces once, the sheet does not move |
@@ -96,12 +96,35 @@ Two choices:
 - **Only the picture moves.** The card's outline and shadow, the check badge and the name stay where they are. Moving the whole card would read as dragging the page, which competes with the sideways swipe.
 - **Both edges belong to the picture.** The export sheet hands a pull that starts at the top to the sheet. The list sheet does not close by dragging, so there is nothing to hand it to. Same component, that one condition off.
 
-The title-only view of the same sheet is a plain list of names and keeps the system response. The rule is unchanged: a picture of the timetable gets the rubber band, everything else behaves like the platform.
+The title-only view of the same sheet is a plain list of names and kept the system response at first; it got the rubber band later that day with every other sheet.
 
 Swiping to the next card mid-pull ends the vertical scroll without a fling, so the pull is released when the scroll reports it has stopped. The fitting case was checked on the emulator by holding the drag and capturing; flinging a long timetable into an edge is for the next test build.
+
+## 2026-10-14 — Scrolling inside a sheet no longer moves the sheet
+
+The line disappeared completely the same day. By the afternoon every vertical scroll inside a sheet (settings, timetable settings, print, share and calendar options, the schedule editor, the color picker) had the same rubber band. It carried over the export preview's rule too: a drag down that starts with the content resting at its top goes to the sheet.
+
+That rule left one thing behind. With timetable settings expanded, a quick flick down on the content didn't move the content at all. The whole sheet jolted down and came back, or closed, depending on the flick. The finger swiped the content and the sheet answered.
+
+Now a scroll inside a sheet never moves the sheet.
+
+| Inside a sheet | Before | Now |
+|---|---|---|
+| Fast flick down at the top of the content | Sheet jolts down and back, or closes | Only the content pulls and returns |
+| Slow drag down at the top | Sheet follows the finger | Content pulls against resistance |
+| Grabber or header dragged down | Sheet comes down | Same — the one way to lower a sheet |
+
+The losing alternative is the one that won above. An iPhone sheet takes a pull that starts at the top, but when the sheet then doesn't close (the flick falls short of the threshold, or unsaved changes make the sheet refuse) all that remains is a jolt, which was the problem. Splitting slow drags from flicks doesn't work either: the choice is made on the first move, and the velocity is only known at release.
+
+One exception stays: the options panel in the print, share and calendar sheets still folds when pulled down from its top. That's the panel's own gesture, not the sheet's.
+
+It was checked by recording each gesture on a dedicated emulator and measuring the sheet's top edge per frame. Before: a flick down at the top moved the edge 1185 px and closed the sheet. After: 0 px, while the content went down 349 px and back. A header drag still closes it.
+
+The first measurement was wrong. The "content" flick started on the header, because a sheet is only as tall as its content and in a short timetable the upper third of the screen is header. Now the header's edge is read from a capture of the same state first, and a header drag (must move the sheet) is recorded alongside the content flick (must not) so each checks the other's coordinates.
 
 ## History
 
 - 2026-10-14 — The grid's scroll edge goes from stretch to rubber band.
 - 2026-10-14 — Rubber band in the image export preview; the sheet follows only a pull that starts at the top. The print preview zooms across the whole upper area.
 - 2026-10-14 — Rubber band in the timetable list's card preview; only the picture moves, the card outline and check badge stay put.
+- 2026-10-14 — Every sheet's scroll edge becomes a rubber band, and a scroll inside a sheet never moves the sheet; sheets are lowered from the grabber or header only.
