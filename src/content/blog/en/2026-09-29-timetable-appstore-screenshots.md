@@ -1,6 +1,6 @@
 ---
 title: "Ten App Store screenshots that read as one picture"
-date: 2026-10-01T23:10:54+09:00
+date: 2026-10-15T00:12:02+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's new App Store screenshots: a three-card panorama of 3D bars taken from the app icon, then seven feature cards whose background keeps running between the phones. How the seams line up, and why the drag shot had two guide lines."
@@ -62,7 +62,26 @@ Trying to override `SIMULATOR_HOST_HOME` through the test runner did not replace
 
 Completion now requires the actual ten selected files for every language, alongside the test result. Even the recovery log needed care: a single test is reported as `1 test`, while a full run uses `tests`. A passing test proves the interaction ran; the image manifest proves the deliverable exists.
 
+## 2026-10-15 — The same cards on the Play Store
+
+The Android listing on Google Play now uses the same cards as the App Store. Backgrounds, captions and highlight colours come straight from the iOS 1.2.0 composition plan; only the phone screens are new, captured from the Android app with the same sample timetables in the same scenes. Because nothing was re-translated, both stores say the same thing in all eight languages. The device frame is a Pixel shape with a centred punch-hole instead of a Dynamic Island.
+
+![Four Play Store cards with Android screens — drag, schedule editor, by time or by period, home screen widget](/blog/timetable-appstore-screenshots/play-android-cards.png)
+
+They could not be uploaded as they were. Play rejects phone screenshots whose long side is more than twice the short side, and the 6.9-inch iPhone cards are 1:2.17. We re-composed them at 9:16 on the same width, lifting captions and phone by 100 px and trimming the same amount off the top of the background — the phone already ran off the bottom edge, so nothing is lost. Play also caps the set at eight, so Batch Edit and Image Share were dropped. The two-card panorama is scaled as one strip with padding only on its outer edges, so the bars still meet at the seam.
+
+The preview video reuses the iOS promo's six scenes, captions and music through the same compositor. Play only accepts a YouTube link, so publishing it is still to do.
+
+Three things went wrong while driving the emulator by coordinates:
+
+- **Long recordings drift.** One 85-second `screenrecord` cut early scenes more than a second too soon and late scenes almost exactly; its variable frame timing drifts against the host clock during the take. Recording each scene separately, fixing it to 30 fps and concatenating gave the same 1.2-second action-to-pixel delay in every scene.
+- **A cloned emulator boot-looped.** Copying the AVD folder while the original was running brought along half-written user data. Cloning without it boots cleanly — and a dedicated emulator matters, because on the shared one another job reinstalled the app mid-run.
+- **`adb shell input text` is ASCII only.** Titles like 자율학습, 自習 and Étude failed or were remapped by the Korean keyboard; uiautomator2's `set_text` writes into the field directly.
+
+Looking at each language's raw captures side by side caught every one of these. A script exiting with 0 did not mean the scenes were right.
+
 ## History
 
 - 2026-09-29 — Added the iPhone panorama, continuous feature backgrounds, and drag capture notes.
 - 2026-10-01 — Verified the iPad viewport, notch default, and gesture capture output route across eight languages.
+- 2026-10-15 — Ported the cards to the Play Store as eight 9:16 cards and built the matching promo video from emulator recordings.
