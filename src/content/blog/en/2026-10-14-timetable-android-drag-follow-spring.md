@@ -1,6 +1,6 @@
 ---
 title: "On Android, a class block teleported between day columns because its spring was 0.08 s"
-date: 2026-10-14T04:10:18+09:00
+date: 2026-10-14T09:06:24+09:00
 app: "timetable"
 tags: ["devlog", "android", "gesture"]
 summary: "Dragging a block to another day looked too fast and smeared. The block follows the snapped cell, not the finger, and the spring that should draw the gap finished in three frames. It now uses the same 0.35 / 0.75 spring as iOS."
@@ -121,7 +121,27 @@ The comparison is on the previewed times, not the finger, so the tick lands exac
 
 What lost: the softer tick Android offers for dense sliders (the complaint was the lack of a click), throttling ticks (it drops exactly the steps of a fast drag), and ticking on a day change (already visible; iOS compares times only).
 
-One catch: Android's "segment tick" constant exists from version 14, and older versions silently do nothing when handed a constant they do not know. Below 14 the app sends an older constant that plays the same effect. An emulator cannot vibrate, so tests pin when the tick fires; its strength still needs a real phone.
+One catch: Android's "segment tick" constant exists from version 14, and older versions silently do nothing when handed a constant they do not know. Below 14 the app sends an older constant that plays the same effect. An emulator cannot vibrate, so tests pin when the tick fires; its strength was left for a real phone. That came back the same day — next section.
+
+## 2026-10-14 — The tick was sent, and nobody felt it
+
+The same day the tick shipped, the report came back: still nothing per step, only the wall hit. The time wheels were silent too. Every test passed.
+
+The tests count whether a tick was requested, not whether a hand feels it. So we compared the one haptic that worked with the two that did not. The difference was the route.
+
+| Haptic | Route | On a real phone |
+|---|---|---|
+| Wall contact | straight to the vibrator, 12 ms at a set strength | felt |
+| Tick per step | ask the view for a "segment tick" | nothing |
+| Wheel row | ask the view for a "frequent tick" | nothing |
+
+Through the view, the platform picks the effect. Ticks are its faintest one — too weak to feel or missing on some devices — and the system touch-feedback setting silences them entirely. The vibrator route is under neither. Two haptics of one drag were obeying different switches.
+
+Both repeating ticks now take the wall hit's route. Call sites still name the tick they mean; the single gate all app haptics pass through sends those two types to the vibrator: a tick primitive where the device has one, otherwise a short pulse of about 10 ms at a chosen strength. A wheel row is lighter than a drag step, and both are softer than the wall. The in-app haptics switch still turns everything off.
+
+What lost: a stronger view-route effect (still the platform's choice, still under the system setting) and marking the vibration as touch feedback (that imports the likeliest cause of the silence).
+
+One thing to be plain about: no phone was attached this time either, so we could not tell whether the reporter's device had "too faint" or "setting off", and the strengths were chosen against the wall hit's numbers. A device-only test case covers both system settings. The lesson is the order: when one haptic of a gesture is felt and another is not, compare the routes before the triggers.
 
 ## History
 
@@ -129,3 +149,4 @@ One catch: Android's "segment tick" constant exists from version 14, and older v
 - 2026-10-14 — Wall squash matches iOS: side swell, impact and rebound, pressed resize handle.
 - 2026-10-14 — Drag-follow spring runs as one uninterrupted frame loop, so the block follows a moving finger.
 - 2026-10-14 — A haptic tick for every step the times take during a drag.
+- 2026-10-14 — Step and wheel ticks moved from view requests to the vibrator: on a real phone only the wall hit could be felt.
