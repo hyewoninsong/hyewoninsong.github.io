@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-09-21T09:41:30+09:00
+date: 2026-10-15T03:49:41+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -76,12 +76,27 @@ The clef cards changed the same day. Each used to be four radios: off, easy, har
 
 Unchecking remembers the range so re-checking restores it; losing the choice on a toggle would read as a mistake. A clef never enabled before starts at the narrowest range. The check uses the same glyph slot and size as the radios but a different shape, a check mark against a filled circle, and not a switch, because every selection on this screen is a left glyph plus a full-row tap and a switch would bring in a color the screen does not use.
 
-## Where it stands
+## Where it stood on 2026-09-21
 
 A question is still one note, so records and statistics are untouched. The review screen draws only the answered note, no do and no dots yet. With no style that gives the answer away by order, timing and accuracy now compare across styles, but stats are not split by style.
+
+## 2026-10-15 — Android settings update in place, and five examples share one clock
+
+The two-axis design above records the September 21 iteration. Practice later settled into five stages: read do, read a do-mi-sol ladder, answer with a full ladder, answer with do alone, and answer without hints. Android now shows a looping staff example beside each stage, so choosing does not depend on understanding the label first.
+
+All five use the same treble clef and middle C. The reading examples show do alone or do-mi-sol; the three quiz examples ask the same sol with progressively fewer hints. They share one clock: one head every 0.5 seconds, a 1.4-second hold after the longest example finishes, then a 0.35-second clear. Short examples wait for the others. Independent timers would put each card at a different point in its explanation. The clock stops when the chooser closes or the app goes into the background.
+
+The settings had also been saving correctly while displaying old values. Clef switches and difficulty choices changed only after reopening the sheet. Stage and question count stayed stale on the home screen.
+
+The missing link was observation. A parent composable read an update counter, but the child screens received the same object and read ordinary store fields. Compose could skip those child calls. A parent redraw did not guarantee another store read.
+
+The screens now observe an account settings snapshot that changes with edits and account switches. Recreating the sheet would discard its interaction state; making every screen read an update counter would leave the same trap for the next screen. Observable settings put the dependency beside the value being displayed.
+
+Regression tests inspect the switches and selected chips while the sheet remains open, then the home labels after choosing a stage or count. They also inspect account switching and the examples reaching full, clearing, and starting again. Reading the saved value alone would have missed this bug.
 
 ## History
 
 - 2026-09-21 — practice styles added (lines/spaces, chain of thirds, landmarks, two-note reading)
 - 2026-09-21 — chain removed; two-note reading counts from the nearest do with dotted skip hints; landmarks show the do slot; dotted ledger lines
 - 2026-09-21 — five styles split into show-how × which-notes; clef cards gated behind an include check
+- 2026-10-15 — Android settings observe a shared snapshot; five stage examples loop on one clock
