@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-13T16:52:33+09:00
+date: 2026-10-14T12:49:41+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -314,6 +314,27 @@ A single threshold can be wrong, and undo does trip it (every block changes colo
 
 That 1.5 s floor is the second decision. Around ten captions see the screen change within half a second of their mark, because a tap opens a sheet immediately. Leaving at that instant would make them flash. Tight for a long sentence, but better than three seconds over a screen the caption no longer describes. The proper fix is to raise the bubble before the touch, which needs a gap in the recording and waits for the next re-record.
 
+## 2026-10-14 — The Android version records the Android app
+
+Android now has the same intro. The twelve collage cards and the clip in the phone frame are **recordings of the Android app** made on an emulator: the same story, Android's sheets, keyboard and bottom buttons. It had been deferred because the clip was an iOS recording and a looping video seemed to need a new player library. Both are solved.
+
+![Android fill chapter — the Android new-event sheet and Korean keyboard inside the phone frame, the step caption and seconds remaining below](/blog/timetable-feature-intro/android-tour-chapter.png)
+
+Shipping the iOS clip lost at once: an intro showing another platform's screens is wrong from the first frame. Media3 lost too: the platform `MediaPlayer` drawing into a `TextureView` already has speed and exact seeking on API 26, with no new dependency. The clip is H.264 rather than HEVC for old software decoders: 137 s, 2.7 MB.
+
+**Tablets skip it**, as on iPad: the recordings show the phone layout. The rule is the smallest screen width (600 dp), not the window width, so a phone held sideways at first launch still gets it.
+
+![Android ending — the finished week in a slightly tilted phone, the app icon in front, and the Start button](/blog/timetable-feature-intro/android-ending.png)
+
+### Four places the recording went wrong
+
+- **Injected touches draw no dot.** `adb shell input` bypasses the input device, so "show taps" draws nothing. A virtual touchscreen via `adb shell uinput` goes through the real input path — but its coordinates span the whole panel, so on a resized emulator only the centre was right.
+- **`delay` is not "from now".** A 0.75 s press plus a 1 s drag arrived in 17 ms. uinput runs a virtual clock from registration and a late batch has all its delays in the past. We measure the clock's origin once and prepend a catch-up delay to every gesture.
+- **The shared emulator is shared.** Another job reinstalled the app mid-take. Takes now run on a cloned AVD nobody else uses.
+- **Idle gaps were invisible in frame times.** The now line redraws the same picture every second, so the first cut was 220 s. Trimming on frames whose picture changed (`mpdecimate`) brought it to 137 s.
+
+After each chapter the recorder reads the timetable the app saved and stops if the scene drifted — a drop that landed at 12:40 instead of 13:00 looks fine on video.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -334,3 +355,4 @@ That 1.5 s floor is the second decision. Around ten captions see the screen chan
 - 2026-10-13 — caption chip removed; a speech bubble on the phone screen points at the touch spot, positions carried by the recording marks as screen fractions
 - 2026-10-13 afternoon — bubble holds three real seconds from its mark then fades in place (clip-time test, returns on rewind) · fill caption once at the first repeat
 - 2026-10-13 evening — bubble leaves when the screen changes within its three seconds (sheet, popover, keyboard), 0.3 s fade · change time measured from clip frame differences, no re-recording · 1.5 s floor
+- 2026-10-14 — Android version: the Android app recorded on an emulator (uinput touches, virtual-clock delays, dedicated emulator, picture-based idle trimming), platform MediaPlayer, phones only
