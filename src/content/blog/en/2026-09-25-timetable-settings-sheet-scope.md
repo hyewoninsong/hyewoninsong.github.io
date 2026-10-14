@@ -1,6 +1,6 @@
 ---
 title: "We merged, split, and re-merged the settings sheet in ten days"
-date: 2026-10-09T01:31:00+09:00
+date: 2026-10-14T15:54:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "Should app-wide settings and per-timetable settings share a sheet? We changed the answer three times. The final answer is both: one sheet from the menu, a quick sheet from the grid."
@@ -89,8 +89,21 @@ What lost:
 
 The value was in the right place; the place just had no name.
 
+## October 14, 2026 — on Android, the half-height sheet jumped to full on the first swipe
+
+The Android Timetable Settings sheet opens at half height like iOS. But swiping up to read further expanded the sheet to full screen instead of scrolling it, and so did spinning a wheel. That covered the timetable the half height was meant to keep in view.
+
+![Half-height Timetable Settings — the content scrolled to Days and Schedules while the sheet's top edge stays mid-screen](/blog/timetable-settings-sheet-scope/android-half-sheet-scrolled.png)
+
+Now a swipe on the content at half height only scrolls the content. To go full screen, drag the grabber or the title row. Once full, pulling down at the top of the content brings it back to half, as before. iOS always worked this way through `.presentationContentInteraction(.scrolls)`, a line the port missed.
+
+The cause is Material3's `ModalBottomSheet`: its nested-scroll connection claims every upward scroll until the sheet is full, and in Compose a nested-scroll parent sees the delta first. A connection between the content and the sheet can't stop it. One above the sheet would take the scroll from the content too. So the fix turns the sheet's gestures off for any touch that lands on the content at half height, until the finger lifts. Touch input is handled before the same frame recomposes, so the connection is gone before the scroll starts. The reverse doesn't work: enabling gestures only when the title row is touched misses that touch, because the drag is switched on after the finger is already down.
+
+The one cost: at half height, pulling the content down no longer closes the sheet. The title row, X, ✓, back and the scrim still do.
+
 ## History
 
 - 2026-09-25 — Merged Settings into two areas (all timetables / this timetable); the Display sheet kept days and hours only.
 - 2026-10-07 — Removed per-timetable values from Settings and added a "Display" row on top. Text color moved to the Display sheet; the app-wide card became three.
 - 2026-10-09 — Added a "Schedules" title to the text color card in the Display sheet and shortened the row to "Text Color". It did not move to the schedule editor.
+- 2026-10-14 — On Android, a swipe on the content at half height scrolls it instead of expanding the sheet; the grabber and title row expand it.
