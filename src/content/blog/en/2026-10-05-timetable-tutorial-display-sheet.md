@@ -1,6 +1,6 @@
 ---
 title: "The tutorial now starts inside the display settings sheet"
-date: 2026-10-10T20:49:50+09:00
+date: 2026-10-14T20:14:27+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The settings sheet and the tutorial used to appear on top of each other. The sheet is now step one of the tutorial. Along the way, a ring drawn 14pt off taught us that iOS 26 draws partial-height sheets at 0.96 scale."
@@ -130,6 +130,26 @@ Three options lost. A more formal register in Korean clashed with every other sc
 
 Each language was written to the same rule rather than translated. Whether "Commencer" and "Começar" fit the half-width button still needs a look on the smallest iPhone.
 
+## 2026-10-14 — On Android, the demo kept pointing at targets scrolled off screen
+
+Walking the Android tutorial by hand turned up three places where edge cases differed from iOS. Each looked fine on its own and broke only when the tutorial put something on top.
+
+**Step 1's sheet showed one line.** The half-height timetable settings sheet showed the hint and the word "Time", then nothing. The sheet trims its scroll area by however far its content hangs below the screen. In step 1 only, a finger demo is drawn over the content, and it used `fillMaxSize` — so the overlay stretched the content box to the window's height, and the trim removed almost all of it. The overlay now uses `matchParentSize`: it follows its parent's size instead of setting it.
+
+![Step 1 sheet: only the "Time" heading is visible below the hint](/blog/timetable-tutorial-display-sheet/android-sheet-one-line.png)
+
+![Fixed: the time card and the days group fill the sheet](/blog/timetable-tutorial-display-sheet/android-sheet-fixed.png)
+
+**Scrolling did not move the demo.** iOS replans every demo cycle from the live scroll position, minus the coach card and the bottom buttons. Android had the same loop, but it lived in a `LaunchedEffect` and read the grid geometry captured when the step began. Keying the effect on scroll would restart the demo on every frame, so the loop now reads the current value each cycle, and each cycle starts the finger from the beginning. Create and edit both re-aim at what is on screen.
+
+![Before scrolling: the demo draws on the 12:00 slot](/blog/timetable-tutorial-display-sheet/android-demo-before-scroll.png)
+
+![After scrolling, next cycle: it moved to the visible 14:30 slot](/blog/timetable-tutorial-display-sheet/android-demo-after-scroll.png)
+
+**The style popover's shadow was cut off.** A Compose `Popup` is a window exactly the size of its content, and nothing is drawn outside it — including the panel's shadow. The panel now sits inside room for its shadow (16 dp at the sides, 12 above, 32 below), positioned by the panel rather than the window; a tap in that room closes it like any outside tap.
+
+None of these showed in tests. They showed in screenshots taken with the tutorial on, mid-scroll, and zoomed in under the popover.
+
 ## History
 
 - 2026-10-05: tutorial starts in the display settings sheet; 0.96 scale correction for partial-height sheets
@@ -137,3 +157,4 @@ Each language was written to the same rule rather than translated. Whether "Comm
 - 2026-10-09: demos no longer cross lunch; the step before locking outlines the whole day row and time column
 - 2026-10-09: the shortcut step ends when the opened sheet is closed with ✓ (reversing advance-on-open)
 - 2026-10-10: every step rewritten as action → outcome; welcome makes a promise instead of a greeting; start button gets its own label
+- 2026-10-14: Android — step-one sheet showing one line, demo re-aims at visible targets after a scroll, popover shadow no longer cut
