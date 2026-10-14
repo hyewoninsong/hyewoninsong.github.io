@@ -14,11 +14,15 @@ The two apps organize different things. Timetable’s screen structure would be 
 
 System blue identifies interface actions. Task and profile colors keep the meaning chosen by the user. Light and dark appearances use neutral backgrounds with distinct grouped surfaces; fields and sheet actions share the same rounded treatment.
 
+![Dark settings separate grouped surfaces from blue selection controls](/blog/planner-android-ios-motion/settings-dark.png)
+
 This is a rendering change. Saved task colors, completion rules, and the persisted data format remain intact.
 
 ## A moving thumb and connected rows show what changed
 
 The view selector uses one raised thumb over a capsule track, following Timetable’s segmented control. Its spring corresponds to a 0.25-second response and 0.85 damping ratio: a short connection between positions rather than a large bounce.
+
+![The light timeline with blue date selection and capsule view and toolbar controls](/blog/planner-android-ios-motion/timeline-light.png)
 
 List rows now join into groups, with rounded outer corners and inset dividers. Completion buttons respond to a press, icons and title colors transition together, and remaining rows move into place when an item leaves the list.
 
