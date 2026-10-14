@@ -1,6 +1,6 @@
 ---
 title: "On Android, the timetable now moves when you pull past the edge instead of stretching"
-date: 2026-10-14T09:12:00+09:00
+date: 2026-10-14T09:54:49+09:00
 app: "timetable"
 tags: ["devlog", "android", "gesture"]
 summary: "Android stretched the grid at its scroll edge. In a timetable the height of a row is the time, so a stretched grid is a wrong picture. The grid now uses the iPhone rubber band, and the official Compose slot turned out not to work for a timetable that fits the screen."
@@ -33,7 +33,7 @@ The numbers are the ones the iPhone scroll view uses. For a finger `x` past the 
 - **Rubber band everywhere.** Sheets and lists are close to system surfaces. Changing them too makes the whole app move unlike the platform.
 - **No edge response.** A pull that gets no answer reads as a stuck scroll.
 
-So it started with the grid, and settings sheets and lists still stretch. One exception arrived the same day: the image export preview, which is a picture of the timetable (see the section below).
+So it started with the grid, and settings sheets and lists of text still stretch. Two exceptions arrived the same day: the image export preview and the card preview in the timetable list, both pictures of the timetable (see the sections below).
 
 ## The official slot ignores content that fits
 
@@ -81,7 +81,27 @@ The same change fixed the print preview. Zoom and pan used to work only inside a
 
 ![Zoomed in: the paper leaves its original rectangle and fills the upper area](/blog/timetable-android-grid-rubber-band/print-zoomed-stage.png)
 
+## 2026-10-14 — The card preview in the timetable list follows too
+
+The line moved once more. The timetable list is a row of cards you swipe sideways, and each card holds a drawing of that timetable, scrolling vertically when it is taller than the card. That drawing was still stretching at its edges. The grid, the export preview and this card are three pictures of the same timetable, and one of them answered a finger differently.
+
+Now the drawing in the card moves whole past either edge and springs back. A short timetable that fits the card can be pulled both ways too, where before a pull got no answer at all.
+
+![The timetable list at rest: the day row sits at the top of the card](/blog/timetable-android-grid-rubber-band/list-preview-at-rest.png)
+
+![The drawing pulled down and held: only the picture moves, while the outline, the check badge and the name stay put](/blog/timetable-android-grid-rubber-band/list-preview-pulled-down.png)
+
+Two choices:
+
+- **Only the picture moves.** The card's outline and shadow, the check badge and the name stay where they are. Moving the whole card would read as dragging the page, which competes with the sideways swipe.
+- **Both edges belong to the picture.** The export sheet hands a pull that starts at the top to the sheet. The list sheet does not close by dragging, so there is nothing to hand it to. Same component, that one condition off.
+
+The title-only view of the same sheet is a plain list of names and keeps the system response. The rule is unchanged: a picture of the timetable gets the rubber band, everything else behaves like the platform.
+
+Swiping to the next card mid-pull ends the vertical scroll without a fling, so the pull is released when the scroll reports it has stopped. The fitting case was checked on the emulator by holding the drag and capturing; flinging a long timetable into an edge is for the next test build.
+
 ## History
 
 - 2026-10-14 — The grid's scroll edge goes from stretch to rubber band.
 - 2026-10-14 — Rubber band in the image export preview; the sheet follows only a pull that starts at the top. The print preview zooms across the whole upper area.
+- 2026-10-14 — Rubber band in the timetable list's card preview; only the picture moves, the card outline and check badge stay put.
