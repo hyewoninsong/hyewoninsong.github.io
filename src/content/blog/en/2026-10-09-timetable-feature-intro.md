@@ -1,6 +1,6 @@
 ---
 title: "We threw away the drawn mockup and recorded the real app for the first-run tour"
-date: 2026-10-14T23:23:43+09:00
+date: 2026-10-14T23:50:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "On first launch, a welcome page and then a phone-shaped mockup playing the real app show four things SuperTimetable can do. The drawn first version was dropped the same day; the next day the clips got a finger and the pages got swipe."
@@ -353,6 +353,16 @@ The tail's position depends on the box width, so the text is measured with `Text
 
 Korean also broke between syllables, leaving "요." alone on a second line. `LineBreak.Heading` with `WordBreak.Phrase` gives two even lines that break between words, and the box width is re-measured from the longest line, because a wrapped layout is as wide as its constraint. `Phrase` needs Android 13; older versions still get the balanced split.
 
+## 2026-10-14 late night — Android gets an English clip, and everyone but Korean devices sees it
+
+The Android tour had only a Korean recording, so English phones watched "시우" and a Korean keyboard inside the mockup. There is now an English take: the same story with Siwoo, School and Insong, on the English UI and keyboard. The rule is a single line. A Korean device plays the Korean clip, and every other language plays the English one.
+
+![The fill chapter opened in three languages — Korean plays the Korean clip; Japanese and English play the English clip, with Japanese text around it](/blog/timetable-feature-intro/android-ko-ja-en.png)
+
+The app used to carry an eight-language table that pointed at recordings that didn't exist, so every row fell through to English anyway. The table is gone. When another language is recorded, that line changes with it.
+
+The recorder now knows keyboards. Long-pressing the space bar opens Gboard's "Change keyboard" list, where it picks the take's layout, then types from a QWERTY key map. A capital is Shift, then the letter. The app's fields don't auto-capitalize, so one Shift changes exactly one letter.
+
 ## History
 
 - 2026-10-09 — Four-page first-run tour using real app recordings instead of drawn screens
@@ -375,3 +385,4 @@ Korean also broke between syllables, leaving "요." alone on a second line. `Lin
 - 2026-10-13 evening — bubble leaves when the screen changes within its three seconds (sheet, popover, keyboard), 0.3 s fade · change time measured from clip frame differences, no re-recording · 1.5 s floor
 - 2026-10-14 — Android version: the Android app recorded on an emulator (uinput touches, virtual-clock delays, dedicated emulator, picture-based idle trimming), platform MediaPlayer, phones only
 - 2026-10-14 night — Android bubbles (touch spot · three seconds · early leave · fill once) · clip re-recorded on the current build · measured text drawn as is · balanced word-boundary lines
+- 2026-10-14 late night — Android English clip (English UI, Gboard English layout) · Korean devices play Korean, all others English
