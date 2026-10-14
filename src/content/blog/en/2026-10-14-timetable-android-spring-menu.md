@@ -6,7 +6,7 @@ tags: ["devlog", "android", "design"]
 summary: "The menu used to pop in, and its Share submenu replaced the whole list in one frame. Now it springs out of the button and the same panel reshapes into the submenu. The stock menu could not do it, so we draw the panel ourselves."
 ---
 
-Tapping `⋯` in SuperTimetable for Android made a menu appear at once, and "Share ›" swapped the list for another in a single frame. Nothing was wrong, but it felt blunt. The menu now grows out of the button, and going into the submenu reshapes the same panel. The two top buttons are circles, as on iPhone.
+Tapping `⋯` in SuperTimetable for Android made a menu appear at once, and "Share ›" swapped the list for another in a single frame. Nothing was wrong, but it felt blunt. The menu now grows out of the button, and going into the submenu reshapes the same panel. The two top buttons briefly became circles, as on iPhone. Later the same day they went back to bare Android icons.
 
 ## The menu opens over the button, not under it
 
@@ -33,3 +33,7 @@ A second panel beside the first had no room on a phone. Translucent glass button
 ## What is left
 
 The small pickers inside sheets are still stock menus, and on tablets only the list and `⋯` buttons are circles. With system animations off, the menu appears without motion.
+
+## 2026-10-14 — The circles are gone
+
+Later that day the whole app moved to Android's own grammar. The top buttons lost their circles, and the menu corner went from 22 to Android's 4. The spring and the reshaping panel stay. More in [SuperTimetable for Android stopped dressing like an iPhone app](/en/blog/2026-10-14-timetable-android-native-grammar/).
