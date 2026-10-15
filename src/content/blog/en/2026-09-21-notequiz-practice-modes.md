@@ -1,8 +1,8 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-15T03:49:41+09:00
+date: 2026-10-15T09:28:00+09:00
 app: "notequiz"
-tags: ["devlog", "design", "swiftui"]
+tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
 ---
 
@@ -54,7 +54,7 @@ Landmarks got the same dots. A re or si question shows the adjacent do slot as o
 
 ![A re question (D6). The do slot to its left is a dotted head on dotted ledger lines](/blog/notequiz-practice-modes/landmark-do-hint.png)
 
-The dots are the counting path, not the answer: empty heads with no name, and counting them is the exercise. They are derived per question and never saved. They stand in the column between the two heads, where nothing else is, and the pair spreads from 1.9 to 2.8 head widths only then, so the dots clear both sets of ledger lines.
+The dots are the counting path, not the answer: empty heads with no name, and counting them is the exercise. They are derived per question and never saved. At that stage they stood in the column between the two heads, where nothing else is, and the pair spreads from 1.9 to 2.8 head widths only then, so the dots cleared both sets of ledger lines. That separate column was later replaced by the vertical ladder described in the October 15 Android layout update below.
 
 ## 2026-09-21 — five radio rows became two axes, and each clef starts with a checkbox
 
@@ -94,9 +94,40 @@ The screens now observe an account settings snapshot that changes with edits and
 
 Regression tests inspect the switches and selected chips while the sheet remains open, then the home labels after choosing a stage or count. They also inspect account switching and the examples reaching full, clearing, and starting again. Reading the saved value alone would have missed this bug.
 
+## 2026-10-15 — Android stacks the counting ladder on one axis
+
+Android's hint notes had the right names and heights, but each occupied a separate horizontal slot. Do-mi-sol looked like a row of notes spread across the staff. We matched the iOS layout in the quiz, home preview, and practice-stage chooser.
+
+### Thirds stack; neighboring heads move aside
+
+The reference, hints, and question form one ordered chain. Notes two staff positions apart share an x coordinate, whether the ladder rises through do-mi-sol or descends through do-la-fa. Only a step smaller than two positions moves right, by 0.92 head widths, to prevent overlapping heads. A distant note stays aligned even if it switches between a line and a space.
+
+Hint names now share a left-hand column at their heads' heights. The given do is red. Reading examples use solid heads; hints during a question remain dotted. The question's pitch is never labeled. Shared ledger lines are drawn once.
+
+![A partial reveal shows do and mi on the same axis in solid reading and dotted quiz examples](/blog/notequiz-practice-modes/android-stage-ladder.png)
+
+Even spacing preserved the order while changing the vertical relationship the exercise teaches. Fixing only the quiz would make the chooser demonstrate a different layout. All three now use the same geometry, with checks for the geometry itself: sharing a renderer can also share its mistake.
+
+### Reveal changes visibility, not the layout
+
+We calculate the complete chain before drawing its visible prefix. The hidden question already contributes its collision offset and centering. Revealing another head therefore keeps earlier heads in place. Centering only the visible notes would move the reference while the learner was counting from it.
+
+Geometry tests cover ascending and descending thirds, both clefs, close collisions, and wider jumps. Visual checks must also compare partial and complete reveals; a finished screenshot cannot show whether the chain moved along the way.
+
+### Home follows the decision order
+
+The home screen now puts the animated example first, followed by one rounded card for range, practice stage, and question count. Each row shows its value and a disclosure arrow. A capsule start action stays at the bottom.
+
+![Android home groups settings below the preview and keeps Start at the bottom](/blog/notequiz-practice-modes/android-home-setup.png)
+
+Grading also follows the iOS pen paths. The circle wobbles slightly and overlaps its starting point. The X draws two gently curved strokes in sequence. Their green and red colors remain, while the shapes appear as marks being drawn over the chosen answer.
+
+Question generation and stored records stay as they were. This change aligns the visual lesson and the route into it. A preview now needs to show the same counting axis as the question it represents.
+
 ## History
 
 - 2026-09-21 — practice styles added (lines/spaces, chain of thirds, landmarks, two-note reading)
 - 2026-09-21 — chain removed; two-note reading counts from the nearest do with dotted skip hints; landmarks show the do slot; dotted ledger lines
 - 2026-09-21 — five styles split into show-how × which-notes; clef cards gated behind an include check
 - 2026-10-15 — Android settings observe a shared snapshot; five stage examples loop on one clock
+- 2026-10-15 — Android ladders share one axis; full-chain reveal geometry, pen grading, and home hierarchy match iOS
