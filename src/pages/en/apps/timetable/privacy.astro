@@ -15,7 +15,7 @@ const t = useTranslations(lang);
     <div class="text-center mb-16 md:mb-20">
       <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperTimetable</span>
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
-      <p class="text-sm text-text-sub">Effective Date: October 13, 2026</p>
+      <p class="text-sm text-text-sub">Effective Date: October 23, 2026 (announced October 16, 2026)</p>
     </div>
 
     <div class="prose prose-gray max-w-none
@@ -67,13 +67,28 @@ const t = useTranslations(lang);
         <li>If a save file cannot be read, an <strong>anonymous summary</strong> of the failure (which step failed, how many items were involved). It never includes what you typed, such as schedule titles or memos.</li>
       </ul>
 
-      <p>The app does not collect names, email addresses, phone numbers, contacts, location, or photos.</p>
+      <h3>Google AdMob (Google LLC) — Android app only</h3>
+      <p>The Android app shows a banner ad at the bottom of the main screen. To serve it, the Google Mobile Ads SDK collects the following and sends it to Google.</p>
+      <ul>
+        <li><strong>IP address</strong>: used to estimate approximate location (country, region). Precise (GPS) location is not collected.</li>
+        <li><strong>Advertising ID and app set ID</strong>: the Android advertising ID (AAID) and app set ID</li>
+        <li><strong>Ad interactions</strong>: app launches, ad impressions and taps</li>
+        <li><strong>Diagnostics</strong>: performance information about the app and the SDK</li>
+      </ul>
+      <p>The iOS app has no ads and does not include AdMob.</p>
+
+      <p>The app does not collect names, email addresses, phone numbers, contacts, precise location, or photos.</p>
 
       <h2>3. Tracking and Advertising Identifiers</h2>
       <p>
-        The app <strong>does not collect the advertising identifier (IDFA) and does not track you.</strong>
+        The <strong>iOS app</strong> does not collect the advertising identifier (IDFA) and does not track you.
         It does not include the frameworks that handle advertising identifiers (AppTrackingTransparency, AdSupport),
-        and therefore never asks for App Tracking Transparency permission. The app contains no advertising.
+        and therefore never asks for App Tracking Transparency permission. The iOS app contains no advertising.
+      </p>
+      <p>
+        The <strong>Android app</strong> uses the Android advertising ID for its banner ads, and Google may use it to show interest-based (personalized) ads.
+        Where the law requires consent (such as the EEA, the UK and Switzerland), a Google consent form appears on first launch; if you decline, only non-personalized ads are shown.
+        You can change this choice at any time in the app under <strong>Settings → Ad privacy</strong>.
       </p>
       <p>
         The App Store privacy label reads as follows, matching the privacy manifest shipped inside the app.
@@ -95,6 +110,7 @@ const t = useTranslations(lang);
         <li>Diagnosing crashes and errors, and fixing bugs</li>
         <li>Improving features and the overall experience</li>
         <li>Understanding how the app is used, in aggregate</li>
+        <li>Showing ads, measuring ad performance and preventing ad fraud (Android app, Google AdMob)</li>
       </ul>
       <p>Collected information is not used for any other purpose. If that ever changes, this policy will be revised and announced first.</p>
 
@@ -106,12 +122,15 @@ const t = useTranslations(lang);
         </thead>
         <tbody>
           <tr><td>Google LLC (Firebase)</td><td>App analytics, crash reporting</td><td>Per the processor's policy</td></tr>
+          <tr><td>Google LLC (AdMob, Android app only)</td><td>Ad serving, ad measurement, fraud prevention</td><td>Per Google's policy</td></tr>
         </tbody>
       </table>
       <ul>
         <li><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy Policy</a></li>
         <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></li>
+        <li><a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">How Google uses information from apps that use its services</a></li>
       </ul>
+      <p>Ad-related data from the Android app is received and processed by Google directly for advertising (sharing with a third party).</p>
       <p>The developer never sells collected data or shares it beyond the purposes above.</p>
 
       <h2>6. Retention Period</h2>
@@ -123,7 +142,8 @@ const t = useTranslations(lang);
 
       <h2>7. Your Rights</h2>
       <ul>
-        <li><strong>Opting out of tracking</strong>: the app does not track you and does not collect an advertising identifier, so no opt-out step is needed.</li>
+        <li><strong>Opting out of tracking</strong>: the iOS app does not track you and does not collect an advertising identifier, so no opt-out step is needed.</li>
+        <li><strong>Turning off personalized ads (Android)</strong>: delete or reset the advertising ID in your device's <strong>Settings → Privacy → Ads</strong>. Where consent is required, change it in the app under <strong>Settings → Ad privacy</strong>.</li>
         <li><strong>Stopping collection</strong>: deleting the app stops all further analytics and crash collection. There is no in-app switch to turn collection off separately.</li>
         <li><strong>Deletion requests</strong>: contact us at the address below to request deletion of collected data. Deletion within Firebase is handled within the limits of Firebase's own policy.</li>
       </ul>
