@@ -14,9 +14,13 @@
 //     purchase bullet of 2026-09-28) would leave the other store locale stale
 //   - the SuperTimetable iOS policy discloses in-app purchase status under
 //     Firebase Analytics and says Apple handles payment (docs/specs/website.md §4.2)
-//   - the SuperTimetable iOS policy and app page disclose iCloud Backup (app
-//     1.2.0, on by default) and no longer claim device-only storage or "no
-//     cloud sync" (docs/decisions/2026-10-08-timetable-icloud-backup-disclosure.md)
+//   - the SuperTimetable iOS policy and app page say data stays on the device
+//     and do not mention iCloud — the backup was removed from the app
+//     (docs/decisions/2026-10-13-timetable-icloud-backup-removed.md)
+//   - the SuperTimetable policy discloses the Android app's Google AdMob banner
+//     as Android-only — its own section, a processor row, a consent / opt-out
+//     path — and keeps saying the iOS app has no ads
+//     (docs/decisions/2026-10-16-timetable-android-admob-privacy.md)
 //
 // Run with: node --test "tests/**/*.test.mjs"
 
@@ -169,6 +173,27 @@ test('the SuperTimetable iOS policy and app page do not mention iCloud and say d
     if (!/stay on the device|기기 안에만/.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: no device-only sentence`);
     if (/icloud/i.test(policy)) problems.push(`${locale}/apps/timetable/privacy.astro: mentions iCloud`);
     if (/icloud/i.test(appPage)) problems.push(`content/apps/${locale}/timetable.md: mentions iCloud`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('the SuperTimetable policy discloses AdMob for the Android app only and keeps iOS ad-free', () => {
+  // The Android app shows an AdMob banner from 2026-10-16; the iOS app has no ads
+  // (docs/decisions/2026-10-16-timetable-android-admob-privacy.md).
+  const wording = {
+    ko: [/<h3>Google AdMob \(Google LLC\) — Android 앱만<\/h3>/, /<td>Google LLC \(AdMob, Android 앱만\)<\/td>/, /iOS 앱에는 광고가 없/, /광고 개인정보 설정/],
+    en: [/<h3>Google AdMob \(Google LLC\) — Android app only<\/h3>/, /<td>Google LLC \(AdMob, Android app only\)<\/td>/, /iOS app (has|contains) no (ads|advertising)/, /Ad privacy/],
+  };
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/timetable/privacy.astro');
+    for (const pattern of wording[locale]) {
+      if (!pattern.test(source)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${pattern}`);
+    }
+    // The old blanket claim would now be false for the Android app.
+    if (/The app contains no advertising|앱에는 광고가 없습니다\./.test(source.replace(/iOS 앱에는 광고가 없습니다\./g, ''))) {
+      problems.push(`${locale}/apps/timetable/privacy.astro: still says the whole app has no ads`);
+    }
   }
   assert.deepEqual(problems, []);
 });
