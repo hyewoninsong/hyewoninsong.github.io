@@ -1,6 +1,6 @@
 ---
 title: "Tapping a timetable file in Files did not offer our app"
-date: 2026-10-12T14:25:00+09:00
+date: 2026-10-15T01:46:35+09:00
 app: "timetable"
 tags: ["devlog", "android", "data"]
 summary: "We ported the iOS manual test catalog to Android and ran it for the first time. Two rows failed: the Files app did not list Timetable under \"Open with\", and a schedule touching the selected one could not be picked with a tap. Unit tests covered both spots and were green."
@@ -55,3 +55,30 @@ All three spots had passing unit tests. The tests were not wrong; their inputs w
 ## Where it stands
 
 After the fixes, 12 of the 14 related rows pass. The other two were not failures but could not be judged: one needs the unfolded screen, one used a fixture whose 500 schedules stack in a single cell. Of 239 rows, 37 have been run so far. Unfolded posture, dark mode and the release build come next.
+
+## 2026-10-15 — Samsung My Files sends an empty type
+
+The same report came back from a Galaxy. Tapping the file in Samsung My Files said no app could open it. That build had already passed every shape we could think of on the emulator: messenger `*/*`, Drive `application/json`, dotted file names.
+
+So we stopped guessing and read the log on the phone:
+
+```
+MyFiles: There is no activity that can handle the intent.
+         (type :  , data : content://media/external/file/57150)
+```
+
+- **The type is an empty string**, not null. MediaStore stores the file as `application/octet-stream`, but My Files uses its own extension table and sends `""` for one it does not know.
+- **The URI is a MediaStore row id.** The file name lives in the row, and the app can only read it after it has been chosen.
+
+Only `*/*` matches an empty type. A filter with no `mimeType` matches null only; we installed one to check, and nothing changed. `mimeType=""` does not parse. A Samsung developer forum thread reaches the same dead end.
+
+An unrestricted `*/*` worked, but the phone then offered Timetable for every photo. Photos, video and audio go out as `…/images|video|audio/…`, and everything else as `…/file/<id>`. So the filter is pinned to `host="media"` with `pathPattern="/.*/file/.*"`. Timetable files open, and the photo and video choosers stay clean. PDFs and documents in that table may still list the app. A non-timetable file is refused at import, as before.
+
+KakaoTalk could not be fixed from our side. It never sends an intent for an unknown extension, even with a catch-all filter installed. Its Share does reach the app, so that is the path for files received in KakaoTalk.
+
+Both earlier rounds missed for the same reason: an emulator query only tests the shapes you thought of. Changes to these filters are now checked by tapping in the real sender on a real device, with logcat running.
+
+## History
+
+- 2026-10-12 — Files app `application/octet-stream`; tapping a touching neighbour
+- 2026-10-15 — Samsung My Files' empty type; KakaoTalk via Share

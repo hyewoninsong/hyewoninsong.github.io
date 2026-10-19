@@ -1,8 +1,8 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-09-21T09:41:30+09:00
+date: 2026-10-15T09:28:00+09:00
 app: "notequiz"
-tags: ["devlog", "design", "swiftui"]
+tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
 ---
 
@@ -54,7 +54,7 @@ Landmarks got the same dots. A re or si question shows the adjacent do slot as o
 
 ![A re question (D6). The do slot to its left is a dotted head on dotted ledger lines](/blog/notequiz-practice-modes/landmark-do-hint.png)
 
-The dots are the counting path, not the answer: empty heads with no name, and counting them is the exercise. They are derived per question and never saved. They stand in the column between the two heads, where nothing else is, and the pair spreads from 1.9 to 2.8 head widths only then, so the dots clear both sets of ledger lines.
+The dots are the counting path, not the answer: empty heads with no name, and counting them is the exercise. They are derived per question and never saved. At that stage they stood in the column between the two heads, where nothing else is, and the pair spreads from 1.9 to 2.8 head widths only then, so the dots cleared both sets of ledger lines. That separate column was later replaced by the vertical ladder described in the October 15 Android layout update below.
 
 ## 2026-09-21 — five radio rows became two axes, and each clef starts with a checkbox
 
@@ -76,12 +76,58 @@ The clef cards changed the same day. Each used to be four radios: off, easy, har
 
 Unchecking remembers the range so re-checking restores it; losing the choice on a toggle would read as a mistake. A clef never enabled before starts at the narrowest range. The check uses the same glyph slot and size as the radios but a different shape, a check mark against a filled circle, and not a switch, because every selection on this screen is a left glyph plus a full-row tap and a switch would bring in a color the screen does not use.
 
-## Where it stands
+## Where it stood on 2026-09-21
 
 A question is still one note, so records and statistics are untouched. The review screen draws only the answered note, no do and no dots yet. With no style that gives the answer away by order, timing and accuracy now compare across styles, but stats are not split by style.
+
+## 2026-10-15 — Android settings update in place, and five examples share one clock
+
+The two-axis design above records the September 21 iteration. Practice later settled into five stages: read do, read a do-mi-sol ladder, answer with a full ladder, answer with do alone, and answer without hints. Android now shows a looping staff example beside each stage, so choosing does not depend on understanding the label first.
+
+All five use the same treble clef and middle C. The reading examples show do alone or do-mi-sol; the three quiz examples ask the same sol with progressively fewer hints. They share one clock: one head every 0.5 seconds, a 1.4-second hold after the longest example finishes, then a 0.35-second clear. Short examples wait for the others. Independent timers would put each card at a different point in its explanation. The clock stops when the chooser closes or the app goes into the background.
+
+The settings had also been saving correctly while displaying old values. Clef switches and difficulty choices changed only after reopening the sheet. Stage and question count stayed stale on the home screen.
+
+The missing link was observation. A parent composable read an update counter, but the child screens received the same object and read ordinary store fields. Compose could skip those child calls. A parent redraw did not guarantee another store read.
+
+The screens now observe an account settings snapshot that changes with edits and account switches. Recreating the sheet would discard its interaction state; making every screen read an update counter would leave the same trap for the next screen. Observable settings put the dependency beside the value being displayed.
+
+Regression tests inspect the switches and selected chips while the sheet remains open, then the home labels after choosing a stage or count. They also inspect account switching and the examples reaching full, clearing, and starting again. Reading the saved value alone would have missed this bug.
+
+## 2026-10-15 — Android stacks the counting ladder on one axis
+
+Android's hint notes had the right names and heights, but each occupied a separate horizontal slot. Do-mi-sol looked like a row of notes spread across the staff. We matched the iOS layout in the quiz, home preview, and practice-stage chooser.
+
+### Thirds stack; neighboring heads move aside
+
+The reference, hints, and question form one ordered chain. Notes two staff positions apart share an x coordinate, whether the ladder rises through do-mi-sol or descends through do-la-fa. Only a step smaller than two positions moves right, by 0.92 head widths, to prevent overlapping heads. A distant note stays aligned even if it switches between a line and a space.
+
+Hint names now share a left-hand column at their heads' heights. The given do is red. Reading examples use solid heads; hints during a question remain dotted. The question's pitch is never labeled. Shared ledger lines are drawn once.
+
+![A partial reveal shows do and mi on the same axis in solid reading and dotted quiz examples](/blog/notequiz-practice-modes/android-stage-ladder.png)
+
+Even spacing preserved the order while changing the vertical relationship the exercise teaches. Fixing only the quiz would make the chooser demonstrate a different layout. All three now use the same geometry, with checks for the geometry itself: sharing a renderer can also share its mistake.
+
+### Reveal changes visibility, not the layout
+
+We calculate the complete chain before drawing its visible prefix. The hidden question already contributes its collision offset and centering. Revealing another head therefore keeps earlier heads in place. Centering only the visible notes would move the reference while the learner was counting from it.
+
+Geometry tests cover ascending and descending thirds, both clefs, close collisions, and wider jumps. Visual checks must also compare partial and complete reveals; a finished screenshot cannot show whether the chain moved along the way.
+
+### Home follows the decision order
+
+The home screen now puts the animated example first, followed by one rounded card for range, practice stage, and question count. Each row shows its value and a disclosure arrow. A capsule start action stays at the bottom.
+
+![Android home groups settings below the preview and keeps Start at the bottom](/blog/notequiz-practice-modes/android-home-setup.png)
+
+Grading also follows the iOS pen paths. The circle wobbles slightly and overlaps its starting point. The X draws two gently curved strokes in sequence. Their green and red colors remain, while the shapes appear as marks being drawn over the chosen answer.
+
+Question generation and stored records stay as they were. This change aligns the visual lesson and the route into it. A preview now needs to show the same counting axis as the question it represents.
 
 ## History
 
 - 2026-09-21 — practice styles added (lines/spaces, chain of thirds, landmarks, two-note reading)
 - 2026-09-21 — chain removed; two-note reading counts from the nearest do with dotted skip hints; landmarks show the do slot; dotted ledger lines
 - 2026-09-21 — five styles split into show-how × which-notes; clef cards gated behind an include check
+- 2026-10-15 — Android settings observe a shared snapshot; five stage examples loop on one clock
+- 2026-10-15 — Android ladders share one axis; full-chain reveal geometry, pen grading, and home hierarchy match iOS
