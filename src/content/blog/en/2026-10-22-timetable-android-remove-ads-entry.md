@@ -1,6 +1,6 @@
 ---
 title: "The people who saw ads were the ones who couldn't find Remove Ads"
-date: 2026-10-22T20:20:00+09:00
+date: 2026-10-22T20:50:00+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "SuperTimetable for Android sold Remove Ads at the bottom of Settings and in a house banner that only showed when no ad loaded. Anyone actually seeing ads never found it. It now sits in a line right above the ad and as the second card in Settings, and disappears once bought."
@@ -38,6 +38,23 @@ Dropping the restore button is safe because restoring is automatic. Every time t
 
 A row in the more menu: four tool rows (settings, share, calendar, tutorial) turn into something else once a purchase row joins them. The first-run intro: it ends before any ad appears, so it would pitch a purchase to someone who has not seen an ad yet. A one-time popup, for the same reason. Rotating the house banner in every Nth refresh even when ads load: the line above the ad does the same job without giving up revenue.
 
+## Same evening: the Settings row now looks like the ad's own
+
+The first reaction after shipping: make the Settings button stand out, not like the other rows. It had moved, but it still looked like every other row — one line of text, a grey price.
+
+![Settings sheet: on a light blue tint, the app icon, bold "Use without ads", a small pitch, and a filled blue "Remove ads" capsule on the right. "Restore purchase" below is a plain white row](/blog/timetable-android-remove-ads-entry/settings-promo-row.png)
+
+So the buy row became a promo row: app icon, bold title, one-line pitch, the price in a filled blue capsule, on a 10% brand tint. Enough to set it apart from the white rows, not enough to fight the capsule. The vocabulary is the house banner's, so the line above the ad, the house banner and the Settings card read as one thing.
+
+One string changed. The house banner says "this banner is gone for good"; in Settings there is no banner on screen, so it says "the ads are gone for good".
+
+It is the only tinted row in Settings, and it stays the only one. One is what makes it visible.
+
 ## Where it stands
 
 The emulator shows no price, since Play has no product there. The priced line on a real device, and Settings going quiet after a purchase, are next, with a license-tester account.
+
+## History
+
+- 2026-10-22 — line above the ad, Settings card moved up, gone once owned
+- 2026-10-22 — Settings card restyled as a promo row
