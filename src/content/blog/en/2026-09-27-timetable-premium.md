@@ -1,12 +1,14 @@
 ---
 title: "Adding a paid tier to the timetable app — and what we chose not to lock"
-date: 2026-10-06T13:34:00+09:00
+date: 2026-10-23T00:07:50+09:00
 app: "timetable"
 tags: ["devlog", "appstore"]
-summary: "We added a one-time Premium purchase, then removed it on 2026-10-06 and made everything free. What we chose not to lock, what we did lock, and what is left behind when a paywall comes out."
+summary: "We added a one-time Premium purchase, removed it on 2026-10-06 to make everything free, and on 2026-10-22 added a bottom banner ad with a one-time Remove Ads purchase instead of locking features. Old Premium buyers see no ads."
 ---
 
-> 2026-10-06 — This Premium tier no longer exists. The in-app purchase is gone and multiple timetables, alarms, custom colors, and calendar export are free. What follows is the record of the paid period; the removal is the last section.
+> 2026-10-06 — This Premium tier no longer exists. The in-app purchase is gone and multiple timetables, alarms, custom colors, and calendar export are free. What follows is the record of the paid period; the removal comes later.
+>
+> 2026-10-22 — Everything is still free. There is now a banner ad under the grid and a one-time purchase that removes it. People who bought the old Premium see no ads. Last section.
 
 The timetable app now has a one-time Premium unlock. Making, editing, and sharing a timetable stays free. Only a second timetable, alarms, and self-made colors sit behind the purchase.
 
@@ -277,7 +279,41 @@ On 2026-09-29 we decided that custom colors on a confirmed-free device would be 
 
 The lesson: when a conversion cannot be undone, keeping the original value next to it is cheap. The policy reversed within a week and the data could not follow.
 
-There is nothing the app can do for people who already paid. It no longer reads purchase state, and refunds go through Apple.
+At the time we wrote that there was nothing the app could do for people who had already paid. Since 2026-10-22 that is no longer true: the app reads that purchase again and shows those people no ads (last section).
+
+## 2026-10-22 — Ads instead of locks, and a price to remove them
+
+The iPhone timetable now has a banner ad under the grid. Right above it sits a line of our own, "Use without ads · price ›", which opens the purchase sheet. Pay once and the ads are gone for good. No feature is locked. Android shipped the same shape a week earlier.
+
+![The line above the ad and the bottom banner; the lock button sits above the banner](/blog/timetable-premium/ios-bottom-banner.png)
+
+Settings has a tinted card right under "Timetable Settings", the only colored row in the sheet. Once you buy, the card and "Restore purchase" disappear.
+
+![The Use without ads card in Settings](/blog/timetable-premium/ios-remove-ads-card.png)
+
+### Old Premium buyers see no ads
+
+The Premium product went off sale on 10-06, but the transaction is still in the device's entitlements. The app reads it again: either Remove Ads or the old Premium means no ads. We did not repurpose the old product, because its name and description talk about multiple timetables and alarms, and Family Sharing was on for it. Once enabled, Family Sharing cannot be turned off.
+
+### Ask about tracking after the tutorial, not at launch
+
+Personalized ads need the advertising identifier, which on iOS means the "Allow tracking?" system prompt. We follow Google's order: consent form first (only where the law requires it), then the tracking prompt, then start the ads SDK. Declining still shows ads, just not personalized ones.
+
+![The tracking prompt; the explanation says the app works the same either way](/blog/timetable-premium/ios-att-prompt.png)
+
+On first launch the iPhone app plays a feature intro. A system prompt on top of it would ask for permission before you know what the app is, so we ask once the intro and tutorial are done. People who own Remove Ads are never asked. When no ad arrives, the same slot shows our own "Use without ads" banner instead of collapsing, so declining consent does not equal no ads and the grid does not jump.
+
+### Two things that broke on the way
+
+**The lock button vanished behind the banner.** We first attached the banner with `safeAreaInset(edge: .bottom)`. The grid ended above it, but the navigation stack's bottom toolbar stays pinned to the stack's frame and ignores the added inset, so the lock button sat under the ad. Stacking the shell and the banner in a `VStack` shrinks the shell itself, and the toolbar now sits right above the banner.
+
+**Tapping Remove Ads in Settings closed Settings.** The result alert was bound to the same state on both the root view and the settings sheet. When it fired, both tried to present, and the root pushed the sheet away. Now the store tracks whether the settings sheet is up, and only one place presents.
+
+Neither shows up in builds or unit tests. Our UI tests turn the banner off to keep their layout measurements stable, so we added a launch flag that turns it back on and caught both from screenshots.
+
+### Where it stands
+
+The Remove Ads product is ready to submit with the first version that carries ads. Sandbox purchase and restore on a real device, and live ads, are still to be checked.
 
 ## History
 
@@ -292,3 +328,4 @@ There is nothing the app can do for people who already paid. It no longer reads 
 
 - 2026-10-05 — resume creation or duplication after payment; distinguish restore failure from no purchase
 - 2026-10-06 — in-app purchase removed, purchase code deleted outright, the order for taking the product off sale, recolored custom colors cannot be restored
+- 2026-10-22 — iPhone bottom banner + one-time Remove Ads (₩3,300), old Premium buyers ad-free, tracking prompt after the tutorial, toolbar hidden under the banner and an alert that closed the sheet
