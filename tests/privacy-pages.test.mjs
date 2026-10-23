@@ -12,15 +12,17 @@
 //   - a policy has the same section / list structure in both languages — a
 //     disclosure added to one language only (e.g. the SuperTimetable in-app
 //     purchase bullet of 2026-09-28) would leave the other store locale stale
-//   - the SuperTimetable iOS policy discloses in-app purchase status under
-//     Firebase Analytics and says Apple handles payment (docs/specs/website.md §4.2)
+//   - the SuperTimetable policy discloses the Remove Ads purchase under Firebase
+//     Analytics and says Apple / Google Play handle payment (docs/specs/website.md §4.2)
 //   - the SuperTimetable iOS policy and app page say data stays on the device
 //     and do not mention iCloud — the backup was removed from the app
 //     (docs/decisions/2026-10-13-timetable-icloud-backup-removed.md)
-//   - the SuperTimetable policy discloses the Android app's Google AdMob banner
-//     as Android-only — its own section, a processor row, a consent / opt-out
-//     path — and keeps saying the iOS app has no ads
-//     (docs/decisions/2026-10-16-timetable-android-admob-privacy.md)
+//   - the SuperTimetable policy discloses the Google AdMob banner on both
+//     platforms — IDFA/ATT (with the Google explainer screen) on iOS, AAID on
+//     Android, a processor row, a consent / opt-out path — its App Store table
+//     mirrors the published ASC label (8 types, 4 tracked), and the shared
+//     policy's ad exception names the whole app
+//     (docs/decisions/2026-10-23-timetable-ios-admob-privacy.md)
 //
 // Run with: node --test "tests/**/*.test.mjs"
 
@@ -144,11 +146,14 @@ test('a policy has the same section and list structure in both languages', () =>
   assert.deepEqual(uneven, []);
 });
 
-test('the SuperTimetable iOS policy discloses in-app purchase status, with Apple handling payment', () => {
+test('the SuperTimetable policy discloses the Remove Ads purchase, with Apple and Google Play handling payment', () => {
+  // The premium purchase stopped selling on 2026-10-06; Remove Ads is the one
+  // purchase on both platforms (docs/decisions/2026-10-23-timetable-ios-admob-privacy.md).
   const wording = {
-    ko: [/앱 내 구매 여부/, /Apple이 처리/],
-    en: [/In-app purchase status/, /handled by Apple/],
+    ko: [/광고 제거 구매/, /Apple\(iOS\)/, /Google Play\(Android\)/],
+    en: [/Remove ads purchase/, /handled by Apple \(iOS\) and Google Play \(Android\)/],
   };
+  const stale = { ko: /앱 내 구매 여부|프리미엄 구매/, en: /In-app purchase status|premium purchase/i };
   const missing = [];
   for (const locale of locales) {
     const source = readPage(locale, 'apps/timetable/privacy.astro');
@@ -157,6 +162,7 @@ test('the SuperTimetable iOS policy discloses in-app purchase status, with Apple
     for (const pattern of wording[locale]) {
       if (!pattern.test(analytics)) missing.push(`${locale}/apps/timetable/privacy.astro: ${pattern}`);
     }
+    if (stale[locale].test(analytics)) missing.push(`${locale}/apps/timetable/privacy.astro: still describes the premium purchase`);
   }
   assert.deepEqual(missing, []);
 });
@@ -177,12 +183,18 @@ test('the SuperTimetable iOS policy and app page do not mention iCloud and say d
   assert.deepEqual(problems, []);
 });
 
-test('the SuperTimetable policy discloses AdMob for the Android app only and keeps iOS ad-free', () => {
-  // The Android app shows an AdMob banner from 2026-10-16; the iOS app has no ads
-  // (docs/decisions/2026-10-16-timetable-android-admob-privacy.md).
+test('the SuperTimetable policy discloses AdMob and ATT on iOS as well as Android', () => {
+  // The iOS app gained an AdMob banner and an ATT prompt (policy effective 2026-10-30),
+  // superseding the iOS-ad-free line of 2026-10-16
+  // (docs/decisions/2026-10-23-timetable-ios-admob-privacy.md,
+  //  docs/decisions/2026-10-23-timetable-ios-idfa-explainer.md).
   const wording = {
-    ko: [/<h3>Google AdMob \(Google LLC\) — Android 앱만<\/h3>/, /<td>Google LLC \(AdMob, Android 앱만\)<\/td>/, /iOS 앱에는 광고가 없/, /광고 개인정보 설정/],
-    en: [/<h3>Google AdMob \(Google LLC\) — Android app only<\/h3>/, /<td>Google LLC \(AdMob, Android app only\)<\/td>/, /iOS app (has|contains) no (ads|advertising)/, /Ad privacy/],
+    ko: [/<h3>Google AdMob \(Google LLC\)<\/h3>/, /<td>Google LLC \(AdMob\)<\/td>/, /IDFA/, /AAID/, /앱 추적 투명성\(ATT\) 권한을 한 번 묻습니다/, /Google 안내 화면/, /광고 개인정보 설정/],
+    en: [/<h3>Google AdMob \(Google LLC\)<\/h3>/, /<td>Google LLC \(AdMob\)<\/td>/, /IDFA/, /AAID/, /App Tracking Transparency/, /short Google screen explains/, /Ad privacy/],
+  };
+  const stale = {
+    ko: /Android 앱만|iOS 앱에는 광고가 없|ATT\) 권한을 요청하지 않습니다/,
+    en: /Android app only|iOS app (has|contains) no (ads|advertising)|does not request App Tracking Transparency/,
   };
   const problems = [];
   for (const locale of locales) {
@@ -190,9 +202,38 @@ test('the SuperTimetable policy discloses AdMob for the Android app only and kee
     for (const pattern of wording[locale]) {
       if (!pattern.test(source)) problems.push(`${locale}/apps/timetable/privacy.astro: missing ${pattern}`);
     }
-    // The old blanket claim would now be false for the Android app.
-    if (/The app contains no advertising|앱에는 광고가 없습니다\./.test(source.replace(/iOS 앱에는 광고가 없습니다\./g, ''))) {
-      problems.push(`${locale}/apps/timetable/privacy.astro: still says the whole app has no ads`);
+    const found = source.match(stale[locale]);
+    if (found) problems.push(`${locale}/apps/timetable/privacy.astro: stale "${found[0]}"`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('the SuperTimetable App Store privacy table mirrors the published ASC label', () => {
+  // Eight data types published 2026-10-23; four are used for tracking.
+  const rows = { ko: /<tbody>[\s\S]*?<\/tbody>/g, en: /<tbody>[\s\S]*?<\/tbody>/g };
+  const tracked = { ko: /<td>함<\/td><\/tr>/g, en: /<td>Yes<\/td><\/tr>/g };
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/timetable/privacy.astro');
+    const table = [...source.matchAll(rows[locale])].map((m) => m[0]).find((body) => /IDFV|기기 ID|Device ID/.test(body));
+    if (!table) { problems.push(`${locale}: App Store privacy table not found`); continue; }
+    const count = (table.match(/<tr>/g) ?? []).length;
+    const trackedCount = (table.match(tracked[locale]) ?? []).length;
+    if (count !== 8) problems.push(`${locale}: ${count} rows, expected 8`);
+    if (trackedCount !== 4) problems.push(`${locale}: ${trackedCount} tracking rows, expected 4`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('the shared privacy page names the SuperTimetable app, not only its Android app, as the ad exception', () => {
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'privacy.astro');
+    if (/SuperTimetable Android 앱의 광고|ads in the SuperTimetable Android app/.test(source)) {
+      problems.push(`${locale}/privacy.astro: exception still limited to the Android app`);
+    }
+    if (!/SuperTimetable 앱의 광고|ads in the SuperTimetable app/.test(source)) {
+      problems.push(`${locale}/privacy.astro: SuperTimetable ad exception missing`);
     }
   }
   assert.deepEqual(problems, []);
