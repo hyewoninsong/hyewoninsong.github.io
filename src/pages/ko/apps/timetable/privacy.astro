@@ -93,19 +93,21 @@ const t = useTranslations(lang);
         이 선택은 앱의 <strong>설정 → 광고 개인정보 설정</strong>에서 언제든 바꿀 수 있습니다.
       </p>
       <p>
-        App Store의 "앱 개인정보" 표시는 아래와 같으며, iOS 앱에 포함된 개인정보 매니페스트와 일치합니다. 어느 항목도 사용자 신원과 연결하지 않습니다.
+        App Store의 "앱 개인정보" 표시는 아래와 같으며, 2026-10-23 에 App Store Connect 에 게시한 내용입니다. 어느 항목도 사용자 신원과 연결하지 않습니다.
       </p>
       <table>
         <thead>
           <tr><th>데이터</th><th>목적</th><th>신원 연결</th><th>추적 사용</th></tr>
         </thead>
         <tbody>
-          <tr><td>식별자 — 기기 ID</td><td>제3자 광고, 분석</td><td>안 함</td><td>함</td></tr>
-          <tr><td>사용 현황 — 광고 데이터</td><td>제3자 광고</td><td>안 함</td><td>함</td></tr>
-          <tr><td>사용 현황 — 제품 상호작용</td><td>분석, 제3자 광고</td><td>안 함</td><td>함</td></tr>
+          <tr><td>식별자 — 기기 ID</td><td>앱 기능, 분석, 제3자 광고</td><td>안 함</td><td>함</td></tr>
           <tr><td>위치 — 대략적인 위치</td><td>제3자 광고</td><td>안 함</td><td>함</td></tr>
-          <tr><td>진단 — 충돌 데이터</td><td>앱 기능</td><td>안 함</td><td>안 함</td></tr>
-          <tr><td>진단 — 기타 진단 데이터</td><td>앱 기능</td><td>안 함</td><td>안 함</td></tr>
+          <tr><td>사용 현황 — 광고 데이터</td><td>제3자 광고</td><td>안 함</td><td>함</td></tr>
+          <tr><td>사용 현황 — 제품 상호작용</td><td>분석, 앱 기능, 제3자 광고</td><td>안 함</td><td>함</td></tr>
+          <tr><td>사용 현황 — 기타 사용 데이터</td><td>앱 기능, 분석</td><td>안 함</td><td>안 함</td></tr>
+          <tr><td>구입 항목 — 구입 내역</td><td>분석</td><td>안 함</td><td>안 함</td></tr>
+          <tr><td>진단 — 충돌 데이터</td><td>앱 기능, 분석</td><td>안 함</td><td>안 함</td></tr>
+          <tr><td>진단 — 실적 데이터</td><td>앱 기능, 분석</td><td>안 함</td><td>안 함</td></tr>
         </tbody>
       </table>
 

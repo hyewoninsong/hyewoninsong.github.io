@@ -93,19 +93,21 @@ const t = useTranslations(lang);
         You can change this choice at any time in the app under <strong>Settings → Ad privacy</strong>.
       </p>
       <p>
-        The App Store privacy label reads as follows, matching the privacy manifest shipped inside the iOS app. None of this data is linked to your identity.
+        The App Store privacy label reads as follows, as published in App Store Connect on October 23, 2026. None of this data is linked to your identity.
       </p>
       <table>
         <thead>
           <tr><th>Data</th><th>Purpose</th><th>Linked to you</th><th>Used to track</th></tr>
         </thead>
         <tbody>
-          <tr><td>Identifiers — Device ID</td><td>Third-Party Advertising, Analytics</td><td>No</td><td>Yes</td></tr>
-          <tr><td>Usage Data — Advertising Data</td><td>Third-Party Advertising</td><td>No</td><td>Yes</td></tr>
-          <tr><td>Usage Data — Product Interaction</td><td>Analytics, Third-Party Advertising</td><td>No</td><td>Yes</td></tr>
+          <tr><td>Identifiers — Device ID</td><td>App Functionality, Analytics, Third-Party Advertising</td><td>No</td><td>Yes</td></tr>
           <tr><td>Location — Coarse Location</td><td>Third-Party Advertising</td><td>No</td><td>Yes</td></tr>
-          <tr><td>Diagnostics — Crash Data</td><td>App Functionality</td><td>No</td><td>No</td></tr>
-          <tr><td>Diagnostics — Other Diagnostic Data</td><td>App Functionality</td><td>No</td><td>No</td></tr>
+          <tr><td>Usage Data — Advertising Data</td><td>Third-Party Advertising</td><td>No</td><td>Yes</td></tr>
+          <tr><td>Usage Data — Product Interaction</td><td>Analytics, App Functionality, Third-Party Advertising</td><td>No</td><td>Yes</td></tr>
+          <tr><td>Usage Data — Other Usage Data</td><td>App Functionality, Analytics</td><td>No</td><td>No</td></tr>
+          <tr><td>Purchases — Purchase History</td><td>Analytics</td><td>No</td><td>No</td></tr>
+          <tr><td>Diagnostics — Crash Data</td><td>App Functionality, Analytics</td><td>No</td><td>No</td></tr>
+          <tr><td>Diagnostics — Performance Data</td><td>App Functionality, Analytics</td><td>No</td><td>No</td></tr>
         </tbody>
       </table>
 
