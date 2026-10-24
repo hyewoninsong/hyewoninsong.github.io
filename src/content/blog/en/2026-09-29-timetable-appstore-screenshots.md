@@ -1,6 +1,6 @@
 ---
 title: "Ten App Store screenshots that read as one picture"
-date: 2026-10-15T00:12:02+09:00
+date: 2026-10-24T05:22:48+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's new App Store screenshots: a three-card panorama of 3D bars taken from the app icon, then seven feature cards whose background keeps running between the phones. How the seams line up, and why the drag shot had two guide lines."
@@ -80,8 +80,39 @@ Three things went wrong while driving the emulator by coordinates:
 
 Looking at each language's raw captures side by side caught every one of these. A script exiting with 0 did not mean the scenes were right.
 
+## 2026-10-24 — Ten cards for the folding iPhone
+
+App Store Connect now takes iPhone Duo screenshots — 1398×2034 for the outer display, 2007×2853 for the inner one — and from April 2027 every app built with the iOS 27.1 SDK must have them; uploading earns an "optimized for iPhone Duo" badge. SuperTimetable 1.2.1 ships on that SDK, so the open inner display went up in landscape (2853×2007), ten cards in ten locales.
+
+![Drag card inside an open iPhone Duo — the Saturday art block being dragged](/blog/timetable-appstore-screenshots/duo-drag-card.png)
+
+The set is the iPad set. An open Duo is wide enough for the same shell (the edit popover next to the grid, the print and share sheets with their option column), and its aspect is nearly the iPad card's (1.42 vs 1.33). So captions, backgrounds and order derive from the iPad plan; only the canvas and the bezel change. Re-cutting the iPhone 6.9" cards for a Duo canvas lost: ten new designs for no visible gain.
+
+### The display type is not in the docs
+
+The API's `screenshotDisplayType` enum lists 33 values and no Duo; fastlane's spaceship doesn't know it either, and `deliver` routes by image size, so a 2853×2007 PNG has nowhere to go. What the server really accepts comes out of one bogus `POST /v1/appScreenshotSets`: the 409 body says "Expected one of …" and the list contains `APP_IPHONE_DUO` and `IMESSAGE_APP_IPHONE_DUO`. A 409 creates nothing, so it is a safe probe (a GET filter with a bogus value just returns an empty list). The uploader names the type by hand.
+
+### Five places the capture test died on an open Duo
+
+The iPad XCUITest failed all nine segments on the Duo simulator. Every failure had the same root: two screens.
+
+- Every PNG was black at 2034×1398. `XCUIScreen.main` is the outer display, which is off while the phone is open; the app and the test both live on the inner one. Take every `XCUIScreen.screens` screenshot and keep the largest. The inner capture comes back 2006×2852 with an EXIF rotation — one pixel short of spec, harmless once composited, but a raw upload would need `simctl io screenshot --display=3`.
+- Tapping a block twice never opened the editor. Coordinates built from `app.coordinate(withNormalizedOffset:)` land on the app element's screen, the dark outer one; the same offsets built from `app.windows.firstMatch` work. Element `tap()` always worked. On a single-screen device the two origins coincide, which is why nobody had seen it.
+- Nothing scrolled the grid. Empty cells, the hour-axis strip, press durations of 0 and 0.1 s, four velocities, six swipes — all zero, while taps and one-second long-press drags work. Rather than dig further, a capture-only launch argument (`-AppStoreInitialScrollHour 13.75`) makes the app start scrolled to the afternoon.
+- Picking "10 minutes before" showed the notifications-off alert: the fresh Duo simulator reports AlarmKit as denied without ever prompting, and `simctl privacy` cannot touch it. In capture mode the app now uses a stand-in alarm backend that is always authorized and registers nothing — the card only needs the value.
+- The keyboard element outlived the keyboard, so the "keyboard dismissed" assertion failed; the popover also shrinks above the keyboard, so the header row is now measured from the close button instead of a fixed offset.
+
+![Alert card inside an open iPhone Duo — Taekwondo with a 10-minute reminder](/blog/timetable-appstore-screenshots/duo-alarm-card.png)
+
+### A human opens the phone
+
+Posture is a DeviceHub button; neither `simctl` nor XCUITest can change it, and every boot folds the phone again. The iPad driver reboots per locale to switch the system language, which would silently fold the Duo from the second language on. The Duo driver never reboots and passes the language as launch arguments only — none of the ten shots shows system-language UI (the open Duo's status bar is just the time and Wi-Fi). Before each locale it checks that the inner display is lit; a folded Duo returns that display at full size, all black. One Open press, eight languages.
+
+Eight languages × nine segments ran with zero failures; a read-back shows ten `COMPLETE` `APP_IPHONE_DUO` screenshots in all ten locales and the iPhone and iPad sets untouched. Review submission is a separate step.
+
 ## History
 
 - 2026-09-29 — Added the iPhone panorama, continuous feature backgrounds, and drag capture notes.
 - 2026-10-01 — Verified the iPad viewport, notch default, and gesture capture output route across eight languages.
 - 2026-10-15 — Ported the cards to the Play Store as eight 9:16 cards and built the matching promo video from emulator recordings.
+- 2026-10-24 — Uploaded ten open-inner-display iPhone Duo cards in ten locales; the hidden `APP_IPHONE_DUO` type and the two-screen capture, coordinate and scroll pitfalls.
