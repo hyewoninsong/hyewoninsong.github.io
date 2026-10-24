@@ -10,7 +10,7 @@ If you've opened SuperFont on three different days and have at least one font in
 
 ## The card says thanks; the system asks for stars
 
-![The SuperFont thank-you card: serif A icon, title, signature and a single button](/blog/superfont-review-card/thanks-card-en.png)
+![The SuperFont thank-you card: split-A app icon, title, signature and a single button](/blog/superfont-review-card/thanks-card-en.png)
 
 The card is Super Timetable's, word for word in all seven languages: an ink-colored letter with the app icon, a title, three lines, a signature and one button. It never asks for a rating. Splitting people into "like / dislike" and sending only the happy ones to the rating sheet breaks App Store guideline 5.6.1, so closing the card in any way calls `requestReview`. The system may still decline to show it (three times a year, never on TestFlight), and the card has to make sense on its own.
 
@@ -22,7 +22,7 @@ Super Timetable waits for five schedules. SuperFont has no such count, so it wai
 
 ## No entrance animation
 
-Super Timetable's card springs in. SuperFont doesn't do entrance animations, so the card is simply there, with a success haptic; only closing fades. The icon is the serif A on a paper tile. There is no menu item to summon it.
+Super Timetable's card springs in. SuperFont doesn't do entrance animations, so the card is simply there, with a success haptic; only closing fades. The icon is SuperFont's real home-screen icon, the split A. A first pass used the splash's whole serif A, which only looked close; now the icon script renders the card's copy too, and a test compares the two files byte for byte. There is no menu item to summon it.
 
 ## Where it stands
 
