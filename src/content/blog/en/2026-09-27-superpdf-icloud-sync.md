@@ -1,10 +1,12 @@
 ---
-title: "Underlines now follow you between your iPhone and iPad"
-date: 2026-09-27T16:00:00+09:00
+title: "Syncing underlines between iPhone and iPad — and why it came back out"
+date: 2026-10-24T23:24:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "data"]
-summary: "On the same Apple account, underlines, the mind map, and the PDF itself now follow you across your own devices. CloudKit has no idea what a tree is, so two devices moving a node in opposite directions can create a cycle — fixing that deterministically was the real work."
+summary: "We built iCloud sync for underlines, the mind map, and PDFs across your own devices, with a deterministic repair for tree cycles. Then no test build shipped for four weeks, and the sync came back out."
 ---
+
+> October 24, 2026: this sync was removed before it ever reached users. The last section explains why; the rest is the design as it stood.
 
 MindPDF is built for underlining on the iPad and re-reading just the underlines on the iPhone, so having the two devices show different things was a long-standing gap. Devices signed into the same Apple account now stay in sync: underlines, mind map, and the PDF itself all follow you across them.
 
@@ -44,6 +46,27 @@ Underlines never hit this problem at all. They aren't a tree, just independent r
 
 **A failed CloudKit open must fall back to local, not move the library aside.** The store-opening code used to move the file aside and start fresh whenever it failed to open. Once sync exists, a failure that's really just an account or schema problem would trigger that path and wipe out a user's library. A local-only open now sits between "open with CloudKit" and "move the file aside" — only a fully local failure reaches the destructive step.
 
-## Where it stands
+## Where it stood (September 27)
 
-Not yet confirmed on two physical devices — the simulator can't actually observe CloudKit sync. The CloudKit dashboard's production schema deploy is also still pending, so TestFlight and App Store builds won't sync until that happens.
+Not yet confirmed on two physical devices, and the production CloudKit schema was never deployed. Neither happened — see below.
+
+## October 24 — four weeks without a build, and removing sync
+
+Every TestFlight deploy after sync landed died at signing, about three minutes in:
+
+```
+Provisioning profile "iOS Team Provisioning Profile: *" doesn't include the iCloud capability.
+```
+
+The app declared an iCloud container and push (CloudKit's change channel), but the App ID on the developer portal had only in-app purchase enabled. All development happened in the simulator, which never checks signing, so the mismatch only showed in release builds. The `*` in the message is the tell: Xcode found no profile for this App ID and fell back to the team wildcard.
+
+The pre-deploy check saw it. It printed the declared keys next to the App ID's capabilities — and passed, because it only blocked a few approval-gated keys and skipped keys the profile lacked entirely. Output nobody reads is not a check. It now blocks when a key like iCloud, push, or app groups has no matching capability.
+
+Fixing it meant creating and attaching the iCloud container by hand on the web (the public API can't), switching the release lane to manual signing, deploying the production CloudKit schema, and testing on two devices. We removed sync instead: the store is local-only, the entitlements are gone, and PDFs are no longer copied into the store. The schema stays as is — reverting it would only add a migration — and the tree repair still runs when a map opens.
+
+The rule we kept: any change that adds a capability-backed entitlement gets one release build before it merges.
+
+## History
+
+- 2026-09-27 — own-device iCloud sync and post-merge tree repair
+- 2026-10-24 — found why signing failed for four weeks; removed sync (schema and tree repair kept)
