@@ -1,9 +1,9 @@
 ---
-title: "Porting the review thank-you card to SuperFont, with two changes"
+title: "Porting the review thank-you card to SuperFont, and breaking one of its rules"
 date: 2026-10-25T00:32:48+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "appstore"]
-summary: "SuperFont now shows a short note from the developers to people who keep using it, and asks the system for a rating when the note is closed. Copy, layout and frequency match Super Timetable; what counts as a regular user, and how the card appears, are SuperFont's own."
+summary: "SuperFont now shows a short note from the developers to people who keep using it, and asks the system for a rating when the note is closed. Copy, layout, entrance and frequency match Super Timetable; only what counts as a regular user is SuperFont's own."
 ---
 
 If you've opened SuperFont on three different days and have at least one font installed, the app greets you with a short thank-you card. SuperFont had no way to ask for reviews at all, and reviews are half of what moves search ranking.
@@ -20,9 +20,9 @@ Frequency is the same too: three days of use, once per version, and at least 90 
 
 Super Timetable waits for five schedules. SuperFont has no such count, so it waits for **at least one font family currently installed**, using the same check that decides "installed" everywhere else in the app. Five families was too high for people who install one or two typefaces at a time, and showing the card right after an install would put it under the full-screen install wizard.
 
-## No entrance animation
+## One exception to "no entrance animations"
 
-Super Timetable's card springs in. SuperFont doesn't do entrance animations, so the card is simply there, with a success haptic; only closing fades. The icon is SuperFont's real home-screen icon, the split A. A first pass used the splash's whole serif A, which only looked close; now the icon script renders the card's copy too, and a test compares the two files byte for byte. There is no menu item to summon it.
+Super Timetable's card springs in from 0.92 scale over a fading scrim. SuperFont otherwise has no entrance animations, and the first version followed that rule. But the same note arriving two different ways in two apps felt more off than the motion, so the card now uses the same spring and is written down as the rule's only exception. The icon is SuperFont's real home-screen icon, the split A. A first pass used the splash's whole serif A, which only looked close; now the icon script renders the card's copy too, and a test compares the two files byte for byte. There is no menu item to summon it.
 
 ## Where it stands
 
