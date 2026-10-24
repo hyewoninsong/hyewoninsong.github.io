@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-24T17:03:11+09:00
+date: 2026-10-25T02:38:57+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -35,3 +35,16 @@ The iPhone Duo simulator starts folded and can only be unfolded from a button in
 ## What is left
 
 Jumping from a map node lands on the right spread but without the flash the scroll view shows. Drawing directly on the spread would mean splitting the coordinator per page.
+
+## 2026-10-25 — Turning a spread froze the app for good
+
+The first TestFlight build with the spread drew a report: open a large scanned book and the app freezes, never to recover. Size looked guilty, so we built a 400-page image PDF with a full OCR cache and 300 highlights. The vertical scroll view opened it in two to five seconds on the simulator. Forcing the spread on with the same data froze it on the first arrow tap.
+
+Sampling the stuck main thread gave one stack in every sample. SwiftUI was mid-update, called `updateUIViewController`, and we called `setViewControllers` there. The new page's `PDFView` became first responder as it joined the window, and the hosting view went to read the responder from the very graph it was updating. AttributeGraph treats that as a cycle and never leaves it. The first layout was fine only because the controller was not in a window yet, which is why it froze on the first turn, not on open.
+
+The fix: once in a window, remember the target spread and set it on the next run loop, last target wins. Next, next, back now goes 3–4, 5–6, 3–4 of 400 with no stall. Our earlier check only captured the first screen and a finger swipe, and a swipe is UIKit turning the page itself; it never went through a SwiftUI update. Representables are now tested through a second update after they are on screen.
+
+## History
+
+- 2026-10-24 — Two-page spread with page curl on the unfolded Duo
+- 2026-10-25 — Arrow turns froze in an AttributeGraph cycle; page swaps moved out of the update
