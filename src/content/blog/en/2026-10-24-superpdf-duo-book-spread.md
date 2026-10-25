@@ -1,18 +1,18 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-25T02:38:57+09:00
+date: 2026-10-25T19:09:27+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
 ---
 
-Open SuperPDF on an unfolded iPhone Duo and the PDF sits as a left page and a right page. Drag the right page and it curls over. Folded, nothing changes: the same vertical scroll as before. The unfolded screen is 669pt wide, too wide for one page at a readable size, and two pages bring it close to a paperback's column width.
+Open SuperPDF on an unfolded iPhone Duo and the PDF sits as a left page and a right page. Drag the right page and it curls over. Folded, and on every other device, pages turn one at a time the same way (see the second October 25 section). The unfolded screen is 669pt wide, too wide for one page at a readable size, and two pages bring it close to a paperback's column width.
 
 ## Two pages, hugging the spine
 
 ![Two-page spread in the PDF plus map split](/blog/superpdf-duo-book-spread/spread-split.png)
 
-Even pages go left, odd pages right, each pushed toward the spine. Highlights, underlines and crops made in the scroll view draw on the spread as they are, and tapping one opens the same popover. The page bar reads "1–2 / 3" and the arrows move one spread at a time. With an odd page count the last right page is blank.
+Even pages go left, odd pages right, each pushed toward the spine. Highlights, underlines and crops made in the scroll view draw on the spread as they are, and tapping one opens the same popover. The page counter reads "1–2 / 3" and the arrows move one spread at a time. With an odd page count the last right page is blank.
 
 ![The right page curling mid-turn](/blog/superpdf-duo-book-spread/page-curl.png)
 
@@ -20,7 +20,7 @@ The turn is `UIPageViewController` with `.pageCurl`, `spineLocation = .mid` and 
 
 ## The fold is read from size classes
 
-iOS has no API for the fold state; the iOS 27 UIKit headers have no posture, fold or hinge. What an unfolded Duo does have is a phone idiom with regular width *and* regular height, a combination no other iPhone produces. The rule is four conditions: phone idiom, regular in both axes, a PDF pane at least 560pt wide, and the reading tool. The idiom excludes iPad, the regular height excludes a landscape iPhone, the pane width excludes the half pane of a side-by-side split, and the tool excludes drawing. It is a pure function with ten unit tests.
+iOS has no API for the fold state; the iOS 27 UIKit headers have no posture, fold or hinge. What an unfolded Duo does have is a phone idiom with regular width *and* regular height, a combination no other iPhone produces. The rule is four conditions: phone idiom, regular in both axes, a PDF pane at least 560pt wide, and the reading tool. The idiom excludes iPad (which turns one page at a time), the regular height excludes a landscape iPhone, the pane width excludes the half pane of a side-by-side split, and the tool excludes drawing. It is a pure function with ten unit tests.
 
 ## Drawing tools fall back to the scroll view
 
@@ -44,7 +44,20 @@ Sampling the stuck main thread gave one stack in every sample. SwiftUI was mid-u
 
 The fix: once in a window, remember the target spread and set it on the next run loop, last target wins. Next, next, back now goes 3–4, 5–6, 3–4 of 400 with no stall. Our earlier check only captured the first screen and a finger swipe, and a swipe is UIKit turning the page itself; it never went through a SwiftUI update. Representables are now tested through a second update after they are on screen.
 
+## 2026-10-25 — The curl took the black margin with it, and the bars shrank the book
+
+Two notes from reading on an unfolded Duo in dark mode: turning a page curled the black pane margin along with the paper, and the top and bottom bars ate the height the book needed. A third followed: make a single page fill the screen too.
+
+**Why the margin curled.** `.pageCurl` curls the child view controller's whole view. With the spread spanning the pane, each page controller got half of it, the PDF page fit narrower inside, and the leftover was the page view's background: black in dark mode, light grey in light mode, which is why the first check missed it. The spread now sits in a container sized to the page aspect times the number of pages, so the margin stays outside the turn. The aspect is the median of fifteen sampled pages, since scanned covers rarely match the body, and any small leftover is painted paper white.
+
+**One rail on the right.** In the reading tool the navigation bar is hidden, and back, file list, view mode, search, export, tool picker, dim, previous/next and the page counter, plus OCR progress, stack in a single column on the right. The book gets the full height. Floating the rail over the page lost: on a pane that fills by width, it covers the edge of the right page. Pick a drawing tool and the scroll view and its bars come back.
+
+**Single pages too.** The reading tool now pages on every device: two pages where the spread fits, otherwise one page fitted to the pane with the spine on the left. The same view handles both by spine location, and is rebuilt when it switches because a page view controller's spine is fixed at creation. Vertical scrolling is now for drawing only.
+
+Still to verify: a dark-mode turn on a real unfolded Duo, and whether a landscape iPad in PDF-only mode should get two pages instead of one.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
 - 2026-10-25 — Arrow turns froze in an AttributeGraph cycle; page swaps moved out of the update
+- 2026-10-25 — Turns no longer curl the pane margin; the reading tool pages on every device; bars moved to a right rail
