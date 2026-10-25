@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-25T23:52:06+09:00
+date: 2026-10-26T01:36:41+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -92,6 +92,14 @@ One tap now means three things. An edge tap is still the page curl's own turn, a
 
 Reading buttons also switched from the blue accent to the label colour, so they stay quieter than the page.
 
+## 2026-10-26 — The buttons left, the page stayed small
+
+A reader on the folded Duo's outer screen sent a screenshot: after the tap the buttons and status bar were gone and the white sheet reached the screen edges, but the page inside it stayed a small shadowed card with margins all around.
+
+Re-applying the fit scale on resize changed nothing, and landscape iPhone never reproduced it. A log on the folded Duo simulator did: the page `PDFView` kept its 375×531 frame, yet its fit scale dropped from 0.630 to 0.610 the moment the buttons hid. The only thing that moved was `safeAreaInsets` — bottom went from 0 to 17pt. With the buttons gone, the page reaches under the status bar and home indicator, and **`PDFView` fits its page inside its own safe area**. Tall book pages lose the most: height shrinks by both insets and the width follows the aspect.
+
+The fix is a `PDFView` subclass whose `safeAreaInsets` is always zero. The SwiftUI pane already decides where the page goes, so the page view should not avoid the safe area a second time. Setting the inner scroll view's `contentInsetAdjustmentBehavior` to `.never` did not help; the scale reads the view's safe area directly. After the fix the scale holds at 0.630 hidden or not. The earlier check ran on a landscape iPad mini, where the page barely touches the safe area — this only shows on a tall page that overlaps it.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -100,3 +108,4 @@ Reading buttons also switched from the blue accent to the label colour, so they 
 - 2026-10-25 — Floating top/bottom buttons on single pages; the right rail is Duo-only
 - 2026-10-25 — Single-page buttons in the iOS bars; floating only when a bar overflows
 - 2026-10-25 — Tap the page to hide or show every button; page numbers under the spread; reading buttons in the label colour
+- 2026-10-26 — Hiding the buttons no longer leaves the page inset by the safe area
