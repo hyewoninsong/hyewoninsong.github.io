@@ -23,6 +23,10 @@
 //     mirrors the published ASC label (8 types, 4 tracked), and the shared
 //     policy's ad exception names the whole app
 //     (docs/decisions/2026-10-23-timetable-ios-admob-privacy.md)
+//   - the SuperFont policy discloses the AdMob banner, IDFA/ATT, UMP consent
+//     and the Remove Ads purchase, and its App Store table mirrors the privacy
+//     manifest (6 types, 4 tracked)
+//     (docs/decisions/2026-10-25-superfont-ios-admob-privacy.md)
 //
 // Run with: node --test "tests/**/*.test.mjs"
 
@@ -235,6 +239,50 @@ test('the shared privacy page names the SuperTimetable app, not only its Android
     if (!/SuperTimetable 앱의 광고|ads in the SuperTimetable app/.test(source)) {
       problems.push(`${locale}/privacy.astro: SuperTimetable ad exception missing`);
     }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('the SuperFont policy discloses AdMob, ATT and the Remove Ads purchase', () => {
+  // Policy effective 2026-10-25 (docs/decisions/2026-10-25-superfont-ios-admob-privacy.md).
+  const wording = {
+    ko: [/<h3>Google AdMob \(Google LLC\)<\/h3>/, /<td>Google LLC \(AdMob\)<\/td>/, /IDFA/, /IDFV/, /앱 추적 투명성\(ATT\) 권한을 한 번 묻습니다/, /UMP/, /광고 제거 화면 → 광고 개인정보 설정/, /광고 제거 구매/, /Apple이 처리/],
+    en: [/<h3>Google AdMob \(Google LLC\)<\/h3>/, /<td>Google LLC \(AdMob\)<\/td>/, /IDFA/, /IDFV/, /App Tracking Transparency/, /UMP/, /Remove Ads screen → Ad privacy/, /Remove Ads/, /Apple/],
+  };
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/superfont/privacy.astro');
+    for (const pattern of wording[locale]) {
+      if (!pattern.test(source)) problems.push(`${locale}/apps/superfont/privacy.astro: missing ${pattern}`);
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('the SuperFont App Store privacy table mirrors the privacy manifest', () => {
+  // Six collected types in PrivacyInfo.xcprivacy; four are used for tracking.
+  const tracked = { ko: /<td>함<\/td><\/tr>/g, en: /<td>Yes<\/td><\/tr>/g };
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/superfont/privacy.astro');
+    const table = [...source.matchAll(/<tbody>[\s\S]*?<\/tbody>/g)].map((m) => m[0]).find((body) => /기기 ID|Device ID/.test(body));
+    if (!table) { problems.push(`${locale}: App Store privacy table not found`); continue; }
+    const count = (table.match(/<tr>/g) ?? []).length;
+    const trackedCount = (table.match(tracked[locale]) ?? []).length;
+    if (count !== 6) problems.push(`${locale}: ${count} rows, expected 6`);
+    if (trackedCount !== 4) problems.push(`${locale}: ${trackedCount} tracking rows, expected 4`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+// SuperFont now reads the IDFA for ads (2026-10-25), but the shared policy still
+// names only SuperTimetable as the exception to "no ad identifiers". Drop the
+// `todo` once src/pages/{ko,en}/privacy.astro names SuperFont too.
+test('the shared privacy page names SuperFont as an ad exception', { todo: 'shared policy lists only SuperTimetable' }, () => {
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'privacy.astro');
+    if (!/SuperFont/.test(source)) problems.push(`${locale}/privacy.astro: SuperFont ad exception missing`);
   }
   assert.deepEqual(problems, []);
 });
