@@ -1,6 +1,6 @@
 ---
 title: "Remove Ads in an app with no Settings screen: where does Restore go?"
-date: 2026-10-24T23:36:25+09:00
+date: 2026-10-25T12:02:56+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "appstore"]
 summary: "SuperFont now shows an AdMob banner at the bottom of the main screen, and a one-time purchase removes it for good. Copying SuperTimetable's setup broke down on one point — there is no Settings screen — and stacking the banner the obvious way buried a keyboard toolbar under the keyboard."
@@ -8,13 +8,13 @@ summary: "SuperFont now shows an AdMob banner at the bottom of the main screen, 
 
 SuperFont's main screen now has an ad banner at the bottom. Tap "Use without ads" right above it, pay once, and the ads are gone for good.
 
-## The banner lives on the main screen only
+## The banner sits at the very bottom, under the buttons
 
 ![A "Use without ads" line and a test banner stacked under the install button](/blog/superfont-ads-remove-ads/banner.png)
 
 The layout comes from SuperTimetable: an app-drawn line ("Use without ads · price ›"), an anchored adaptive AdMob banner, then the home-indicator strip. The line sits outside the ad area in the app's own type, as AdMob policy requires. When no ad fills, the same slot shows a house banner instead of an empty strip.
 
-The banner is stacked under the main screen, so the main screen gets shorter and the install button sits right above the ad. The install wizard covers the whole screen, so there are no ads while you install a font. Consent follows Google's order — UMP, then App Tracking Transparency, then the SDK — and waits until the splash animation is gone.
+The banner is stacked under the main screen, so the main screen gets shorter and the install button sits right above the ad. At first the full-screen install wizard covered the banner, so there were no ads while installing. A day later the wizard got its own banner (see October 25 below). Consent follows Google's order — UMP, then App Tracking Transparency, then the SDK — and waits until the splash animation is gone.
 
 ## Entry points open a sheet, not the payment sheet
 
@@ -35,3 +35,18 @@ The same capture caught a second one: an accessibility identifier on the banner 
 ## Where it stands
 
 Ads are off on every simulator (UI tests and store captures run there); Debug builds show them with `-showsAds`. The price appears once the product exists in App Store Connect, and the App Privacy answers have to move from "no tracking" to tracking for ads.
+
+## 2026-10-25 — The banner stays during install
+
+![The install wizard's font step, with "Use without ads" and a test banner right under the Next button](/blog/superfont-ads-remove-ads/wizard-banner.png)
+
+The install wizard is where people actually spend their time in SuperFont, and it had no ads at all. It is a `fullScreenCover`, which hides everything under it, including the main screen's banner. So the cover now stacks its own banner slot under the wizard, exactly like the main screen. Each step's Next button sits right above it. Keyboard collapse, the house-banner fallback, and "no slot at all once you've paid" all carry over from the same single check.
+
+Two alternatives lost. Putting the banner inside the wizard view would make a screen know about the ad under it; the root decides layout, so it went there. Turning the wizard into in-place navigation would leave one banner, but would mean rewiring the drop-off metric and the review-card timing.
+
+Consent still shows once, since the request is ignored while one is running or done. One oddity: with the wizard up on first launch, UI tests see two "Continue" buttons on the consent form. A build with the wizard's consent request switched off showed the same, and the screen only shows one, so tests just tap the first match. The cost: the wizard is one banner shorter, so small iPhones show fewer fonts.
+
+## History
+
+- 2026-10-24 — Main-screen banner, Remove Ads sheet, keyboard toolbar pitfall
+- 2026-10-25 — Banner inside the install wizard
