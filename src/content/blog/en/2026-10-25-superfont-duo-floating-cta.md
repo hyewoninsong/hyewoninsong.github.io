@@ -64,6 +64,8 @@ The morning rule holds — only system-drawn icon items move — with one additi
 
 Three paths lost. A segmented control in `.bottomBar` is still text, so it would not move, and on iPhone it adds a system toolbar under the floating button. `.sidebarAdaptable` gives iPad a sidebar toggle for three items. Custom tab symbols — an "A" inside a document, a cloud, a phone — got as far as rendering: hand-written squares and circles compiled, but long outlines produced by a geometry library compiled into empty glyphs, so the stock icons stayed.
 
+Later that day the tabs went away entirely — the home screen became an install list and the three sources moved into sheets behind a + menu ([next post](/en/blog/2026-10-25-superfont-add-menu-sheets/)). So no tabs sit in the Duo strip now; the + and the in-sheet trash do.
+
 What remains is the ad banner: the iPhone bottom now stacks install button, tab bar, banner. The consent form is a web view the simulator tests could not get past, so that is a device check.
 
 ## Unfolded, checked
