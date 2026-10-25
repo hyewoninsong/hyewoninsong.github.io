@@ -1,12 +1,12 @@
 ---
 title: "The foldable iPhone's side strip had no SuperFont buttons in it"
-date: 2026-10-25T02:59:21+09:00
+date: 2026-10-25T11:40:00+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "design"]
-summary: "On the iPhone Duo simulator SuperFont's side strip showed nothing but the clock. Only system toolbar icons move there, so the trash and close buttons became toolbar items, and the bottom install button lost its bar and now floats as tinted glass."
+summary: "On the iPhone Duo simulator SuperFont's side strip showed nothing but the clock. Only system toolbar icons move there, so the trash and close buttons became toolbar items and the install button now floats as tinted glass. Later the same day the segmented tab picker turned out not to move either — a system tab bar does, and now the tabs stand at the bottom of the strip."
 ---
 
-On iPhone Duo, SuperFont's trash and close buttons now sit as round buttons in the strip along the right edge. The install button dropped its gray bar and floats over the list as translucent glass. iPhone gets the same look.
+On iPhone Duo, SuperFont's trash and close buttons now sit as round buttons at the top of the strip along the right edge, and the three tabs sit at its bottom. The install button dropped its gray bar and floats over the list as translucent glass. On iPhone the tabs moved down into a glass tab bar.
 
 ## The strip was empty
 
@@ -20,13 +20,13 @@ The rule is narrow: only **system toolbar icon items** move. SuperFont's main sc
 
 | Spot | Before | After |
 |---|---|---|
-| Main tab picker | Custom segmented control, nav bar hidden | `ToolbarItem(.principal)` |
+| Main tab picker | Custom segmented control, nav bar hidden | `ToolbarItem(.principal)` — replaced by a system tab bar that afternoon, see below |
 | My Fonts trash | Red square beside the install button | Red icon at the nav bar's trailing edge, only with a selection |
 | Wizard close | "Cancel" text | System X (`Button(role: .close)`) |
 
 ![Folded Duo, My Fonts tab: the red trash stands as a round button in the strip, Reinstall floats over the list](/blog/superfont-duo-floating-cta/duo-folded-trash-strip.png)
 
-![iPhone 17, same screen: trash at the trailing edge, picker in the middle](/blog/superfont-duo-floating-cta/iphone-trash-navbar.png)
+![iPhone 17, same screen: trash at the trailing edge, picker in the middle — the picker became a bottom tab bar later that day](/blog/superfont-duo-floating-cta/iphone-trash-navbar.png)
 
 The install button stayed put. Its label carries the count ("Install 3", "Next (3 families)") and the Google Fonts tab adds a "7 styles included" line under it. An icon in the strip would throw that away.
 
@@ -44,10 +44,33 @@ Moving the picker into the navigation bar turned the three tab titles into icons
 
 The UI test that selects a family and screenshots the trash hung right after tapping the tab, "waiting for the app to idle", and failed ten minutes later. CPU was 0%, so no runaway animation. The test had been started in the background and the turn ended; the session's cleanup hook then shut down the simulator it was running on. Simulator work now stays inside one turn.
 
-## Unfolded is still open
+## 2026-10-25, afternoon — the tabs needed a tab bar, not a segmented control
 
-The Duo simulator boots folded and the unfold control lives only in the simulator window, which a locked Mac keeps out of reach. The folded posture shows the strip working; the open posture is next.
+The picker in the navigation bar never reached the Duo strip. Three text segments are not icon items, so the strip still held one trash button and the tabs stayed above the content. The question was whether the tabs could move to the bottom and, on Duo, to the right side. The answer was not where to put the segmented control but to use a system `TabView`.
+
+Three `Tab(title, systemImage:, value:)` entries, each with its own `NavigationStack`; the icons are the document, globe and "Aa" that were already there.
+
+| Device | Where the tabs land |
+|---|---|
+| iPhone | Bottom glass tab bar, the install button floats right above it |
+| iPad | Floating tab bar at the top |
+| Duo, folded and open | Bottom of the right strip, icons only |
+
+![iPhone 17, bottom: the floating "Install 3" button above the glass tab bar](/blog/superfont-duo-floating-cta/iphone-bottom-tab-bar.png)
+
+![Open Duo, My Fonts: with one family selected, the red trash sits at the top of the strip and the three tabs at its bottom](/blog/superfont-duo-floating-cta/duo-open-tabs-strip.png)
+
+The morning rule holds — only system-drawn icon items move — with one addition: the tabs of a system tab bar are such items.
+
+Three paths lost. A segmented control in `.bottomBar` is still text, so it would not move, and on iPhone it adds a system toolbar under the floating button. `.sidebarAdaptable` gives iPad a sidebar toggle for three items. Custom tab symbols — an "A" inside a document, a cloud, a phone — got as far as rendering: hand-written squares and circles compiled, but long outlines produced by a geometry library compiled into empty glyphs, so the stock icons stayed.
+
+What remains is the ad banner: the iPhone bottom now stacks install button, tab bar, banner. The consent form is a web view the simulator tests could not get past, so that is a device check.
+
+## Unfolded, checked
+
+The Duo simulator boots folded; the Open button lives in Xcode 27's DeviceHub window, and while the Mac is locked the accessibility API returns the app shell instead of the window. Unlocked, selecting the device row in the sidebar and pressing Open lit the inner display, and the tabs and trash stood in the same right strip. As a bonus, the app's own accessibility tree shows through that window, so tabs and families could be tapped without a UI test.
 
 ## History
 
 - 2026-10-25 — side strip support and the floating glass CTA
+- 2026-10-25, afternoon — segmented tabs replaced by a system tab bar; open posture verified
