@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-26T01:36:41+09:00
+date: 2026-10-26T02:41:47+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -16,7 +16,7 @@ Even pages go left, odd pages right, each pushed toward the spine. Highlights, u
 
 ![The right page curling mid-turn](/blog/superpdf-duo-book-spread/page-curl.png)
 
-The turn is `UIPageViewController` with `.pageCurl`, `spineLocation = .mid` and `isDoubleSided = true`; each page is a view controller hosting a `PDFView` in `.singlePage` mode. It is the only public API on iOS that curls paper.
+The turn is `UIPageViewController` with `.pageCurl`, `spineLocation = .mid` and `isDoubleSided = true`; each page is its own view controller (first a `PDFView`, later a pre-rendered image — see the second 2026-10-26 section). It is the only public API on iOS that curls paper.
 
 ## The fold is read from size classes
 
@@ -98,7 +98,17 @@ A reader on the folded Duo's outer screen sent a screenshot: after the tap the b
 
 Re-applying the fit scale on resize changed nothing, and landscape iPhone never reproduced it. A log on the folded Duo simulator did: the page `PDFView` kept its 375×531 frame, yet its fit scale dropped from 0.630 to 0.610 the moment the buttons hid. The only thing that moved was `safeAreaInsets` — bottom went from 0 to 17pt. With the buttons gone, the page reaches under the status bar and home indicator, and **`PDFView` fits its page inside its own safe area**. Tall book pages lose the most: height shrinks by both insets and the width follows the aspect.
 
-The fix is a `PDFView` subclass whose `safeAreaInsets` is always zero. The SwiftUI pane already decides where the page goes, so the page view should not avoid the safe area a second time. Setting the inner scroll view's `contentInsetAdjustmentBehavior` to `.never` did not help; the scale reads the view's safe area directly. After the fix the scale holds at 0.630 hidden or not. The earlier check ran on a landscape iPad mini, where the page barely touches the safe area — this only shows on a tall page that overlaps it.
+The fix was a `PDFView` subclass whose `safeAreaInsets` is always zero (gone the same day, when pages became pre-rendered images). The SwiftUI pane already decides where the page goes, so the page view should not avoid the safe area a second time. Setting the inner scroll view's `contentInsetAdjustmentBehavior` to `.never` did not help; the scale reads the view's safe area directly. After the fix the scale holds at 0.630 hidden or not. The earlier check ran on a landscape iPad mini, where the page barely touches the safe area — this only shows on a tall page that overlaps it.
+
+## 2026-10-26 — Fast swipes made the paper stutter
+
+One turn at a time was fine; a run of quick swipes lagged and the curl hitched mid-way. Measured on a scan-sized A4 page, building and drawing one page controller took **about 100ms** on the main thread — six-plus frames — and the unfolded Duo builds two per turn.
+
+Each page hosted a fresh `PDFView`, and `UIPageViewController` asks for the next page and draws it the instant a turn starts. Attaching the document, decoding the scan JPEG and rendering the first tiles all ran right there on main.
+
+Pages are now pre-rendered images with the highlight overlay on top. A background queue draws them at screen pixel size from its own copy of the `PDFDocument` (PDFKit makes no thread-safety promise for the on-screen one). The visible page goes first, the next two turns and the previous one are drawn ahead, and stale prefetches are dropped when the direction changes. Main-thread cost per page: **0.3ms**. Pooling `PDFView`s lost because `go(to:)` and tiling still run on main. Tests compare the drawing with PDFKit's thumbnails at every rotation and with an offset crop box, and check highlight taps on a rotated page.
+
+The cost: page text is no longer exposed to VoiceOver the way `PDFView` did, and if prefetch falls behind a page can flash white for a moment.
 
 ## History
 
@@ -109,3 +119,4 @@ The fix is a `PDFView` subclass whose `safeAreaInsets` is always zero. The Swift
 - 2026-10-25 — Single-page buttons in the iOS bars; floating only when a bar overflows
 - 2026-10-25 — Tap the page to hide or show every button; page numbers under the spread; reading buttons in the label colour
 - 2026-10-26 — Hiding the buttons no longer leaves the page inset by the safe area
+- 2026-10-26 — Fast swipes no longer stutter: pages are drawn off the main thread ahead of time
