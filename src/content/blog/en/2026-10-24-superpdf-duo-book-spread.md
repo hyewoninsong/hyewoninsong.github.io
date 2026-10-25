@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-25T23:11:10+09:00
+date: 2026-10-25T23:52:06+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -78,6 +78,20 @@ Single-page reading now uses the real navigation bar and bottom toolbar. With iO
 
 System bars do not report overflow, so the fit is decided up front from the window width: 44pt per button, 48pt of bar chrome, 84pt for the page counter and 84pt for OCR progress. The top bar needs 268pt, the bottom 308pt (392pt during OCR). A regular iPhone fits both; a 320pt Slide Over window running OCR moves only the bottom bar to floating capsules. A whole bar moves at once, never single buttons, so nothing ends up split between bar and air. The unfolded Duo keeps its right rail.
 
+## 2026-10-25 — One tap hides every button
+
+The next ask came with an Apple Books screenshot: page numbers under the spread and buttons at the side, then one tap on the book hides all of it so the PDF fills the screen, and another tap brings it back.
+
+![Page numbers 1 and 2 under the spread, button rail on the right](/blog/superpdf-duo-book-spread/spread-buttons-shown.png)
+
+The unfolded Duo now shows each page's number under it. Tap the middle of a page and the rail, the page numbers, the status bar and the home indicator go away together, and the spread grows into the safe area. Single-page reading drops its navigation bar and bottom toolbar the same way. Tap again and everything returns.
+
+![The same screen after the tap: only the spread](/blog/superpdf-duo-book-spread/spread-buttons-hidden.png)
+
+One tap now means three things. An edge tap is still the page curl's own turn, a tap on a highlight opens its popover, anything else toggles the buttons. A single recognizer on the spread container does the sorting, with `require(toFail:)` on the page controller's tap recognizers so a turn never also toggles. Buttons do not auto-hide on a timer (they would vanish while you look for one), the hidden state is not saved, and VoiceOver gets a "hide/show buttons" action instead of the tap. Hidden or not, the spread keeps the page aspect; cropping to fill the width would hide part of the page.
+
+Reading buttons also switched from the blue accent to the label colour, so they stay quieter than the page.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -85,3 +99,4 @@ System bars do not report overflow, so the fit is decided up front from the wind
 - 2026-10-25 — Turns no longer curl the pane margin; the reading tool pages on every device; bars moved to a right rail
 - 2026-10-25 — Floating top/bottom buttons on single pages; the right rail is Duo-only
 - 2026-10-25 — Single-page buttons in the iOS bars; floating only when a bar overflows
+- 2026-10-25 — Tap the page to hide or show every button; page numbers under the spread; reading buttons in the label colour
