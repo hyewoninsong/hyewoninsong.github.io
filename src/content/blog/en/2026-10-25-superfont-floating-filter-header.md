@@ -1,31 +1,31 @@
 ---
-title: "The search and filters in SuperFont now float above the list and slide away as you scroll"
-date: 2026-10-25T23:34:56+09:00
+title: "The search and filters in SuperFont now float on a glass card that shrinks to the search field as you scroll"
+date: 2026-10-26T00:25:14+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "design"]
-summary: "Five rows of search and filter controls were pinned to the top, leaving room for about two and a half font cards. They now sit on a translucent rounded card that hides when you scroll down and comes back the moment you scroll up, even a little."
+summary: "Five rows of search and filter controls were pinned to the top, leaving room for about two and a half font cards. They now sit on a glass card that shrinks to just the search field when you scroll down, and expands the moment you scroll up. Short lists never collapse it."
 ---
 
-In SuperFont's Google Fonts and My Fonts sheets, the search and filter controls now live on a translucent rounded card floating above the list. Scroll down and the card slides away. Scroll up even slightly, from anywhere, and it comes back.
+In SuperFont's Google Fonts and My Fonts sheets, the search and filter controls now live on a glass card floating above the list. Scroll down and it shrinks to the search field. Scroll up even slightly, from anywhere, and it expands again.
 
 ## Five pinned rows left little room for the list
 
 The Google Fonts header has five rows: search, preview text and size, category chips, status chips, language and sort. Pinned in place on an iPhone, they left space for about two and a half cards, on a screen whose whole job is browsing more than 1,800 families.
 
-## Only the card moves, never the list
+## Only the card changes, never the list
 
-![Scrolled down: the card is gone and the list runs right up to the navigation bar](/blog/superfont-floating-filter-header/header-hidden.png)
+![At the top: five rows of controls on a glass card, clearly a different material from the opaque font cards below](/blog/superfont-floating-filter-header/glass-expanded.png)
 
 | You | The card |
 |---|---|
-| scroll down | slides up and fades out |
-| scroll up a little, anywhere | comes right back |
-| are near the top, or the list is short | stays visible |
-| see an empty result or a loading list | stays visible |
+| scroll down | shrinks to the search field |
+| scroll up a little, anywhere | expands right away |
+| are near the top, or the list is too short to hide anything | stays expanded |
+| see an empty result or a loading list | stays expanded |
 
-![Nudged up: the card floats over the list, with the cards behind it blurred through](/blog/superfont-floating-filter-header/header-back.png)
+![Scrolled down: only the search field remains, with the list passing behind the glass](/blog/superfont-floating-filter-header/glass-collapsed.png)
 
-Hiding changes only the card's offset and opacity. The list's layout never changes height, so nothing jumps. The offline notice moved into the card's last row too.
+Collapsing changes only the card's size. The space above the list stays at the expanded height, so nothing jumps. The offline notice moved into the card's last row too.
 
 ## This reverses a decision from a month ago
 
@@ -38,6 +38,16 @@ The first version compared each scroll offset with the previous one: bigger mean
 The cause was `LazyVStack`. As newly visible cards get measured, it corrects the content offset by a few points to make up for its height estimates. The offset grows with no finger on the screen, and the naive check read that as scrolling down.
 
 The fix is a distance threshold. We remember where the list last moved up and hide only after it has gone more than 24pt below that point. Showing still happens on the first upward frame. The check now waits two seconds after the nudge, then actually types into the field and taps a chip.
+
+## 2026-10-26 — It looked like a list item, and short lists made it jump
+
+A day of use turned up two problems. In dark mode the `.regularMaterial` card had nearly the same gray and corner radius as the font cards, so it read as the first row of the list. And on a list with two or three fonts, any drag made it vanish, even though there was nothing for it to cover. Search vanished with it.
+
+The card is now Liquid Glass, a different material from the opaque cards and the same family as the floating install button. A darker background alone still looked like the same material.
+
+Scrolling down now keeps the search field instead of hiding everything. The inset above the list stays at the expanded height: shrinking it would change the scroll view's inset and make the visible rows jump, one of the reasons we abandoned collapsing back in September.
+
+The card also collapses only when the list overflows by more than the height collapsing would free up. A list that barely scrolls stays put.
 
 ## What's next
 
