@@ -1,6 +1,6 @@
 ---
 title: "The foldable iPhone's side strip had no SuperFont buttons in it"
-date: 2026-10-26T02:01:36+09:00
+date: 2026-10-26T02:16:27+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "design"]
 summary: "On the iPhone Duo simulator SuperFont's side strip showed nothing but the clock. Only system toolbar icons move there, so the trash and close buttons became toolbar items and the install button now floats as tinted glass. Later the same day the segmented tab picker turned out not to move either — a system tab bar does, and now the tabs stand at the bottom of the strip."
@@ -102,9 +102,26 @@ A larger cap lost because the free height differs per device, and on iPad's fixe
 Two smaller fixes shipped alongside. The Safari landing page no longer points at a "Return to SuperFont" chip that Safari does not always show. The Install Complete screen now scrolls, so a long list of installed fonts is no longer cut off above the ad.
 
 
+## 2026-10-26 — the remove sheet was the last one left
+
+![Folded Duo, remove sheet: the close X has moved to the strip, but "Open Settings" and "Remove from App Only" still sit at the bottom covering checklist steps 5 and 6](/blog/superfont-duo-floating-cta/remove-sheet-duo-folded-before.png)
+
+Opening the remove sheet on a folded Duo after the guide sheets were done: the close X was in the strip, two text buttons were still at the bottom. The folded outer display is 678pt tall, so a six-step checklist, two buttons and a note do not fit; the buttons floated over steps 5 and 6. The request was one line — round buttons here too, so the system can stack them on the right.
+
+The bottom row is gone. Open Settings is a filled gear at the trailing edge of the nav bar — the same filled circle as the home screen's install button and the wizard's done check, so in this app a filled circle means "the one primary action". Remove from App Only is a red trash next to it. The labels survive as VoiceOver text, and the note explaining the difference stays at the end of the checklist.
+
+![iPhone 17, remove sheet: X top left, red trash and black-filled gear top right; with the bottom free, all six steps and the note fit without scrolling](/blog/superfont-duo-floating-cta/remove-sheet-iphone-toolbar.png)
+
+iPhone gets a side benefit: all six steps and the note now fit on one screen without scrolling.
+
+Two options lost. Moving only the primary action and leaving the trash at the bottom keeps a bottom row that still covers the checklist on Duo. Folding both actions into one menu hides the primary action behind an extra tap.
+
+The folded posture was not captured this time — the simulator had been left open from the previous session and the DeviceHub posture button could not be pressed in this turn. Unfolded, the sheet stands as a side panel with the three round buttons in its own nav bar. That the icons reach the folded strip follows from the close X, an item of the same kind, already being there.
+
 ## History
 
 - 2026-10-25 — side strip support and the floating glass CTA
 - 2026-10-25, afternoon — segmented tabs replaced by a system tab bar; open posture verified
 - 2026-10-25, evening — wizard Previous/Next in the strip, Next filled
 - 2026-10-26 — guide sheets on toolbar buttons, uncapped screenshots, landing hint removed, Install Complete scrolls
+- 2026-10-26 — remove sheet actions on toolbar buttons, bottom CTA removed
