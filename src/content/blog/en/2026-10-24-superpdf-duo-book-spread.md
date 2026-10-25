@@ -38,7 +38,7 @@ Jumping from a map node lands on the right spread but without the flash the scro
 
 ## 2026-10-25 — Turning a spread froze the app for good
 
-The first TestFlight build with the spread drew a report: open a large scanned book and the app freezes, never to recover. Size looked guilty, so we built a 400-page image PDF with a full OCR cache and 300 highlights. The vertical scroll view opened it in two to five seconds on the simulator. Forcing the spread on with the same data froze it on the first arrow tap.
+The first TestFlight build with the spread drew a report: open a large scanned book and the app freezes, never to recover. Size looked guilty, so we built a 400-page image PDF with a full OCR cache and 300 highlights. The vertical scroll view opened it in two to five seconds on the simulator, which we read as fine. It was not: that was a second, separate freeze, fixed the next day (the whole OCR cache was decoded on open). Forcing the spread on with the same data froze it on the first arrow tap.
 
 Sampling the stuck main thread gave one stack in every sample. SwiftUI was mid-update, called `updateUIViewController`, and we called `setViewControllers` there. The new page's `PDFView` became first responder as it joined the window, and the hosting view went to read the responder from the very graph it was updating. AttributeGraph treats that as a cycle and never leaves it. The first layout was fine only because the controller was not in a window yet, which is why it froze on the first turn, not on open.
 
