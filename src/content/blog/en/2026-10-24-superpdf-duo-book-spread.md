@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-25T19:09:27+09:00
+date: 2026-10-25T22:59:40+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -50,14 +50,27 @@ Two notes from reading on an unfolded Duo in dark mode: turning a page curled th
 
 **Why the margin curled.** `.pageCurl` curls the child view controller's whole view. With the spread spanning the pane, each page controller got half of it, the PDF page fit narrower inside, and the leftover was the page view's background: black in dark mode, light grey in light mode, which is why the first check missed it. The spread now sits in a container sized to the page aspect times the number of pages, so the margin stays outside the turn. The aspect is the median of fifteen sampled pages, since scanned covers rarely match the body, and any small leftover is painted paper white.
 
-**One rail on the right.** In the reading tool the navigation bar is hidden, and back, file list, view mode, search, export, tool picker, dim, previous/next and the page counter, plus OCR progress, stack in a single column on the right. The book gets the full height. Floating the rail over the page lost: on a pane that fills by width, it covers the edge of the right page. Pick a drawing tool and the scroll view and its bars come back.
+**One rail on the right** (now only on the unfolded Duo — see the last section). In the reading tool the navigation bar is hidden, and back, file list, view mode, search, export, tool picker, dim, previous/next and the page counter, plus OCR progress, stack in a single column on the right. The book gets the full height. Floating the rail over the page lost: on a pane that fills by width, it covers the edge of the right page. Pick a drawing tool and the scroll view and its bars come back.
 
 **Single pages too.** The reading tool now pages on every device: two pages where the spread fits, otherwise one page fitted to the pane with the spine on the left. The same view handles both by spine location, and is rebuilt when it switches because a page view controller's spine is fixed at creation. Vertical scrolling is now for drawing only.
 
 Still to verify: a dark-mode turn on a real unfolded Duo, and whether a landscape iPad in PDF-only mode should get two pages instead of one.
+
+## 2026-10-25 — Floating buttons on a single page, the rail only on the Duo
+
+The rail lasted one round of feedback. On a phone, the ask was: keep the buttons at the top and bottom, floating, and move them to the right only on an unfolded Duo.
+
+![iPhone portrait with floating button groups above and below the page](/blog/superpdf-duo-book-spread/single-page-floating.png)
+
+When one page fills the pane (iPhone, iPad, folded Duo), four translucent capsules float over it: back and file list top left, view mode, search and export top right, tool and dim bottom left, previous, page counter and next bottom right. They sit where the old bars were, in the same order.
+
+![The two-page spread with the vertical rail on the right](/blog/superpdf-duo-book-spread/spread-right-rail.png)
+
+The two-page spread keeps the right rail. Why the split: a portrait iPhone pane is about 0.46 wide-to-tall and a PDF page about 0.7, so a width-fitted page leaves margin above and below, which is where the capsules land. The rail instead took 60pt of width on every phone, and on a narrow screen width is text size. The unfolded Duo fills by height, so its spare room is on the right. Both layouts share one set of buttons, and only one is on screen at a time, so the search popover and share sheet never attach twice.
 
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
 - 2026-10-25 — Arrow turns froze in an AttributeGraph cycle; page swaps moved out of the update
 - 2026-10-25 — Turns no longer curl the pane margin; the reading tool pages on every device; bars moved to a right rail
+- 2026-10-25 — Floating top/bottom buttons on single pages; the right rail is Duo-only
