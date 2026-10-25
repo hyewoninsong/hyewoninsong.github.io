@@ -1,6 +1,6 @@
 ---
 title: "Ten App Store screenshots that read as one picture"
-date: 2026-10-24T05:22:48+09:00
+date: 2026-10-26T06:08:33+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's new App Store screenshots: a three-card panorama of 3D bars taken from the app icon, then seven feature cards whose background keeps running between the phones. How the seams line up, and why the drag shot had two guide lines."
@@ -96,7 +96,7 @@ The API's `screenshotDisplayType` enum lists 33 values and no Duo; fastlane's sp
 
 The iPad XCUITest failed all nine segments on the Duo simulator. Every failure had the same root: two screens.
 
-- Every PNG was black at 2034×1398. `XCUIScreen.main` is the outer display, which is off while the phone is open; the app and the test both live on the inner one. Take every `XCUIScreen.screens` screenshot and keep the largest. The inner capture comes back 2006×2852 with an EXIF rotation — one pixel short of spec, harmless once composited, but a raw upload would need `simctl io screenshot --display=3`.
+- Every PNG was black at 2034×1398. `XCUIScreen.main` is the outer display, which is off while the phone is open; the app and the test both live on the inner one. Take every `XCUIScreen.screens` screenshot and keep the largest one that is lit (it was "the largest" at first; two days later the folded posture turned that rule upside down — see 10-26 below). The inner capture comes back 2006×2852 with an EXIF rotation — one pixel short of spec, harmless once composited, but a raw upload would need `simctl io screenshot --display=3`.
 - Tapping a block twice never opened the editor. Coordinates built from `app.coordinate(withNormalizedOffset:)` land on the app element's screen, the dark outer one; the same offsets built from `app.windows.firstMatch` work. Element `tap()` always worked. On a single-screen device the two origins coincide, which is why nobody had seen it.
 - Nothing scrolled the grid. Empty cells, the hour-axis strip, press durations of 0 and 0.1 s, four velocities, six swipes — all zero, while taps and one-second long-press drags work. Rather than dig further, a capture-only launch argument (`-AppStoreInitialScrollHour 13.75`) makes the app start scrolled to the afternoon.
 - Picking "10 minutes before" showed the notifications-off alert: the fresh Duo simulator reports AlarmKit as denied without ever prompting, and `simctl privacy` cannot touch it. In capture mode the app now uses a stand-in alarm backend that is always authorized and registers nothing — the card only needs the value.
@@ -110,9 +110,40 @@ Posture is a DeviceHub button; neither `simctl` nor XCUITest can change it, and 
 
 Eight languages × nine segments ran with zero failures; a read-back shows ten `COMPLETE` `APP_IPHONE_DUO` screenshots in all ten locales and the iPhone and iPad sets untouched. Review submission is a separate step.
 
+## 2026-10-26 — The folded display joins each card
+
+Another app's Duo listing put the open phone and the folded phone on the same card. Someone buying a folding phone wants to know whether the app is usable closed, and our open-only set answered half the question. The 1.2.3 set has two phones per card — the open inner display large, the folded outer display small, sides alternating — with the 10-24 canvas, captions, backgrounds and order untouched.
+
+![Edit card — the folded Duo's edit sheet on the left, the open Duo's edit popover on the right](/blog/timetable-appstore-screenshots/duo-fold-open-edit-card.png)
+
+The folded outer display (1398×2034) is a 466 pt compact shell, so the iPhone set's capture test runs on it unchanged; each card pairs the matching iPhone scene. Designing the folded shots separately lost: the small phone only has to say "the same feature exists closed".
+
+### The folded face is D-shaped
+
+Folded, the outer display is square on the hinge side and round on the other. The card compositor drew every bezel with one radius, so the first render was a generic four-round-corner phone. A per-corner flag now shapes the body, the screen mask and the shadow alike; the capture itself already had the shape, because the OS clips the sheet that way.
+
+![The folded iPhone Duo's alert sheet — square corners on the left, round on the right](/blog/timetable-appstore-screenshots/duo-folded-d-shape.png)
+
+### Folded, "the largest screen" is the dark one
+
+On 10-24 the fix for black captures was "take the largest of `XCUIScreen.screens`". Folded, that rule inverts: the inner display still reports its full 2007×2853 and is entirely black, while the app lives on the smaller outer display. The helper now takes the largest screen that is lit — shrink to 16×16, any bright pixel counts. Single-screen devices and the open Duo are unaffected.
+
+Three of ten Korean shots stayed black after that fix — the mid-drag captures taken from a background queue while the finger is down, which had their own copy of the "largest screen" rule in a second function. Two copies of one choice means one of them gets fixed; both now call the same function.
+
+### A short screen pushes constant coordinates off the edge
+
+The iPhone set's style scene drags an empty Saturday cell. Saturday's x was a constant measured on a 440 pt phone; on the folded Duo the side strip covers the grid's end, columns are narrower, and 407 hit an empty band. The test now measures column width from the two Taekwondo blocks (Monday and Friday) and derives Saturday; the 13:30 drag end was also below the 678 pt viewport, so a short screen drags 12:09–12:30 instead. The style sheet shows the timetable's style list, not the new block's time.
+
+### DeviceHub is an app, not a menu
+
+Opening the phone takes a DeviceHub press, and it was nowhere in Simulator's menus — in Xcode 27.1 DeviceHub is a separate `DeviceHub.app`, and the Simulator that was running belonged to Xcode 26, which has no Duo posture at all. Since every boot folds the phone, the folded set went first with a reboot per locale; then one Open, and the open set ran without rebooting.
+
+Eight languages × ten folded + ten open shots became 100 cards; the read-back shows ten `COMPLETE` `APP_IPHONE_DUO` screenshots in every locale on 1.2.3, a version with no build attached yet.
+
 ## History
 
 - 2026-09-29 — Added the iPhone panorama, continuous feature backgrounds, and drag capture notes.
 - 2026-10-01 — Verified the iPad viewport, notch default, and gesture capture output route across eight languages.
 - 2026-10-15 — Ported the cards to the Play Store as eight 9:16 cards and built the matching promo video from emulator recordings.
 - 2026-10-24 — Uploaded ten open-inner-display iPhone Duo cards in ten locales; the hidden `APP_IPHONE_DUO` type and the two-screen capture, coordinate and scroll pitfalls.
+- 2026-10-26 — Added the folded display to every card: the D-shaped bezel, the "lit screen" rule for the folded posture, constant coordinates on a short screen, DeviceHub as a separate app.
