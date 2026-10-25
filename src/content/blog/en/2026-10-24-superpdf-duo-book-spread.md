@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-25T22:59:40+09:00
+date: 2026-10-25T23:11:10+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -62,11 +62,21 @@ The rail lasted one round of feedback. On a phone, the ask was: keep the buttons
 
 ![iPhone portrait with floating button groups above and below the page](/blog/superpdf-duo-book-spread/single-page-floating.png)
 
-When one page fills the pane (iPhone, iPad, folded Duo), four translucent capsules float over it: back and file list top left, view mode, search and export top right, tool and dim bottom left, previous, page counter and next bottom right. They sit where the old bars were, in the same order.
+(This changed a few hours later; see the last section.) When one page fills the pane (iPhone, iPad, folded Duo), four translucent capsules float over it: back and file list top left, view mode, search and export top right, tool and dim bottom left, previous, page counter and next bottom right. They sit where the old bars were, in the same order.
 
 ![The two-page spread with the vertical rail on the right](/blog/superpdf-duo-book-spread/spread-right-rail.png)
 
 The two-page spread keeps the right rail. Why the split: a portrait iPhone pane is about 0.46 wide-to-tall and a PDF page about 0.7, so a width-fitted page leaves margin above and below, which is where the capsules land. The rail instead took 60pt of width on every phone, and on a narrow screen width is text size. The unfolded Duo fills by height, so its spare room is on the right. Both layouts share one set of buttons, and only one is on screen at a time, so the search popover and share sheet never attach twice.
+
+## 2026-10-25 — System bars first, floating only when they overflow
+
+The next ask set an order: put the buttons in the iOS top and bottom bars, and float them only when there are too many to fit.
+
+![iPhone portrait with reading buttons in the navigation bar and bottom toolbar](/blog/superpdf-duo-book-spread/single-page-system-bars.png)
+
+Single-page reading now uses the real navigation bar and bottom toolbar. With iOS 26 glass they look almost like the capsules did, but the title is back, back is the system button, and keyboard focus and VoiceOver order match the rest of the app.
+
+System bars do not report overflow, so the fit is decided up front from the window width: 44pt per button, 48pt of bar chrome, 84pt for the page counter and 84pt for OCR progress. The top bar needs 268pt, the bottom 308pt (392pt during OCR). A regular iPhone fits both; a 320pt Slide Over window running OCR moves only the bottom bar to floating capsules. A whole bar moves at once, never single buttons, so nothing ends up split between bar and air. The unfolded Duo keeps its right rail.
 
 ## History
 
@@ -74,3 +84,4 @@ The two-page spread keeps the right rail. Why the split: a portrait iPhone pane 
 - 2026-10-25 — Arrow turns froze in an AttributeGraph cycle; page swaps moved out of the update
 - 2026-10-25 — Turns no longer curl the pane margin; the reading tool pages on every device; bars moved to a right rail
 - 2026-10-25 — Floating top/bottom buttons on single pages; the right rail is Duo-only
+- 2026-10-25 — Single-page buttons in the iOS bars; floating only when a bar overflows
