@@ -1,6 +1,6 @@
 ---
 title: "The foldable iPhone's side strip had no SuperFont buttons in it"
-date: 2026-10-25T11:40:00+09:00
+date: 2026-10-25T16:50:00+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "design"]
 summary: "On the iPhone Duo simulator SuperFont's side strip showed nothing but the clock. Only system toolbar icons move there, so the trash and close buttons became toolbar items and the install button now floats as tinted glass. Later the same day the segmented tab picker turned out not to move either — a system tab bar does, and now the tabs stand at the bottom of the strip."
@@ -34,9 +34,9 @@ The install button stayed put. Its label carries the count ("Install 3", "Next (
 
 The install button used to stand on a material bar with a divider. Without the bar, it is a glass button with the app's primary color at 62% tint, and the list scrolls through underneath. 78% looked opaque; 62% lets the cards show while white text stays readable.
 
-![Folded Duo, install step: "Previous" is a glass capsule, "Open Settings" is tinted glass over the checklist](/blog/superfont-duo-floating-cta/duo-folded-install-guide.png)
+![Folded Duo, install step (morning): "Previous" is a glass capsule, "Open Settings" is tinted glass — by evening "Previous" had moved to the strip](/blog/superfont-duo-floating-cta/duo-folded-install-guide.png)
 
-Removing the bar exposed the wizard's "Previous": a bare text button that now collided with list text scrolling under it. It got a clear glass capsule. The note under the remove sheet's buttons moved into the body for the same reason.
+Removing the bar exposed the wizard's "Previous": a bare text button that now collided with list text scrolling under it. It got a clear glass capsule — gone by evening, when Previous moved to the strip. The note under the remove sheet's buttons moved into the body for the same reason.
 
 ## Two things that bit on the way
 
@@ -72,7 +72,23 @@ What remains is the ad banner: the iPhone bottom now stacks install button, tab 
 
 The Duo simulator boots folded; the Open button lives in Xcode 27's DeviceHub window, and while the Mac is locked the accessibility API returns the app shell instead of the window. Unlocked, selecting the device row in the sidebar and pressing Open lit the inner display, and the tabs and trash stood in the same right strip. As a bonus, the app's own accessibility tree shows through that window, so tabs and families could be tapped without a UI test.
 
+## 2026-10-25, evening — Previous and Next move to the strip, Next is filled
+
+![Folded Duo, font step: close, previous, and a black-filled next stacked in the right strip](/blog/superfont-duo-floating-cta/duo-wizard-next-enabled.png)
+
+Only the wizard's close X had reached the strip; Previous and Next stayed at the bottom. Safari on Duo puts back and forward in the strip, so the wizard now does the same: two chevrons at the trailing edge of the nav bar, both system toolbar icons. Next uses `.glassProminent`, because it can be blocked (nothing selected, profile not downloaded, install not detected yet). Filled black means you can go on.
+
+![Folded Duo, install guide: install not detected yet, so Next is filled gray](/blog/superfont-duo-floating-cta/duo-wizard-next-disabled.png)
+
+Blocked, it is gray in the Duo strip. On iPhone the fill drops and it merges with Previous into one capsule, which looks exactly like Safari's back and forward.
+
+![iPhone install guide: blocked Next merged with Previous into one capsule, with only "Open Settings" at the bottom](/blog/superfont-duo-floating-cta/iphone-wizard-nav-capsule.png)
+
+The bottom keeps one button: the step's own action. On the first step that means Next appears twice, on purpose, so it stays in thumb reach. Turning the bottom actions into chevrons lost, because "open Safari" is not "next". A custom filled chip lost too: the Timetable app showed that buttons with the system glass turned off do not move to the strip.
+
+
 ## History
 
 - 2026-10-25 — side strip support and the floating glass CTA
 - 2026-10-25, afternoon — segmented tabs replaced by a system tab bar; open posture verified
+- 2026-10-25, evening — wizard Previous/Next in the strip, Next filled
