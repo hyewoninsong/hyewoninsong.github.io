@@ -1,6 +1,6 @@
 ---
 title: "The foldable iPhone's side strip had no SuperFont buttons in it"
-date: 2026-10-25T16:50:00+09:00
+date: 2026-10-26T02:01:36+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "design"]
 summary: "On the iPhone Duo simulator SuperFont's side strip showed nothing but the clock. Only system toolbar icons move there, so the trash and close buttons became toolbar items and the install button now floats as tinted glass. Later the same day the segmented tab picker turned out not to move either — a system tab bar does, and now the tabs stand at the bottom of the strip."
@@ -87,8 +87,24 @@ Blocked, it is gray in the Duo strip. On iPhone the fill drops and it merges wit
 The bottom keeps one button: the step's own action. On the first step that means Next appears twice, on purpose, so it stays in thumb reach. Turning the bottom actions into chevrons lost, because "open Safari" is not "next". A custom filled chip lost too: the Timetable app showed that buttons with the system glass turned off do not move to the strip.
 
 
+## 2026-10-26 — the screenshot guides follow, and the screenshots get the room
+
+Three sheets walk through real screen captures: what to do in Safari, in Settings, and when removing a profile. They still had a text "Close" at the top left and a wide "Next" at the bottom. Neither moved to the Duo strip, and the bottom button ate the space the screenshot needed. The image was capped at 300pt, so the alert text it was there to show was unreadable.
+
+Now they use the wizard's grammar: a system close X and a filled chevron on the right. On the last page the chevron becomes the sheet's action: a checkmark, a gear for Open Settings, or a red trash for Remove from App. With the bottom free, the cap is gone and the screenshot takes all the height the header leaves.
+
+![Safari guide, first page: X at top left, filled chevron at top right, screenshot filling the sheet](/blog/superfont-duo-floating-cta/guide-sheet-safari.png)
+
+![Settings guide, last page: a gear where Next was, the settings path as a footnote](/blog/superfont-duo-floating-cta/guide-sheet-last-page.png)
+
+A larger cap lost because the free height differs per device, and on iPad's fixed-size sheet a bigger image pushes the text out. The three page views were merged into one.
+
+Two smaller fixes shipped alongside. The Safari landing page no longer points at a "Return to SuperFont" chip that Safari does not always show. The Install Complete screen now scrolls, so a long list of installed fonts is no longer cut off above the ad.
+
+
 ## History
 
 - 2026-10-25 — side strip support and the floating glass CTA
 - 2026-10-25, afternoon — segmented tabs replaced by a system tab bar; open posture verified
 - 2026-10-25, evening — wizard Previous/Next in the strip, Next filled
+- 2026-10-26 — guide sheets on toolbar buttons, uncapped screenshots, landing hint removed, Install Complete scrolls
