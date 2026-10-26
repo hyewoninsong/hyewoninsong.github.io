@@ -64,7 +64,7 @@ The fix is polling: keep the loaded ad in an actor property and check it every 2
 
 ### Where it stands
 
-The Release rewarded ad unit ID is still empty, so release builds show the banner but no pre-download ad until the unit exists in AdMob. If the cancel or close-early rate turns out high, the next decision is whether an early close should still install.
+The rewarded ad unit now exists in AdMob (reward amount 1, item `Reward` — the app only checks that the callback fired) and release builds carry its ID. If the cancel or close-early rate turns out high, the next decision is whether an early close should still install.
 
 ## History
 
