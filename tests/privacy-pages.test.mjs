@@ -286,3 +286,35 @@ test('the shared privacy page names SuperFont as an ad exception', { todo: 'shar
   }
   assert.deepEqual(problems, []);
 });
+
+test('the SuperMusicNote Android policy discloses AdMob and the Remove Ads purchase', () => {
+  // Policy effective 2026-10-26 (docs/decisions/2026-10-26-musicnote-android-admob-privacy.md).
+  // "No advertising ID" must stay scoped to Firebase Analytics; the ad SDK reads the AAID.
+  const wording = {
+    ko: [/<strong>Google AdMob<\/strong>\(Google LLC\)/, /AAID/, /앱 세트 ID/, /설정 → 광고 개인정보 설정/, /광고 제거<\/strong> 결제는 Google Play 가 처리/, /Firebase Analytics 는 광고 ID 를 수집하지 않아/],
+    en: [/<strong>Google AdMob<\/strong> \(Google LLC\)/, /AAID/, /app set ID/, /Settings → Ad privacy settings/, /Remove Ads<\/strong> payments are processed by Google Play/, /Firebase Analytics does not collect the advertising ID/],
+  };
+  const stale = { ko: /광고를 표시하거나 결제를 처리하지 않/, en: /does not display advertising or process payments/ };
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'apps/musicnote/android/privacy.astro');
+    for (const pattern of wording[locale]) {
+      if (!pattern.test(source)) problems.push(`${locale}/apps/musicnote/android/privacy.astro: missing ${pattern}`);
+    }
+    if (stale[locale].test(source)) problems.push(`${locale}/apps/musicnote/android/privacy.astro: still says the app has no ads`);
+  }
+  assert.deepEqual(problems, []);
+});
+
+// SuperMusicNote Android reads the AAID for ads (2026-10-26), but the shared policy
+// still names only SuperTimetable as the exception to "no ad identifiers". Drop the
+// `todo` once src/pages/{ko,en}/privacy.astro names SuperMusicNote in that sentence.
+test('the shared privacy page names SuperMusicNote as an ad exception', { todo: 'shared policy lists only SuperTimetable' }, () => {
+  const problems = [];
+  for (const locale of locales) {
+    const source = readPage(locale, 'privacy.astro');
+    const sentence = source.split('\n').find((line) => /SuperTimetable 앱의 광고|ads in the SuperTimetable app/.test(line)) ?? '';
+    if (!/SuperMusicNote/.test(sentence)) problems.push(`${locale}/privacy.astro: SuperMusicNote ad exception missing`);
+  }
+  assert.deepEqual(problems, []);
+});
