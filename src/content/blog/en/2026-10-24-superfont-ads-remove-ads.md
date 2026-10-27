@@ -1,6 +1,6 @@
 ---
 title: "Remove Ads in an app with no Settings screen: where does Restore go?"
-date: 2026-10-26T11:03:06+09:00
+date: 2026-10-27T20:47:57+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "appstore"]
 summary: "SuperFont shows an AdMob banner and sells a one-time Remove Ads. With no Settings screen, Restore moved into a sheet. Two days later a rewarded video ad went in right before the profile download — why rewarded and not interstitial, and why an 8-second timeout stayed silent for 36 seconds."
@@ -66,7 +66,30 @@ The fix is polling: keep the loaded ad in an actor property and check it every 2
 
 The rewarded ad unit now exists in AdMob (reward amount 1, item `Reward` — the app only checks that the callback fired) and release builds carry its ID. If the cancel or close-early rate turns out high, the next decision is whether an early close should still install.
 
+## 2026-10-27 — The payment sheet never appeared on the reviewer's iPad
+
+1.1.0 was rejected a second time, under 2.1(b). The reviewer tapped Remove ads on an iPad Air 11-inch and got an error. The attached screenshot was our own alert: "Purchase didn't go through. Check your connection and try again."
+
+![The "Purchase didn't go through" alert over the Remove Ads sheet on iPad; the button still reads $3.99](/blog/superfont-ads-remove-ads/purchase-failed-ipad.png)
+
+The screenshot narrowed it down. The button says `$3.99`, so `Product.products(for:)` had succeeded and `product.purchase()` was what threw. App Store Connect checked out through the API — product state, seven localizations, price schedule, 175 territories, review screenshot, product attached to the submission. Crashlytics had nothing yet; non-fatals upload on the next launch, and the reviewer never relaunched.
+
+### StoreKit could not find a window to put the sheet on
+
+`Product.purchase()` is the iOS 15 call: StoreKit picks the window for the confirmation sheet itself. iOS 17 added `purchase(confirmIn: UIScene)`, iOS 18.2 added `purchase(confirmIn: UIViewController)`. Since then there are several developer-forum reports of the unanchored call failing with `StoreKitError.unknown` — "could not find a visible window" — on iPad, from a SwiftUI sheet, in sandbox or TestFlight. Our button sits in exactly that spot.
+
+It never reproduced locally. The simulator runs purchases against a StoreKit configuration file, and that environment finds a window without an anchor. iPhone TestFlight never showed it either. And our `catch` turns every error into "check your connection", so the screenshot could not say what had happened.
+
+The fix is one line: `product.purchase(confirmIn: topViewController)`, the same "top presented view controller" the consent form and the rewarded ad already use. SwiftUI's `@Environment(\.purchase)` would also anchor it, but the purchase flow lives in the store object, not the view, so that would only have added a hand-off.
+
+The review mail offered to approve as-is if this was a bug-fix submission. We declined; that would ship an app with ads that cannot be turned off.
+
+### Where it stands
+
+Neither reproduction nor verification works in the simulator. The next step is a real iPad with a sandbox account, watching the payment sheet actually appear, then a new build on 1.1.0. SuperTimetable makes the same call.
+
 ## History
 
 - 2026-10-24 — bottom banner, Remove Ads sheet, keyboard toolbar pitfall
 - 2026-10-26 — rewarded ad before the profile download, `withTaskGroup` timeout pitfall
+- 2026-10-27 — payment sheet missing on the reviewer's iPad, `purchase(confirmIn:)` anchor
