@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-28T15:06:29+09:00
+date: 2026-10-29T00:49:50+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -50,7 +50,7 @@ Two notes from reading on an unfolded Duo in dark mode: turning a page curled th
 
 **Why the margin curled.** `.pageCurl` curls the child view controller's whole view. With the spread spanning the pane, each page controller got half of it, the PDF page fit narrower inside, and the leftover was the page view's background: black in dark mode, light grey in light mode, which is why the first check missed it. The spread now sits in a container sized to the page aspect times the number of pages, so the margin stays outside the turn. The aspect is the median of fifteen sampled pages, since scanned covers rarely match the body, and any small leftover is painted paper white.
 
-**One rail on the right** (now only on the unfolded Duo — see the last section). In the reading tool the navigation bar is hidden, and back, file list, view mode, search, export, tool picker, dim, previous/next and the page counter, plus OCR progress, stack in a single column on the right. The book gets the full height. Floating the rail over the page lost: on a pane that fills by width, it covers the edge of the right page. Pick a drawing tool and the scroll view and its bars come back.
+**One rail on the right** (now only on the unfolded Duo, and since October 29 floating over the book — see the last section). In the reading tool the navigation bar is hidden, and back, file list, view mode, search, export, tool picker, dim, previous/next and the page counter, plus OCR progress, stack in a single column on the right. The book gets the full height. Floating the rail over the page lost: on a pane that fills by width, it covers the edge of the right page. Pick a drawing tool and the scroll view and its bars come back.
 
 **Single pages too.** The reading tool now pages on every device: two pages where the spread fits, otherwise one page fitted to the pane with the spine on the left. The same view handles both by spine location, and is rebuilt when it switches because a page view controller's spine is fixed at creation. Vertical scrolling is now for drawing only.
 
@@ -74,7 +74,7 @@ The next ask set an order: put the buttons in the iOS top and bottom bars, and f
 
 ![iPhone portrait with reading buttons in the navigation bar and bottom toolbar](/blog/superpdf-duo-book-spread/single-page-system-bars.png)
 
-Single-page reading now uses the real navigation bar and bottom toolbar. With iOS 26 glass they look almost like the capsules did, but the title is back, back is the system button, and keyboard focus and VoiceOver order match the rest of the app.
+(Changed again on October 29 — see the last section.) From here, single-page reading used the real navigation bar and bottom toolbar. With iOS 26 glass they look almost like the capsules did, but the title is back, back is the system button, and keyboard focus and VoiceOver order match the rest of the app.
 
 System bars do not report overflow, so the fit is decided up front from the window width: 44pt per button, 48pt of bar chrome, 84pt for the page counter and 84pt for OCR progress. The top bar needs 268pt, the bottom 308pt (392pt during OCR). A regular iPhone fits both; a 320pt Slide Over window running OCR moves only the bottom bar to floating capsules. A whole bar moves at once, never single buttons, so nothing ends up split between bar and air. The unfolded Duo keeps its right rail.
 
@@ -84,7 +84,7 @@ The next ask came with an Apple Books screenshot: page numbers under the spread 
 
 ![Page numbers 1 and 2 under the spread, button rail on the right](/blog/superpdf-duo-book-spread/spread-buttons-shown.png)
 
-The unfolded Duo now shows each page's number under it. Tap the middle of a page and the rail, the page numbers, the status bar and the home indicator go away together, and the spread grows into the safe area. Single-page reading drops its navigation bar and bottom toolbar the same way. Tap again and everything returns.
+The unfolded Duo now shows each page's number under it. Tap the middle of a page and the rail, the page numbers, the status bar and the home indicator go away together, and the spread grows into the safe area. Single-page reading drops its top and bottom buttons the same way. Tap again and everything returns.
 
 ![The same screen after the tap: only the spread](/blog/superpdf-duo-book-spread/spread-buttons-hidden.png)
 
@@ -136,6 +136,18 @@ Quotes become paragraphs under chapter headings, 14 pt apart, lines capped at 62
 
 Still to check on hardware: underlining on an unfolded Duo spread, and OCR snapping on a scanned book in the paged view.
 
+## 2026-10-29 — The buttons left the bars and float on the book
+
+The ask came with a screenshot of the handwriting app TypeDraw: buttons floating on the book. There, the paper runs to the screen edge and round buttons sit on it one by one.
+
+![iPad portrait: the page fills the screen, round glass buttons float at the top and bottom](/blog/superpdf-duo-book-spread/single-page-glass.png)
+
+Paged reading has no system bars anymore. The page fills the screen up under the status bar and every button is an iOS 26 glass circle on top of it; only previous, page counter and next share a capsule. On a single page: back and file list top left, collect, search and more top right, tool and dim bottom left, paging bottom right. On a two-page spread the same circles stand along the book's right edge, so the spread no longer gives up a 60pt column.
+
+This reverses the "system bars first" call from four days earlier. Real bars brought back the title, the system back button and consistent focus order, but a bar is a band with a background, and on a portrait phone it covers the top and bottom of the page. We gave up the title and the long-press back history to let the book be the whole screen. Grouping the buttons in four capsules lost to single circles, which let more of the paper show through.
+
+The width check that decided whether buttons fit in a bar is gone with the bars. OCR progress now sits small above the paging capsule so the bottom row never overflows. Since the page fills the screen whether or not the buttons show, hiding them no longer changes the page size. Checked on an iPad simulator in portrait and landscape; how much the top circles cover on a portrait iPhone, and the right-edge circles on an unfolded Duo, still needs real hardware.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -148,3 +160,4 @@ Still to check on hardware: underlining on an unfolded Duo spread, and OCR snapp
 - 2026-10-26 — Two pages only when the pane is landscape; landscape iPad spreads too
 - 2026-10-26 — Fast swipes no longer stutter: pages are drawn off the main thread ahead of time
 - 2026-10-28 — Long-press underlining in the paged view; a Flow tab that reads underlines like a book
+- 2026-10-29 — Paged buttons left the system bars and float on the book as glass circles; the spread rail floats too
