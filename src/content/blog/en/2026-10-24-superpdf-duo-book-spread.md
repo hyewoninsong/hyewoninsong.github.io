@@ -1,9 +1,9 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-26T02:53:29+09:00
+date: 2026-10-28T15:06:29+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
-summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading tool only; pick the highlighter and the vertical scroll comes back. The fold state is read from size classes, not the device name."
+summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
 ---
 
 Open SuperPDF on an unfolded iPhone Duo and the PDF sits as a left page and a right page. Drag the right page and it curls over. Folded, and on every other device, pages turn one at a time the same way (see the second October 25 section). Two pages only when the pane is wider than tall; hold the unfolded Duo upright and one page fills it (see the second October 26 section).
@@ -24,7 +24,7 @@ iOS has no API for the fold state; the iOS 27 UIKit headers have no posture, fol
 
 ## Drawing tools fall back to the scroll view
 
-A highlight drag and a page-turn drag are the same one-finger pan; splitting them inside one view makes one of them always late. The range resolver, end handles, pen canvas and crop preview are also all bound to a coordinator that assumes a single `PDFView`, so the spread stays a read-only presentation. Switch to the highlighter and the scroll view returns; switch back and the spread reopens on the page you were on. Pinch zoom inside a page is off for the same reason.
+A highlight drag and a page-turn drag are the same one-finger pan; splitting them inside one view makes one of them always late. The range resolver, end handles, pen canvas and crop preview are also all bound to a coordinator that assumes a single `PDFView`, so the spread stays a read-only presentation (since 2026-10-28 a long press then drag underlines here too — see below). Switch to the pen or crop and the scroll view returns; put it down and the spread reopens on the page you were on (since 2026-10-28 the underline tool keeps the spread, and scrolling is its own "Read by scrolling" setting). Pinch zoom inside a page is off for the same reason.
 
 Two alternatives lost: `PDFView.displayMode = .twoUp` with `displaysAsBook` gives two pages but a scrolling turn, and `usePageViewController` ignores `displayMode` entirely, so it never shows two pages.
 
@@ -122,6 +122,20 @@ It reads the **pane's shape, not the device orientation**. A portrait iPad split
 
 Checked on an iPad simulator in PDF-only mode, portrait to landscape and back, with unit tests for Duo and iPad shapes. An upright real Duo is still to be tried.
 
+## 2026-10-28 — Underline while paging, then read only what you underlined
+
+You can now underline in the full-screen paged view: hold for 0.3 s, then drag. Move before that and the page turns as before; a quick tap still hides the buttons or opens a highlight. While you drag, the page controller's gestures are switched off. The colour, style and weight are whatever you last picked in the highlighter.
+
+The real blocker was not the gesture but the range calculation — text selection, OCR line snapping for scans, region OCR before a page is scanned — which lived in a coordinator built around one `PDFView`. Paged pages are pre-rendered images now, so that logic moved into a view-independent type both screens call. The same drag leaves the same underline in either view.
+
+Review also gets a **Flow** tab. Shrinking the gap in the existing list would not have done it: list rows carry page, colour and "add to map" lines and cut quotes at three lines, and the cropped-page strip scales each crop to the width, so the type size jumps from item to item.
+
+![Flow tab — quotes run as paragraphs under the chapter title, colour as a thin margin bar, page number at the end of each paragraph](/blog/superpdf-duo-book-spread/reading-flow-tab.png)
+
+Quotes become paragraphs under chapter headings, 14 pt apart, lines capped at 620 pt. Colour is a 3 pt bar in the margin and the page number trails the paragraph in small grey type. Crops and handwriting sit in place as images. Tap to jump to the PDF, long-press for the highlight menu; deleting and filtering stay in the list.
+
+Still to check on hardware: underlining on an unfolded Duo spread, and OCR snapping on a scanned book in the paged view.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -133,3 +147,4 @@ Checked on an iPad simulator in PDF-only mode, portrait to landscape and back, w
 - 2026-10-26 — Hiding the buttons no longer leaves the page inset by the safe area
 - 2026-10-26 — Two pages only when the pane is landscape; landscape iPad spreads too
 - 2026-10-26 — Fast swipes no longer stutter: pages are drawn off the main thread ahead of time
+- 2026-10-28 — Long-press underlining in the paged view; a Flow tab that reads underlines like a book

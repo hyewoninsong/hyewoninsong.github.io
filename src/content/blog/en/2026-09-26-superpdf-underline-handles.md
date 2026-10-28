@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-09-26T23:59:00+09:00
+date: 2026-10-28T21:22:02+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -12,7 +12,7 @@ In SuperPDF an underline now covers exactly what you dragged over, and afterward
 
 ![An underline starting mid-line and ending mid-line on the next line, with a handle at each end](/blog/superpdf-underline-handles/partial-underline.png)
 
-The first line starts at the glyph you touched, the last line ends at the glyph you lifted on, and the line is continuous in between. A fresh or tapped underline gets iOS-style handles.
+The first line starts at the glyph you touched, the last line ends at the glyph you lifted on, and the line is continuous in between. A fresh or tapped underline gets iOS-style handles (both knobs now sit below the line — see the latest entry).
 
 | Action | Result |
 |---|---|
@@ -38,3 +38,43 @@ Handles live in the page overlay, so they follow scroll and zoom, and a touch th
 ## What's left
 
 The estimate on older OCR caches can be off by a glyph or two. Pencil input and real scanned-page OCR need a device, so the next TestFlight build gets checked with the same book.
+
+## 2026-10-28 — Handles on the page-turning view, and handles you can see
+
+Earlier that day the underline tool stopped switching the book to vertical scrolling. You now underline right on the page-curl view. But that view only knew long-press-to-draw. The handles lived in the scrolling view, so they were gone. The report came in that evening: start points often land one character off, and there was no way to fix them.
+
+Now underlines on the page-curl view get handles too, and tapping any existing underline brings them back. A touch that starts on a handle is taken by the handle immediately. Anywhere else it fails at once, so page turns and long presses aren't delayed. With handles showing, a tap on blank paper only clears the handles. The next tap hides the buttons.
+
+The handles also got a glass look: a white rim, a soft shadow and a sheen across the top. A yellow knob used to disappear on white paper.
+
+![Old handles: the yellow knobs barely show on white paper](/blog/superpdf-underline-handles/handles-flat.png)
+
+![New handles with a white rim, shadow and sheen, after dragging the start handle left](/blog/superpdf-underline-handles/handles-glass.png)
+
+Ideas we dropped: letting the pencil draw on first touch made underlining and turning the page hard to tell apart. A magnifier helps with the end point, but the start point is fixed the moment you press. Snapping to word boundaries gets in the way when you want to start mid-word.
+
+The lesson: when one tool is implemented by two views, moving it to the other view quietly drops whatever only the old view did. The hit test and drawing are now shared, so the two can't drift apart again.
+
+## 2026-10-28, later — a loupe, both knobs below the line, glass that reads the paper
+
+Three more reports the same night: while drawing, your finger hides the glyph you're about to stop on; the start knob sat above the line, so dragging it covered the very text you were adjusting; and even the glass knobs were hard to spot.
+
+Now the system text loupe (`UITextLoupeSession`) floats above your finger while you draw and while you drag a handle — the same loupe as iOS text selection.
+
+![Drawing an underline: a round loupe above the finger magnifies the glyphs under it](/blog/superpdf-underline-handles/loupe-drawing.png)
+
+When dragging a handle, the loupe follows the end being moved, not the finger, since the finger sits below the line holding the knob.
+
+![Dragging the start handle: the loupe shows the start bar from above, and both knobs sit below the line](/blog/superpdf-underline-handles/loupe-handle-drag.png)
+
+Both knobs now hang below the line. Copying iOS's top start knob was exactly what put the finger over the text.
+
+Knobs are dark glass on light paper and light glass on dark paper, with just a small dot in the underline colour. We judge "light" from the paper under the knob, not the app's light/dark mode: pages stay white in dark mode, so following the mode would put light glass on white paper. Each page keeps a tiny thumbnail and the knob checks the average brightness under it.
+
+This also settles the magnifier we set aside earlier: handles fix the start point, and the loupe shows up while you drag them.
+
+## History
+
+- 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
+- 2026-10-28 — Handles on the page-curl view, tap to bring them back, glass-style handles
+- 2026-10-28, later — Loupe while drawing and dragging handles, both knobs below the line, paper-aware glass
