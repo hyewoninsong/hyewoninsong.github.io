@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-09-26T23:59:00+09:00
+date: 2026-10-28T20:45:27+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -38,3 +38,24 @@ Handles live in the page overlay, so they follow scroll and zoom, and a touch th
 ## What's left
 
 The estimate on older OCR caches can be off by a glyph or two. Pencil input and real scanned-page OCR need a device, so the next TestFlight build gets checked with the same book.
+
+## 2026-10-28 — Handles on the page-turning view, and handles you can see
+
+Earlier that day the underline tool stopped switching the book to vertical scrolling. You now underline right on the page-curl view. But that view only knew long-press-to-draw. The handles lived in the scrolling view, so they were gone. The report came in that evening: start points often land one character off, and there was no way to fix them.
+
+Now underlines on the page-curl view get handles too, and tapping any existing underline brings them back. A touch that starts on a handle is taken by the handle immediately. Anywhere else it fails at once, so page turns and long presses aren't delayed. With handles showing, a tap on blank paper only clears the handles. The next tap hides the buttons.
+
+The handles also got a glass look: a white rim, a soft shadow and a sheen across the top. A yellow knob used to disappear on white paper.
+
+![Old handles: the yellow knobs barely show on white paper](/blog/superpdf-underline-handles/handles-flat.png)
+
+![New handles with a white rim, shadow and sheen, after dragging the start handle left](/blog/superpdf-underline-handles/handles-glass.png)
+
+Ideas we dropped: letting the pencil draw on first touch made underlining and turning the page hard to tell apart. A magnifier helps with the end point, but the start point is fixed the moment you press. Snapping to word boundaries gets in the way when you want to start mid-word.
+
+The lesson: when one tool is implemented by two views, moving it to the other view quietly drops whatever only the old view did. The hit test and drawing are now shared, so the two can't drift apart again.
+
+## History
+
+- 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
+- 2026-10-28 — Handles on the page-curl view, tap to bring them back, glass-style handles
