@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-28T21:56:43+09:00
+date: 2026-10-28T22:40:11+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -88,9 +88,22 @@ Highlighter fills have no weight, so row two shows only colour; crops have neith
 
 Colour stays in a popover because four swatches next to the weights make row two too long, and a colour pick is a one-shot choice. Keeping the old popover and letting outside taps through wasn't possible: SwiftUI popovers consume that tap.
 
+## 2026-10-28, near midnight — handles while drawing, and any tap only deselects
+
+Two more came in after the toolbar. While drawing, only the loupe showed and the handles popped in on lift, so drawing and adjusting felt like different tools. And with an underline selected, tapping the screen edge sometimes turned the page instead of clearing the selection.
+
+The live preview now carries both handles while you draw; on lift the real handles land in the same spot.
+
+![Drawing an underline. The loupe magnifies the end, and the preview already has a knob at each end](/blog/superpdf-underline-handles/drawing-handles.png)
+
+With a selection up, every tap now only deselects — no page turn at the edge, no jumping to another underline. Swiping and drawing still work.
+
+The edge leak was recognizer order. The page curl owns a tap recognizer for edge taps, and ours waited for it to fail (`require(toFail:)`), so edge taps never reached our "deselect first" branch. While a selection is up we now disable the page curl's tap recognizers; a disabled recognizer counts as failed, so ours takes the tap. In the scroll view, our tap claims it before PDF links can.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
 - 2026-10-28 — Handles on the page-curl view, tap to bring them back, glass-style handles
 - 2026-10-28, later — Loupe while drawing and dragging handles, both knobs below the line, paper-aware glass
 - 2026-10-28, late — Two-row glass toolbar instead of a popover, one blank tap deselects, change an underline's weight
+- 2026-10-28, near midnight — Handles while drawing; any tap only deselects, edge taps included
