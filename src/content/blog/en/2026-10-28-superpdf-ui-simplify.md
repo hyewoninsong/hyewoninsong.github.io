@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-10-29T00:22:21+09:00
+date: 2026-10-29T02:12:32+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -27,7 +27,7 @@ The "Read" button is gone, because reading is what you do with no tool in hand. 
 
 ![Underline tool and its options](/blog/superpdf-ui-simplify/tool-options.png)
 
-Picking the underline tool no longer swaps the page-turning view for a scroll view. Scrolling is a reading setting now, "Read by scrolling" in the … menu. Pen and crop still switch to scrolling, because their drags collide with page curl.
+Picking the underline tool no longer swaps the page-turning view for a scroll view. Scrolling is a reading setting now, "Read by scrolling" in the … menu. Pen and crop followed a day later (see the 2026-10-29 night section).
 
 ![Underlining on the page-turning view with the tool in hand](/blog/superpdf-ui-simplify/paged-underline.png)
 
@@ -56,8 +56,24 @@ Colour grouping is gone (colours no longer carry meaning) and so is the fit butt
 
 One more fix came out of checking edit mode: tapping a node to select it jumped to the PDF and out of Collect. Edit-mode taps now only select. "Add to map", which only the list view had, moved to the PDF highlight toolbar.
 
+## 2026-10-29 (night) — Pen and crop stay on the page too
+
+The next report was blunt: picking pen or crop still flipped the book into a scroll view, and that felt like a bug. Now only the "Read by scrolling" setting decides how the book is shown; no tool changes it.
+
+- **Pen** draws on a PencilKit canvas laid over each page. The page-turning view shows pre-rendered page images, not PDF views, so the canvas code moved into one class that both views share.
+- **Crop** is a straight drag on the page, with a dashed preview clipped to the page you started on.
+
+![A pen stroke drawn on the page-turning view](/blog/superpdf-ui-simplify/paged-pen-stroke.png)
+
+Dragging used to turn the page, and pen and crop both draw by dragging. So while either tool is in hand, drag-to-turn is off and you turn pages with the previous/next buttons. Pen also turns off edge taps, since a tap makes a dot.
+
+![A crop drawn on the page, with the "added to Collect" toast; the page counter still reads 1/3](/blog/superpdf-ui-simplify/paged-crop.png)
+
+We didn't go with pencil-draws/finger-turns because finger drawing is the default, and people without a Pencil couldn't draw at all. This time we listed everything the scroll view did for pen and crop before moving them, so nothing quietly went missing like the underline handles did the day before. Two-page spreads use the same code but haven't been checked on screen yet.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
 - 2026-10-29 — Collect is the map; reading-mode nodes read like prose with page numbers; colour grouping and the fit button removed; edit taps only select.
 - 2026-10-29 (later) — tighter reading-mode spacing.
+- 2026-10-29 (night) — pen and crop stay on the page-turning view; drag-to-turn is off while drawing.
