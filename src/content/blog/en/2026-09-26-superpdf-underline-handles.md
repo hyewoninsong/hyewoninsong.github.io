@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-28T22:40:11+09:00
+date: 2026-10-29T01:35:49+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -100,6 +100,18 @@ With a selection up, every tap now only deselects — no page turn at the edge, 
 
 The edge leak was recognizer order. The page curl owns a tap recognizer for edge taps, and ours waited for it to fail (`require(toFail:)`), so edge taps never reached our "deselect first" branch. While a selection is up we now disable the page curl's tap recognizers; a disabled recognizer counts as failed, so ours takes the tap. In the scroll view, our tap claims it before PDF links can.
 
+## 2026-10-29, early morning — other underlines fade while you draw or select
+
+With same-colour underlines on the lines just above and below, the loupe showed three magnified yellow bars and no hint of which one you were moving.
+
+Now every existing mark fades to 30% opacity while you draw a new one, and while an underline is selected only that one stays full strength. Tap blank space and everything comes back.
+
+![Nothing selected: highlights and the green underline at full strength](/blog/superpdf-underline-handles/others-full.png)
+
+![Top highlight selected: it stays bright yellow while the rest fade](/blog/superpdf-underline-handles/others-dimmed.png)
+
+An outline or shadow on the selected line was too small to read at loupe scale; hiding the others entirely would make it hard to draw right next to them. Fading keeps both. The system loupe mirrors the live view, so lowering layer opacity was all it took, on both the scrolling and page-turning views.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -107,3 +119,4 @@ The edge leak was recognizer order. The page curl owns a tap recognizer for edge
 - 2026-10-28, later — Loupe while drawing and dragging handles, both knobs below the line, paper-aware glass
 - 2026-10-28, late — Two-row glass toolbar instead of a popover, one blank tap deselects, change an underline's weight
 - 2026-10-28, near midnight — Handles while drawing; any tap only deselects, edge taps included
+- 2026-10-29 — Other marks fade while drawing or while one is selected
