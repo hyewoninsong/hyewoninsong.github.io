@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-28T21:22:02+09:00
+date: 2026-10-28T21:56:43+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -73,8 +73,24 @@ Knobs are dark glass on light paper and light glass on dark paper, with just a s
 
 This also settles the magnifier we set aside earlier: handles fix the start point, and the loupe shows up while you drag them.
 
+## 2026-10-28, late — tap an underline, get a two-row toolbar instead of a popover
+
+Tapping an underline used to open a popover right next to the line, covering the sentence you were fixing. Worse, the popover was modal: the first tap elsewhere only closed it, and the handles needed a second tap.
+
+Now a two-row glass toolbar floats at the top of the page, split the way Goodnotes splits its pen tools.
+
+![A tapped underline with a two-row glass toolbar at the top: pen types and actions on the first row, three line weights and the current colour on the second](/blog/superpdf-underline-handles/edit-toolbar.png)
+
+- **Row one** — pen type (highlighter or underline), note, edit text, copy, show in map, delete.
+- **Row two** — what depends on the pen type: three weights for underlines, then the current colour, which opens the four colour slots in a popover.
+
+Highlighter fills have no weight, so row two shows only colour; crops have neither, so the row disappears. You can now change an existing underline's weight, undoable in one step. Because the toolbar is not modal, one blank tap clears both the handles and the toolbar, and on the page-turning view that tap no longer falls through to hiding the buttons. If the underline sits under the toolbar, the toolbar moves to the bottom.
+
+Colour stays in a popover because four swatches next to the weights make row two too long, and a colour pick is a one-shot choice. Keeping the old popover and letting outside taps through wasn't possible: SwiftUI popovers consume that tap.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
 - 2026-10-28 — Handles on the page-curl view, tap to bring them back, glass-style handles
 - 2026-10-28, later — Loupe while drawing and dragging handles, both knobs below the line, paper-aware glass
+- 2026-10-28, late — Two-row glass toolbar instead of a popover, one blank tap deselects, change an underline's weight
