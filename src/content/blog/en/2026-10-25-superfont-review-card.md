@@ -22,6 +22,8 @@ Super Timetable waits for five schedules. SuperFont has no such count, so it wai
 
 ## One exception to "no entrance animations"
 
+![The Korean card — "함께해 주셔서 고맙습니다." and a "좋아요" button](/blog/superfont-review-card/thanks-card-ko.png)
+
 Super Timetable's card springs in from 0.92 scale over a fading scrim. SuperFont otherwise has no entrance animations, and the first version followed that rule. But the same note arriving two different ways in two apps felt more off than the motion, so the card now uses the same spring and is written down as the rule's only exception. The icon is SuperFont's real home-screen icon, the split A. A first pass used the splash's whole serif A, which only looked close; now the icon script renders the card's copy too, and a test compares the two files byte for byte. There is no menu item to summon it.
 
 ## Where it stands
