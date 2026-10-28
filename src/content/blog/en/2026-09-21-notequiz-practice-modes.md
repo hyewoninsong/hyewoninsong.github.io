@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-15T09:28:00+09:00
+date: 2026-10-29T00:56:00+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -84,7 +84,7 @@ A question is still one note, so records and statistics are untouched. The revie
 
 The two-axis design above records the September 21 iteration. Practice later settled into five stages: read do, read a do-mi-sol ladder, answer with a full ladder, answer with do alone, and answer without hints. Android now shows a looping staff example beside each stage, so choosing does not depend on understanding the label first.
 
-All five use the same treble clef and middle C. The reading examples show do alone or do-mi-sol; the three quiz examples ask the same sol with progressively fewer hints. They share one clock: one head every 0.5 seconds, a 1.4-second hold after the longest example finishes, then a 0.35-second clear. Short examples wait for the others. Independent timers would put each card at a different point in its explanation. The clock stops when the chooser closes or the app goes into the background.
+All five used the same treble clef and middle C (since 2026-10-29 they come from your range, below). The reading examples show do alone or do-mi-sol; the three quiz examples ask the same sol with progressively fewer hints. They share one clock: one head every 0.5 seconds, a 1.4-second hold after the longest example finishes, then a 0.35-second clear. Short examples wait for the others. Independent timers would put each card at a different point in its explanation. The clock stops when the chooser closes or the app goes into the background.
 
 The settings had also been saving correctly while displaying old values. Clef switches and difficulty choices changed only after reopening the sheet. Stage and question count stayed stale on the home screen.
 
@@ -124,6 +124,24 @@ Grading also follows the iOS pen paths. The circle wobbles slightly and overlaps
 
 Question generation and stored records stay as they were. This change aligns the visual lesson and the route into it. A preview now needs to show the same counting axis as the question it represents.
 
+## 2026-10-29 — Android range sheet: fewer circles, and weak notes alone are a range
+
+Three rounds of iOS changes to the range sheet landed on Android at once.
+
+**Each layer has its own control.** The clef card used to be all circles: an include check, two radio buttons, and the preview's note dots. Now the clef is a switch row (`𝄞 Treble clef ……… switch`; tapping the words works too), and the range under it is one `Easy | Hard` pill with the note count beside it, in a single card. The only circles left are the notes. A second, lighter panel inside the card was tried on iOS and lost: the double border read before the hierarchy did.
+
+![Android range sheet: a clef switch row over one card holding the preview and an Easy/Hard pill](/blog/notequiz-practice-modes/android-range-switch-pill.png)
+
+**Nothing on, nothing to confirm.** Every switch can still be turned off, but with no clef and no weak-note focus the check is disabled and the sheet says why. An alert on tap lost: you only find out by pressing.
+
+![Both clefs off: the check is dimmed and a line explains what to turn on](/blog/notequiz-practice-modes/android-range-all-off.png)
+
+**Weak-note focus alone is a range.** Focus used to weight weak notes at 60% inside the chosen clefs, so practising only weak notes still meant 40% ordinary questions. With both clefs off and focus on, the quiz now asks weak notes only, from both clefs' widest range. Quietly treating that as "both clefs on" lost because it switches back on what you switched off. One function counts what a setup can deal, and the generator, the start lock, the preview, the sheet's count and record replay all use it.
+
+**Stage examples follow your range.** The 2026-10-15 note above says all five examples use treble middle C; no longer. A bass-only setup now shows bass examples, a new set each turn, clefs alternating when both are on. Within a turn the five cards still point at the same note.
+
+**Saving is tapping a name, then "play again?"** A card tap in the save sheet saves; there is no separate Save. A finished session then asks to play again with the same settings, and a new round starts in place. A session left early does not ask.
+
 ## History
 
 - 2026-09-21 — practice styles added (lines/spaces, chain of thirds, landmarks, two-note reading)
@@ -131,3 +149,4 @@ Question generation and stored records stay as they were. This change aligns the
 - 2026-09-21 — five styles split into show-how × which-notes; clef cards gated behind an include check
 - 2026-10-15 — Android settings observe a shared snapshot; five stage examples loop on one clock
 - 2026-10-15 — Android ladders share one axis; full-chain reveal geometry, pen grading, and home hierarchy match iOS
+- 2026-10-29 — Android range sheet with switches and a pill, weak focus alone, stage examples from the range, tap-to-save and play again
