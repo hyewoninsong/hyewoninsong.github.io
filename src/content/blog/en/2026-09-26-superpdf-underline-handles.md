@@ -122,6 +122,8 @@ The reason for moving it down was the finger covering the text while dragging th
 
 ## 2026-10-29, night — a lock on the toolbar hides the second row
 
+(Removed later that night: once the toolbar became "functions on top, settings below", there was no reason to hide the settings row. See the last section of the iPhone Duo post.)
+
 Most taps on an underline turn out to be for reading, not editing: check the note, jump to the map. The weight-and-colour row came up every time and covered one more line of text.
 
 The first row now starts with a lock. Turn it on and the second row (weight, colour) goes away; turn it off and it comes back. It is an app-wide setting, so the next underline you tap opens with one row too. Crops have no second row, so they have no lock.

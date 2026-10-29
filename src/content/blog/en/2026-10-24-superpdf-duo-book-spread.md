@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-29T20:13:47+09:00
+date: 2026-10-29T22:46:09+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -194,6 +194,29 @@ Both toolbars share one row component: a glass capsule, 40×36pt cells, the same
 
 Three layouts lost. Keeping the reading rows while editing stacks four rows over the top third of the page. One row cannot fit thirteen buttons into an iPhone's 402pt. Moving tools and dim to row one overflows it. The unfolded Duo spread keeps its right-hand rail, because a spread runs out of height first. Checked on an iPhone 17 simulator; iPad and real devices are not checked yet.
 
+## 2026-10-29, night — The top row picks a function, the bottom row sets it up
+
+The two-row toolbar changed again the same night. The user wanted the pen settings always in view, so you can see what a long-press will draw before you draw it, and wanted long-press drawing only while the pen is on. After a few proposed orders came back one rule: the top row holds functions, the bottom row holds the settings of whatever the top row has selected.
+
+![Reading state. Top: back, list | underline, pen, crop | collect, search, more. Bottom: dim, page navigation, undo](/blog/superpdf-duo-book-spread/toolbar-functions-reading.png)
+
+The top row never changes: back and list, underline/pen/crop, collect/search/more. The three tools came out of their menu as buttons; tap the active one again to go back to reading. A short bar under the underline and pen icons shows the current colour.
+
+| Selected on top | Bottom row |
+|---|---|
+| nothing (reading) | dim · previous/page/next · undo |
+| underline | highlight/underline · three weights · colour · undo |
+| pen | three weights · colour · previous/next · undo |
+| crop | "drag to select an area" · previous/next · undo |
+
+![Underline tool on: style, three weights, a yellow colour dot, undo](/blog/superpdf-duo-book-spread/toolbar-functions-underline.png)
+
+Pen and crop keep page arrows because both turn drag-to-turn off on the paged board. Long-press drawing now works only with the underline tool on, which already matched the scroll board.
+
+![A tapped text underline: actions on top, its style and colour below](/blog/superpdf-duo-book-spread/toolbar-functions-edit.png)
+
+A tapped underline follows the same rule. Its actions are on the top row and its settings on the bottom row, built from the same component as the tool's settings row. The lock added earlier that day is gone, since the settings row is now where it belongs. Removing the 4 pt gaps between buttons is what lets eight buttons fit a 402 pt iPhone. Folding style and weight into single cycling buttons would have saved width too, but then you can't see the current state at a glance.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -210,3 +233,4 @@ Three layouts lost. Keeping the reading rows while editing stacks four rows over
 - 2026-10-29 — Scroll reading fills the width with floating buttons; a tap hides and restores them
 - 2026-10-29 — A fit-width button when the scroll board is pinched off width; fixed an endless re-render that kept an open book at 120% CPU
 - 2026-10-29 — Reading buttons gathered into one two-row top toolbar that the underline edit toolbar shares
+- 2026-10-29 — Toolbar split into functions on top, settings below; long-press draws only with the underline tool; edit toolbar lock removed
