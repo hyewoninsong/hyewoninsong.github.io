@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-29T00:49:50+09:00
+date: 2026-10-29T15:44:18+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -148,6 +148,16 @@ This reverses the "system bars first" call from four days earlier. Real bars bro
 
 The width check that decided whether buttons fit in a bar is gone with the bars. OCR progress now sits small above the paging capsule so the bottom row never overflows. Since the page fills the screen whether or not the buttons show, hiding them no longer changes the page size. Checked on an iPad simulator in portrait and landscape; how much the top circles cover on a portrait iPhone, and the right-edge circles on an unfolded Duo, still needs real hardware.
 
+## 2026-10-29 — Scrolling uses the full width too
+
+"Read by scrolling" was the last board still framed by bars: a section switcher on top, navigation buttons on the side, a tool panel with undo below, and a page strip under that. The page ended up a small rectangle in the middle.
+
+The scroll board now follows the paged grammar. No system bars, the page fills the screen, and the same floating circles sit on top: back and PDF list top left, collect, search and more top right, tools and dim bottom left, page stepper bottom right. Tap an empty spot on the page and every button and the status bar go away; tap again and they come back.
+
+The page now fits the pane edge to edge: side `pageBreakMargins` set to zero and the extra 20pt inset gone, refitted when the width changes. The tap toggle first did nothing, because the highlight tap recognizer refused to begin off a highlight so PDFKit could handle links. It now takes the tap unless a link annotation sits under it or the pen is active, where a finger tap draws a dot.
+
+Two alternatives lost: keeping system bars only for scrolling keeps the small book, and keeping undo and redo only there makes buttons appear and vanish by board. Checked on an iPhone simulator; the unfolded Duo, iPad and real devices are not checked yet.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -161,3 +171,4 @@ The width check that decided whether buttons fit in a bar is gone with the bars.
 - 2026-10-26 — Fast swipes no longer stutter: pages are drawn off the main thread ahead of time
 - 2026-10-28 — Long-press underlining in the paged view; a Flow tab that reads underlines like a book
 - 2026-10-29 — Paged buttons left the system bars and float on the book as glass circles; the spread rail floats too
+- 2026-10-29 — Scroll reading fills the width with floating buttons; a tap hides and restores them
