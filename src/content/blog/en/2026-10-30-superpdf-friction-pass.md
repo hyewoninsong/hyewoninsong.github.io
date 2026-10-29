@@ -18,7 +18,7 @@ The answer to "what would make this better to use" was not a feature but a list 
 
 iPhone has no ⌘Z, so deleting an underline had no visible way back.
 
-![The undo toast right after deleting a node](/blog/superpdf-friction-pass/undo-toast.png)
+![The toast right after deleting a node (captured before the copy glossary renamed its button from "실행 취소" to "되돌리기", now "Undo")](/blog/superpdf-friction-pass/undo-toast.png)
 
 - Deleting an underline or a node shows a 4-second "Deleted · Undo" toast. If anything else was edited in between, the button hides, so it can never undo the wrong thing.
 - Map edits (move, delete, rename) are now undoable too, reversing an earlier decision. The old reason was avoiding SwiftData's automatic undo, not that map edits were risky. Registering explicit reverse operations by ID, as the underline ledger does, avoids that, and both now share one undo stack.
