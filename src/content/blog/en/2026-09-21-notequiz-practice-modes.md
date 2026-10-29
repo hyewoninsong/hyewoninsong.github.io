@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-29T00:56:00+09:00
+date: 2026-10-29T16:49:40+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -140,7 +140,27 @@ Three rounds of iOS changes to the range sheet landed on Android at once.
 
 **Stage examples follow your range.** The 2026-10-15 note above says all five examples use treble middle C; no longer. A bass-only setup now shows bass examples, a new set each turn, clefs alternating when both are on. Within a turn the five cards still point at the same note.
 
-**Saving is tapping a name, then "play again?"** A card tap in the save sheet saves; there is no separate Save. A finished session then asks to play again with the same settings, and a new round starts in place. A session left early does not ask.
+**Saving is tapping a name, then "play again?"** (Replaced the same afternoon; see the next section.) A card tap in the save sheet saves; there is no separate Save. A finished session then asks to play again with the same settings, and a new round starts in place. A session left early does not ask.
+
+## 2026-10-29 — one sheet decides saving and the next round, finished or not
+
+The morning's "tap a name to save, then a play-again dialog" did not last the day. Ending a round took two decisions, you could not play again without saving, and leaving early still showed the old sheet.
+
+Now the save sheet is one card and three buttons. The card has a `Save record` switch, on by default, and a `Save to · name >` row. Below it are `Play again`, `Next stage` and `Done`. The switch decides whether to save and the button decides what happens next, so you tap once.
+
+![The finished save sheet: the Save record switch and the Save to row share one card, with Play again, Next stage and Done below](/blog/notequiz-practice-modes/android-save-sheet-switch.png)
+
+`Next stage` keeps range, length and weak focus and moves the stage up one rung. The new stage is saved as that account's last setting. On the last stage, or when the next stage has nothing to ask in this range, the button does not appear. `Save to` opens the same account sheet as the home chip, where you pick, add or rename accounts. With saving off, the row dims.
+
+Three options lost. Adding a third button to the dialog still meant two decisions. A Save / Don't save segment took more space and hid that saving is the default. Two of every button made six buttons. A dropdown for the account lasted a day on iOS, because creating and editing accounts still happened in the account sheet.
+
+Leaving mid-round shows the same sheet with a different header. Swiping it down takes you back to the question. Leave without saving and its confirmation are gone, since switching saving off is the confirmation.
+
+Also in this pass: in the range sheet each clef is a group like Weak spots, and the "pick at least one" notice sits at the top in accent instead of a grey footnote. *Practice these notes* now turns the clefs off, so only weak notes come up. Session replay is a worded button under the summary instead of a toolbar glyph.
+
+![Range sheet with everything off: an accent notice at the top, and each clef a titled card whose first row is the Include in test switch](/blog/notequiz-practice-modes/android-range-empty-notice.png)
+
+One test pitfall. After the reorder handle moved inside its account card, the drag test failed with "Failed to inject touch input", which sounds like an emulator problem. The card merges its children for accessibility, and the test looked the tag up in the merged tree, where the handle no longer had a node of its own. Searching with `useUnmergedTree = true` fixed it. The next test in the class also failed, but only as a knock-on: run alone, it passed.
 
 ## History
 
@@ -150,3 +170,4 @@ Three rounds of iOS changes to the range sheet landed on Android at once.
 - 2026-10-15 — Android settings observe a shared snapshot; five stage examples loop on one clock
 - 2026-10-15 — Android ladders share one axis; full-chain reveal geometry, pen grading, and home hierarchy match iOS
 - 2026-10-29 — Android range sheet with switches and a pill, weak focus alone, stage examples from the range, tap-to-save and play again
+- 2026-10-29 — save sheet with a Save record switch, an account row and Play again / Next stage / Done, the same mid-round; range groups and top notice; weak-note practice asks weak notes only; worded session replay
