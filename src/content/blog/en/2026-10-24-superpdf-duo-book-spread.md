@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-29T18:50:27+09:00
+date: 2026-10-29T20:13:47+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -178,6 +178,22 @@ While checking this, the test runner froze on a "main thread busy for 30s" error
 
 Checked on an iPhone simulator; real-device pinching is not checked yet.
 
+## 2026-10-29 — Scattered circles became one two-row toolbar on top
+
+That evening the user sent two iPhone screenshots side by side: the edit toolbar that appears when you tap an underline, and the floating circles of the reading board. The ask: make them one toolbar, two rows, at the top.
+
+The circles sat in five places and covered all four corners of the page. The edit toolbar was a two-row capsule at the top. Tapping an underline swapped one for the other, and the whole screen seemed to change.
+
+![The reading board's two-row glass toolbar: back, list, undo, redo, collect, search and more on top; tools, dim and the page stepper below](/blog/superpdf-duo-book-spread/reading-toolbar-two-rows.png)
+
+Every button on the scroll and single-page boards now lives in that top toolbar. Row one: back and PDF list, undo and redo, collect, search and more. Row two: tools and dim, then previous, page number and next. The fit-width circle from the pinched scroll board now sits next to dim. Nothing is left at the bottom.
+
+![After tapping an underline, the edit toolbar takes the same spot in the same shape](/blog/superpdf-duo-book-spread/edit-toolbar-same-spot.png)
+
+Both toolbars share one row component: a glass capsule, 40×36pt cells, the same padding and dividers. Tap an underline and only the buttons inside the rows change. Tap empty space and the reading buttons come back. An underline within 200pt of the top still pushes the edit toolbar to the bottom so it never covers what you are editing.
+
+Three layouts lost. Keeping the reading rows while editing stacks four rows over the top third of the page. One row cannot fit thirteen buttons into an iPhone's 402pt. Moving tools and dim to row one overflows it. The unfolded Duo spread keeps its right-hand rail, because a spread runs out of height first. Checked on an iPhone 17 simulator; iPad and real devices are not checked yet.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -193,3 +209,4 @@ Checked on an iPhone simulator; real-device pinching is not checked yet.
 - 2026-10-29 — Paged buttons left the system bars and float on the book as glass circles; the spread rail floats too
 - 2026-10-29 — Scroll reading fills the width with floating buttons; a tap hides and restores them
 - 2026-10-29 — A fit-width button when the scroll board is pinched off width; fixed an endless re-render that kept an open book at 120% CPU
+- 2026-10-29 — Reading buttons gathered into one two-row top toolbar that the underline edit toolbar shares
