@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-29T01:35:49+09:00
+date: 2026-10-29T19:06:07+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -112,6 +112,20 @@ Now every existing mark fades to 30% opacity while you draw a new one, and while
 
 An outline or shadow on the selected line was too small to read at loupe scale; hiding the others entirely would make it hard to draw right next to them. Fading keeps both. The system loupe mirrors the live view, so lowering layer opacity was all it took, on both the scrolling and page-turning views.
 
+## 2026-10-29, evening — a lock on the toolbar hides the second row
+
+Most taps on an underline turn out to be for reading, not editing: check the note, jump to the map. The weight-and-colour row came up every time and covered one more line of text.
+
+The first row now starts with a lock. Turn it on and the second row (weight, colour) goes away; turn it off and it comes back. It is an app-wide setting, so the next underline you tap opens with one row too. Crops have no second row, so they have no lock.
+
+![The toolbar with the lock on: one row of buttons below the status bar, no colour row](/blog/superpdf-underline-handles/toolbar-lock-on.png)
+
+Testing the lock turned up a real bug: the toolbar's first row could not be tapped at all. A day earlier the reading board was told to ignore the safe area so pages fill the screen. SwiftUI modifiers wrap outward, so the toolbar overlay attached *before* `ignoresSafeArea` was pushed up under the clock and battery, and UI tests reported every button in that row as not hittable. The floating buttons attached *after* the modifier were fine, which is why the change missed it.
+
+![Before the fix: the first toolbar row overlaps the status bar](/blog/superpdf-underline-handles/toolbar-under-status-bar.png)
+
+The overlay now sits after the modifier, inside the safe area, and moves down 52pt when the floating top bar is showing. Any change that widens the board now gets a capture with an underline selected and a hittable check on its buttons.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -120,3 +134,4 @@ An outline or shadow on the selected line was too small to read at loupe scale; 
 - 2026-10-28, late — Two-row glass toolbar instead of a popover, one blank tap deselects, change an underline's weight
 - 2026-10-28, near midnight — Handles while drawing; any tap only deselects, edge taps included
 - 2026-10-29 — Other marks fade while drawing or while one is selected
+- 2026-10-29, evening — Lock on the toolbar hides the second row; toolbar no longer sits under the status bar
