@@ -1,12 +1,12 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-29T22:46:09+09:00
+date: 2026-10-30T01:13:28+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
 ---
 
-Open SuperPDF on an unfolded iPhone Duo and the PDF sits as a left page and a right page. Drag the right page and it curls over. Folded, and on every other device, pages turn one at a time the same way (see the second October 25 section). Two pages only when the pane is wider than tall; hold the unfolded Duo upright and one page fills it (see the second October 26 section).
+Open SuperPDF on an unfolded iPhone Duo and the PDF sits as a left page and a right page. Drag the right page and it curls over. Folded, and on every other device, pages turn one at a time the same way (see the second October 25 section). One page or two is now decided by the pane's shape and the PDF's own page aspect, not the device: a folded Duo's outer screen or an iPhone turned sideways shows two pages, and an upright pane gets one (see the October 26 and October 30 sections).
 
 ## Two pages, hugging the spine
 
@@ -20,7 +20,7 @@ The turn is `UIPageViewController` with `.pageCurl`, `spineLocation = .mid` and 
 
 ## The fold is read from size classes
 
-iOS has no API for the fold state; the iOS 27 UIKit headers have no posture, fold or hinge. What an unfolded Duo does have is a phone idiom with regular width *and* regular height, a combination no other iPhone produces. The rule is four conditions: phone idiom, regular in both axes, a PDF pane at least 560pt wide, and the reading tool. The idiom separates the Duo from other iPhones (iPad got its own spread rule on October 26), the regular height excludes a landscape iPhone, the pane width excludes the half pane of a side-by-side split, and the tool excludes drawing. It is a pure function with ten unit tests.
+iOS has no API for the fold state; the iOS 27 UIKit headers have no posture, fold or hinge. What an unfolded Duo does have is a phone idiom with regular width *and* regular height, a combination no other iPhone produces. The rule is four conditions: phone idiom, regular in both axes, a PDF pane at least 560pt wide, and the reading tool. The idiom separates the Duo from other iPhones (iPad got its own spread rule on October 26), the regular height excludes a landscape iPhone, the pane width excludes the half pane of a side-by-side split, and the tool excludes drawing. It is a pure function with ten unit tests. (Retired on October 30: the rule no longer looks at the device at all.)
 
 ## Drawing tools fall back to the scroll view
 
@@ -116,9 +116,9 @@ A screenshot from an unfolded Duo held upright: two pages side by side, a black 
 
 Book pages are about 0.7 wide-to-tall. In a 700×1000 pane two pages are bound by width, each 350×500, and half the height is empty. One page gets 700×1000, nearly twice the size. The old 560pt minimum only kept pages from getting too narrow; it never asked whether the pane was tall.
 
-The rule is now **pane at least 560pt wide and wider than tall**, on an unfolded Duo or any iPad. iPad used to always show one page, which left a lone page in the middle of a landscape PDF-only screen. A landscape iPhone still gets one page.
+The rule is now **pane at least 560pt wide and wider than tall**, on an unfolded Duo or any iPad. iPad used to always show one page, which left a lone page in the middle of a landscape PDF-only screen. A landscape iPhone still got one page (until October 30).
 
-It reads the **pane's shape, not the device orientation**. A portrait iPad split top and bottom gives the PDF an 834×525 pane, where two pages are as big as one and fill the width, so it spreads. A landscape iPad split side by side gives 597×800, so one page. Picking whichever layout makes the page bigger, given each document's page aspect, was more exact but would flip the layout between a slide deck and a book on the same screen.
+It reads the **pane's shape, not the device orientation**. A portrait iPad split top and bottom gives the PDF an 834×525 pane, where two pages are as big as one and fill the width, so it spreads. A landscape iPad split side by side gives 597×800, so one page. Picking whichever layout makes the page bigger, given each document's page aspect, was more exact but would flip the layout between a slide deck and a book on the same screen. Four days later that turned out to be the point (October 30).
 
 Checked on an iPad simulator in PDF-only mode, portrait to landscape and back, with unit tests for Duo and iPad shapes. An upright real Duo is still to be tried.
 
@@ -217,6 +217,16 @@ Pen and crop keep page arrows because both turn drag-to-turn off on the paged bo
 
 A tapped underline follows the same rule. Its actions are on the top row and its settings on the bottom row, built from the same component as the tool's settings row. The lock added earlier that day is gone, since the settings row is now where it belongs. Removing the 4 pt gaps between buttons is what lets eight buttons fit a 402 pt iPhone. Folding style and weight into single cycling buttons would have saved width too, but then you can't see the current state at a glance.
 
+## 2026-10-30 — The device left the rule; the page aspect came in
+
+A screenshot from a folded Duo's outer screen turned sideways: one page in the middle, a third of the screen black on each side. To the old rule that screen was just "a landscape iPhone". The ask was not to special-case it, and not to hard-code sizes, because PDFs come in different shapes, landscape ones included.
+
+The rule now fits one page (aspect a) and two pages (2a) to the pane and **picks whichever fills more of it**. The two tie when the pane is √2 times the page aspect. The aspect is the median of fifteen sampled pages, measured once when the document opens. A portrait book spreads on the outer screen, on a landscape iPhone, and on a landscape iPad; a slide deck stays on one page until the pane is about twice as wide as tall. On a landscape iPhone the height binds either way, so two pages are exactly as large as one.
+
+What lost: an exception for the outer screen (it is indistinguishable from any iPhone by idiom and size class), "spread only if pages do not shrink" (a letter-size document would show one page on a landscape iPad), and a fixed pane-ratio cutoff (blind to slides). Compact-height spreads use the two-row top toolbar, since the Duo's right rail does not fit in about 400pt. Checked on an iPhone simulator; the real outer screen is still to try. 
+
+Wide pages now turn like a book leaf. A slide shown one at a time used to curl as a whole sheet from its left edge, like a wall calendar. Now a wider-than-tall page sits across two faces of a centre-spine page curl: the slide is shown whole, and turning folds only its right half, with the next slide's left half on the back. Turns count faces; highlights, pen and crop count pages, so an underline that starts on the left half and crosses the spine lands on the same page. Verified with a slow-drag recording; drawing across the spine with the pen is still to check.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -234,3 +244,4 @@ A tapped underline follows the same rule. Its actions are on the top row and its
 - 2026-10-29 — A fit-width button when the scroll board is pinched off width; fixed an endless re-render that kept an open book at 120% CPU
 - 2026-10-29 — Reading buttons gathered into one two-row top toolbar that the underline edit toolbar shares
 - 2026-10-29 — Toolbar split into functions on top, settings below; long-press draws only with the underline tool; edit toolbar lock removed
+- 2026-10-30 — One or two pages decided by the PDF's page aspect, not the device; landscape iPhone and the Duo outer screen spread; wide pages turn by their right half
