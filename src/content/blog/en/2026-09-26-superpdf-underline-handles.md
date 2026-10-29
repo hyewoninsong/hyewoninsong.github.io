@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-29T19:06:07+09:00
+date: 2026-10-29T19:12:42+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -12,7 +12,7 @@ In SuperPDF an underline now covers exactly what you dragged over, and afterward
 
 ![An underline starting mid-line and ending mid-line on the next line, with a handle at each end](/blog/superpdf-underline-handles/partial-underline.png)
 
-The first line starts at the glyph you touched, the last line ends at the glyph you lifted on, and the line is continuous in between. A fresh or tapped underline gets iOS-style handles (both knobs now sit below the line — see the latest entry).
+The first line starts at the glyph you touched, the last line ends at the glyph you lifted on, and the line is continuous in between. A fresh or tapped underline gets iOS-style handles (start knob above the line, end knob below — see the 2026-10-29 evening entry).
 
 | Action | Result |
 |---|---|
@@ -67,7 +67,7 @@ When dragging a handle, the loupe follows the end being moved, not the finger, s
 
 ![Dragging the start handle: the loupe shows the start bar from above, and both knobs sit below the line](/blog/superpdf-underline-handles/loupe-handle-drag.png)
 
-Both knobs now hang below the line. Copying iOS's top start knob was exactly what put the finger over the text.
+Both knobs now hang below the line. Copying iOS's top start knob was exactly what put the finger over the text. (Reversed the next day — see 2026-10-29 evening.)
 
 Knobs are dark glass on light paper and light glass on dark paper, with just a small dot in the underline colour. We judge "light" from the paper under the knob, not the app's light/dark mode: pages stay white in dark mode, so following the mode would put light glass on white paper. Each page keeps a tiny thumbnail and the knob checks the average brightness under it.
 
@@ -112,7 +112,15 @@ Now every existing mark fades to 30% opacity while you draw a new one, and while
 
 An outline or shadow on the selected line was too small to read at loupe scale; hiding the others entirely would make it hard to draw right next to them. Fading keeps both. The system loupe mirrors the live view, so lowering layer opacity was all it took, on both the scrolling and page-turning views.
 
-## 2026-10-29, evening — a lock on the toolbar hides the second row
+## 2026-10-29, evening — the start knob goes back above the line
+
+Both knobs below the line felt wrong next to every other iOS app, where the start knob sits on top. Hands trained by the system reach above the line for it first.
+
+![A tapped highlight: the start bar has its knob on top, the end bar has its knob below](/blog/superpdf-underline-handles/start-knob-above.png)
+
+The reason for moving it down was the finger covering the text while dragging the start. The loupe now shows the dragged end anyway, so that problem is gone and only the familiarity gap was left. The knob position and the hit test both moved; every view shares the same function, so it changed everywhere at once.
+
+## 2026-10-29, night — a lock on the toolbar hides the second row
 
 Most taps on an underline turn out to be for reading, not editing: check the note, jump to the map. The weight-and-colour row came up every time and covered one more line of text.
 
@@ -124,7 +132,7 @@ Testing the lock turned up a real bug: the toolbar's first row could not be tapp
 
 ![Before the fix: the first toolbar row overlaps the status bar](/blog/superpdf-underline-handles/toolbar-under-status-bar.png)
 
-The overlay now sits after the modifier, inside the safe area, and moves down 52pt when the floating top bar is showing. Any change that widens the board now gets a capture with an underline selected and a hittable check on its buttons.
+The fix is to attach the overlay after the modifier, inside the safe area. Another change landed the same fix first that day, and it also hides the floating buttons while the toolbar is up, so the two never overlap. We kept that version. Any change that widens the board now gets a capture with an underline selected and a hittable check on its buttons.
 
 ## History
 
@@ -134,4 +142,5 @@ The overlay now sits after the modifier, inside the safe area, and moves down 52
 - 2026-10-28, late — Two-row glass toolbar instead of a popover, one blank tap deselects, change an underline's weight
 - 2026-10-28, near midnight — Handles while drawing; any tap only deselects, edge taps included
 - 2026-10-29 — Other marks fade while drawing or while one is selected
-- 2026-10-29, evening — Lock on the toolbar hides the second row; toolbar no longer sits under the status bar
+- 2026-10-29, evening — Start knob back above the line, matching iOS text selection
+- 2026-10-29, night — Lock on the toolbar hides the second row; toolbar no longer sits under the status bar
