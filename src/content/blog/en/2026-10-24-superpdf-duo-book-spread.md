@@ -223,7 +223,9 @@ A screenshot from a folded Duo's outer screen turned sideways: one page in the m
 
 The rule now fits one page (aspect a) and two pages (2a) to the pane and **picks whichever fills more of it**. The two tie when the pane is √2 times the page aspect. The aspect is the median of fifteen sampled pages, measured once when the document opens. A portrait book spreads on the outer screen, on a landscape iPhone, and on a landscape iPad; a slide deck stays on one page until the pane is about twice as wide as tall. On a landscape iPhone the height binds either way, so two pages are exactly as large as one.
 
-What lost: an exception for the outer screen (it is indistinguishable from any iPhone by idiom and size class), "spread only if pages do not shrink" (a letter-size document would show one page on a landscape iPad), and a fixed pane-ratio cutoff (blind to slides). Compact-height spreads use the two-row top toolbar, since the Duo's right rail does not fit in about 400pt. Checked on an iPhone simulator; the real outer screen is still to try. Next: a landscape page that is really two scanned book pages should turn by halves in portrait.
+What lost: an exception for the outer screen (it is indistinguishable from any iPhone by idiom and size class), "spread only if pages do not shrink" (a letter-size document would show one page on a landscape iPad), and a fixed pane-ratio cutoff (blind to slides). Compact-height spreads use the two-row top toolbar, since the Duo's right rail does not fit in about 400pt. Checked on an iPhone simulator; the real outer screen is still to try. 
+
+Wide pages now turn like a book leaf. A slide shown one at a time used to curl as a whole sheet from its left edge, like a wall calendar. Now a wider-than-tall page sits across two faces of a centre-spine page curl: the slide is shown whole, and turning folds only its right half, with the next slide's left half on the back. Turns count faces; highlights, pen and crop count pages, so an underline that starts on the left half and crosses the spine lands on the same page. Verified with a slow-drag recording; drawing across the spine with the pen is still to check.
 
 ## History
 
@@ -242,4 +244,4 @@ What lost: an exception for the outer screen (it is indistinguishable from any i
 - 2026-10-29 — A fit-width button when the scroll board is pinched off width; fixed an endless re-render that kept an open book at 120% CPU
 - 2026-10-29 — Reading buttons gathered into one two-row top toolbar that the underline edit toolbar shares
 - 2026-10-29 — Toolbar split into functions on top, settings below; long-press draws only with the underline tool; edit toolbar lock removed
-- 2026-10-30 — One or two pages decided by the PDF's page aspect, not the device; landscape iPhone and the Duo outer screen spread
+- 2026-10-30 — One or two pages decided by the PDF's page aspect, not the device; landscape iPhone and the Duo outer screen spread; wide pages turn by their right half
