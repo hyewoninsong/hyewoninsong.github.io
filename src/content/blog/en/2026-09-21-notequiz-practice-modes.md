@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-30T18:48:37+09:00
+date: 2026-10-30T21:57:14+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -174,7 +174,9 @@ The sheet opens as a draft like any other range edit. X changes nothing, and a c
 
 One Android pitfall: `ScrollState.maxValue` is `Int.MAX_VALUE` until the scroll area is measured. Scrolling once to the first measured value was not enough either; see the stage-3 section below. While the sheet rises, `maxValue` moves 100 → 0 → 100, so the first glide ended at 0.
 
-## 2026-10-30 — weak-note practice starts at stage 3
+## 2026-10-30 — weak-note practice starts at stage 3 (reversed the same day)
+
+This rule was gone within hours; the next section is what the app does now. The paragraphs below stay as the reasoning of the time.
 
 If *Practice these notes* is tapped on stage 1 or 2, the sheet shows a notice under the weak-focus card: practice starts at stage 3, and confirming sets it. The check saves the stage along with the range; the question count stays.
 
@@ -183,6 +185,17 @@ If *Practice these notes* is tapped on stage 1 or 2, the sheet shows a notice un
 Stage 1 asks only do, and stage 2 only do-mi-sol / do-la-fa. A weak-notes-only round there can ask almost nothing, and often the Start button just locks. The stage change is part of the draft, so X undoes it. Turning a clef back on hides the notice and keeps the stage. Hiding the button on stages 1–2 lost because nobody would know why it vanished.
 
 The notice's second line was clipped at the bottom edge, which exposed a bug in the morning's scroll: it had never moved. The rising sheet resizes its body, `maxValue` goes 100 → 0 → … → 100, and a one-shot glide ends at 0. It now follows the bottom while the view sits at the last bottom it saw. The UI test compares an element's clipped `boundsInRoot` height with its own height, which `assertIsDisplayed()` does not.
+
+## 2026-10-30 — stages 1–2 deal the range around weak notes, stage 3 adds the notes themselves
+
+Raising the stage drew an immediate objection: stages 1 and 2 are where you learn *where* the weak notes sit. Finding do and counting do-mi-sol near them is useful even if the weak note itself is never asked. So weak focus now means something different per stage.
+
+| Stage | What weak focus adds to the chosen range |
+|---|---|
+| 1–2 | The narrowest range holding every weak note, per clef (Easy, else Hard); its dos and ladders are asked |
+| 3 and up | The weak notes themselves, even outside the chosen range; nothing else from that wider range |
+
+With no clef on only the added part is left, so "weak focus alone" from the day before becomes one case of this rule. The sheet caption splits in two, and the 60 % caption drops "in range", since it now counts notes outside it. The count on stages 1–2 is every weak note that set the range. Rejected: keeping the stage raise (contradicts the request), adding every do of the widest range (far ledger-line dos unrelated to weak notes), and adding the covering range from stage 3 (non-weak notes would leak in). The cost: with focus on, the chosen range is no longer the outer edge of what can appear. Android got the same rule the same day.
 
 ## History
 
@@ -195,3 +208,4 @@ The notice's second line was clipped at the bottom edge, which exposed a bug in 
 - 2026-10-29 — save sheet with a Save record switch, an account row and Play again / Next stage / Done, the same mid-round; range groups and top notice; weak-note practice asks weak notes only; worded session replay
 - 2026-10-30 — *Practice these notes* opens the range sheet as a draft (clefs off, weak focus on) scrolled to the bottom, instead of starting the quiz (iOS and Android)
 - 2026-10-30 — weak-note practice from stage 3: notice on stages 1–2 and the stage rises on confirm; the auto-scroll follows the moving bottom (iOS and Android)
+- 2026-10-30 — stage raise reversed: weak focus adds the covering range on stages 1–2 and the weak notes themselves from stage 3 (iOS and Android)
