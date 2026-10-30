@@ -1,6 +1,6 @@
 ---
 title: "Remove Ads in an app with no Settings screen: where does Restore go?"
-date: 2026-10-27T20:47:57+09:00
+date: 2026-10-30T19:14:01+09:00
 app: "superfont"
 tags: ["devlog", "swiftui", "appstore"]
 summary: "SuperFont shows an AdMob banner and sells a one-time Remove Ads. With no Settings screen, Restore moved into a sheet. Two days later a rewarded video ad went in right before the profile download — why rewarded and not interstitial, and why an 8-second timeout stayed silent for 36 seconds."
@@ -20,7 +20,7 @@ The banner is stacked under the main screen, so the main screen gets shorter and
 
 ![The Use without ads sheet: app mark, Remove ads button, Restore purchase, footnote](/blog/superfont-ads-remove-ads/remove-ads-sheet.png)
 
-In SuperTimetable the entry point starts the purchase directly, and Restore and Ad privacy live in Settings. SuperFont has no Settings screen, but both are required: a non-consumable needs an in-app Restore button for review, and consent regions need a way to change consent. So both entry points open one sheet with Buy, Restore, and (in consent regions) Ad privacy. It costs one extra tap. A standalone Restore button had no room on the main screen; a whole Settings screen was too much for one feature.
+In SuperTimetable the entry point starts the purchase directly, and Restore and Ad privacy live in Settings. SuperFont has no Settings screen, but both are required: a non-consumable needs an in-app Restore button for review, and consent regions need a way to change consent. So both entry points open one sheet with Buy, Restore, and (in consent regions) Ad privacy. It costs one extra tap. A standalone Restore button had no room on the main screen; a whole Settings screen was too much for one feature. (Six days later it got one anyway — see 2026-10-30 below.)
 
 ## Stacking the banner buried the keyboard toolbar
 
@@ -88,8 +88,21 @@ The review mail offered to approve as-is if this was a bug-fix submission. We de
 
 Neither reproduction nor verification works in the simulator. The next step is a real iPad with a sandbox account, watching the payment sheet actually appear, then a new build on 1.1.0. SuperTimetable makes the same call.
 
+## 2026-10-30 — A Settings screen after all, like the other apps
+
+The sheet existed because there was no Settings screen — but Settings is where people look for Restore. The studio's timetable and note quiz apps put a "Use without ads" card at the top of Settings: tap the row to buy, Restore right below. SuperFont now does the same, behind a gear in the empty top-left corner.
+
+![Settings: the Use without ads row with price capsule and Restore purchase on top, Appearance chips below](/blog/superfont-ads-remove-ads/settings-sheet.png)
+
+The card disappears for people who already own Remove Ads (entitlements resync whenever the app comes forward) and in builds that show no ads. A Restore-only row was tried first; without the purchase row it was unclear what you were restoring.
+
+One catch: the accent is `.primary`, and on the iOS 26 sheet's glass background a `.primary` fill gets vibrancy and fades to gray. The price capsule now uses a non-semantic black/white dynamic color, identical to the banner's.
+
+Appearance is a row of three chips — Light, Dark, Auto. `.preferredColorScheme` at the root leaves an already-open sheet in the old appearance, so an invisible `UIView` sets `window.overrideUserInterfaceStyle` instead; the trait flows into presented sheets, which switch in place. The splash stays pinned to the device appearance so its first frame matches the launch storyboard.
+
 ## History
 
 - 2026-10-24 — bottom banner, Remove Ads sheet, keyboard toolbar pitfall
 - 2026-10-26 — rewarded ad before the profile download, `withTaskGroup` timeout pitfall
 - 2026-10-27 — payment sheet missing on the reviewer's iPad, `purchase(confirmIn:)` anchor
+- 2026-10-30 — Settings screen (top-left gear): Use without ads (buy + restore) on top, Appearance, capsule-on-glass catch

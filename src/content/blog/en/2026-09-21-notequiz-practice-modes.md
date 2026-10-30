@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-15T09:28:00+09:00
+date: 2026-10-30T21:57:14+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -84,7 +84,7 @@ A question is still one note, so records and statistics are untouched. The revie
 
 The two-axis design above records the September 21 iteration. Practice later settled into five stages: read do, read a do-mi-sol ladder, answer with a full ladder, answer with do alone, and answer without hints. Android now shows a looping staff example beside each stage, so choosing does not depend on understanding the label first.
 
-All five use the same treble clef and middle C. The reading examples show do alone or do-mi-sol; the three quiz examples ask the same sol with progressively fewer hints. They share one clock: one head every 0.5 seconds, a 1.4-second hold after the longest example finishes, then a 0.35-second clear. Short examples wait for the others. Independent timers would put each card at a different point in its explanation. The clock stops when the chooser closes or the app goes into the background.
+All five used the same treble clef and middle C (since 2026-10-29 they come from your range, below). The reading examples show do alone or do-mi-sol; the three quiz examples ask the same sol with progressively fewer hints. They share one clock: one head every 0.5 seconds, a 1.4-second hold after the longest example finishes, then a 0.35-second clear. Short examples wait for the others. Independent timers would put each card at a different point in its explanation. The clock stops when the chooser closes or the app goes into the background.
 
 The settings had also been saving correctly while displaying old values. Clef switches and difficulty choices changed only after reopening the sheet. Stage and question count stayed stale on the home screen.
 
@@ -124,6 +124,79 @@ Grading also follows the iOS pen paths. The circle wobbles slightly and overlaps
 
 Question generation and stored records stay as they were. This change aligns the visual lesson and the route into it. A preview now needs to show the same counting axis as the question it represents.
 
+## 2026-10-29 — Android range sheet: fewer circles, and weak notes alone are a range
+
+Three rounds of iOS changes to the range sheet landed on Android at once.
+
+**Each layer has its own control.** The clef card used to be all circles: an include check, two radio buttons, and the preview's note dots. Now the clef is a switch row (`𝄞 Treble clef ……… switch`; tapping the words works too), and the range under it is one `Easy | Hard` pill with the note count beside it, in a single card. The only circles left are the notes. A second, lighter panel inside the card was tried on iOS and lost: the double border read before the hierarchy did.
+
+![Android range sheet: a clef switch row over one card holding the preview and an Easy/Hard pill](/blog/notequiz-practice-modes/android-range-switch-pill.png)
+
+**Nothing on, nothing to confirm.** Every switch can still be turned off, but with no clef and no weak-note focus the check is disabled and the sheet says why. An alert on tap lost: you only find out by pressing.
+
+![Both clefs off: the check is dimmed and a line explains what to turn on](/blog/notequiz-practice-modes/android-range-all-off.png)
+
+**Weak-note focus alone is a range.** Focus used to weight weak notes at 60% inside the chosen clefs, so practising only weak notes still meant 40% ordinary questions. With both clefs off and focus on, the quiz now asks weak notes only, from both clefs' widest range. Quietly treating that as "both clefs on" lost because it switches back on what you switched off. One function counts what a setup can deal, and the generator, the start lock, the preview, the sheet's count and record replay all use it.
+
+**Stage examples follow your range.** The 2026-10-15 note above says all five examples use treble middle C; no longer. A bass-only setup now shows bass examples, a new set each turn, clefs alternating when both are on. Within a turn the five cards still point at the same note.
+
+**Saving is tapping a name, then "play again?"** (Replaced the same afternoon; see the next section.) A card tap in the save sheet saves; there is no separate Save. A finished session then asks to play again with the same settings, and a new round starts in place. A session left early does not ask.
+
+## 2026-10-29 — one sheet decides saving and the next round, finished or not
+
+The morning's "tap a name to save, then a play-again dialog" did not last the day. Ending a round took two decisions, you could not play again without saving, and leaving early still showed the old sheet.
+
+Now the save sheet is one card and three buttons. The card has a `Save record` switch, on by default, and a `Save to · name >` row. Below it are `Play again`, `Next stage` and `Done`. The switch decides whether to save and the button decides what happens next, so you tap once.
+
+![The finished save sheet: the Save record switch and the Save to row share one card, with Play again, Next stage and Done below](/blog/notequiz-practice-modes/android-save-sheet-switch.png)
+
+`Next stage` keeps range, length and weak focus and moves the stage up one rung. The new stage is saved as that account's last setting. On the last stage, or when the next stage has nothing to ask in this range, the button does not appear. `Save to` opens the same account sheet as the home chip, where you pick, add or rename accounts. With saving off, the row dims.
+
+Three options lost. Adding a third button to the dialog still meant two decisions. A Save / Don't save segment took more space and hid that saving is the default. Two of every button made six buttons. A dropdown for the account lasted a day on iOS, because creating and editing accounts still happened in the account sheet.
+
+Leaving mid-round shows the same sheet with a different header. Swiping it down takes you back to the question. Leave without saving and its confirmation are gone, since switching saving off is the confirmation.
+
+Also in this pass: in the range sheet each clef is a group like Weak spots, and the "pick at least one" notice sits at the top in accent instead of a grey footnote. *Practice these notes* now turns the clefs off, so only weak notes come up. (On 2026-10-30 it stopped starting the quiz on its own — see below.) Session replay is a worded button under the summary instead of a toolbar glyph.
+
+![Range sheet with everything off: an accent notice at the top, and each clef a titled card whose first row is the Include in test switch](/blog/notequiz-practice-modes/android-range-empty-notice.png)
+
+One test pitfall. After the reorder handle moved inside its account card, the drag test failed with "Failed to inject touch input", which sounds like an emulator problem. The card merges its children for accessibility, and the test looked the tag up in the merged tree, where the handle no longer had a node of its own. Searching with `useUnmergedTree = true` fixed it. The next test in the class also failed, but only as a knock-on: run alone, it passed.
+
+## 2026-10-30 — *Practice these notes* opens the range sheet, not the quiz
+
+The button at the bottom of the Stats tab now takes you to the Test tab and opens the range sheet: both clefs switched off, *Ask weak notes more often* on, scrolled down to the weak-note chips. The check saves it; you press Start yourself.
+
+![The range sheet opened from Stats: both clef switches off and dimmed, only the weak-focus switch on, with the weak-note chip below](/blog/notequiz-practice-modes/android-weak-practice-range-sheet.png)
+
+Earlier the same day the button saved the range and started the quiz at once. The range was settled, but the **practice stage** was not: it is shown only on the Test tab, which the button skipped. People started a quiz without knowing whether it would show hints, and on stage 1 a weak note that is not a do cannot be asked at all.
+
+The sheet opens as a draft like any other range edit. X changes nothing, and a clef switched back on gets its old range back. Saving first and then opening the sheet lost because the check would open disabled and X could not undo it. Opening the stage sheet instead lost because it hides the range, which is what the button changes. Both iOS and Android changed; the `weak_notes` analytics entry is gone.
+
+One Android pitfall: `ScrollState.maxValue` is `Int.MAX_VALUE` until the scroll area is measured. Scrolling once to the first measured value was not enough either; see the stage-3 section below. While the sheet rises, `maxValue` moves 100 → 0 → 100, so the first glide ended at 0.
+
+## 2026-10-30 — weak-note practice starts at stage 3 (reversed the same day)
+
+This rule was gone within hours; the next section is what the app does now. The paragraphs below stay as the reasoning of the time.
+
+If *Practice these notes* is tapped on stage 1 or 2, the sheet shows a notice under the weak-focus card: practice starts at stage 3, and confirming sets it. The check saves the stage along with the range; the question count stays.
+
+![The range sheet opened on stage 1, with the accent notice under the weak-focus card](/blog/notequiz-practice-modes/android-weak-practice-stage-notice.png)
+
+Stage 1 asks only do, and stage 2 only do-mi-sol / do-la-fa. A weak-notes-only round there can ask almost nothing, and often the Start button just locks. The stage change is part of the draft, so X undoes it. Turning a clef back on hides the notice and keeps the stage. Hiding the button on stages 1–2 lost because nobody would know why it vanished.
+
+The notice's second line was clipped at the bottom edge, which exposed a bug in the morning's scroll: it had never moved. The rising sheet resizes its body, `maxValue` goes 100 → 0 → … → 100, and a one-shot glide ends at 0. It now follows the bottom while the view sits at the last bottom it saw. The UI test compares an element's clipped `boundsInRoot` height with its own height, which `assertIsDisplayed()` does not.
+
+## 2026-10-30 — stages 1–2 deal the range around weak notes, stage 3 adds the notes themselves
+
+Raising the stage drew an immediate objection: stages 1 and 2 are where you learn *where* the weak notes sit. Finding do and counting do-mi-sol near them is useful even if the weak note itself is never asked. So weak focus now means something different per stage.
+
+| Stage | What weak focus adds to the chosen range |
+|---|---|
+| 1–2 | The narrowest range holding every weak note, per clef (Easy, else Hard); its dos and ladders are asked |
+| 3 and up | The weak notes themselves, even outside the chosen range; nothing else from that wider range |
+
+With no clef on only the added part is left, so "weak focus alone" from the day before becomes one case of this rule. The sheet caption splits in two, and the 60 % caption drops "in range", since it now counts notes outside it. The count on stages 1–2 is every weak note that set the range. Rejected: keeping the stage raise (contradicts the request), adding every do of the widest range (far ledger-line dos unrelated to weak notes), and adding the covering range from stage 3 (non-weak notes would leak in). The cost: with focus on, the chosen range is no longer the outer edge of what can appear. Android got the same rule the same day.
+
 ## History
 
 - 2026-09-21 — practice styles added (lines/spaces, chain of thirds, landmarks, two-note reading)
@@ -131,3 +204,8 @@ Question generation and stored records stay as they were. This change aligns the
 - 2026-09-21 — five styles split into show-how × which-notes; clef cards gated behind an include check
 - 2026-10-15 — Android settings observe a shared snapshot; five stage examples loop on one clock
 - 2026-10-15 — Android ladders share one axis; full-chain reveal geometry, pen grading, and home hierarchy match iOS
+- 2026-10-29 — Android range sheet with switches and a pill, weak focus alone, stage examples from the range, tap-to-save and play again
+- 2026-10-29 — save sheet with a Save record switch, an account row and Play again / Next stage / Done, the same mid-round; range groups and top notice; weak-note practice asks weak notes only; worded session replay
+- 2026-10-30 — *Practice these notes* opens the range sheet as a draft (clefs off, weak focus on) scrolled to the bottom, instead of starting the quiz (iOS and Android)
+- 2026-10-30 — weak-note practice from stage 3: notice on stages 1–2 and the stage rises on confirm; the auto-scroll follows the moving bottom (iOS and Android)
+- 2026-10-30 — stage raise reversed: weak focus adds the covering range on stages 1–2 and the weak notes themselves from stage 3 (iOS and Android)
