@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-29T16:49:40+09:00
+date: 2026-10-30T18:30:47+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -156,11 +156,23 @@ Three options lost. Adding a third button to the dialog still meant two decision
 
 Leaving mid-round shows the same sheet with a different header. Swiping it down takes you back to the question. Leave without saving and its confirmation are gone, since switching saving off is the confirmation.
 
-Also in this pass: in the range sheet each clef is a group like Weak spots, and the "pick at least one" notice sits at the top in accent instead of a grey footnote. *Practice these notes* now turns the clefs off, so only weak notes come up. Session replay is a worded button under the summary instead of a toolbar glyph.
+Also in this pass: in the range sheet each clef is a group like Weak spots, and the "pick at least one" notice sits at the top in accent instead of a grey footnote. *Practice these notes* now turns the clefs off, so only weak notes come up. (On 2026-10-30 it stopped starting the quiz on its own — see below.) Session replay is a worded button under the summary instead of a toolbar glyph.
 
 ![Range sheet with everything off: an accent notice at the top, and each clef a titled card whose first row is the Include in test switch](/blog/notequiz-practice-modes/android-range-empty-notice.png)
 
 One test pitfall. After the reorder handle moved inside its account card, the drag test failed with "Failed to inject touch input", which sounds like an emulator problem. The card merges its children for accessibility, and the test looked the tag up in the merged tree, where the handle no longer had a node of its own. Searching with `useUnmergedTree = true` fixed it. The next test in the class also failed, but only as a knock-on: run alone, it passed.
+
+## 2026-10-30 — *Practice these notes* opens the range sheet, not the quiz
+
+The button at the bottom of the Stats tab now takes you to the Test tab and opens the range sheet: both clefs switched off, *Ask weak notes more often* on, scrolled down to the weak-note chips. The check saves it; you press Start yourself.
+
+![The range sheet opened from Stats: both clef switches off and dimmed, only the weak-focus switch on, with the weak-note chip below](/blog/notequiz-practice-modes/android-weak-practice-range-sheet.png)
+
+Earlier the same day the button saved the range and started the quiz at once. The range was settled, but the **practice stage** was not: it is shown only on the Test tab, which the button skipped. People started a quiz without knowing whether it would show hints, and on stage 1 a weak note that is not a do cannot be asked at all.
+
+The sheet opens as a draft like any other range edit. X changes nothing, and a clef switched back on gets its old range back. Saving first and then opening the sheet lost because the check would open disabled and X could not undo it. Opening the stage sheet instead lost because it hides the range, which is what the button changes. Both iOS and Android changed; the `weak_notes` analytics entry is gone.
+
+One Android pitfall: `ScrollState.maxValue` is `Int.MAX_VALUE` until the scroll area is measured, so scrolling to it right away aims at infinity. Wait for the first measured value with `snapshotFlow`, then scroll, and have the UI test assert the bottom chip is displayed, not just the switch states.
 
 ## History
 
@@ -171,3 +183,4 @@ One test pitfall. After the reorder handle moved inside its account card, the dr
 - 2026-10-15 — Android ladders share one axis; full-chain reveal geometry, pen grading, and home hierarchy match iOS
 - 2026-10-29 — Android range sheet with switches and a pill, weak focus alone, stage examples from the range, tap-to-save and play again
 - 2026-10-29 — save sheet with a Save record switch, an account row and Play again / Next stage / Done, the same mid-round; range groups and top notice; weak-note practice asks weak notes only; worded session replay
+- 2026-10-30 — *Practice these notes* opens the range sheet as a draft (clefs off, weak focus on) scrolled to the bottom, instead of starting the quiz (iOS and Android)
