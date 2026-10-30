@@ -1,6 +1,6 @@
 ---
 title: "Remove Ads costs the same on Google Play and the App Store — matching only the Korean price doesn't get you there"
-date: 2026-10-26T22:40:16+09:00
+date: 2026-10-30T18:59:00+09:00
 app: "notequiz"
 tags: ["devlog", "android", "appstore"]
 summary: "Both stores got a 11,000 KRW base price and automatic conversion everywhere else, and the US alone came out at 6.99 vs 8.49 dollars. How we made the App Store the single source of truth for 174 Play regions, and the API traps on the way."
@@ -24,7 +24,7 @@ Both products were created the same way: 11,000 KRW in Korea, the store converts
 
 ## The App Store is the source of truth
 
-A script reads the iOS price schedule through the App Store Connect API (1 manual plus 174 automatic territories) and writes the same customer price into the Play product per region, then reads it back. It now lives as a two-step skill: `plan`, then `apply`. Of 174 Play regions, 152 changed, 5 were already equal, 17 Play-only regions kept their price, and 18 App-Store-only territories were ignored.
+A script reads the iOS price schedule through the App Store Connect API (1 manual plus 174 automatic territories) and writes the same customer price into the Play product per region, then reads it back. It now lives as a two-step skill: `plan`, then `apply`. Of 174 Play regions, 152 changed, 5 were already equal, 17 Play-only regions kept their price (changed on Oct 30, see below), and 18 App-Store-only territories were ignored.
 
 About 30 countries are the exception: Apple bills in USD or EUR where Play bills in local currency (Argentina, Ukraine, Kenya, Morocco, Paraguay, Mongolia). Copying digits would set the wrong currency, so the iOS amount is converted with Play's own converter. Equivalent value, not identical digits.
 
@@ -44,3 +44,18 @@ The script now reads back after create, after pricing and after activation.
 ## Where it stands
 
 The product is `ACTIVE` with iOS-equal prices. The 1.1.0 production release is a draft waiting for the Console rollout. License testers and one real test purchase are still to do.
+
+## 2026-10-30 — Down to 6,600 KRW, and the Play-only countries follow too
+
+The iOS price dropped to a 6,600 KRW base. Re-running the sync carried it over wherever the App Store sells: US$6.99 became US$3.99, ¥1,100 became ¥600, £6.99 became £3.99, €7.99 became €3.99. The 30 USD-billed countries again got US$3.99 converted by Play (Argentina ARS 6,150).
+
+The 17 Play-only regions were the gap. With no iOS price to copy, they kept the 11,000-KRW-era conversion: US$8.30 in Aruba and Djibouti and €8.99 in Monaco while the US went to US$3.99. Play's default for regions it adds later (`newRegionsConfig`) sat at US$8.30 / €7.42 for the same reason.
+
+The new rule: a country iOS doesn't sell in gets Play's conversion of the **iOS base-territory price**, read from App Store Connect each run rather than hard-coded, so the next iOS price change moves these countries too. Result: CHF 4.40, BDT 700, €5.49 in Monaco, and US$4.94 / €4.42 for future regions. Converting from the US price instead would re-convert a number Apple had already rounded once; leaving them alone would repeat the problem on every price drop.
+
+All 174 regions changed (127 copied, 30 converted from USD/EUR, 17 from 6,600 KRW) and read back equal; a second `plan` showed no difference. No app code changed.
+
+## History
+
+- 2026-10-26 — Created the Play product and matched 174 regions to the App Store.
+- 2026-10-30 — Re-synced to the 6,600 KRW iOS schedule; Play-only regions and the new-region default now come from the iOS base price.
