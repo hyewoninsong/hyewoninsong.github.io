@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-10-30T12:59:13+09:00
+date: 2026-10-30T16:20:39+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -97,6 +97,14 @@ Now all three follow the same grammar: tap, everything else dims, the tooltip si
 
 Corner resize handles lost: there is no way to stretch ink or re-cut a crop yet, and a handle you can grab that does nothing is worse than none.
 
+## 2026-10-30 (evening) — The tooltip jumped sideways every time it appeared
+
+A tester noticed the tooltip landing a little off and then snapping into place. Cut into frames, the recording showed it sitting in the wrong spot only for the 0.2-second appear transition, then jumping once when the transition ended — invisible in any single screenshot.
+
+The offset matched the side safe-area inset, so it only happens with the camera beside the screen (a phone held sideways). Portrait never reproduced it; landscape did every time, starting about 62pt off.
+
+The tooltip's `Layout` used `.ignoresSafeArea()` to stretch into the PDF view's coordinates, where the underline's rect lives. Once settled that works, but while the view is being inserted it was drawn with the un-stretched bounds. The fix stops stretching: the PDF view gets a named coordinate space, and the tooltip's `GeometryReader` shifts the rect by its own origin in that space. Both values come from the same layout pass, so the transition can't pull them apart.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -105,3 +113,4 @@ Corner resize handles lost: there is no way to stretch ink or re-cut a crop yet,
 - 2026-10-29 (night) — pen and crop stay on the page-turning view; drag-to-turn is off while drawing.
 - 2026-10-30 — one toolbar: Collect toggle, separate undo group, select tool with a tooltip beside the underline.
 - 2026-10-30 (afternoon) — select tool picks pen drawings and crops too, with a dashed frame.
+- 2026-10-30 (evening) — the tooltip no longer jumps by the safe-area inset as it appears.
