@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-10-30T12:40:23+09:00
+date: 2026-10-30T12:59:13+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -85,6 +85,18 @@ Even after the two-place change, the top of the screen had three shapes: the rea
 
 Tap-to-select in reading mode lost because tapping the page to hide the buttons would keep opening a tooltip whenever the tap landed on an underline. The old two-row edit toolbar lost as a tooltip because it covers too much text. The tooltip is placed by a SwiftUI `Layout` that asks the tooltip its size, rather than measuring and feeding the size back into state.
 
+## 2026-10-30 (afternoon) — Pen drawings and crops are selectable too
+
+Tapping a pen drawing or a crop with the select tool already opened the tooltip, but nothing showed what you had picked: only text highlights got the "selected" look. You were one tap away from Delete without seeing what would go.
+
+Now all three follow the same grammar: tap, everything else dims, the tooltip sits right above what you picked. Underlines keep their end handles, since they have a text range to adjust. Pen drawings and crops get a dashed rounded frame instead, 6pt outside the region so it never sits on a crop's own 1pt outline.
+
+![A selected crop wrapped in a dashed frame, with Delete and More above it](/blog/superpdf-ui-simplify/select-crop.png)
+
+![A selected pen drawing in a dashed frame, with colour and Delete above it](/blog/superpdf-ui-simplify/select-ink.png)
+
+Corner resize handles lost: there is no way to stretch ink or re-cut a crop yet, and a handle you can grab that does nothing is worse than none.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -92,3 +104,4 @@ Tap-to-select in reading mode lost because tapping the page to hide the buttons 
 - 2026-10-29 (later) — tighter reading-mode spacing.
 - 2026-10-29 (night) — pen and crop stay on the page-turning view; drag-to-turn is off while drawing.
 - 2026-10-30 — one toolbar: Collect toggle, separate undo group, select tool with a tooltip beside the underline.
+- 2026-10-30 (afternoon) — select tool picks pen drawings and crops too, with a dashed frame.
