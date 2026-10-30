@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-30T18:30:47+09:00
+date: 2026-10-30T18:48:37+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -172,7 +172,17 @@ Earlier the same day the button saved the range and started the quiz at once. Th
 
 The sheet opens as a draft like any other range edit. X changes nothing, and a clef switched back on gets its old range back. Saving first and then opening the sheet lost because the check would open disabled and X could not undo it. Opening the stage sheet instead lost because it hides the range, which is what the button changes. Both iOS and Android changed; the `weak_notes` analytics entry is gone.
 
-One Android pitfall: `ScrollState.maxValue` is `Int.MAX_VALUE` until the scroll area is measured, so scrolling to it right away aims at infinity. Wait for the first measured value with `snapshotFlow`, then scroll, and have the UI test assert the bottom chip is displayed, not just the switch states.
+One Android pitfall: `ScrollState.maxValue` is `Int.MAX_VALUE` until the scroll area is measured. Scrolling once to the first measured value was not enough either; see the stage-3 section below. While the sheet rises, `maxValue` moves 100 → 0 → 100, so the first glide ended at 0.
+
+## 2026-10-30 — weak-note practice starts at stage 3
+
+If *Practice these notes* is tapped on stage 1 or 2, the sheet shows a notice under the weak-focus card: practice starts at stage 3, and confirming sets it. The check saves the stage along with the range; the question count stays.
+
+![The range sheet opened on stage 1, with the accent notice under the weak-focus card](/blog/notequiz-practice-modes/android-weak-practice-stage-notice.png)
+
+Stage 1 asks only do, and stage 2 only do-mi-sol / do-la-fa. A weak-notes-only round there can ask almost nothing, and often the Start button just locks. The stage change is part of the draft, so X undoes it. Turning a clef back on hides the notice and keeps the stage. Hiding the button on stages 1–2 lost because nobody would know why it vanished.
+
+The notice's second line was clipped at the bottom edge, which exposed a bug in the morning's scroll: it had never moved. The rising sheet resizes its body, `maxValue` goes 100 → 0 → … → 100, and a one-shot glide ends at 0. It now follows the bottom while the view sits at the last bottom it saw. The UI test compares an element's clipped `boundsInRoot` height with its own height, which `assertIsDisplayed()` does not.
 
 ## History
 
@@ -184,3 +194,4 @@ One Android pitfall: `ScrollState.maxValue` is `Int.MAX_VALUE` until the scroll 
 - 2026-10-29 — Android range sheet with switches and a pill, weak focus alone, stage examples from the range, tap-to-save and play again
 - 2026-10-29 — save sheet with a Save record switch, an account row and Play again / Next stage / Done, the same mid-round; range groups and top notice; weak-note practice asks weak notes only; worded session replay
 - 2026-10-30 — *Practice these notes* opens the range sheet as a draft (clefs off, weak focus on) scrolled to the bottom, instead of starting the quiz (iOS and Android)
+- 2026-10-30 — weak-note practice from stage 3: notice on stages 1–2 and the stage rises on confirm; the auto-scroll follows the moving bottom (iOS and Android)
