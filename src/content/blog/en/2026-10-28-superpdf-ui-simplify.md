@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-10-29T02:12:32+09:00
+date: 2026-10-30T12:40:23+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -71,9 +71,24 @@ Dragging used to turn the page, and pen and crop both draw by dragging. So while
 
 We didn't go with pencil-draws/finger-turns because finger drawing is the default, and people without a Pencil couldn't draw at all. This time we listed everything the scroll view did for pen and crop before moving them, so nothing quietly went missing like the underline handles did the day before. Two-page spreads use the same code but haven't been checked on screen yet.
 
+## 2026-10-30 — One toolbar; pick an underline with the select tool and edit it right there
+
+Even after the two-place change, the top of the screen had three shapes: the reading toolbar, an edit toolbar that replaced it when you tapped an underline, and the system bar with a segmented control in Collect. Now there is one toolbar whenever a book is open.
+
+- **Collect is a toggle** in that toolbar. The toolbar stays; only the button lights up.
+- **Undo/redo is its own group** on the left of the second row, always there, Collect included — it isn't a setting of any tool.
+- **A select tool** (the hand) sits first among the tools. Tap an underline with it and a one-row tooltip appears right next to it: style, weight, colour, delete, and a `…` menu for note, edit/copy text and the map.
+
+![Collect keeps the same toolbar; only the Collect button is on](/blog/superpdf-ui-simplify/collect-same-toolbar.png)
+
+![A one-row tooltip under the selected underline; the top toolbar stays](/blog/superpdf-ui-simplify/select-tooltip.png)
+
+Tap-to-select in reading mode lost because tapping the page to hide the buttons would keep opening a tooltip whenever the tap landed on an underline. The old two-row edit toolbar lost as a tooltip because it covers too much text. The tooltip is placed by a SwiftUI `Layout` that asks the tooltip its size, rather than measuring and feeding the size back into state.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
 - 2026-10-29 — Collect is the map; reading-mode nodes read like prose with page numbers; colour grouping and the fit button removed; edit taps only select.
 - 2026-10-29 (later) — tighter reading-mode spacing.
 - 2026-10-29 (night) — pen and crop stay on the page-turning view; drag-to-turn is off while drawing.
+- 2026-10-30 — one toolbar: Collect toggle, separate undo group, select tool with a tooltip beside the underline.
