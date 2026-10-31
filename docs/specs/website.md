@@ -96,12 +96,12 @@ src/content/
 │   ├── ko.md         # 한국어 회사 소개
 │   └── en.md         # English about page
 ├── apps/
-│   ├── ko/           # 한국어 앱 소개
+│   ├── ko/           # 한국어 앱 소개 — timetable · superfont · musicnote · planner · pdf
 │   │   ├── timetable.md
-│   │   └── fontbox.md
-│   └── en/           # English app descriptions
+│   │   └── …
+│   └── en/           # English app descriptions (같은 다섯 파일)
 │       ├── timetable.md
-│       └── fontbox.md
+│       └── …
 └── blog/
     ├── ko/           # 한국어 블로그 글
     └── en/           # English blog posts
@@ -224,7 +224,7 @@ UTC 자정으로 파싱되기 때문에 현지 시간대로 찍으면 하루 밀
 - PC: 한 줄에 2~3개 카드 / 태블릿: 2개 / 모바일: 1개
 - 카드 클릭 시 해당 앱 상세 페이지로 이동
 
-> **현재 상태 (2026-10-02):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 2026-09-22 App Store 출시, 상세 페이지 있음), SuperMusicNote·SuperPlanner(iPhone·iPad 개발중, 전용 상세 페이지 `musicnote.astro`·`planner.astro` 가 있고 2026-09-24 에 스크린샷을 넣었다), SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperTimetable 은 2026-09-26 부터 Android 개발중 뱃지도 단다 (`platforms.android: "in-development"`). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. SuperTimetable 아이콘(`/apps/timetable/icon.png`)은 2026-09-23 에 앱 쪽 아이콘 재제작(그림자 제거·iOS 시스템색·둥근 모서리)에 맞춰 `SuperTimetable.icon` 번들에서 다시 합성했다. 다섯 앱 모두 아이콘(`/apps/<slug>/icon.png`)이 있고, 스샷이 아직 없는 것은 SuperPDF 하나다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 지금 있는 것은 SuperFont 의 둘과 SuperTimetable 의 `privacy` 이고, 앱에 묶이지 않은 `/{lang}/support/` · `/{lang}/privacy/` 가 따로 있다. Android 전용 정책은 `/{lang}/apps/<slug>/android/privacy/` 에 따로 둔다 (Play Console 개인정보처리방침 URL) — 2026-10-02 에 SuperMusicNote 와 SuperPlanner 것이 생겼다. 현재 배포 빌드의 SDK·권한·백업 설정 및 Play 데이터 보안 신고와 맞추고, iOS 정책의 IDFA/ATT 문구나 공통 정책의 Firebase 서술을 그대로 옮기지 않는다: SuperMusicNote Android 는 Firebase Analytics·Crashlytics 를 쓴다고 밝히고(광고 ID 는 수집하지 않음, 클라우드 백업 꺼짐), SuperPlanner Android 1.0.0 은 Firebase 가 없어 기기 저장·Android 백업·JSON 내보내기만 적고 Analytics 는 "도입 예정" 으로만 표시한다 — 도입 예정인 SDK를 현재 수집 사실로 쓰지 않는다 (`docs/decisions/2026-10-02-planner-android-privacy.md`, `docs/references/privacy-policy-host-and-platform-pitfall.md`). 공통 개인정보 페이지(`/{lang}/privacy/`)는 앱별 정책으로 연결한다 — 지금 걸린 것은 SuperPlanner Android · SuperMusicNote Android · SuperTimetable 셋이다. 앱 상세 페이지 맨 아래에는 그 앱의 블로그 글 최근 셋이 "개발 기록" 으로 붙는다 (`AppDevlog.astro`, §4.3.4). iOS 개인정보 페이지의 "앱 개인정보" 표는 그 앱의 `PrivacyInfo.xcprivacy` 와 같아야 한다. 2026-10-13 시행 판: 앱에서 iCloud 백업 기능이 삭제되어 정책·앱 페이지는 "기기 안에만 저장" 으로 되돌렸고 iCloud 문장은 두지 않는다 (`docs/decisions/2026-10-13-timetable-icloud-backup-removed.md`, `tests/privacy-pages.test.mjs`). 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다. 개인정보 페이지의 ko/en 짝, 공통 페이지의 링크, Android 정책의 문구 규칙은 `tests/privacy-pages.test.mjs` 가 본다.
+> **현재 상태 (2026-10-23):** 목록에는 다섯이 보인다 — SuperTimetable·SuperFont(둘 다 2026-09-22 App Store 출시, 상세 페이지 있음), SuperMusicNote·SuperPlanner(iPhone·iPad 개발중, 전용 상세 페이지 `musicnote.astro`·`planner.astro` 가 있고 2026-09-24 에 스크린샷을 넣었다), SuperPDF(iPhone 개발중, `comingSoon: true` 라 상세는 "준비중" 안내 한 장). SuperTimetable 은 2026-09-26 부터 Android 개발중 뱃지도 단다 (`platforms.android: "in-development"`). SuperPlanner 는 2026-09-21 에 아이콘을 넣어(앱 저장소의 `AppIcon-1024.png` 를 256px 로 줄인 `/apps/planner/icon.png`) 카드와 상세 상단에 그려진다. SuperTimetable 아이콘(`/apps/timetable/icon.png`)은 2026-09-23 에 앱 쪽 아이콘 재제작(그림자 제거·iOS 시스템색·둥근 모서리)에 맞춰 `SuperTimetable.icon` 번들에서 다시 합성했다. 다섯 앱 모두 아이콘(`/apps/<slug>/icon.png`)이 있고, 스샷이 아직 없는 것은 SuperPDF 하나다. 스크린샷은 두 배치가 있다 — 전용 상세 페이지가 있는 앱(timetable · superfont · musicnote · planner)은 언어별 `public/apps/<slug>/{ko,en}/<이름>.png` 에 두고 페이지의 `img()` 헬퍼로 현재 로케일 폴더를 고르며, 보관된 supertimers 는 언어 구분 없는 평면 `public/apps/<slug>/<이름>.png` 다. 두 배치 모두 ko/en 페이지가 가리키는 파일이 실제로 있고 서로 같은지는 `tests/app-screenshots.test.mjs` 가 본다. 소개가 준비되면 `comingSoon` 을 지우고 본문(또는 `AppPage.astro` 를 쓰는 전용 페이지)을 채운다. 나머지 앱(mathmaster · notequiz · supertimers)의 페이지와 md 는 지우지 않고 `src/_archive/` 로 옮겨 라우팅에서 뺐다 — 다시 보이게 하려면 `src/pages/{ko,en}/apps/` 와 `src/content/apps/{ko,en}/` 로 되돌리면 된다 (SuperFont 는 App Store 제출용 지원·개인정보 URL 이 필요해 2026-09-18 에 되돌렸다). 앱마다 App Store 에 넣는 페이지가 둘 있다: `/{lang}/apps/<slug>/support/` (지원 URL) 와 `/{lang}/apps/<slug>/privacy/` (개인정보 처리방침 URL). 지금 있는 것은 SuperFont 의 둘과 SuperTimetable 의 `privacy` 이고, 앱에 묶이지 않은 `/{lang}/support/` · `/{lang}/privacy/` 가 따로 있다. Android 전용 정책은 `/{lang}/apps/<slug>/android/privacy/` 에 따로 둔다 (Play Console 개인정보처리방침 URL) — 2026-10-02 에 SuperMusicNote 와 SuperPlanner 것이 생겼다. 현재 배포 빌드의 SDK·권한·백업 설정 및 Play 데이터 보안 신고와 맞추고, iOS 정책의 IDFA/ATT 문구나 공통 정책의 Firebase 서술을 그대로 옮기지 않는다: SuperMusicNote Android 는 Firebase Analytics·Crashlytics 를 쓴다고 밝히고(Firebase 는 광고 ID 를 수집하지 않음, 클라우드 백업 꺼짐), 2026-10-26 시행 판부터 화면 아래 AdMob 배너(AAID·앱 세트 ID 수집, 동의 창, 설정 → 광고 개인정보 설정)와 Google Play 결제의 "광고 제거" 구매도 적는다 (`docs/decisions/2026-10-26-musicnote-android-admob-privacy.md`), SuperPlanner Android 1.0.0 은 Firebase 가 없어 기기 저장·Android 백업·JSON 내보내기만 적고 Analytics 는 "도입 예정" 으로만 표시한다 — 도입 예정인 SDK를 현재 수집 사실로 쓰지 않는다 (`docs/decisions/2026-10-02-planner-android-privacy.md`, `docs/references/privacy-policy-host-and-platform-pitfall.md`). 공통 개인정보 페이지(`/{lang}/privacy/`)는 앱별 정책으로 연결한다 — 지금 걸린 것은 SuperPlanner Android · SuperMusicNote Android · SuperTimetable 셋이다. 앱 상세 페이지 맨 아래에는 그 앱의 블로그 글 최근 셋이 "개발 기록" 으로 붙는다 (`AppDevlog.astro`, §4.3.4). iOS 개인정보 페이지의 "앱 개인정보" 표는 App Store Connect 에 **게시된 라벨**을 그대로 옮기고, 라벨은 그 앱의 `PrivacyInfo.xcprivacy` 의 상위 집합이어야 한다 (매니페스트에 있는 유형·추적 여부가 라벨에서 빠지면 안 된다). SuperTimetable iOS 정책은 2026-09-28 시행 판부터 Firebase Analytics 항목에 **앱 내 구매 여부**(프리미엄 화면을 연 위치, 구매·복원 여부)를 적는다 — 결제·영수증은 Apple 이 처리하고 앱은 결제 정보를 받지 않는다는 문장을 같이 둔다(ko/en 둘 다, `tests/privacy-pages.test.mjs` 가 본다). 2026-10-08 시행 판은 앱 1.2.0 의 iCloud 백업에 맞춰 iCloud 백업 항목을 넣었으나, 앱이 2026-10-13 에 그 기능을 통째로 지워 2026-10-13 시행 판에서 되돌렸다 — 1조는 다시 "기기 안에만 저장 / stored only on your device" 이고 클라우드 동기화·백업 기능이 없다고 적으며, 정책과 앱 페이지(`src/content/apps/{ko,en}/timetable.md`) 어디에도 iCloud 문장을 두지 않는다 (`docs/decisions/2026-10-13-timetable-icloud-backup-removed.md` 가 `2026-10-08-timetable-icloud-backup-disclosure.md` 를 대체, `tests/privacy-pages.test.mjs` 가 ko/en 둘 다 본다). 구매 여부 항목은 2026-10-13 시행 판에도 그대로 있다. 2026-10-16 시행 판은 SuperTimetable Android 앱의 AdMob 배너에 맞춰 한 정책 안에서 플랫폼을 나눈다 — 2조에 `Google AdMob (Google LLC) — Android 앱만` 소절(IP 기반 대략 위치·광고 ID·앱 세트 ID·광고 상호작용·진단)과 Android 광고 제거 구매 항목을 넣고, 3조의 IDFA/ATT 문장은 "iOS 앱" 으로 좁혀 iOS 앱에는 광고가 없다고 그대로 두며, Android 는 맞춤 광고 동의(EEA·영국·스위스)와 앱의 **설정 → 광고 개인정보 설정** 을 적는다. 처리 위탁 표에 AdMob 행을 더하고, 공통 개인정보 페이지의 "광고 식별자를 수집하지 않음" 문장도 이 예외를 밝힌다 (`docs/decisions/2026-10-16-timetable-android-admob-privacy.md`). 2026-10-30 시행 판은 iOS 앱에도 AdMob 배너·광고 제거 구매·ATT 가 들어간 것에 맞춰 이 구분을 걷어 냈다 — 소절 제목과 위탁 표에서 "Android 앱만" 을 떼고, 기기 식별자를 플랫폼별(iOS 는 IDFA(추적 허용 시)·IDFV, Android 는 AAID·앱 세트 ID)로 적고, 3조는 튜토리얼 뒤 ATT 를 한 번 묻고 그 바로 앞에 Google IDFA 안내 화면이 뜬다고 쓴다. "앱 내 구매 = 프리미엄" 항목은 지우고 광고 제거 구매를 iOS·Android 공통 한 항목으로 합쳤으며, App Store 표는 2026-10-23 ASC 게시 라벨 8개 유형(기기 ID·대략적 위치·광고 데이터·제품 상호작용 = 추적)이다. 공통 페이지의 예외 문구도 "SuperTimetable 앱의 광고" 로 넓혔다 (`docs/decisions/2026-10-23-timetable-ios-admob-privacy.md`, `docs/decisions/2026-10-23-timetable-ios-idfa-explainer.md`). SuperFont 방침은 2026-10-25 시행 판부터 AdMob 배너 · ATT(IDFA) · UMP 동의 · 광고 제거 구매(Apple 결제)를 적고, App Store 표는 매니페스트 수집 항목 6개(추적 4개)를 옮긴다. 설정 화면이 없는 앱이라 동의 선택은 **광고 제거 화면 → 광고 개인정보 설정** 에 있다 (`docs/decisions/2026-10-25-superfont-ios-admob-privacy.md`). 공통 방침의 "광고 식별자를 수집하지 않음" 예외는 아직 SuperTimetable 만 적고 있어 테스트에 `todo` 로 걸려 있다. AdMob 이 개발자 웹사이트에서 읽는 판매자 인증 파일은 `public/app-ads.txt` (`google.com, pub-…, DIRECT, f08c47fec0942fa0` 한 줄)이고 형식은 `tests/app-ads.test.mjs` 가 본다. 상세 페이지 `timetable.astro` 는 스토어 소개글(`fastlane/metadata/*/description.txt`)의 섹션 순서를 따르되 **기능 나열이 아니라 편해지는 점**을 리드 문장으로 쓴다. 개인정보 페이지의 ko/en 짝(존재·시행일·`<h2>/<h3>/<li>` 개수), 공통 페이지의 링크, Android 정책의 문구 규칙, SuperTimetable 의 광고 제거 구매 고지·iCloud 문장이 없는지·iOS/Android 양쪽 AdMob·ATT 고지·ASC 라벨 표(8행, 추적 4행)·공통 페이지의 광고 예외 문구는 `tests/privacy-pages.test.mjs` 가 본다.
 
 **레이아웃:**
 
@@ -252,7 +252,7 @@ UTC 자정으로 파싱되기 때문에 현지 시간대로 찍으면 하루 밀
 
 **콘텐츠 작성 방식:** `src/content/blog/ko/`, `src/content/blog/en/` 폴더 안에 글마다 `.md` 파일 추가. 블로그 글은 선택적 번역 — 한국어만 작성해도 되고, 양쪽 모두 작성해도 됨.
 
-> **현재 상태 (2026-10-04):** 글은 ko·en 각 68편이고 지금은 전부 양쪽 언어로 있다. 같은 주제의 후속 세션은 새 글을 만들지 않고 기존 파일에 합쳐 쓴다(10월 4일 커밋 열셋 중 일곱이 그런 `improve:` 갱신이다) — 그래서 파일 이름의 날짜는 첫 발행일이고 frontmatter 의 `date` 는 마지막 갱신 시각이라 둘이 다를 수 있으며, 목록은 `date` 순이라 갱신된 글이 위로 올라온다. 대부분 앱 저장소의 devlog 세션이 올리고 하루에 여러 편이 올라온다 — 그래서 `date` 는 날짜만이 아니라 **한국 시각까지** 적는다 (`2026-09-29T20:47:41+09:00`). 목록 순서는 그 시각의 내림차순이고(`src/lib/blog-posts.ts` 의 `byNewest`), 화면에는 한국 날짜(YYYY-MM-DD)만 나온다. frontmatter 의 `app` 은 그 글이 어느 앱을 만들다 나왔는지로, `src/lib/blog-apps.ts` 의 `BLOG_APPS` 키다 (`timetable` · `superfont` · `daily-planner` · `superpdf` · `notequiz` · `supermath` · `supertimers`). 앱 저장소의 슬러그라 apps 컬렉션의 `slug` 와 다를 수 있다 (`daily-planner` → `planner`, `notequiz` → `musicnote`). 앱과 무관한 글은 `app` 을 비운다. 본문 이미지는 `public/blog/<주제>/<이름>.png` 에 두고 본문에서 `/blog/<주제>/<이름>.png` 로 쓴다. `thumbnail` 은 스키마에 남아 있지만 쓰는 글이 없다. 파일 이름 형식, 필수 frontmatter(`title`·`date`·`summary`)와 스키마 밖 키, `app` 이 `BLOG_APPS` 키인지(그리고 `BLOG_APPS` 의 `appSlug` 가 실제 apps 항목인지), 이미지 파일이 실제로 있는지, ko/en 짝의 `date`·`app` 이 같은지는 `tests/blog-content.test.mjs` 가 본다 (`node --test "tests/**/*.test.mjs"`).
+> **현재 상태 (2026-10-31):** 글은 ko·en 각 149편이고 지금은 전부 양쪽 언어로 있다. 같은 주제의 후속 세션은 새 글을 만들지 않고 기존 파일에 합쳐 쓴다(10월 7일 하루에 글 커밋이 스물일곱 올라왔는데 새 글은 다섯이고 스물하나가 그런 `improve:` 갱신, 하나가 문장 정정 `fix:` 였고, 10월 8일에는 스물다섯 중 새 글 다섯·`improve:` 갱신 스물, 10월 9일에는 스물다섯 중 새 글 일곱·`improve:` 갱신 열여덟, 10월 10일에는 열둘 중 새 글 셋·`improve:` 갱신 아홉, 10월 11일에는 열다섯 전부가 `improve:` 갱신이라 새 글이 없고 그중 일곱이 첫 실행 소개 글 하나에 합쳐졌으며, 10월 12일에는 여섯 중 새 글 둘·`improve:` 갱신 넷, 10월 13일에는 열일곱 중 새 글 둘·`improve:` 갱신 열다섯이다 — 발행 당일에 같은 글이 세 번 더 합쳐지기도 한다) — 그래서 파일 이름의 날짜는 첫 발행일이고 frontmatter 의 `date` 는 마지막 갱신 시각이라 둘이 다를 수 있으며, 목록은 `date` 순이라 갱신된 글이 위로 올라온다. 대부분 앱 저장소의 devlog 세션이 올리고 하루에 여러 편이 올라온다 — 그래서 `date` 는 날짜만이 아니라 **한국 시각까지** 적는다 (`2026-09-29T20:47:41+09:00`). 목록 순서는 그 시각의 내림차순이고(`src/lib/blog-posts.ts` 의 `byNewest`), 화면에는 한국 날짜(YYYY-MM-DD)만 나온다. frontmatter 의 `app` 은 그 글이 어느 앱을 만들다 나왔는지로, `src/lib/blog-apps.ts` 의 `BLOG_APPS` 키다 (`timetable` · `superfont` · `daily-planner` · `superpdf` · `notequiz` · `supermath` · `supertimers`). 앱 저장소의 슬러그라 apps 컬렉션의 `slug` 와 다를 수 있다 (`daily-planner` → `planner`, `notequiz` → `musicnote`). 앱과 무관한 글은 `app` 을 비운다. 본문 이미지는 `public/blog/<주제>/<이름>.png` 에 두고 본문에서 `/blog/<주제>/<이름>.png` 로 쓴다 (`<주제>` 는 글 파일 이름에서 날짜를 뗀 슬러그를 쓰는 것이 관례이고, 날짜까지 붙인 폴더는 `2026-10-03-timetable-list-row-duplicate/` · `2026-10-05-timetable-grid-entrance-first-load/` · `2026-10-08-timetable-cards-view-icon/` · `2026-10-09-timetable-display-sheet-card-order/` · `2026-10-14-timetable-android-grid-change-animation/` · `2026-10-14-timetable-android-sheet-endless-bounce/` 여섯이다). `thumbnail` 은 스키마에 남아 있지만 쓰는 글이 없다. 파일 이름 형식, 필수 frontmatter(`title`·`date`·`summary`)와 스키마 밖 키, `app` 이 `BLOG_APPS` 키인지(그리고 `BLOG_APPS` 의 `appSlug` 가 실제 apps 항목인지), 이미지 파일이 실제로 있는지, ko/en 짝의 `date`·`app`·이미지 목록이 같은지, 이미지에 alt 가 있는지, `date` 가 미래가 아닌지, `/{lang}/blog/<slug>` 링크가 실제 글인지는 `tests/blog-content.test.mjs` 가 본다 (`node --test "tests/**/*.test.mjs"`).
 
 ```
 src/content/blog/
@@ -352,8 +352,11 @@ thumbnail: "/blog/timetable-grid/grid.png"
 
 |앱 이름   |상태 |설명                   |
 |-------|---|---------------------|
-|시간표 관리 |출시 |나만의 시간표를 만들고 관리하는 앱  |
-|FontBox|개발중|iOS에서 폰트를 설치하고 관리하는 앱|
+|SuperTimetable |출시 (iOS) · Android 개발중 |나만의 시간표를 만들고 관리하는 앱  |
+|SuperFont |출시 (iOS) |iOS에서 폰트를 설치하고 관리하는 앱 (옛 이름 FontBox)|
+|SuperMusicNote |개발중 |악보·음악 노트 앱|
+|SuperPlanner |개발중 |하루 계획 앱|
+|SuperPDF |개발중 (`comingSoon`) |PDF 앱|
 
 ### 블로그 (초기 게시글 예시)
 
@@ -471,11 +474,14 @@ hyewoninsong.com/
 │   ├── blog/<주제>/           # 블로그 본문 이미지
 │   ├── invite/timetable/      # /invite/timetable/ 초대 랜딩 — index.html · invite.mjs · ready.json
 │   ├── CNAME
+│   ├── app-ads.txt            # AdMob 판매자 인증 (SuperTimetable iOS·Android 광고)
 │   ├── robots.txt
 │   ├── favicon.ico
 │   └── favicon.svg
-├── tests/                     # node --test "tests/**/*.test.mjs"
+├── tests/                     # node --test "tests/**/*.test.mjs" (npm test)
+│   ├── app-screenshots.test.mjs   # 앱 상세 페이지 스크린샷 참조가 public/ 에 있고 ko/en 이 같은지
 │   ├── blog-content.test.mjs      # 블로그 파일 이름 · 이미지 경로 · ko/en 짝 검사
+│   ├── app-ads.test.mjs           # public/app-ads.txt 레코드 형식 · AdMob 게시자 줄
 │   ├── privacy-pages.test.mjs     # 개인정보·지원 페이지 ko/en 짝 · 공통 페이지 링크 · Android 정책 문구
 │   └── timetable-invite.test.mjs  # 초대 링크 파싱 · 로케일 · 설치 링크
 ├── docs/                      # plans · specs · references · adr · decisions
@@ -490,10 +496,10 @@ hyewoninsong.com/
 ## 8. 배포 파이프라인
 
 1. `main` 브랜치에 push
-1. GitHub Actions 자동 트리거
-1. `npm run build` → 정적 파일 생성
-1. `gh-pages` 브랜치에 빌드 결과물 배포
-1. GitHub Pages에서 서빙
+1. GitHub Actions 자동 트리거 (`.github/workflows/deploy.yml`, Node 22, `npm ci`)
+1. `npm run build` → `dist/` 에 정적 파일 생성
+1. `actions/upload-pages-artifact` 로 `dist/` 를 아티팩트로 올림 — `gh-pages` 브랜치는 쓰지 않는다
+1. `actions/deploy-pages` 가 GitHub Pages 에 배포 · 서빙
 
 -----
 
