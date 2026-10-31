@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-29T19:12:42+09:00
+date: 2026-10-31T16:32:24+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -136,6 +136,26 @@ Testing the lock turned up a real bug: the toolbar's first row could not be tapp
 
 The fix is to attach the overlay after the modifier, inside the safe area. Another change landed the same fix first that day, and it also hides the floating buttons while the toolbar is up, so the two never overlap. We kept that version. Any change that widens the board now gets a capture with an underline selected and a hittable check on its buttons.
 
+## 2026-10-31 — Move handwriting and crops, and resize them with eight handles
+
+Selecting handwriting or a crop used to give you a dashed frame and a toolbar: colour and delete. A crop in the wrong spot meant deleting it and dragging a new one. Now dragging inside the selection moves it, and eight handles on the frame (four corners, four edge midpoints) resize it.
+
+| Grab | Crop | Handwriting |
+|---|---|---|
+| Inside | Re-crops at the new spot | Moves the ink |
+| Corner | Two edges at once | Scales the writing on both axes |
+| Edge | That edge only | Stretches along one axis |
+
+![A crop moved down and enlarged from its bottom-right corner, with eight white handles on the dashed frame and the toolbar following it](/blog/superpdf-underline-handles/crop-moved-resized.png)
+
+Letting go saves once, and one undo restores the region, the ink and the map node's picture together. Crops re-render the node image; handwriting transforms the stored ink itself rather than just how it is drawn, so thumbnails, export and handwriting recognition all keep reading one source of truth. Stroke width scales with it.
+
+![A one-line wave of handwriting, moved and then enlarged from its corner](/blog/superpdf-underline-handles/ink-resized.png)
+
+Edge handles stretch one axis because the request was "resize the region and the writing follows"; drag a corner diagonally if you want to keep the shape. Dragging only works with the select tool, so a finger that meant to scroll past a crop picked from the map does not move it.
+
+One bug showed up while testing. The sample handwriting is a single wave, about 30pt tall with its frame. Dragging its middle stretched it instead of moving it: with a 22pt handle radius, the middle of a 30pt frame is within reach of both the top and bottom handles, so the body could never be grabbed. Inside the frame the handle radius now shrinks to a quarter of the short side; outside it stays at 22pt. A test now pins "the middle of a thin region moves it".
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -146,3 +166,4 @@ The fix is to attach the overlay after the modifier, inside the safe area. Anoth
 - 2026-10-29 — Other marks fade while drawing or while one is selected
 - 2026-10-29, evening — Start knob back above the line, matching iOS text selection
 - 2026-10-29, night — Lock on the toolbar hides the second row; toolbar no longer sits under the status bar
+- 2026-10-31 — Move handwriting and crops, resize with eight handles; thin handwriting no longer stretches when you drag its middle
