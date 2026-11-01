@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T16:55:51+09:00
+date: 2026-11-01T17:47:10+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -95,8 +95,19 @@ Reworking the layout per language lost out: sheet headers and segmented controls
 
 Translations had a separate review, but not by native speakers. At the largest system font, chips and day headers still clip in Thai, Hindi, Arabic and Urdu. Store screenshots and the intro video remain in the original languages, and iOS still has eight.
 
+## 2026-11-01 — Two kinds of digits, and tests that passed without running
+
+Arabic screens showed "٥٠ د" next to "9:00". A `%d` in a sentence uses the language's digits, but times were built with `Locale.ROOT`. One display function now converts times, dates, wheels and chips using the locale's own digits, so `ar-AE` stays Western. Writing Arabic digits into translations would be wrong there, and forcing Western digits app-wide would reach into per-app language and widgets.
+
+![Arabic calendar export, with dates and counts all in Arabic digits](/blog/timetable-rtl-grid/arabic-digits.png)
+
+Long words used to drop one last letter onto the next line. Words that can't fit at the smallest size now break at a syllable with a hyphen. The list sheet's bottom bar also mirrors now.
+
+A worse problem turned up along the way. A bulk replace script rewrote `%1$d` as `%١$d`, a string that crashes when formatted, and the tests passed in six seconds. String checks read the XML files directly, which Gradle can't see, so a strings-only change skipped the test task or restored a cached pass. Earlier string edits may have slipped through the same way. We declared those folders as test inputs, broke a string on purpose to watch the test fail, and reran everything.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
 - 2026-11-01: Mirrored shared images, printing, widgets and the tutorial, and fixed widget taps in every language.
 - 2026-11-01: Added ten languages, including Arabic and Urdu strings.
+- 2026-11-01: Unified Arabic digits, hyphenated long words, mirrored the list bar, and made string checks actually run.
