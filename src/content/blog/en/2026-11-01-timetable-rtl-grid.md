@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T01:16:43+09:00
+date: 2026-11-02T02:12:54+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -203,6 +203,16 @@ Thai segmentation reused Android's approach, but Android's test title "โรง
 
 The iPad popover in Arabic got the same fix for the same mechanism, but we only captured iPhone. Thai titles not clipping is covered by unit tests only, and the 1.5 line-height factor for Urdu Nastaliq is Android's measurement.
 
+## 2026-11-02 — Android took the iOS follow-ups back, and "that can't happen here" was wrong
+
+Of the fifty-odd iOS changes we compared, two were missing on Android: the hyphen rule and paragraph direction in schedule blocks.
+
+We had ruled out the second one, remembering that Compose and `StaticLayout` both go by the first strong character. A device test on `getParagraphDirection`, added to pin that down, failed. `TextDirection.Unspecified` is not `Content`: it takes the layout direction and ignores the letters. Material `Text` asks for `Content` itself and canvases follow the first strong character, so only hand-measured grid text was wrong. The same title was fine in a shared image and backwards in the app.
+
+The fix differs from iOS on purpose. iOS uses the language's direction; Android looks at the letters first, so "Math 101!" in the Arabic app keeps its `!` at the end. Titles with only digits and symbols stay left to right in the week widget.
+
+Hyphens now go in only if the whole title fits; otherwise the title is measured again without them. On some widths that also rescued titles the hyphens themselves had pushed over the limit. The test first checks that hyphens really appear, because a Korean emulator has no dictionary for English words and would pass it for nothing. We verified this at the renderer level, not with screen captures.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -214,3 +224,4 @@ The iPad popover in Arabic got the same fix for the same mechanism, but we only 
 - 2026-11-01: iOS review follow-up — restored paragraph direction inside the pinned grid, completed the time-range wrap, and hyphenate only within the line limit.
 - 2026-11-02: Fixed RTL outside the grid, tall-script line height, Thai wrapping, AM/PM markers and language-change refresh.
 - 2026-11-02: Brought tall-script line height, Thai segmentation, header fitting and AM/PM words to iOS, and pinned the measured-frame layers left to right.
+- 2026-11-02: Brought the hyphen rule to Android and made grid block paragraphs follow their letters.
