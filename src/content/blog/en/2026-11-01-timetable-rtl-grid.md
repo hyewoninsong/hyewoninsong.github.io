@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T18:20:47+09:00
+date: 2026-11-01T20:08:00+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -93,7 +93,7 @@ Reworking the layout per language lost out: sheet headers and segmented controls
 
 ### What this doesn't cover
 
-Translations had a separate review, but not by native speakers. At the largest system font, chips and day headers still clip in Thai, Hindi, Arabic and Urdu. Store screenshots and the intro video remain in the original languages, and iOS still has eight.
+Translations had a separate review, but not by native speakers. At the largest system font, chips and day headers still clip in Thai, Hindi, Arabic and Urdu. Store screenshots and the intro video remain in the original languages. The iOS app caught up in the last entry below.
 
 ## 2026-11-01 — Two kinds of digits, and tests that passed without running
 
@@ -111,7 +111,29 @@ The grid shrinks and breaks long words, but widgets had a fixed size and cut the
 
 ![The today widget, with long titles shrunk, one-line blocks ending in an ellipsis, and a memo below its title](/blog/timetable-rtl-grid/widget-long-titles.png)
 
-Android's hyphenation has no public API, so titles that fit keep the balanced wrap and only overflowing ones go through `StaticLayout`. iOS widgets stay at a fixed size, so the two apps differ here. Checking a resized widget is still to do.
+Android's hyphenation has no public API, so titles that fit keep the balanced wrap and only overflowing ones go through `StaticLayout`. iOS widgets gained the same rule in the last entry below. Checking a resized widget is still to do.
+
+## 2026-11-01 — iOS reaches 18 languages, and breaks in different places
+
+The iOS app now ships the same 18 languages. In Arabic and Urdu the time axis moves to the right, and shared images, print and widgets follow. English finally stops saying "1 schedules".
+
+![iOS Arabic home screen — both widgets keep the time axis on the right, with Monday beside it on the weekly widget](/blog/timetable-rtl-grid/ios-arabic-widgets.png)
+
+The fix matches Android: hold the grid left to right and reverse only the list of days. SwiftUI mirrors `HStack`, but not `Canvas` or UIKit touch coordinates. Sheets keep the logical order, because SwiftUI mirrors them already and a reversed list would flip twice.
+
+Three things were different on iOS:
+
+- **Direction needs a translation.** Android flips without one. iOS flips the moment Arabic ships, so the language and the layout went in together.
+- **Offscreen rendering gets no direction.** The image renderer has to be told, or the export runs the other way from the screen.
+- **The `.ics` risk was the calendar, not the digits.** Values were already ASCII, but dates came from `Calendar.current`, so an Islamic-calendar device would have written the wrong year into `DTSTART`. Export now always uses Gregorian.
+
+Plurals moved to `.stringsdict`, and that alone was not enough: `String(format:)` without a locale skips the language's digits, so every counted string now goes through one function.
+
+Widget titles shrink and break in Android's order, except titles with Korean, Chinese or Japanese characters, which stay as they were so the existing languages do not change. `Text` will not hyphenate, so CoreFoundation's dictionary finds the break and we split the lines ourselves.
+
+A blocked drag in Arabic looked like a layout bug until the same gesture failed in German too. The sample timetable was locked. Once unlocked, a Saturday event dragged one column right saved as Friday.
+
+Translations reuse the Android copy and were not reviewed by native speakers. We checked the Arabic grid, edit sheet, list preview and real widgets by eye; the other languages' long strings and iPad remain to check, and the App Store listing is unchanged.
 
 ## History
 
@@ -120,3 +142,4 @@ Android's hyphenation has no public API, so titles that fit keep the balanced wr
 - 2026-11-01: Added ten languages, including Arabic and Urdu strings.
 - 2026-11-01: Unified Arabic digits, hyphenated long words, mirrored the list bar, and made string checks actually run.
 - 2026-11-01: Widget titles now shrink and break like the grid.
+- 2026-11-01: Brought 18 languages, RTL, plurals, language digits and fitted widget titles to iOS.
