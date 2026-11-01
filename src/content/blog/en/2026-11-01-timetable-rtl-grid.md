@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T21:49:26+09:00
+date: 2026-11-02T00:12:09+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -155,6 +155,28 @@ Hyphenating long words ignored the line count. A 30-minute, one-line block with 
 
 Measurement got cheaper too. A word can only need a hyphen once the title has shrunk to the 0.75 floor, so titles above the floor return untouched with no measuring, and the few at the floor go through a small cache. Measuring every word of every block during a pinch was the alternative that lost.
 
+## 2026-11-02 — A second sweep fixed sixteen spots, and `absoluteOffset` wasn't enough
+
+Re-reading the Android build with every language in found RTL breakage outside the grid. Tapping a custom colour picked a different one, the colour handle moved against the finger, and the tablet edit popover opened across the screen from its block. Time wheels read minute then hour. All of it traces back to the table above: `Modifier.offset` mirrors, while `boundsInRoot` and touch coordinates don't. We fixed sixteen issues in sixteen PRs.
+
+![Arabic tablet — the edit popover sits right beside the selected block, its arrow pointing at it](/blog/timetable-rtl-grid/popover-beside-block.png)
+
+### The starting corner still mirrored
+
+The fix was `absoluteOffset`, and a source check passed. Then the Arabic welcome collage came up with its left third empty. `absoluteOffset` stops mirroring the value, but the parent `Box` still chooses the start, and `TopStart` is the top right in RTL. Adding `.align(AbsoluteAlignment.TopLeft)` fixed it. Only running the merged build on an emulator caught this, because a source test knows nothing about where things land.
+
+### Thai needs words before it can wrap
+
+Thai has no spaces, so a whole title counted as one word and always shrank to the floor. Dictionary segments from `BreakIterator` fixed that, but a long dictionary word then left a single vowel alone on the last line.
+
+![Before — one Thai vowel alone on a third line](/blog/timetable-rtl-grid/thai-last-letter.png)
+
+Thai has no hyphenation patterns, so we cut over-wide words ourselves and keep three graphemes on the last line.
+
+### What we chose, and what's left
+
+The colour grid stays left to right, since mirroring it meant reversing geometry, pointers and paging for a palette with no reading order. Hindi, Thai and Urdu now show their own AM/PM markers, ahead of iOS. Tall-script line height follows the title's own characters, so a Thai title in an English UI gets room too. Shared images, widgets, the 12-hour wheel and colour reordering still need a look on a device.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -164,3 +186,4 @@ Measurement got cheaper too. A word can only need a hyphen once the title has sh
 - 2026-11-01: Widget titles now shrink and break like the grid.
 - 2026-11-01: Brought 18 languages, RTL, plurals, language digits and fitted widget titles to iOS.
 - 2026-11-01: iOS review follow-up — restored paragraph direction inside the pinned grid, completed the time-range wrap, and hyphenate only within the line limit.
+- 2026-11-02: Fixed RTL outside the grid, tall-script line height, Thai wrapping, AM/PM markers and language-change refresh.
