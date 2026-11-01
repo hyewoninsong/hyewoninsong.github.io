@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T03:10:24+09:00
+date: 2026-11-02T08:47:12+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -234,6 +234,22 @@ The table also explains why the day before missed it. The 11-01 check seed was a
 
 Android code didn't change. Its week widget still pins to the app language, so a Latin title in the Arabic app can flip there alone; it gets the same rule the next time the widget is touched.
 
+## 2026-11-02 — The wheel and the value beside it said different words
+
+In Urdu 12-hour mode the edit sheet's wheel read "صبح" while the value right above it read "قبل دوپہر". Both now use the same word.
+
+![Urdu edit sheet — the value and the wheel both read "دوپہر"](/blog/timetable-rtl-grid/urdu-wheel-matches.png)
+
+The iOS wheel is `UIDatePicker`, so its words can't change. Checking why it used that word showed that Urdu's 12-hour clock isn't an AM/PM pair at all: the system pattern is `B h:mm`, with five parts of the day. Our table had folded those into two.
+
+Drawing our own wheel would mean rebuilding its momentum and accessibility for one word, and leaving it would keep two cells disagreeing. So the app's labels moved to the system's words, which are mostly shorter and help the narrow time axis. The words live in one table shared by the axis, widgets and Android, and a test compares it with the device's system format for all 24 hours.
+
+Android draws its own two-row wheel, so changing only the table would have recreated the mismatch there. The rows stay, and each now shows what the selected hour reads in that half.
+
+The time pill shown while dragging had a related problem. `.monospaced` covered the whole label, so Urdu words came out stretched instead of in Nastaliq. It stayed hidden because 24-hour labels are digits only and the pill appears only mid-drag. `.monospacedDigit()` would have changed the digits in every language, so monospace now applies only to digits and colons.
+
+Native review is still pending, and the Android wheel's changing words haven't been checked on an emulator yet.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -247,3 +263,4 @@ Android code didn't change. Its week widget still pins to the app language, so a
 - 2026-11-02: Brought tall-script line height, Thai segmentation, header fitting and AM/PM words to iOS, and pinned the measured-frame layers left to right.
 - 2026-11-02: Brought the hyphen rule to Android and made grid block paragraphs follow their letters.
 - 2026-11-02: Compared the two platforms' paragraph rules in a table and moved iOS to letters first.
+- 2026-11-02: Moved Urdu 12-hour labels to the system wheel's day-period words and limited monospace to digits in time labels.
