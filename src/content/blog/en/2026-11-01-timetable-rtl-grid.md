@@ -129,7 +129,7 @@ Three things were different on iOS:
 
 Plurals moved to `.stringsdict`, and that alone was not enough: `String(format:)` without a locale skips the language's digits, so every counted string now goes through one function.
 
-Widget titles shrink and break in Android's order, except titles with Korean, Chinese or Japanese characters, which stay as they were so the existing languages do not change. `Text` will not hyphenate, so CoreFoundation's dictionary finds the break and we split the lines ourselves.
+Widget titles shrink and break in Android's order. Korean, Chinese and Japanese titles follow the same rule and wrap between characters. `Text` will not hyphenate, so CoreFoundation's dictionary finds the break and we split the lines ourselves.
 
 A blocked drag in Arabic looked like a layout bug until the same gesture failed in German too. The sample timetable was locked. Once unlocked, a Saturday event dragged one column right saved as Friday.
 
