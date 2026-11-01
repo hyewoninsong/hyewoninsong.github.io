@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T00:12:09+09:00
+date: 2026-11-02T01:16:43+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -175,7 +175,33 @@ Thai has no hyphenation patterns, so we cut over-wide words ourselves and keep t
 
 ### What we chose, and what's left
 
-The colour grid stays left to right, since mirroring it meant reversing geometry, pointers and paging for a palette with no reading order. Hindi, Thai and Urdu now show their own AM/PM markers, ahead of iOS. Tall-script line height follows the title's own characters, so a Thai title in an English UI gets room too. Shared images, widgets, the 12-hour wheel and colour reordering still need a look on a device.
+The colour grid stays left to right, since mirroring it meant reversing geometry, pointers and paging for a palette with no reading order. Hindi, Thai and Urdu now show their own AM/PM markers; iOS caught up the same evening, below. Tall-script line height follows the title's own characters, so a Thai title in an English UI gets room too. Shared images, widgets, the 12-hour wheel and colour reordering still need a look on a device.
+
+## 2026-11-02 — On iOS, the layers fed by measured frames were mirrored
+
+With Android's list of sixteen fixes in hand, we went through the iOS code item by item. Wheels, list cards and axis labels are system-mirrored on iOS and were already right. Tall-script line height, Thai word segmentation, weekday header fitting and the Hindi, Thai and Urdu AM/PM words had the same code shape on iOS, so the same fixes moved over.
+
+![Thai 12-hour axis — ก่อนเที่ยง and หลังเที่ยง instead of AM/PM](/blog/timetable-rtl-grid/thai-axis-12h.png)
+
+The undecidable part was anywhere a measured frame goes into `.position` or `.offset`: the tutorial demos, the intro's speech bubbles, the iPad edit popover. Nothing documents whether SwiftUI mirrors those two modifiers in RTL, and our grid-era table (`HStack` flips, `Canvas` and UIKit coordinates don't) had no row for them. So we captured it in Arabic.
+
+![Before — the sheet's ✓ is top left, but the demo finger and ring float top right](/blog/timetable-rtl-grid/tutorial-check-mirrored.png)
+
+The ✓ sat top left and the ring top right. On the intro's second page the finger pressed Monday on the left while the bubble's tail pointed right. Measurement arrives in physical, left-origin coordinates; `.position` and `.offset` flip the axis in RTL. A `Path` outline in the same layer stays physical, so the outline was right and only the finger was mirrored. It is exactly Android's `offset` versus `absoluteOffset`.
+
+![After — ring and finger sit on the ✓](/blog/timetable-rtl-grid/tutorial-check-fixed.png)
+
+The fix matches the grid: any layer that places children from measured frames is pinned with `.environment(\.layoutDirection, .leftToRight)`, and only the text inside it (bubble copy, popover content) gets the language direction back. That covered four tutorial layers, the intro bubbles and flying card, the iPad popover's invisible anchor, and the lifted colour swatch. Formulas that assume a side were flipped separately: the display-settings demo computed the day-header centre as if the axis were on the left, and the edit-sheet caret now blinks at the right end in Arabic.
+
+The classification changed. It is not "views SwiftUI mirrors" versus "views drawn by coordinates"; it is **where a measurement is consumed**. If it feeds `.position` or `.offset`, that layer is coordinate territory, and coordinate territory is pinned left to right.
+
+### Thai dictionaries differ per platform
+
+Thai segmentation reused Android's approach, but Android's test title "โรงเรียนมัธยมศึกษา" came back as one segment on Apple's dictionary; "คณิตศาสตร์ขั้นสูง" splits into three. Long titles the dictionary treats as one word still overflow, so the grapheme cut that keeps three on the last line was needed on iOS too.
+
+### Where it stands
+
+The iPad popover in Arabic got the same fix for the same mechanism, but we only captured iPhone. Thai titles not clipping is covered by unit tests only, and the 1.5 line-height factor for Urdu Nastaliq is Android's measurement.
 
 ## History
 
@@ -187,3 +213,4 @@ The colour grid stays left to right, since mirroring it meant reversing geometry
 - 2026-11-01: Brought 18 languages, RTL, plurals, language digits and fitted widget titles to iOS.
 - 2026-11-01: iOS review follow-up — restored paragraph direction inside the pinned grid, completed the time-range wrap, and hyphenate only within the line limit.
 - 2026-11-02: Fixed RTL outside the grid, tall-script line height, Thai wrapping, AM/PM markers and language-change refresh.
+- 2026-11-02: Brought tall-script line height, Thai segmentation, header fitting and AM/PM words to iOS, and pinned the measured-frame layers left to right.
