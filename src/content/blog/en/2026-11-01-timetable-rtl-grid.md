@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T20:08:00+09:00
+date: 2026-11-01T21:49:26+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -135,6 +135,26 @@ A blocked drag in Arabic looked like a layout bug until the same gesture failed 
 
 Translations reuse the Android copy and were not reviewed by native speakers. We checked the Arabic grid, edit sheet, list preview and real widgets by eye; the other languages' long strings and iPad remain to check, and the App Store listing is unchanged.
 
+## 2026-11-01 — Re-reading the merged code: pinning coordinates pins paragraphs too
+
+After the iOS merge we read all thirty changed files again. Nothing crashed, but the fix had three gaps, and none of them showed on an Arabic screen.
+
+### Pinning the grid left to right moved Arabic punctuation to the wrong end
+
+The grid's inside is held with `.environment(\.layoutDirection, .leftToRight)` for the sake of coordinates. That same value also decides the paragraph direction of every `Text` inside it. An Arabic title like "رياضيات!" needs its exclamation mark at the end of the sentence, the left edge; in a left-to-right paragraph it lands on the right. A title mixing digits, "فيزياء 101", reorders too. The today widget already restored the language direction per block; the app grid, the shared image and the weekly widget didn't. The block's text stack now gets the app language's direction back, and a contract test checks all four renderers.
+
+The Arabic seed hid it. Sample titles had no punctuation, and Arabic-Indic digits are class `AN` in the bidi algorithm, which doesn't scramble inside a left-to-right paragraph. The check seed now includes a title ending in "!" and one mixing digits.
+
+### The time-range wrap was missing in two places
+
+Holding "12:00 PM – 2:00 PM" together had been applied to the locked-tap card and the series list, but not to the period-rules summary or Siri's "free time today" reply. Arabic looks fine there. Urdu, which uses Western digits, shows "9:00 – 15:00" as "15:00 – 9:00": European digits pull a dash between two numbers into the right-to-left run, Arabic-Indic digits don't. Every place where code concatenates two times now wraps them, and the check runs in Urdu, not Arabic.
+
+### No hyphen in front of an ellipsis
+
+Hyphenating long words ignored the line count. A 30-minute, one-line block with a long word showed "Mathe-…", hyphen and ellipsis side by side. We now count the broken pieces, and if they exceed the block's lines we leave the word whole. One-line blocks therefore always show the original, shrinking and then truncating as before. Widgets follow the same rule.
+
+Measurement got cheaper too. A word can only need a hyphen once the title has shrunk to the 0.75 floor, so titles above the floor return untouched with no measuring, and the few at the floor go through a small cache. Measuring every word of every block during a pinch was the alternative that lost.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -143,3 +163,4 @@ Translations reuse the Android copy and were not reviewed by native speakers. We
 - 2026-11-01: Unified Arabic digits, hyphenated long words, mirrored the list bar, and made string checks actually run.
 - 2026-11-01: Widget titles now shrink and break like the grid.
 - 2026-11-01: Brought 18 languages, RTL, plurals, language digits and fitted widget titles to iOS.
+- 2026-11-01: iOS review follow-up — restored paragraph direction inside the pinned grid, completed the time-range wrap, and hyphenate only within the line limit.
