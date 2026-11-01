@@ -1,6 +1,6 @@
 ---
 title: "The note quiz now asks how notes come, not just which"
-date: 2026-10-30T21:57:14+09:00
+date: 2026-11-01T00:47:59+09:00
 app: "notequiz"
 tags: ["devlog", "design", "swiftui", "android"]
 summary: "Range only says which notes can appear. Two more axes pick how: plain reading or counting from do, and which notes come up. Splitting by octave lost, then the chain of thirds, then the five-row radio list."
@@ -197,6 +197,45 @@ Raising the stage drew an immediate objection: stages 1 and 2 are where you lear
 
 With no clef on only the added part is left, so "weak focus alone" from the day before becomes one case of this rule. The sheet caption splits in two, and the 60 % caption drops "in range", since it now counts notes outside it. The count on stages 1–2 is every weak note that set the range. Rejected: keeping the stage raise (contradicts the request), adding every do of the widest range (far ledger-line dos unrelated to weak notes), and adding the covering range from stage 3 (non-weak notes would leak in). The cost: with focus on, the chosen range is no longer the outer edge of what can appear. Android got the same rule the same day.
 
+## 2026-10-31 — Stage 1 reads a whole scale and asks one of its notes
+
+Stage 1 is now *Read the scale*. It used to show each do in the range and wait for a tap, so nothing practised counting from do before the ladders of stage 2.
+
+The first card now stacks one octave from do, eight notes, rising or falling at random.
+
+![The first card: eight separated notes run from do to do, with their names in one row under the staff](/blog/notequiz-practice-modes/android-scale-first-card.png)
+
+*Got it* turns it into a question. One of the eight is drawn in ink, the other seven turn faint where they stand, and the asked note's name is blank. The card appears whole and the question clock starts at zero.
+
+![The asking card: the second of eight notes is solid, the rest are faint, and its blank name cell is underlined](/blog/notequiz-practice-modes/android-scale-asking-card.png)
+
+With something to answer, stage 1 lost its exceptions: it now has a question count, clock, score, answer line and saved record.
+
+- **Both end dos must be inside the chosen range.** Otherwise Easy would show a beginner a do five ledger lines down.
+- **Names go in one row under the staff.** Eight names a step apart overlap in a column, and beside a stepped head they land on the previous head.
+- **The staff fits the width too, measured on the stage's longest card,** so its size holds through a round. Stage 1's staff is smaller than the others'.
+
+The Android port hit one trap. The stage's stored value changes with its name, and this app's JSON setup (`coerceInputValues`) turns an unknown value into the field's default with no error. That default is stage 5, so a plain rename would have silently moved stage 1 players to the hardest stage. A round-trip test passes either way. The old name stays readable through `@JsonNames`, and a test now decodes the literal old value.
+
+The store screenshots and promo video still show the old stage 1 and need retaking.
+
+## 2026-11-01 — The asking card keeps the whole octave
+
+A day of use showed two problems. The notes sat too close, and the asking card cut the octave at the asked note, so the picture changed right after you had read it.
+
+The asking card now keeps all eight notes in place, with only the asked one in ink.
+
+- **A scale's notes stand 1.25 head widths apart.** The ladders keep their 0.92, which only exists for one stepped head. The cost is a smaller stage 1 staff.
+- **The blank name gets an underline, always black.** The name row is red only for do, so a red underline would give the answer away.
+- **The answer line went from 160 to 100,** just wider than the grading mark on `Sol`, the widest answer.
+
+![The card asking the first do: only the first note is solid, and the other do's name stays visible](/blog/notequiz-practice-modes/android-scale-asked-do.png)
+
+From stage 2 on, a do answer removes every hint, because drawing the do would give it away. Stage 1 now breaks that rule: the other do's name stays on screen, and seven named cells make the blank solvable by elimination. Stage 1 is about tying names to places, so we took that cost to keep every card the same picture.
+
+The store screenshots still show the older stage 1.
+
+
 ## History
 
 - 2026-09-21 — practice styles added (lines/spaces, chain of thirds, landmarks, two-note reading)
@@ -209,3 +248,5 @@ With no clef on only the added part is left, so "weak focus alone" from the day 
 - 2026-10-30 — *Practice these notes* opens the range sheet as a draft (clefs off, weak focus on) scrolled to the bottom, instead of starting the quiz (iOS and Android)
 - 2026-10-30 — weak-note practice from stage 3: notice on stages 1–2 and the stage rises on confirm; the auto-scroll follows the moving bottom (iOS and Android)
 - 2026-10-30 — stage raise reversed: weak focus adds the covering range on stages 1–2 and the weak notes themselves from stage 3 (iOS and Android)
+- 2026-10-31 — stage 1 becomes Read the scale: an in-range octave, then one note asked with the path kept; every stage is graded and saved (iOS and Android)
+- 2026-11-01 — the asking card keeps the whole octave, a black underline on the blank name, wider scale spacing, a 100 answer line (iOS and Android)
