@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T02:12:54+09:00
+date: 2026-11-02T03:10:24+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -141,7 +141,7 @@ After the iOS merge we read all thirty changed files again. Nothing crashed, but
 
 ### Pinning the grid left to right moved Arabic punctuation to the wrong end
 
-The grid's inside is held with `.environment(\.layoutDirection, .leftToRight)` for the sake of coordinates. That same value also decides the paragraph direction of every `Text` inside it. An Arabic title like "رياضيات!" needs its exclamation mark at the end of the sentence, the left edge; in a left-to-right paragraph it lands on the right. A title mixing digits, "فيزياء 101", reorders too. The today widget already restored the language direction per block; the app grid, the shared image and the weekly widget didn't. The block's text stack now gets the app language's direction back, and a contract test checks all four renderers.
+The grid's inside is held with `.environment(\.layoutDirection, .leftToRight)` for the sake of coordinates. That same value also decides the paragraph direction of every `Text` inside it. An Arabic title like "رياضيات!" needs its exclamation mark at the end of the sentence, the left edge; in a left-to-right paragraph it lands on the right. A title mixing digits, "فيزياء 101", reorders too. The today widget already restored the language direction per block; the app grid, the shared image and the weekly widget didn't. At the time the block's text stack got the app language's direction back — a rule replaced the next day by letter-first direction (last entry below). A contract test checks all four renderers.
 
 The Arabic seed hid it. Sample titles had no punctuation, and Arabic-Indic digits are class `AN` in the bidi algorithm, which doesn't scramble inside a left-to-right paragraph. The check seed now includes a title ending in "!" and one mixing digits.
 
@@ -209,9 +209,30 @@ Of the fifty-odd iOS changes we compared, two were missing on Android: the hyphe
 
 We had ruled out the second one, remembering that Compose and `StaticLayout` both go by the first strong character. A device test on `getParagraphDirection`, added to pin that down, failed. `TextDirection.Unspecified` is not `Content`: it takes the layout direction and ignores the letters. Material `Text` asks for `Content` itself and canvases follow the first strong character, so only hand-measured grid text was wrong. The same title was fine in a shared image and backwards in the app.
 
-The fix differs from iOS on purpose. iOS uses the language's direction; Android looks at the letters first, so "Math 101!" in the Arabic app keeps its `!` at the end. Titles with only digits and symbols stay left to right in the week widget.
+The fix differed from iOS at the time. iOS was still using the language's direction; Android looks at the letters first, so "Math 101!" in the Arabic app keeps its `!` at the end. The difference closed the same day, when iOS moved to letters first (next entry). Titles with only digits and symbols stay left to right in the week widget.
 
 Hyphens now go in only if the whole title fits; otherwise the title is measured again without them. On some widths that also rescued titles the hyphens themselves had pushed over the limit. The test first checks that hyphens really appear, because a Korean emulator has no dictionary for English words and would pass it for nothing. We verified this at the renderer level, not with screen captures.
+
+## 2026-11-02 — The two platforms disagreed on paragraph direction; a table showed iOS was wrong more often
+
+iOS pinned block text to the app language's direction; Android went by the letters. To settle it we wrote down where each rule fails.
+
+| Title | App language (iOS) | Letters first (Android) |
+|---|---|---|
+| `C++`, `Math 101!` in the Arabic app | `++C`, `!Math 101` — broken | right |
+| Arabic title `عربي 1!` in a Korean app | `!` and `1` on the wrong side — broken | right |
+| Title starting in Arabic | right | right |
+| Title starting in English, continuing in Arabic | right | left-to-right paragraph — odd word order, still readable |
+
+The table made the call. The two cells where iOS fails are English course names and foreign-language class titles: common, and the result is garbled text. The one cell where Android fails is rare, and the result is awkward ordering. Letters first is also what UIKit's `natural`, Material `Text` and the browser's `dir=auto` do by default, so it matches what users see elsewhere.
+
+So iOS moved. SwiftUI `Text` has no `natural`; it takes the `layoutDirection` environment as the paragraph direction. One function now looks at the title's first alphabetic character — right-to-left if it sits in the Arabic, Hebrew, Syriac, Thaana or NKo blocks, left-to-right for any other letter, the app language when there are no letters at all — and the title and memo `Text` each get their own value. Digits are weak and skipped: "101 رياضيات" reads right to left, "(1) Physics" left to right. Four renderers (grid, shared image, week widget, today widget), with a table test pinning eight left-to-right, seven right-to-left and six no-letter cases.
+
+Both platforms accept the odd ordering of English-then-Arabic titles. We did not go down the per-word route (direction marks, split runs); the trade-off is written into both decision records instead.
+
+The table also explains why the day before missed it. The 11-01 check seed was an Arabic title in the Arabic app, the one cell where both rules draw the same picture. The rules only diverge when the app language and the title's letters differ, so the RTL seed now carries `C++` in the Arabic app and an Arabic title in the Korean app.
+
+Android code didn't change. Its week widget still pins to the app language, so a Latin title in the Arabic app can flip there alone; it gets the same rule the next time the widget is touched.
 
 ## History
 
@@ -225,3 +246,4 @@ Hyphens now go in only if the whole title fits; otherwise the title is measured 
 - 2026-11-02: Fixed RTL outside the grid, tall-script line height, Thai wrapping, AM/PM markers and language-change refresh.
 - 2026-11-02: Brought tall-script line height, Thai segmentation, header fitting and AM/PM words to iOS, and pinned the measured-frame layers left to right.
 - 2026-11-02: Brought the hyphen rule to Android and made grid block paragraphs follow their letters.
+- 2026-11-02: Compared the two platforms' paragraph rules in a table and moved iOS to letters first.
