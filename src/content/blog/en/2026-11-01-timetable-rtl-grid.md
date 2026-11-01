@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T12:10:00+09:00
+date: 2026-11-01T12:56:48+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -42,4 +42,33 @@ Our first conclusion was that the grid and touch were fine. Tapping selected the
 
 ## Where it stands
 
-This removes the mismatch; it doesn't add right-to-left languages. There are no strings yet, and shared images, printing and widgets have the right days but draw left to right. We tested with an app language, so a device whose system language is Arabic still needs its own look.
+This removes the mismatch; it doesn't add right-to-left languages. There are no strings yet, so the text stays English. Shared images, printing, widgets and a device whose system language is Arabic came later the same day, below.
+
+## 2026-11-01 — The exported pictures mirror too, and widget taps had been broken all along
+
+A mirrored grid alone means an Arabic user sends friends a week running the opposite way. Shared images, printing, list previews, widgets and the tutorial now match the grid: the time axis on the right, Monday beside it, Saturday leftmost.
+
+Share, print and the list preview draw through one renderer, so moving the axis and reversing the same day list there fixed all three. Flipping the finished bitmap would have been one line, and it would have mirrored every letter.
+
+This time we changed the system language, not the app language. The launcher sets the direction of a widget's views, so an app language can't show what such a phone does.
+
+### Tapping a widget block only opened the app
+
+The widget looked right, but tapping Saturday's block just opened the app, and tapping an empty corner selected a different schedule. It wasn't an Arabic bug: the same code ran in every language.
+
+A `uiautomator dump` showed why. Every block's tap target sat at the same coordinates. Glance has no free positioning, so we moved each box with `padding(start = x, top = y)`, but Glance padding is inside the view. The boxes never left the corner.
+
+The geometry tests passed because the drawing coordinates were right. A manual test for tap position existed but missed it: tapping anywhere opens the app, so an open app proves nothing. We now pad a full-size parent and put the box inside it, pinned from both sides because the launcher decides direction. Sixty blocks still render, and the manual test now compares view bounds with the picture.
+
+### Direction hid outside the coordinates too
+
+- The tutorial's L-shaped outline assumed the axis was on the left. It now turns with the axis.
+- Lines like "Duplicate at the bottom right" are wrong on a mirrored screen, so they get right-to-left English variants. A translation will take priority.
+- In 12-hour time, `12:00 PM – 2:00 PM` broke into `PM – 2:00 PM 12:00`. Digits and dashes are weak in a right-to-left paragraph, and 24-hour time hides it. Each time is now held together as one run.
+
+We followed all 11 tutorial steps with real gestures, then checked the grid, widgets and taps again in Korean. Strings are what's left: English punctuation still lands at the wrong end until a translation arrives.
+
+## History
+
+- 2026-11-01: Fixed the grid's weekday mismatch.
+- 2026-11-01: Mirrored shared images, printing, widgets and the tutorial, and fixed widget taps in every language.
