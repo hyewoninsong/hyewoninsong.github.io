@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T17:47:10+09:00
+date: 2026-11-01T18:20:47+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -105,9 +105,18 @@ Long words used to drop one last letter onto the next line. Words that can't fit
 
 A worse problem turned up along the way. A bulk replace script rewrote `%1$d` as `%١$d`, a string that crashes when formatted, and the tests passed in six seconds. String checks read the XML files directly, which Gradle can't see, so a strings-only change skipped the test task or restored a cached pass. Earlier string edits may have slipped through the same way. We declared those folders as test inputs, broke a string on purpose to watch the test fail, and reran everything.
 
+## 2026-11-01 — Widgets shrink their titles too
+
+The grid shrinks and breaks long words, but widgets had a fixed size and cut the end off. Widgets now follow the same order: shrink until the word fits, shrink further if lines run out, hyphenate only a word too wide at the 0.75 floor, and end in an ellipsis. Keeping the fixed size and only adding hyphens lost out, because small widget text would break far too often.
+
+![The today widget, with long titles shrunk, one-line blocks ending in an ellipsis, and a memo below its title](/blog/timetable-rtl-grid/widget-long-titles.png)
+
+Android's hyphenation has no public API, so titles that fit keep the balanced wrap and only overflowing ones go through `StaticLayout`. iOS widgets stay at a fixed size, so the two apps differ here. Checking a resized widget is still to do.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
 - 2026-11-01: Mirrored shared images, printing, widgets and the tutorial, and fixed widget taps in every language.
 - 2026-11-01: Added ten languages, including Arabic and Urdu strings.
 - 2026-11-01: Unified Arabic digits, hyphenated long words, mirrored the list bar, and made string checks actually run.
+- 2026-11-01: Widget titles now shrink and break like the grid.
