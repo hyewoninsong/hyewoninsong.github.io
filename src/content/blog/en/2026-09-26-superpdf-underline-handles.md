@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-10-31T16:32:24+09:00
+date: 2026-11-02T23:46:29+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -156,6 +156,32 @@ Edge handles stretch one axis because the request was "resize the region and the
 
 One bug showed up while testing. The sample handwriting is a single wave, about 30pt tall with its frame. Dragging its middle stretched it instead of moving it: with a 22pt handle radius, the middle of a 30pt frame is within reach of both the top and bottom handles, so the body could never be grabbed. Inside the frame the handle radius now shrinks to a quarter of the short side; outside it stays at 22pt. A test now pins "the middle of a thin region moves it".
 
+## 2026-11-02 — Long-press grabs the word, then only the end you drag moves
+
+Pressing the middle of a word and dragging used to drop its first letters, because the fixed point was whichever letter you touched. Now a long press selects the whole space-delimited word first. Lift without dragging and that word stays underlined.
+
+![A long press alone selects one whole word, with handles on both ends](/blog/superpdf-underline-handles/longpress-word.png)
+
+| Finger goes | Fixed end | Moving end |
+|---|---|---|
+| After the word (right, line below) | Word start | End |
+| Before the word (left, line above) | Word end | Start |
+| Inside the word | Both | None |
+
+Before and after follow reading order, not screen position.
+
+![After dragging left, the start moved into an earlier word while the end stayed fixed](/blog/superpdf-underline-handles/longpress-drag-left.png)
+
+We kept the moving end per character. Snapping it by word would force a trip to the handles whenever you want part of a long compound. Apple Pencil's direct drawing still starts at the exact letter it touches.
+
+The unit tests missed it, but the sample document selected the wrong words. `characterIndex(at:)` in PDFKit doesn't share numbering with `page.string`, and the gap grows further down a page. Short ASCII fixtures hid it. Letters now come from `selectionForWord(at:)`, and the tests use a long Korean paragraph.
+
+Then dragging left made the range jump four lines. Merging character ranges was the mistake, since `range(at:on:)` on a point-built selection isn't reliable either. Now we build two selections, word start to finger and word end to finger, and keep the longer one. That's the same calculation a handle drag uses.
+
+The last bug was older. `isScrollEnabled = false` dropped the automatic safe-area inset from 62pt to 0, so the page jumped 59pt the moment you started drawing. Disabling only the pan recognizer fixed it.
+
+This hasn't been tried yet on a real device, with Pencil, or on a real scanned book; the scan path has unit tests only.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -167,3 +193,4 @@ One bug showed up while testing. The sample handwriting is a single wave, about 
 - 2026-10-29, evening — Start knob back above the line, matching iOS text selection
 - 2026-10-29, night — Lock on the toolbar hides the second row; toolbar no longer sits under the status bar
 - 2026-10-31 — Move handwriting and crops, resize with eight handles; thin handwriting no longer stretches when you drag its middle
+- 2026-11-02 — Long-press grabs the word and only the dragged end moves; fixed PDFKit index mismatches and the page jump when drawing starts
