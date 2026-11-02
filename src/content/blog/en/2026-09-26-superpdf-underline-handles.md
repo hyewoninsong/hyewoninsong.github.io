@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-11-02T23:46:29+09:00
+date: 2026-11-03T02:53:10+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -182,6 +182,14 @@ The last bug was older. `isScrollEnabled = false` dropped the automatic safe-are
 
 This hasn't been tried yet on a real device, with Pencil, or on a real scanned book; the scan path has unit tests only.
 
+## 2026-11-03 — The space after a period wouldn't leave the underline
+
+The gap after the previous sentence kept tagging along at the start of an underline. Dragging the start handle did nothing, then a little further removed the first letter instead. Underlines now never start or end on a space.
+
+PDFKit rounds a point to the middle of a glyph, so the space was only excluded inside a window about 10pt wide, narrower on screen when the page is zoomed out. The quote was trimmed, but the underline rects came straight from the untrimmed selection, so the saved text looked fine while the mark sat on the space. The selection itself is now trimmed before either value is read, using a negative `extend(atStart:)` one character at a time. That argument isn't documented, so it was measured on the simulator and tests now check the rects, not just the string.
+
+Existing underlines clean up the next time you touch a handle. This hasn't been tried by hand in the app yet.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -194,3 +202,4 @@ This hasn't been tried yet on a real device, with Pencil, or on a real scanned b
 - 2026-10-29, night — Lock on the toolbar hides the second row; toolbar no longer sits under the status bar
 - 2026-10-31 — Move handwriting and crops, resize with eight handles; thin handwriting no longer stretches when you drag its middle
 - 2026-11-02 — Long-press grabs the word and only the dragged end moves; fixed PDFKit index mismatches and the page jump when drawing starts
+- 2026-11-03 — The space after a period no longer stays in the underline range
