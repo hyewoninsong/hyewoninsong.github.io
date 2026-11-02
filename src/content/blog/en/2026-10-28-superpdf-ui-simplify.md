@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-02T23:58:30+09:00
+date: 2026-11-03T00:06:33+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -97,6 +97,16 @@ Now all three follow the same grammar: tap, everything else dims, the tooltip si
 
 Corner resize handles lost: there is no way to stretch ink or re-cut a crop yet, and a handle you can grab that does nothing is worse than none.
 
+## 2026-11-02 — Rotating the device left the tooltip behind
+
+With an underline selected, rotating the device moved the underline and its handles, but the tooltip stayed at the same screen coordinates, floating over an unrelated line.
+
+The tooltip's anchor was a view-space rectangle captured at the moment of the tap, and it was only measured again when a handle was released. View coordinates are true for one layout. The handles live on the page overlay and move with it; a coordinate copied into state does not.
+
+Now, whenever a page or the board changes place, the selected underline's rectangle is measured again from page coordinates, once, on the next run loop. Two neighbours got fixed with it: the scroll board now keeps the selected underline in view instead of jumping to the top of the page, and selecting on the right page of a spread makes that the current page, so rotating to one page still shows it.
+
+Dropping the selection on rotation would have been the shortest fix, but it interrupts the edit. One gap remains: scrolling by finger in the scroll board still leaves the tooltip where it was.
+
 ## 2026-11-02 — A half view between the book and the map
 
 On wide windows the single Collect button is now three: book, half, map. Any of them is one tap away.
@@ -121,4 +131,5 @@ We passed on one button cycling through the three states: getting from half back
 - 2026-10-29 (night) — pen and crop stay on the page-turning view; drag-to-turn is off while drawing.
 - 2026-10-30 — one toolbar: Collect toggle, separate undo group, select tool with a tooltip beside the underline.
 - 2026-10-30 (afternoon) — select tool picks pen drawings and crops too, with a dashed frame.
+- 2026-11-02 — The tooltip anchor is measured again from page coordinates whenever the board is re-laid out
 - 2026-11-02 — book, half and map buttons on wide windows; stacked half always scrolls; toolbar pinned to the window.
