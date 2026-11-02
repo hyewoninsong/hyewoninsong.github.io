@@ -1,6 +1,6 @@
 ---
 title: "Unfold the iPhone and the PDF opens like a book"
-date: 2026-10-30T01:13:28+09:00
+date: 2026-11-03T02:18:16+09:00
 app: "superpdf"
 tags: ["devlog", "uikit", "gesture"]
 summary: "On an unfolded iPhone Duo, SuperPDF lays two pages side by side and turns them with a page curl. Reading and underline tools keep it; pick the pen or crop and the vertical scroll comes back. The fold state is read from size classes, not the device name."
@@ -227,6 +227,16 @@ What lost: an exception for the outer screen (it is indistinguishable from any i
 
 Wide pages now turn like a book leaf. A slide shown one at a time used to curl as a whole sheet from its left edge, like a wall calendar. Now a wider-than-tall page sits across two faces of a centre-spine page curl: the slide is shown whole, and turning folds only its right half, with the next slide's left half on the back. Turns count faces; highlights, pen and crop count pages, so an underline that starts on the left half and crosses the spine lands on the same page. Verified with a slow-drag recording; drawing across the spine with the pen is still to check.
 
+## 2026-11-03 — The strip beside the page was never ours
+
+The folded Duo's outer screen no longer keeps a vertical strip beside the book. A tester reported that the clock and battery stayed over the page after tapping to hide the buttons. Now the status moves back to the top and the page gets the full width.
+
+The strip is the iOS 27.1 system vertical bar, documented in `UIVerticalBarEdge` in the Xcode 27.1 SDK. It can only be turned off through `preferredVerticalBarBehavior`, which has no SwiftUI modifier, so the reading screen answers `.disabled` at runtime while it is visible. Turning it off on each tap lost because the header forbids switching on view state. Turning it off everywhere lost because the home screen's buttons work well in that strip.
+
+We first blamed the unfolded display, but the home capture from the same run showed the bar all along. Since then, a capture from the unmodified build comes first.
+
+It is not closed yet. On the simulator the status already hid on tap before the fix, and the round back button from the report never appeared, even with scroll mode and a slow load. Removing the bar should leave that state nowhere to appear, but it still needs a check on the device.
+
 ## History
 
 - 2026-10-24 — Two-page spread with page curl on the unfolded Duo
@@ -245,3 +255,4 @@ Wide pages now turn like a book leaf. A slide shown one at a time used to curl a
 - 2026-10-29 — Reading buttons gathered into one two-row top toolbar that the underline edit toolbar shares
 - 2026-10-29 — Toolbar split into functions on top, settings below; long-press draws only with the underline tool; edit toolbar lock removed
 - 2026-10-30 — One or two pages decided by the PDF's page aspect, not the device; landscape iPhone and the Duo outer screen spread; wide pages turn by their right half
+- 2026-11-03 — System vertical bar turned off on the reading screen of the folded Duo; the reported state awaits a device check
