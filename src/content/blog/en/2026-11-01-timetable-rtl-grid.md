@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T13:13:37+09:00
+date: 2026-11-02T17:12:00+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -266,6 +266,22 @@ Arabic and Urdu covers are mirrored. The two cover cards are one panorama cut in
 
 Urdu's Nastaliq slopes enough that two lines collided, so it gets its own size and position. Card copy now matches the iOS work from the same day. Translations have had machine review only.
 
+## 2026-11-02 — On the App Store cards, the capture broke before the text did
+
+iOS got its ten new store pages ready for 1.2.6: ten iPhone and ten iPad cards per language, shot in the real app, plus new listing copy. The compositor fixes carried over from the Play work. The capture runs took the time.
+
+![Arabic iPad widget card — widgets fill from the right and the time axis sits on the right](/blog/timetable-rtl-grid/ios-ipad-widgets-arabic.png)
+
+**Removing a widget did not remove its picture.** The showcase widget never refreshes its timeline, so the system cache served the old timetable and the old language to the new widget. Each language now starts clean: the app is deleted on iPhone, the simulator is erased on iPad.
+
+**Switching the language failed silently.** Right after boot, `simctl spawn` can exit 124 under load, and the shell script moved on. The app was Arabic; the widgets were German. The driver now retries and reads the value back.
+
+**In RTL the top-left button is a different button.** Grid constants hit another day, the pager and widget gallery ran backwards, Edit and Done swapped sides, and the delete badge moved, so the app icon we meant to keep got removed. Left-based coordinates do not fail. They press something else, so only the picture proves the shot.
+
+**System labels came from the runtime.** Guessed labels were wrong. The simulator runtime has the real strings, and they showed that Russian, Turkish and Hindi use "+" for Edit.
+
+iPhone Duo cards, the App Store Connect upload and a native read of the translations are still to come.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -281,3 +297,4 @@ Urdu's Nastaliq slopes enough that two lines collided, so it gets its own size a
 - 2026-11-02: Compared the two platforms' paragraph rules in a table and moved iOS to letters first.
 - 2026-11-02: Moved Urdu 12-hour labels to the system wheel's day-period words and limited monospace to digits in time labels.
 - 2026-11-02: Prepared Play store art in all 18 languages, with shaped text and mirrored RTL covers.
+- 2026-11-02: Prepared App Store cards in ten new languages, fixing the widget cache, language switch checks and RTL Home Screen steps.
