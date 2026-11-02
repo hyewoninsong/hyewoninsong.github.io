@@ -20,10 +20,12 @@ Line weight (thin, regular, bold) now applies to all four line styles. The stora
 
 | Style | How it is drawn |
 |---|---|
-| Underline, strikethrough | Three low-frequency sine waves added together; starts 1–2pt early, ends 1–3pt late; a ribbon that is thicker in the middle. |
-| Circle | Starts on the left, goes once around plus 15–30 degrees, drifting outward by the stroke width so the end passes over the start. |
+| Underline, strikethrough | A uniform-width, round-capped pen stroke with at most one and a half gentle bends; starts 0.5–2pt early, ends 0.5–3pt late. |
+| Circle | Starts on the left, goes once around plus 20–35 degrees, drifts slightly outward, then the tail hooks inward across the first stroke. Tilted a few degrees, one side flatter. |
 | Box | Four separate strokes, each corner overshooting by 0.5–2pt. |
 | Highlighter | Unchanged: a translucent rectangle. |
+
+The first version drew underlines as a ribbon, thicker in the middle. Looking at the Notes screenshot again, its underline is a uniform pen line, and the hand-drawn feel comes from one gentle bend, not from jitter. Same day, the ribbon became a stroke and the wobble frequencies dropped.
 
 The seed is the **highlight's id**. Fresh randomness on every draw makes lines shiver on scroll and zoom, and the same underline would look different on the paged board and the scroll board. Seeded by id, it is the same shape everywhere, every time. The amplitude is tied to the line weight and stays around 1pt, which is as far as it can go before a page with dozens of underlines looks messy.
 
