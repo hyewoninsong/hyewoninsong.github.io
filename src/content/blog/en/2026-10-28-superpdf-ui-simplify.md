@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-03T00:06:33+09:00
+date: 2026-11-03T02:51:07+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -123,6 +123,14 @@ The split already existed, hidden behind a toggle at the end of the second row. 
 
 We passed on one button cycling through the three states: getting from half back to book would mean going through the map. iPhone keeps the single button, because the toolbar would cover nearly half of a stacked top pane.
 
+## 2026-11-03 — The half view wasn't half
+
+The divider sat left of the screen's center even though the stored ratio was exactly 0.5.
+
+The ratio was applied to the size `GeometryReader` reports, which is the size inside the safe area. With a status column on the right, half of that width is not the middle of the screen. The book draws to the screen edge, so it looks like the screen is being divided while the math divides something narrower. iPad's symmetric safe areas hid this.
+
+The ratio now uses the full screen length, dragging divides by the same length, and the toolbar sits on the same axis. On a simulator with a temporary 60pt right inset, the divider's offset from center went from -30pt to 0. It hasn't been checked yet on a device with the real status column.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -133,3 +141,4 @@ We passed on one button cycling through the three states: getting from half back
 - 2026-10-30 (afternoon) — select tool picks pen drawings and crops too, with a dashed frame.
 - 2026-11-02 — The tooltip anchor is measured again from page coordinates whenever the board is re-laid out
 - 2026-11-02 — book, half and map buttons on wide windows; stacked half always scrolls; toolbar pinned to the window.
+- 2026-11-03 — the half view ratio uses the full screen, so the divider and toolbar sit at the exact center.
