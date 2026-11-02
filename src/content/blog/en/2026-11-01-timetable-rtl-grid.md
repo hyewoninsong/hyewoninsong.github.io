@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-01T20:08:00+09:00
+date: 2026-11-02T17:12:00+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -135,6 +135,153 @@ A blocked drag in Arabic looked like a layout bug until the same gesture failed 
 
 Translations reuse the Android copy and were not reviewed by native speakers. We checked the Arabic grid, edit sheet, list preview and real widgets by eye; the other languages' long strings and iPad remain to check, and the App Store listing is unchanged.
 
+## 2026-11-01 — Re-reading the merged code: pinning coordinates pins paragraphs too
+
+After the iOS merge we read all thirty changed files again. Nothing crashed, but the fix had three gaps, and none of them showed on an Arabic screen.
+
+### Pinning the grid left to right moved Arabic punctuation to the wrong end
+
+The grid's inside is held with `.environment(\.layoutDirection, .leftToRight)` for the sake of coordinates. That same value also decides the paragraph direction of every `Text` inside it. An Arabic title like "رياضيات!" needs its exclamation mark at the end of the sentence, the left edge; in a left-to-right paragraph it lands on the right. A title mixing digits, "فيزياء 101", reorders too. The today widget already restored the language direction per block; the app grid, the shared image and the weekly widget didn't. At the time the block's text stack got the app language's direction back — a rule replaced the next day by letter-first direction (last entry below). A contract test checks all four renderers.
+
+The Arabic seed hid it. Sample titles had no punctuation, and Arabic-Indic digits are class `AN` in the bidi algorithm, which doesn't scramble inside a left-to-right paragraph. The check seed now includes a title ending in "!" and one mixing digits.
+
+### The time-range wrap was missing in two places
+
+Holding "12:00 PM – 2:00 PM" together had been applied to the locked-tap card and the series list, but not to the period-rules summary or Siri's "free time today" reply. Arabic looks fine there. Urdu, which uses Western digits, shows "9:00 – 15:00" as "15:00 – 9:00": European digits pull a dash between two numbers into the right-to-left run, Arabic-Indic digits don't. Every place where code concatenates two times now wraps them, and the check runs in Urdu, not Arabic.
+
+### No hyphen in front of an ellipsis
+
+Hyphenating long words ignored the line count. A 30-minute, one-line block with a long word showed "Mathe-…", hyphen and ellipsis side by side. We now count the broken pieces, and if they exceed the block's lines we leave the word whole. One-line blocks therefore always show the original, shrinking and then truncating as before. Widgets follow the same rule.
+
+Measurement got cheaper too. A word can only need a hyphen once the title has shrunk to the 0.75 floor, so titles above the floor return untouched with no measuring, and the few at the floor go through a small cache. Measuring every word of every block during a pinch was the alternative that lost.
+
+## 2026-11-02 — A second sweep fixed sixteen spots, and `absoluteOffset` wasn't enough
+
+Re-reading the Android build with every language in found RTL breakage outside the grid. Tapping a custom colour picked a different one, the colour handle moved against the finger, and the tablet edit popover opened across the screen from its block. Time wheels read minute then hour. All of it traces back to the table above: `Modifier.offset` mirrors, while `boundsInRoot` and touch coordinates don't. We fixed sixteen issues in sixteen PRs.
+
+![Arabic tablet — the edit popover sits right beside the selected block, its arrow pointing at it](/blog/timetable-rtl-grid/popover-beside-block.png)
+
+### The starting corner still mirrored
+
+The fix was `absoluteOffset`, and a source check passed. Then the Arabic welcome collage came up with its left third empty. `absoluteOffset` stops mirroring the value, but the parent `Box` still chooses the start, and `TopStart` is the top right in RTL. Adding `.align(AbsoluteAlignment.TopLeft)` fixed it. Only running the merged build on an emulator caught this, because a source test knows nothing about where things land.
+
+### Thai needs words before it can wrap
+
+Thai has no spaces, so a whole title counted as one word and always shrank to the floor. Dictionary segments from `BreakIterator` fixed that, but a long dictionary word then left a single vowel alone on the last line.
+
+![Before — one Thai vowel alone on a third line](/blog/timetable-rtl-grid/thai-last-letter.png)
+
+Thai has no hyphenation patterns, so we cut over-wide words ourselves and keep three graphemes on the last line.
+
+### What we chose, and what's left
+
+The colour grid stays left to right, since mirroring it meant reversing geometry, pointers and paging for a palette with no reading order. Hindi, Thai and Urdu now show their own AM/PM markers; iOS caught up the same evening, below. Tall-script line height follows the title's own characters, so a Thai title in an English UI gets room too. Shared images, widgets, the 12-hour wheel and colour reordering still need a look on a device.
+
+## 2026-11-02 — On iOS, the layers fed by measured frames were mirrored
+
+With Android's list of sixteen fixes in hand, we went through the iOS code item by item. Wheels, list cards and axis labels are system-mirrored on iOS and were already right. Tall-script line height, Thai word segmentation, weekday header fitting and the Hindi, Thai and Urdu AM/PM words had the same code shape on iOS, so the same fixes moved over.
+
+![Thai 12-hour axis — ก่อนเที่ยง and หลังเที่ยง instead of AM/PM](/blog/timetable-rtl-grid/thai-axis-12h.png)
+
+The undecidable part was anywhere a measured frame goes into `.position` or `.offset`: the tutorial demos, the intro's speech bubbles, the iPad edit popover. Nothing documents whether SwiftUI mirrors those two modifiers in RTL, and our grid-era table (`HStack` flips, `Canvas` and UIKit coordinates don't) had no row for them. So we captured it in Arabic.
+
+![Before — the sheet's ✓ is top left, but the demo finger and ring float top right](/blog/timetable-rtl-grid/tutorial-check-mirrored.png)
+
+The ✓ sat top left and the ring top right. On the intro's second page the finger pressed Monday on the left while the bubble's tail pointed right. Measurement arrives in physical, left-origin coordinates; `.position` and `.offset` flip the axis in RTL. A `Path` outline in the same layer stays physical, so the outline was right and only the finger was mirrored. It is exactly Android's `offset` versus `absoluteOffset`.
+
+![After — ring and finger sit on the ✓](/blog/timetable-rtl-grid/tutorial-check-fixed.png)
+
+The fix matches the grid: any layer that places children from measured frames is pinned with `.environment(\.layoutDirection, .leftToRight)`, and only the text inside it (bubble copy, popover content) gets the language direction back. That covered four tutorial layers, the intro bubbles and flying card, the iPad popover's invisible anchor, and the lifted colour swatch. Formulas that assume a side were flipped separately: the display-settings demo computed the day-header centre as if the axis were on the left, and the edit-sheet caret now blinks at the right end in Arabic.
+
+The classification changed. It is not "views SwiftUI mirrors" versus "views drawn by coordinates"; it is **where a measurement is consumed**. If it feeds `.position` or `.offset`, that layer is coordinate territory, and coordinate territory is pinned left to right.
+
+### Thai dictionaries differ per platform
+
+Thai segmentation reused Android's approach, but Android's test title "โรงเรียนมัธยมศึกษา" came back as one segment on Apple's dictionary; "คณิตศาสตร์ขั้นสูง" splits into three. Long titles the dictionary treats as one word still overflow, so the grapheme cut that keeps three on the last line was needed on iOS too.
+
+### Where it stands
+
+The iPad popover in Arabic got the same fix for the same mechanism, but we only captured iPhone. Thai titles not clipping is covered by unit tests only, and the 1.5 line-height factor for Urdu Nastaliq is Android's measurement.
+
+## 2026-11-02 — Android took the iOS follow-ups back, and "that can't happen here" was wrong
+
+Of the fifty-odd iOS changes we compared, two were missing on Android: the hyphen rule and paragraph direction in schedule blocks.
+
+We had ruled out the second one, remembering that Compose and `StaticLayout` both go by the first strong character. A device test on `getParagraphDirection`, added to pin that down, failed. `TextDirection.Unspecified` is not `Content`: it takes the layout direction and ignores the letters. Material `Text` asks for `Content` itself and canvases follow the first strong character, so only hand-measured grid text was wrong. The same title was fine in a shared image and backwards in the app.
+
+The fix differed from iOS at the time. iOS was still using the language's direction; Android looks at the letters first, so "Math 101!" in the Arabic app keeps its `!` at the end. The difference closed the same day, when iOS moved to letters first (next entry). Titles with only digits and symbols stay left to right in the week widget.
+
+Hyphens now go in only if the whole title fits; otherwise the title is measured again without them. On some widths that also rescued titles the hyphens themselves had pushed over the limit. The test first checks that hyphens really appear, because a Korean emulator has no dictionary for English words and would pass it for nothing. We verified this at the renderer level, not with screen captures.
+
+## 2026-11-02 — The two platforms disagreed on paragraph direction; a table showed iOS was wrong more often
+
+iOS pinned block text to the app language's direction; Android went by the letters. To settle it we wrote down where each rule fails.
+
+| Title | App language (iOS) | Letters first (Android) |
+|---|---|---|
+| `C++`, `Math 101!` in the Arabic app | `++C`, `!Math 101` — broken | right |
+| Arabic title `عربي 1!` in a Korean app | `!` and `1` on the wrong side — broken | right |
+| Title starting in Arabic | right | right |
+| Title starting in English, continuing in Arabic | right | left-to-right paragraph — odd word order, still readable |
+
+The table made the call. The two cells where iOS fails are English course names and foreign-language class titles: common, and the result is garbled text. The one cell where Android fails is rare, and the result is awkward ordering. Letters first is also what UIKit's `natural`, Material `Text` and the browser's `dir=auto` do by default, so it matches what users see elsewhere.
+
+So iOS moved. SwiftUI `Text` has no `natural`; it takes the `layoutDirection` environment as the paragraph direction. One function now looks at the title's first alphabetic character — right-to-left if it sits in the Arabic, Hebrew, Syriac, Thaana or NKo blocks, left-to-right for any other letter, the app language when there are no letters at all — and the title and memo `Text` each get their own value. Digits are weak and skipped: "101 رياضيات" reads right to left, "(1) Physics" left to right. Four renderers (grid, shared image, week widget, today widget), with a table test pinning eight left-to-right, seven right-to-left and six no-letter cases.
+
+Both platforms accept the odd ordering of English-then-Arabic titles. We did not go down the per-word route (direction marks, split runs); the trade-off is written into both decision records instead.
+
+The table also explains why the day before missed it. The 11-01 check seed was an Arabic title in the Arabic app, the one cell where both rules draw the same picture. The rules only diverge when the app language and the title's letters differ, so the RTL seed now carries `C++` in the Arabic app and an Arabic title in the Korean app.
+
+Android code didn't change. Its week widget still pins to the app language, so a Latin title in the Arabic app can flip there alone; it gets the same rule the next time the widget is touched.
+
+## 2026-11-02 — The wheel and the value beside it said different words
+
+In Urdu 12-hour mode the edit sheet's wheel read "صبح" while the value right above it read "قبل دوپہر". Both now use the same word.
+
+![Urdu edit sheet — the value and the wheel both read "دوپہر"](/blog/timetable-rtl-grid/urdu-wheel-matches.png)
+
+The iOS wheel is `UIDatePicker`, so its words can't change. Checking why it used that word showed that Urdu's 12-hour clock isn't an AM/PM pair at all: the system pattern is `B h:mm`, with five parts of the day. Our table had folded those into two.
+
+Drawing our own wheel would mean rebuilding its momentum and accessibility for one word, and leaving it would keep two cells disagreeing. So the app's labels moved to the system's words, which are mostly shorter and help the narrow time axis. The words live in one table shared by the axis, widgets and Android, and a test compares it with the device's system format for all 24 hours.
+
+Android draws its own two-row wheel, so changing only the table would have recreated the mismatch there. The rows stay, and each now shows what the selected hour reads in that half.
+
+The time pill shown while dragging had a related problem. `.monospaced` covered the whole label, so Urdu words came out stretched instead of in Nastaliq. It stayed hidden because 24-hour labels are digits only and the pill appears only mid-drag. `.monospacedDigit()` would have changed the digits in every language, so monospace now applies only to digits and colons.
+
+Native review is still pending, and the Android wheel's changing words haven't been checked on an emulator yet.
+
+## 2026-11-02 — Store art per language, and text that broke while looking fine
+
+From 1.2.6 the Play page uses all ten new languages. Until now only the description was translated, so an Arabic reader still saw English screenshots. Each language now has its own feature graphic, 8 phone and 8 tablet screenshots of the real app.
+
+![Arabic Play feature graphic with the text starting on the right and the bars on the left](/blog/timetable-rtl-grid/play-graphic-arabic.png)
+
+Arabic and Urdu covers are mirrored. The two cover cards are one panorama cut in half, and we expect a right-to-left store to read the gallery from the right, so the card with the text becomes the right half. We have not yet seen the order in the real Play app.
+
+**The compositor only caught missing letters.** Its glyph check stops on tofu, but Arabic and Devanagari break with every glyph present. Pillow's basic layout leaves Arabic unjoined and reversed and puts vowel signs on the wrong consonant, with no exception. Raqm fixes that but loads FriBiDi from the system and falls back silently without it. Now the run stops first.
+
+**The same check was also wrong the other way.** The `[ ]` highlight markers are never drawn, yet they counted as text, and Geeza Pro has no `[`. It has no `/` either, which is a real miss, so the Arabic period card says "time or period".
+
+**Capture failures were about waiting, not coordinates.** Saved scroll offsets, taps during a fling and slow first boots each produced wrong scenes, and the debug tablet build showed a test ad. One sheet with scenes across and languages down made the bad cells obvious.
+
+Urdu's Nastaliq slopes enough that two lines collided, so it gets its own size and position. Card copy now matches the iOS work from the same day. Translations have had machine review only.
+
+## 2026-11-02 — On the App Store cards, the capture broke before the text did
+
+iOS got its ten new store pages ready for 1.2.6: ten iPhone and ten iPad cards per language, shot in the real app, plus new listing copy. The compositor fixes carried over from the Play work. The capture runs took the time.
+
+![Arabic iPad widget card — widgets fill from the right and the time axis sits on the right](/blog/timetable-rtl-grid/ios-ipad-widgets-arabic.png)
+
+**Removing a widget did not remove its picture.** The showcase widget never refreshes its timeline, so the system cache served the old timetable and the old language to the new widget. Each language now starts clean: the app is deleted on iPhone, the simulator is erased on iPad.
+
+**Switching the language failed silently.** Right after boot, `simctl spawn` can exit 124 under load, and the shell script moved on. The app was Arabic; the widgets were German. The driver now retries and reads the value back.
+
+**In RTL the top-left button is a different button.** Grid constants hit another day, the pager and widget gallery ran backwards, Edit and Done swapped sides, and the delete badge moved, so the app icon we meant to keep got removed. Left-based coordinates do not fail. They press something else, so only the picture proves the shot.
+
+**System labels came from the runtime.** Guessed labels were wrong. The simulator runtime has the real strings, and they showed that Russian, Turkish and Hindi use "+" for Edit.
+
+iPhone Duo cards, the App Store Connect upload and a native read of the translations are still to come.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -143,3 +290,11 @@ Translations reuse the Android copy and were not reviewed by native speakers. We
 - 2026-11-01: Unified Arabic digits, hyphenated long words, mirrored the list bar, and made string checks actually run.
 - 2026-11-01: Widget titles now shrink and break like the grid.
 - 2026-11-01: Brought 18 languages, RTL, plurals, language digits and fitted widget titles to iOS.
+- 2026-11-01: iOS review follow-up — restored paragraph direction inside the pinned grid, completed the time-range wrap, and hyphenate only within the line limit.
+- 2026-11-02: Fixed RTL outside the grid, tall-script line height, Thai wrapping, AM/PM markers and language-change refresh.
+- 2026-11-02: Brought tall-script line height, Thai segmentation, header fitting and AM/PM words to iOS, and pinned the measured-frame layers left to right.
+- 2026-11-02: Brought the hyphen rule to Android and made grid block paragraphs follow their letters.
+- 2026-11-02: Compared the two platforms' paragraph rules in a table and moved iOS to letters first.
+- 2026-11-02: Moved Urdu 12-hour labels to the system wheel's day-period words and limited monospace to digits in time labels.
+- 2026-11-02: Prepared Play store art in all 18 languages, with shaped text and mirrored RTL covers.
+- 2026-11-02: Prepared App Store cards in ten new languages, fixing the widget cache, language switch checks and RTL Home Screen steps.
