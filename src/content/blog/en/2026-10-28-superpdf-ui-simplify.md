@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-02T23:48:30+09:00
+date: 2026-11-03T00:06:33+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -14,7 +14,7 @@ The toolbar used to say `PDF+Map | PDF | Map | Review`. Now it says **Read** and
 
 ![The Read | Collect segment in the toolbar](/blog/superpdf-ui-simplify/sections-toolbar.png)
 
-- **Read** is the book. If you want the map beside it, turn on "Map beside" in the … menu. That option only appears on wide windows.
+- **Read** is the book. On wide windows the half button in the toolbar shows the map with it (it started as "Map beside" in the … menu).
 - **Collect** is what you marked. It started with four views (list, cards, flow, map); the same night it became the map alone (see the end).
 
 ![Collect: search, four views, colour chips](/blog/superpdf-ui-simplify/collect-list.png)
@@ -107,6 +107,22 @@ Now, whenever a page or the board changes place, the selected underline's rectan
 
 Dropping the selection on rotation would have been the shortest fix, but it interrupts the edit. One gap remains: scrolling by finger in the scroll board still leaves the tooltip where it was.
 
+## 2026-11-02 — A half view between the book and the map
+
+On wide windows the single Collect button is now three: book, half, map. Any of them is one tap away.
+
+![Side-by-side half view: book on the left, map on the right, the half button lit in the toolbar](/blog/superpdf-ui-simplify/half-side.png)
+
+A wide window puts the book on the left and the map on the right. A tall window puts the book on top. The icon draws the current direction.
+
+![Stacked half view: the book scrolls at full width on top, the map sits below](/blog/superpdf-ui-simplify/half-stacked.png)
+
+Stacked, the book always scrolls. The top pane is short, so turned pages would shrink, while scrolling keeps the page at full width. Your reading setting is untouched: back in book view, pages turn again.
+
+The split already existed, hidden behind a toggle at the end of the second row. The toolbar also sat on the PDF pane, so it jumped to the left half when the split opened, and the button you had just pressed moved out from under your finger. The toolbar now belongs to the window.
+
+We passed on one button cycling through the three states: getting from half back to book would mean going through the map. iPhone keeps the single button, because the toolbar would cover nearly half of a stacked top pane.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -116,3 +132,4 @@ Dropping the selection on rotation would have been the shortest fix, but it inte
 - 2026-10-30 — one toolbar: Collect toggle, separate undo group, select tool with a tooltip beside the underline.
 - 2026-10-30 (afternoon) — select tool picks pen drawings and crops too, with a dashed frame.
 - 2026-11-02 — The tooltip anchor is measured again from page coordinates whenever the board is re-laid out
+- 2026-11-02 — book, half and map buttons on wide windows; stacked half always scrolls; toolbar pinned to the window.
