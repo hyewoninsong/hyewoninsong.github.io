@@ -1,6 +1,6 @@
 ---
 title: "Underlines were ruler-straight. Now four marks look hand-drawn, and you pick the style after you draw"
-date: 2026-11-03T00:25:00+09:00
+date: 2026-11-03T02:39:47+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperPDF grew from two line styles to five: highlighter, underline, strikethrough, circle, box. The lines wobble like a pen stroke with a per-highlight fixed seed, and a tooltip opens right after you draw so you can switch."
@@ -21,7 +21,7 @@ Line weight (thin, regular, bold) now applies to all four line styles. The stora
 | Style | How it is drawn |
 |---|---|
 | Underline, strikethrough | A uniform-width, round-capped pen stroke with at most one and a half gentle bends; starts 0.5–2pt early, ends 0.5–3pt late. |
-| Circle | Starts on the left, goes once around plus 20–35 degrees, drifts slightly outward, then the tail hooks inward across the first stroke. Tilted a few degrees, one side flatter. |
+| Circle | Starts at the top left, goes once around plus 20–35 degrees, drifts slightly outward, and the tail lifts above the first stroke. Round ends, tilted a few degrees. |
 | Box | Four separate strokes, each corner overshooting by 0.5–2pt. |
 | Highlighter | Unchanged: a translucent rectangle. |
 
@@ -56,3 +56,24 @@ The tooltip overflowed: an iPhone in portrait leaves 378pt, and five styles plus
 The circle's outward drift was first expressed as a fraction of the radius. On a long single-line oval that let the horizontal radius grow by 15pt, because a ratio sized for a 10pt vertical radius was multiplied by an 83pt horizontal one. The drift is now an absolute number of points. A test that fails when a circle leaves the line margin by more than 6pt caught it.
 
 On export, a box becomes a PDF `/Square` annotation, and so does a crop. To tell them apart on re-import, the box writes its style name into `/Subj`. The hand-drawn shape itself is not written to the PDF; other apps see straight lines.
+
+## 2026-11-03 — The circle had pointed ends
+
+Around a long sentence, the circle pinched into needle points at both ends, while the one in Notes stays round. That is a property of ellipses: the radius at the tip is `ry²/rx`, about 0.7pt on a 600pt line, and it gets worse as the line grows.
+
+So the outline is no longer an ellipse. It is a flat ellipse pushed outward by a fixed distance, which keeps the tip radius close to that distance at any length while the sides keep their gentle curve. The outer size is unchanged, so margins and PDF export stay as they were.
+
+![A circle around a long line of text, with round ends and softly curved sides](/blog/superpdf-hand-drawn-styles/circle-round-ends.png)
+
+Points had to change too. Even angle steps crowd the round tip into a sliver of the sweep and turn it into one kink, so a point now lands every 5pt or every 7 degrees or so of turning.
+
+Pushing out by 80% of the vertical radius looked like a pill; 55% looked like the Notes oval. The overlap moved from the left end to the top side, which left the inward tail poking out like an arrowhead and scratching the text, so the tail now lifts outward.
+
+![Circles from 16pt to 620pt wide, all with round ends](/blog/superpdf-hand-drawn-styles/circle-widths.png)
+
+A superellipse lost because its exponent has to be tuned per aspect ratio, and straight sides joined to half circles lost for looking ruler-made. Paths are not stored, so circles you already drew get the new shape too.
+
+## History
+
+- 2026-11-02 — Five line styles, hand-drawn marks, a tooltip after drawing
+- 2026-11-03 — Round ends on the circle, overlap on the top side
