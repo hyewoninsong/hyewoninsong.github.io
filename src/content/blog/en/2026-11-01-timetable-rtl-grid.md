@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T08:47:12+09:00
+date: 2026-11-02T13:13:37+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -250,6 +250,22 @@ The time pill shown while dragging had a related problem. `.monospaced` covered 
 
 Native review is still pending, and the Android wheel's changing words haven't been checked on an emulator yet.
 
+## 2026-11-02 — Store art per language, and text that broke while looking fine
+
+From 1.2.6 the Play page uses all ten new languages. Until now only the description was translated, so an Arabic reader still saw English screenshots. Each language now has its own feature graphic, 8 phone and 8 tablet screenshots of the real app.
+
+![Arabic Play feature graphic with the text starting on the right and the bars on the left](/blog/timetable-rtl-grid/play-graphic-arabic.png)
+
+Arabic and Urdu covers are mirrored. The two cover cards are one panorama cut in half, and we expect a right-to-left store to read the gallery from the right, so the card with the text becomes the right half. We have not yet seen the order in the real Play app.
+
+**The compositor only caught missing letters.** Its glyph check stops on tofu, but Arabic and Devanagari break with every glyph present. Pillow's basic layout leaves Arabic unjoined and reversed and puts vowel signs on the wrong consonant, with no exception. Raqm fixes that but loads FriBiDi from the system and falls back silently without it. Now the run stops first.
+
+**The same check was also wrong the other way.** The `[ ]` highlight markers are never drawn, yet they counted as text, and Geeza Pro has no `[`. It has no `/` either, which is a real miss, so the Arabic period card says "time or period".
+
+**Capture failures were about waiting, not coordinates.** Saved scroll offsets, taps during a fling and slow first boots each produced wrong scenes, and the debug tablet build showed a test ad. One sheet with scenes across and languages down made the bad cells obvious.
+
+Urdu's Nastaliq slopes enough that two lines collided, so it gets its own size and position. Card copy now matches the iOS work from the same day. Translations have had machine review only.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -264,3 +280,4 @@ Native review is still pending, and the Android wheel's changing words haven't b
 - 2026-11-02: Brought the hyphen rule to Android and made grid block paragraphs follow their letters.
 - 2026-11-02: Compared the two platforms' paragraph rules in a table and moved iOS to letters first.
 - 2026-11-02: Moved Urdu 12-hour labels to the system wheel's day-period words and limited monospace to digits in time labels.
+- 2026-11-02: Prepared Play store art in all 18 languages, with shaped text and mirrored RTL covers.
