@@ -1,6 +1,6 @@
 ---
 title: "A 100 MB scanned book, cut to a third — pages become JPEG, text becomes an invisible layer"
-date: 2026-11-04T00:24:07+09:00
+date: 2026-11-04T01:24:13+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "data"]
 summary: "SuperPDF can now export a smaller copy of a book. Scanned pages are re-rendered as JPEG at the resolution you pick, and the app's OCR result is laid over them as invisible text so other apps can still search. iOS has no API to swap just the image inside a page, so we re-render the whole page."
