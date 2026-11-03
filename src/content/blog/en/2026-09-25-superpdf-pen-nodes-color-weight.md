@@ -1,12 +1,12 @@
 ---
 title: "Pen nodes were already being created. Nobody could see them."
-date: 2026-11-03T10:32:00+09:00
+date: 2026-11-03T17:58:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
-summary: "A request to 'make pen strokes into nodes' turned out to be a visibility problem: the node existed as plain text and the 'node added' toast only fired for highlights. Handwriting is now an image node showing the ink, every creation path announces itself, the four colours are editable per project, and underline and pen have three widths."
+summary: "A request to 'make pen strokes into nodes' turned out to be a visibility problem: the node existed as plain text and the 'node added' toast only fired for highlights. Handwriting is now an image node showing the ink, every creation path announces itself, colours went from four slots to free values to a ten-slot palette, and underline and pen have three widths."
 ---
 
-In SuperPDF, handwriting now lands in the mind map **as its own ink**. Whether you highlight, write, or crop, a "node added" toast appears whenever the map is off screen. You can make and pick as many highlighter colours as you like (since 2026-10-28, see the end), and underline and pen have a weight picker.
+In SuperPDF, handwriting now lands in the mind map **as its own ink**. Whether you highlight, write, or crop, a "node added" toast appears whenever the map is off screen. Highlighter colours come from a ten-slot palette; change a slot or swap the whole palette and every underline in that slot follows (since 2026-11-03, see the end). Underline and pen have a weight picker.
 
 ## The request was a wrong diagnosis
 
@@ -35,7 +35,7 @@ At this point we did not open the palette to unlimited colours. SuperPDF had fou
 
 ![After recolouring the yellow slot: toolbar chip, underlines and pen strokes are all purple](/blog/superpdf-pen-nodes-color-weight/recolored-purple.png)
 
-With the default palette nothing looks different. Per-highlight hex colours lost because they would touch every place that keys on the slot plus the migration (a month later we went exactly that way, see below); unifying the defaults onto system colours lost because existing documents would change for no reason the user asked for.
+With the default palette nothing looks different. Per-highlight hex colours lost because they would touch every place that keys on the slot plus the migration (a month later we went that way, and six days after that we came back, see below); unifying the defaults onto system colours lost because existing documents would change for no reason the user asked for.
 
 ## Line weight is one button
 
@@ -81,12 +81,29 @@ Keeping a vertical scroll was easiest, but it pushed custom colours far down and
 
 There were two causes. `.frame(height:)` pinned the list, so when the system shrank the popover, the inner `ScrollView` stayed tall and clipped instead of scrolling. `.frame(idealHeight:maxHeight:)` fixed that. Then the simulator showed the popover squashed into a thin strip when the tooltip sat near the bottom of the screen: `arrowEdge: .top` forced it below the button even with the space above empty. Removing the arrow edge lets the system pick the side with room.
 
+## 2026-11-03 — Colours are slots again: ten of them, and the palette swaps as a whole
+
+Free colours lasted six days. What the user actually wanted was not unlimited colours but one colour system to set up and keep, and when that system changes, the underlines already drawn should change with it. A stored hex value can never do that.
+
+So a highlight now stores a **palette slot index**, not a colour. The palette has ten slots and there is one for the whole app. The popover shows the ten slots in two rows; long-press a slot to change its colour, and a menu beside the title swaps in a preset (basic, pastel, marker) all at once. The three-section paged popover from 10-28 is gone; ten slots fit on one screen.
+
+![The colour popover: a five-dot strip and "basic" menu beside the title, ten colour circles in two rows, the second selected](/blog/superpdf-pen-nodes-color-weight/palette-ten-slots.png)
+
+Change a slot or pick a preset and everything using that slot follows: highlights, underlines and circles on the page, map nodes, handwriting thumbnails, toolbar chips, even the annotated PDF export. It is the property we built on 09-25, back when there were four slots per book; now it is ten slots per app, for the same reason custom colours were app-wide on 10-28: people use the same colour system across books.
+
+![The page after switching to the pastel preset: the selected circle is pale grey and every highlight, box and wave underline has gone pale too](/blog/superpdf-pen-nodes-color-weight/palette-pastel-page.png)
+
+The presets share slot order (yellow, green, sky, pink, orange, purple, teal, blue, red, grey), so switching from basic to pastel keeps "the yellow ones" distinct from "the green ones". The first four slots of the basic palette are the old four colours, so the toolbar looks unchanged.
+
+What lost this time: leaving old hex highlights alone (then a palette swap would skip some underlines, which breaks the point; the six days of hex underlines are moved to the nearest slot when the book opens, and only text-box ink stays a fixed colour); snapping hex to a slot at draw time (two truths, and the slot could change with every palette swap); a palette per book (home cards and export draw colours outside any book); re-rendering handwriting thumbnails on palette change (closed books could never be re-rendered, so the thumbnail's alpha is tinted with the current slot colour instead, via `renderingMode(.template)`).
+
 ## What is left
 
-Annotated PDF export writes picked colours as they are, but re-importing maps them to the nearest of the old four. Import exists for other apps' annotations, so that rule stays.
+Annotated PDF export writes the current palette's slot colours. Re-importing maps them to the nearest of the old four, since import exists for other apps' annotations; pastel green can come back as the sky slot.
 
 ## History
 
 - 2026-09-25 — handwriting image nodes, toast from all three paths, editable colour slots, three line weights, popover size-loop freeze
 - 2026-10-28 — pick any colour from a popover, colour meanings removed, filters list every colour used
 - 2026-11-03 — popover reworked into two paged sections of two rows, pinned height and forced arrow removed
+- 2026-11-03 — back to slots: ten-slot app-wide palette, slot index stored, presets and slot edits recolour everything, old hex moved on open
