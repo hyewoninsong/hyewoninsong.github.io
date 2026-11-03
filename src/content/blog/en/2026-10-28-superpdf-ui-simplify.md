@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-03T09:50:57+09:00
+date: 2026-11-03T11:22:18+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -117,7 +117,7 @@ A wide window puts the book on the left and the map on the right. A tall window 
 
 ![Stacked half view: the book scrolls at full width on top, the map sits below](/blog/superpdf-ui-simplify/half-stacked.png)
 
-Stacked, the book always scrolls. The top pane is short, so turned pages would shrink, while scrolling keeps the page at full width. Your reading setting is untouched: back in book view, pages turn again.
+At first the stacked half always scrolled, on the theory that turned pages would shrink in the short top pane. A day later we reversed that; see "Page turning above the map" below.
 
 The split already existed, hidden behind a toggle at the end of the second row. The toolbar also sat on the PDF pane, so it jumped to the left half when the split opened, and the button you had just pressed moved out from under your finger. The toolbar now belongs to the window.
 
@@ -159,6 +159,18 @@ Search wasn't on the list. Deleting it would lose a feature and a tenth button o
 
 On the page-turning view, zooming and selecting now exclude each other, because both want the same finger on page coordinates. Verified on simulators at iPhone width on both boards; inserting a photo end to end and an unfolded Duo are still open.
 
+## 2026-11-03 — Page turning above the map
+
+On an unfolded Duo or an iPad in portrait, showing the book and the map together forced the book into scrolling, and the switch back was disabled. If you read by turning pages, the half view took that away.
+
+![Stacked half view with turned pages: a two-page spread on top, the map below](/blog/superpdf-ui-simplify/half-paged.png)
+
+Now the stacked half follows the same page-turn ↔ scroll button as the book view. The pane's shape still picks one page or two: the wide top pane shows a spread, and dragging the divider down makes it tall enough for a single page.
+
+![Divider dragged down: the taller top pane switches to a single page](/blog/superpdf-ui-simplify/half-paged-single.png)
+
+The UI test for that drag found two bugs. A map node overflowing its clipped pane sat invisibly on top of the divider. `.clipped()` clips drawing, not hit testing, so `.contentShape(Rectangle())` now clips the touch area too. And the divider measured its drag in its own moving coordinate space. It followed the finger at half speed, and together with the new center snap it could not leave 50% on a slow drag. Measured in global space, a 300pt drag now moves it 299pt. The test drags slowly and checks the distance, not just that something moved.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -172,3 +184,4 @@ On the page-turning view, zooming and selecting now exclude each other, because 
 - 2026-11-03 — the half view ratio uses the full screen, so the divider and toolbar sit at the exact center.
 - 2026-11-03 — half button recenters, the divider snaps to center, and the ratio moved to new keys.
 - 2026-11-03 — nine-button top row: one tool menu, reading and select merged into the finger, view menu, no more `…` menu.
+- 2026-11-03 — the stacked half follows the page-turn/scroll setting; the divider drags in screen space and overflowing map nodes no longer cover it.
