@@ -1,6 +1,6 @@
 ---
 title: "Pen nodes were already being created. Nobody could see them."
-date: 2026-10-28T23:00:01+09:00
+date: 2026-11-03T10:32:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "A request to 'make pen strokes into nodes' turned out to be a visibility problem: the node existed as plain text and the 'node added' toast only fired for highlights. Handwriting is now an image node showing the ink, every creation path announces itself, the four colours are editable per project, and underline and pen have three widths."
@@ -67,6 +67,20 @@ What lost: growing the slots to N (deleting a slot strands its highlights, and "
 
 One near miss: map nodes stored colour as a five-case enum, and the undo record copied that enum. Undo then redo a purple highlight and its node came back yellow, because an unknown value falls back to the default. The record now keeps the raw stored string, and a test pins the colour through create, undo and redo.
 
+## 2026-11-03 — The popover got clipped, so it became two sections of two rows
+
+Opened from the tooltip beside an underline, the colour popover had about 300pt of room but wanted up to 520pt. Swatches were cut off at the top and bottom.
+
+Now colours used in this book sit on top, and basics plus your own colours sit below. Each section is two rows and pages sideways past that, opening on the page that holds the current colour.
+
+![Four used colours on top and two rows of pale basics below, nothing clipped, with page dots beside the section title](/blog/superpdf-pen-nodes-color-weight/color-popover-two-rows.png)
+
+![Paging to the end of the lower section changes its title to My colours, with the add button](/blog/superpdf-pen-nodes-color-weight/color-popover-my-colors.png)
+
+Keeping a vertical scroll was easiest, but it pushed custom colours far down and could leave the current colour off screen. Tabs would have added a control for something a swipe already does.
+
+There were two causes. `.frame(height:)` pinned the list, so when the system shrank the popover, the inner `ScrollView` stayed tall and clipped instead of scrolling. `.frame(idealHeight:maxHeight:)` fixed that. Then the simulator showed the popover squashed into a thin strip when the tooltip sat near the bottom of the screen: `arrowEdge: .top` forced it below the button even with the space above empty. Removing the arrow edge lets the system pick the side with room.
+
 ## What is left
 
 Annotated PDF export writes picked colours as they are, but re-importing maps them to the nearest of the old four. Import exists for other apps' annotations, so that rule stays.
@@ -75,3 +89,4 @@ Annotated PDF export writes picked colours as they are, but re-importing maps th
 
 - 2026-09-25 — handwriting image nodes, toast from all three paths, editable colour slots, three line weights, popover size-loop freeze
 - 2026-10-28 — pick any colour from a popover, colour meanings removed, filters list every colour used
+- 2026-11-03 — popover reworked into two paged sections of two rows, pinned height and forced arrow removed
