@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-11-03T17:49:24+09:00
+date: 2026-11-03T21:30:52+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -220,6 +220,20 @@ Scans don't use PDFKit selection. Their ends come from the glyph boxes Vision re
 
 So the edges next to a space are now clamped to the gap center plus or minus half a space width, estimated from the line's median glyph width. Edges only ever shrink. Re-reading the page image for ink was more exact but too costly per handle drag. Fixing the boxes at OCR time would have meant re-recognizing books already processed. A test now runs real Vision and checks every word edge against the drawn position. It failed in nine places before the fix. We haven't dragged it on a real scan on a device yet.
 
+## 2026-11-03, night — The tooltip sticks to the mark, and turns with the page
+
+With a mark selected, scrolling moved the underline and its handles but left the tooltip where it was. Turning a page was worse: the tooltip floated over the next page. Now it scrolls with the mark, and on a page turn it curls over with the page.
+
+![Left: right after selecting. Right: after pushing the page up. Mark and tooltip moved together](/blog/superpdf-underline-handles/tooltip-follows-scroll.png)
+
+The tooltip is SwiftUI floating over the board, while the page lives in a UIKit PDF view, so it held the coordinates measured at tap time. Writing a new position into the view model every frame would rebuild the whole reading board at 60 fps. Instead, a `contentOffset` KVO writes into a tiny `@Observable` that only the tooltip view reads, and the view model gets one settled value after 0.15 s of stillness. While following, the tooltip keeps its side (above or below) so it doesn't flip as the mark slides under the toolbar.
+
+For the page curl, the tooltip is snapshotted (`resizableSnapshotView`) onto the page view when the turn begins and the live one hides, so it curls like ink on paper. When the page leaves, the selection ends. Cancel the turn and the tooltip comes back.
+
+![Halfway through a turn: the tooltip is cut off at the curling edge along with the mark](/blog/superpdf-underline-handles/tooltip-turns-with-page.png)
+
+What lost: keeping an invisible selection after the turn (the "any tap only deselects" rule would act on something you can't see), hosting the tooltip inside the page view (the page view is clipped to the page, and nobody taps a tooltip mid-turn), and hiding it while scrolling (the ask was for it to stay attached). UI tests measure the 60 pt scroll and the turn; the curl itself was checked from simulator video frames. Not yet tried on a device.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -235,3 +249,4 @@ So the edges next to a space are now clamped to the gap center plus or minus hal
 - 2026-11-03 — The space after a period no longer stays in the underline range
 - 2026-11-03, afternoon — Tap selects in the underline tool too; no switching to the finger
 - 2026-11-03, evening — On scans, underline ends no longer sit in the word gap (Vision glyph boxes absorbed it)
+- 2026-11-03, night — Tooltip follows scrolling and turns with the page; the selection ends when the page leaves
