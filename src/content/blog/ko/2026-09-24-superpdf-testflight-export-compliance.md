@@ -1,6 +1,6 @@
 ---
 title: "업로드는 성공이라는데 테스터 폰에는 빌드가 없었다"
-date: 2026-09-24T21:30:00+09:00
+date: 2026-11-03T23:33:15+09:00
 app: "superpdf"
 tags: ["devlog", "appstore"]
 summary: "fastlane 은 성공으로 끝났고 App Store Connect 도 빌드를 VALID 로 보여줬다. 그런데 TestFlight 에는 아무것도 오지 않았다. 암호화 사용 여부를 묻는 질문 하나가 답 없이 남아 빌드 넷이 조용히 멈춰 있었고, 유일하게 됐던 빌드는 누군가 손으로 눌러 준 것이었다."
@@ -35,3 +35,24 @@ App Store Connect 의 빌드 객체에는 처리 상태 말고 `buildBetaDetail`
 ## 지금 상태
 
 build 7 은 테스터에게 풀렸고, plist 키는 저장소에 들어갔다. 배포 도구 쪽에는 업로드 뒤 베타 상태를 조회하는 단계와, 키가 없으면 preflight 에서 막는 검사를 넣는 중이다. 이런 문제는 앱마다 한 번씩 겪지 않도록 도구에 남기는 것이 맞다.
+
+## 2026-11-03 — 이번엔 빌드가 아예 나타나지 않았다
+
+기기 안에서 도는 신경망 음성 엔진(sherpa-onnx 와 onnxruntime)을 넣고 처음 올린 빌드 48 은 다른 모양으로 멈췄다. 업로드 도구는 `UPLOAD SUCCEEDED with no errors` 를 찍었다. 그런데 한 시간이 지나도 App Store Connect 의 빌드 목록에 48 이 없었다. "처리 중" 으로도 뜨지 않았다. 9월에 배운 대로 베타 상태를 물어보려 해도 물어볼 빌드가 없었다.
+
+같은 ipa 를 `altool --validate-app` 으로 Apple 서버 검증에 다시 넣으면 `VERIFY SUCCEEDED` 가 나온다. 업로드 기록을 보는 API(`buildUploads`)는 공개 API 에 없다. 이유는 메일로만 왔다.
+
+> ITMS-90208: Invalid Bundle - The bundle MindPDF.app/Frameworks/onnxruntime.framework does not support the minimum OS Version specified in the Info.plist.
+
+ipa 를 열어 보니 `onnxruntime.framework` 의 Info.plist 는 최소 iOS 13.0 이라고 말하는데, 실행 파일에 박힌 최소 버전(`LC_BUILD_VERSION` 의 minos)은 26.2 였다. 크기는 51KB. 원본 onnxruntime 은 44MB 다.
+
+원인은 라이브러리의 포장에 있었다. 두 엔진의 xcframework 는 정적 라이브러리(ar archive)를 `.framework` 폴더에 넣어 둔 것이다. Swift 패키지의 `binaryTarget` 으로 걸면 Xcode 27 은 코드를 앱 본체에 정적으로 링크하고, 남은 `.framework` 껍데기도 앱의 `Frameworks/` 에 넣는다. 그때 빌드 로그에 `Injecting stub binary into codeless framework` 가 찍힌다. 껍데기에 빈 실행 파일을 끼우는데, 이 스텁을 앱의 배포 대상(26.2)으로 컴파일한다. Info.plist 는 원본의 13.0 그대로라 둘이 어긋났다. 정작 그 프레임워크는 실행 중에 아무도 쓰지 않는다. 코드는 이미 본체에 있기 때문이다.
+
+그래서 plist 의 숫자를 맞추지 않고, 껍데기가 들어가지 않게 했다. 엔진을 받는 스크립트가 두 xcframework 를 `.a` 파일과 헤더, 모듈 맵만 담은 "라이브러리" 형태로 다시 묶는다(`xcodebuild -create-xcframework -library … -headers …`). 라이브러리 형태는 링크만 되고 앱에 들어가지 않는다. 다시 아카이브하니 `Frameworks/` 폴더가 사라졌고, 본체 안의 엔진 코드는 이전 빌드와 같은 양이었다. plist 를 26.2 로 고치는 쪽은 빈 프레임워크가 계속 실리고, 배포 대상을 바꿀 때마다 같은 일이 되풀이되기 때문에 고르지 않았다.
+
+이번에도 배운 것은 9월과 같은 줄기다. 성공 메시지는 Apple 이 파일을 받았다는 뜻일 뿐이다. 업로드 후 십몇 분이 지나도 빌드가 목록에 없으면 늦는 게 아니라 거절된 것이고, 이유는 메일함에 있다. ipa 를 검사하는 스크립트는 이제 앱에 들어간 프레임워크마다 실행 파일의 minos 와 plist 를 비교해 어긋나면 배포를 막는다. 검사기가 이 검사를 업로드 전에 했다면 15분짜리 업로드와 한 시간의 기다림은 없었을 것이다.
+
+## 이력
+
+- 2026-09-24 — 수출 규정 답이 없어 빌드 넷이 테스터에게 안 풀린 일, 서버보다 뒤처진 빌드 번호
+- 2026-11-03 — 정적 라이브러리를 감싼 프레임워크에 Xcode 가 스텁을 끼워 ITMS-90208 로 거절된 빌드 48
