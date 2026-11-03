@@ -1,9 +1,9 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-03T16:32:12+09:00
+date: 2026-11-03T21:20:25+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
-summary: "One button reads from the current page and keeps going, page after page. Scanned books are read from the app's own text recognition. Why it uses on-device voices rather than a cloud TTS, and why the text never comes from the document on screen."
+summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
 ---
 
 You can now look away from the page. Tap the speaker button in the lower toolbar and SuperPDF reads from the current page, turns the page when it finishes, and keeps reading.
@@ -30,7 +30,7 @@ Reading continues with the screen off. A phone call pauses it, and it does not r
 
 ## On-device voices, not a cloud TTS
 
-Cloud voices sound better. We still chose `AVSpeechSynthesizer`:
+Cloud voices sound better. We still started with `AVSpeechSynthesizer` (and added on-device neural voices the same evening, below):
 
 - A book has hundreds of thousands of characters, and cloud TTS is billed per character.
 - SuperPDF never sends the books you read off your device. A cloud voice would break that.
@@ -53,3 +53,36 @@ In the simulator, the text PDF read page 1 and moved to page 2. The scanned book
 ## What's left
 
 The simulator only has one basic Korean voice. Enhanced and Premium voices, lock-screen controls, and pausing for phone calls still need checking on a device. Two-column layouts are read in the order recognition returns them.
+
+## 2026-11-03 evening — four neural voices that run on the phone
+
+System voices are free but flat. Cloud voices sound natural but cost money per character. Free neural models that run on the phone sit in between. Which one sounds best is something you have to hear, so instead of picking one, all four are in the app for side-by-side testing.
+
+**Voice engines…** in the speed menu opens a sheet. Each model can be downloaded, removed, and selected, and you can hear the same sentence in Korean and English. The sample also shows time to first sound and how long synthesis took per second of speech. Under 1 keeps up with reading.
+
+![Voice engine sheet: system voice, Supertonic 2 and 3, each with download, remove, select, and Korean and English samples](/blog/superpdf-read-aloud/engine-sheet.png)
+
+| Model | Download | Languages | Synthesis per 1 s of speech (Mac) |
+|---|---|---|---|
+| Supertonic 2 | 85 MB | Korean, English | 0.06 s |
+| Supertonic 3 | 129 MB | 31 languages | 0.16 s |
+| Kokoro | 350 MB | English | 0.54 s (0.31 s on 4 threads) |
+| MeloTTS | 163 MB | English | 0.46 s |
+
+If the chosen model can't read the page's language, that page uses the system voice, and the menu says why.
+
+![After a sample: "first sound 1.7 s, 0.32 s per second of speech" under Kokoro](/blog/superpdf-read-aloud/engine-sample-timing.png)
+
+All four run on one open-source runtime, **sherpa-onnx**, built from source for iOS. It has no official iOS binary, and a third-party prebuilt package broke often. Models are downloaded on first use rather than bundled (700 MB for all four). They ship only as `.tar.bz2`, which iOS can't open, so the app decompresses them with the system `libbz2` and streams the tar entries straight to disk. Speech is synthesized one sentence at a time, two sentences ahead. Neural models don't report word positions, so the line marker is estimated from elapsed time.
+
+Two things didn't go as expected:
+
+- **MeloTTS can't speak Korean on a phone.** The Korean model runs a 581 MB BERT on every sentence and needs a morphological analyzer for pronunciation. Nobody has exported it to ONNX. Only the English MeloTTS is included.
+- **Kokoro's int8 model was slower than the full fp32 one.** It took 0.90 s per second of speech, against 0.54 s for fp32, barely keeping up with reading. The app downloads the bigger model and uses four threads.
+
+None of this has been measured on an iPhone yet. The sample timings in the sheet are how to choose on a device.
+
+## History
+
+- 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
+- 2026-11-03 evening — four neural voices for testing, with samples and synthesis speed
