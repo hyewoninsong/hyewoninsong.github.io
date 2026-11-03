@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-03T09:12:42+09:00
+date: 2026-11-03T09:50:57+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -14,7 +14,7 @@ The toolbar used to say `PDF+Map | PDF | Map | Review`. Now it says **Read** and
 
 ![The Read | Collect segment in the toolbar](/blog/superpdf-ui-simplify/sections-toolbar.png)
 
-- **Read** is the book. On wide windows the half button in the toolbar shows the map with it (it started as "Map beside" in the … menu).
+- **Read** is the book. On wide windows the view menu in the toolbar shows the map with it (it started as "Map beside" in the … menu).
 - **Collect** is what you marked. It started with four views (list, cards, flow, map); the same night it became the map alone (see the end).
 
 ![Collect: search, four views, colour chips](/blog/superpdf-ui-simplify/collect-list.png)
@@ -23,11 +23,11 @@ The map now lives inside Collect. New books open in Read without it. AI suggesti
 
 ## Three tools, and the book stays put
 
-The "Read" button is gone, because reading is what you do with no tool in hand. Underline, pen and crop are toggles; tap the active one again to put it down. Style and weight moved into an Options popover.
+The "Read" button is gone, because reading is what you do with no tool in hand. Underline, pen and crop became toggles; tap the active one again to put it down (since 2026-11-03 they live in one tool menu, see the last section). Style and weight moved into an Options popover.
 
 ![Underline tool and its options](/blog/superpdf-ui-simplify/tool-options.png)
 
-Picking the underline tool no longer swaps the page-turning view for a scroll view. Scrolling is a reading setting now, "Read by scrolling" in the … menu. Pen and crop followed a day later (see the 2026-10-29 night section).
+Picking the underline tool no longer swaps the page-turning view for a scroll view. Scrolling is a reading setting now, a toolbar toggle. Pen and crop followed a day later (see the 2026-10-29 night section).
 
 ![Underlining on the page-turning view with the tool in hand](/blog/superpdf-ui-simplify/paged-underline.png)
 
@@ -143,6 +143,22 @@ Now the half button always returns to the exact center, and a dragged divider sn
 
 UI tests now measure the real divider against the window. They pass on an iPad simulator; a check on an unfolded Duo is still open.
 
+## 2026-11-03 — Nine buttons, and one tool button
+
+The tools took four slots while text and photo insertion hid in the second row, and page tone, scrolling and settings sat inside the `…` menu. The top row is now, in order: back, PDF list, tool, underlines only, page-turn/scroll toggle, view, page tone, export, settings.
+
+![The nine-button top row, with undo, search and page controls below](/blog/superpdf-ui-simplify/toolbar-nine.png)
+
+The tool button opens one menu: finger, underline, pen, crop, text, image. The view button opens book, book and map, or map. The `…` menu is gone.
+
+![The tool menu with finger checked](/blog/superpdf-ui-simplify/tool-menu.png)
+
+The real change is the finger. Reading with no tool and the select tool used to be separate states. A menu always has something picked, so keeping both would have left a seventh state the menu couldn't show. They are one default state now: tap an underline while reading and its tooltip opens. We rejected exactly that four days ago, and the cost is still real, since tapping an underline no longer hides the buttons. But switching tools now takes two taps, which made leaving the reading state to fix an underline the worse trade.
+
+Search wasn't on the list. Deleting it would lose a feature and a tenth button overflows an iPhone, so it moved next to undo in the second row. The underline tool needs that width, so the button steps aside there, and the search popover hangs off the group so ⌘F keeps working.
+
+On the page-turning view, zooming and selecting now exclude each other, because both want the same finger on page coordinates. Verified on simulators at iPhone width on both boards; inserting a photo end to end and an unfolded Duo are still open.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -155,3 +171,4 @@ UI tests now measure the real divider against the window. They pass on an iPad s
 - 2026-11-02 — book, half and map buttons on wide windows; stacked half always scrolls; toolbar pinned to the window.
 - 2026-11-03 — the half view ratio uses the full screen, so the divider and toolbar sit at the exact center.
 - 2026-11-03 — half button recenters, the divider snaps to center, and the ratio moved to new keys.
+- 2026-11-03 — nine-button top row: one tool menu, reading and select merged into the finger, view menu, no more `…` menu.
