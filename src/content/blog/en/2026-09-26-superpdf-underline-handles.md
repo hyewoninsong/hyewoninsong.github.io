@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-11-03T15:46:22+09:00
+date: 2026-11-03T17:49:24+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -212,6 +212,14 @@ Two alternatives lost. Dropping the finger tool altogether — it's where zoom a
 
 In code, four places that asked "is this the finger?" now ask "does this tool select on tap?". A UI test opens the underline tool, taps the seeded circle, expects the tooltip with the tool button still on underline, then taps blank space and expects only the selection to clear. The tap position is computed from how the page is letterboxed inside the board — the first attempt tapped the margin above the page and only hid the buttons.
 
+## 2026-11-03, evening — On scanned books the start sat in the middle of the word gap
+
+The same day the period-space fix landed, a scanned book showed the same symptom. If you dragged the start handle to the front of a word, the underline began in the middle of the gap before it. Ends looked fine. Both ends now stick to the glyphs on scans too.
+
+Scans don't use PDFKit selection. Their ends come from the glyph boxes Vision returns, and spaces never count as glyphs, so no space was being selected. The boxes themselves were too wide. We drew a 20pt line into an image, ran Vision on it, and compared the boxes with where the glyphs really were. Of a 4.8pt word gap, Vision left only 2.3pt to the space. It handed the rest to the neighbours, and the glyph after the space got the most (1.6pt), which is why only the start looked wrong. The center of the gap was accurate to within 0.4pt.
+
+So the edges next to a space are now clamped to the gap center plus or minus half a space width, estimated from the line's median glyph width. Edges only ever shrink. Re-reading the page image for ink was more exact but too costly per handle drag. Fixing the boxes at OCR time would have meant re-recognizing books already processed. A test now runs real Vision and checks every word edge against the drawn position. It failed in nine places before the fix. We haven't dragged it on a real scan on a device yet.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -226,3 +234,4 @@ In code, four places that asked "is this the finger?" now ask "does this tool se
 - 2026-11-02 — Long-press grabs the word and only the dragged end moves; fixed PDFKit index mismatches and the page jump when drawing starts
 - 2026-11-03 — The space after a period no longer stays in the underline range
 - 2026-11-03, afternoon — Tap selects in the underline tool too; no switching to the finger
+- 2026-11-03, evening — On scans, underline ends no longer sit in the word gap (Vision glyph boxes absorbed it)
