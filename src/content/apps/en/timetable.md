@@ -15,14 +15,15 @@ order: 1
 
 Put the week already in your head straight onto the screen. Drag across an empty slot and the class appears right there, so there is nothing to type into a form.
 
-- A layout you can keep changing — guide lines, unlimited undo, lock
+- Editing that survives a change of plans — alignment guides, undo, lock
 - One edit that covers every repeat
-- A day only as long as yours
-- Alarms that arrive in time
-- The next class without opening the app
-- A timetable that leaves the screen, as a picture, a file, or on paper
-- Separate timetables for each semester and each person at home
+- School timetables by class period
+- Only the days and hours you use, in light or dark mode
+- Separate alerts for getting ready and getting started
+- What is next without opening the app — widgets, Siri and Shortcuts
+- A timetable that leaves the screen, on paper, as a picture, into your calendar, or as a file
+- Separate timetables for school, extra classes, family, and each semester
 
-Your timetables stay on the device. No account, no sign-in.
+Your timetables are stored on your device. No account, no sign-in.
 
 It is on Android too — the same grid and the same feel.
