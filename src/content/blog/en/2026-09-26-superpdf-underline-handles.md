@@ -1,6 +1,6 @@
 ---
 title: "The underline you saw while drawing wasn't the one you got"
-date: 2026-11-03T02:53:10+09:00
+date: 2026-11-03T15:46:22+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "uikit"]
 summary: "On scanned books, underlines broke between words while drawing and then covered whole lines when you lifted the pencil. Preview and commit were computing the range separately. Now they share one calculation, and you can drag handles to adjust an underline afterwards."
@@ -190,6 +190,28 @@ PDFKit rounds a point to the middle of a glyph, so the space was only excluded i
 
 Existing underlines clean up the next time you touch a handle. This hasn't been tried by hand in the app yet.
 
+## 2026-11-03, afternoon — Tap to select in the underline tool, no switching to the finger
+
+Fixing an earlier underline while drawing meant opening the tool menu, picking the finger, editing, and switching back. Right after drawing, the tooltip and handles were there, but one line later the same underline ignored taps — the tap counted as a blank tap and hid the buttons.
+
+Now tapping an underline in the underline tool selects it exactly as the finger does: tooltip and end handles. The tool stays underline, so you close the tooltip and keep drawing.
+
+![The underline tool is active and a circled phrase has been tapped: the tool button still shows underline, and the style/color/delete tooltip with end handles sits over the mark](/blog/superpdf-underline-handles/tap-select-in-underline-tool.png)
+
+One rule: **in tools where a tap isn't a drawing gesture, a tap selects.** The finger has a free tap; underline draws on long-press, not tap. Pen is excluded because its tap puts a dot. Crop also has a free tap but was left alone this time.
+
+| Tool | Long-press drag | Tap on a mark | Tap on blank |
+|---|---|---|---|
+| Finger | none (scroll, zoom) | select | hide buttons |
+| Underline | draw | select | hide buttons |
+| Pen | draw | dot | dot |
+
+Selecting had been limited to a select tool since October 30, partly so a reader tapping a mark to hide the buttons wouldn't get a tooltip. On the morning of November 3 the tool menu collapsed to one button and the select tool merged into the finger, which already brought back "tap while reading selects". Only the underline tool still carried the old condition.
+
+Two alternatives lost. Dropping the finger tool altogether — it's where zoom and scroll live, and a menu that always has one item chosen would need an "off" entry. Letting the bottom settings row switch to the selected underline's settings — the bottom row is for the *next* underline, the tooltip for the *selected* one; merging them breaks the top-row-tool / bottom-row-settings pairing. So the tooltip looks the same in every tool and the bottom row stays put.
+
+In code, four places that asked "is this the finger?" now ask "does this tool select on tap?". A UI test opens the underline tool, taps the seeded circle, expects the tooltip with the tool button still on underline, then taps blank space and expects only the selection to clear. The tap position is computed from how the page is letterboxed inside the board — the first attempt tapped the margin above the page and only hid the buttons.
+
 ## History
 
 - 2026-09-26 — Underline gaps and whole-line commits fixed; end handles
@@ -203,3 +225,4 @@ Existing underlines clean up the next time you touch a handle. This hasn't been 
 - 2026-10-31 — Move handwriting and crops, resize with eight handles; thin handwriting no longer stretches when you drag its middle
 - 2026-11-02 — Long-press grabs the word and only the dragged end moves; fixed PDFKit index mismatches and the page jump when drawing starts
 - 2026-11-03 — The space after a period no longer stays in the underline range
+- 2026-11-03, afternoon — Tap selects in the underline tool too; no switching to the finger
