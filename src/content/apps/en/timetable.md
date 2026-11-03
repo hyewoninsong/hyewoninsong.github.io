@@ -6,8 +6,9 @@ summary: "A timetable you draw by hand. Drag to draw it, glance at it on your Ho
 platforms:
   iphone: "released"
   ipad: "released"
-  android: "in-development"
+  android: "released"
 appStoreUrl: "https://apps.apple.com/app/id6760938147"
+playStoreUrl: "https://play.google.com/store/apps/details?id=com.hyewoninsong.supertimetable"
 releaseDate: 2026-09-22
 order: 1
 ---
@@ -24,4 +25,4 @@ Put the week already in your head straight onto the screen. Drag across an empty
 
 Your timetables stay on the device. No account, no sign-in.
 
-An Android version is in development — the same grid and the same feel, dressed in Material 3.
+It is on Android too — the same grid and the same feel.

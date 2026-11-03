@@ -4,8 +4,12 @@ slug: "musicnote"
 icon: "/apps/musicnote/icon.png"
 summary: "Practice until the staff reads. Pick the range, learn the counting path, then take the hints away one stage at a time. No account, no sign-in."
 platforms:
-  iphone: "in-development"
-  ipad: "in-development"
+  iphone: "released"
+  ipad: "released"
+  android: "released"
+appStoreUrl: "https://apps.apple.com/app/id6816625784"
+playStoreUrl: "https://play.google.com/store/apps/details?id=com.hyewoninsong.supermusicnote"
+releaseDate: 2026-09-30
 order: 3
 ---
 
@@ -17,4 +21,4 @@ You can read music. What is slow is starting from do and counting up every singl
 - The Stats tab colours a staff map note by note so a weak register shows in the shape you read. The Records tab leaves one row per session.
 - Records are kept per name, so several people on one device do not end up in one history.
 
-Records and accounts stay on the device. No sign-in, and nothing goes to a server.
+Records and accounts stay on the device. No sign-in needed.
