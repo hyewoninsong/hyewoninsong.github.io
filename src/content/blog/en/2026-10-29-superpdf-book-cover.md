@@ -1,6 +1,6 @@
 ---
 title: "Leave the app and it closes like a book; unfold the phone and the book opens"
-date: 2026-10-30T15:37:58+09:00
+date: 2026-11-03T09:35:26+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "Come back after a while and a translucent sheet lies over your document's first page; tap or drag and it curls away like a page. On an unfolded iPhone Duo the bookshelf gets an inside cover on its left. The settings sheet now picks one or two columns from its own width."
@@ -47,3 +47,9 @@ The first cover was a cloth binding with a name label. It looked nice but never 
 With no document open, the sheet covers blank paper for now. Where you land after the turn is a setting, "When the cover turns": **last-read page** (default) or **first page**. Always landing on page one would match what was under the sheet, but would lose your place every time.
 
 The first page is rendered off the main thread from the file and pre-blurred, since a page curl snapshots the whole view and a live blur view is risky there. The page controller gets its two pages once; SwiftUI updates only swap images and text.
+
+## 2026-11-03 — The page under the sheet now matches the page you read
+
+The page used to grow every time the sheet turned. Under the sheet it sat inside the safe area with an extra 20pt margin, while the reader uses the whole board. The sheet had worked out that position on its own, so the two never agreed.
+
+The sheet now places the page the way the reader does, using the document's typical page shape and then the first page's own. The paper shadow is gone and the background matches the reader. On a two-page spread or in split view, the page can still sit somewhere else on screen.
