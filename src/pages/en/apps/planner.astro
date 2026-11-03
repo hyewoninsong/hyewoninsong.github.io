@@ -1,8 +1,9 @@
 ---
 /**
- * SuperPlanner page. Screenshots are the raw captures from the app repo's capture lane
- * (`scripts/appstore-capture.sh`), copied by `web-app-page/scripts/collect-shots.sh` into
- * `public/apps/planner/{ko,en}/` and `…/ipad/`. iPad captures are portrait → `ipadShot="plain"`, 720×960.
+ * SuperPlanner page. Screenshots are the raw captures from the app repo's capture tests
+ * (`todoUITests/AppStoreScreenshots` · `AppStoreIPadScreenshots`), copied by `web-app-page/scripts/collect-shots.sh`
+ * into `public/apps/planner/{ko,en}/` and `…/ipad/`. `list-view` is not in the store set — an extra capture of the
+ * list view added after ADR-0114. iPad captures are portrait → `ipadShot="plain"`, 720×960.
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import AppPage, { type Copy } from '../../../components/AppPage.astro';
@@ -14,39 +15,53 @@ const t = useTranslations(lang);
 const app = (await getEntry('apps', 'en/planner'))!;
 
 const copy: Copy = {
-  tagline: 'A planner you draw on the day itself',
-  summary: 'Instead of piling tasks into a list, you decide where in the day each one goes — and drag it when the day goes differently.',
+  tagline: 'Plan your day by the hour',
+  summary: 'A plan without an hour on it is only an intention. Put what you mean to do onto the hours of the day, and drag it when the day goes differently.',
   hero: { iphone: 'SuperPlanner day timeline (iPhone)', ipad: 'SuperPlanner day timeline (iPad)' },
   tabs: { iphone: 'iPhone', ipad: 'iPad' },
-  closing: ['Your plans and history move only inside your own iCloud account.', 'There is no account to create and no sign-in screen.'],
+  closing: ['Your plan lives on your device and in your own iCloud, and the names and notes you write are never sent anywhere.', 'There is no account to create and no sign-in screen.'],
   sections: [
     {
       label: 'Plan',
       title: 'Drag an empty stretch and that is when it happens',
       lead: 'Writing something down and deciding when to do it are two different jobs, and a list only ever does the first. Here you drag across an empty stretch of the day and that stretch becomes the time for it.',
       steps: [
-        ['Drag a range', 'The span is drawn as you hold and pull. Starts land on the hour or the half hour, so you never pass through a screen that asks for a time.'],
-        ['Release to pick', 'Letting go brings up the tasks you already keep. The one you pick lands in that span and is selected right away.'],
-        ['Or make one there', 'A task that is not on the list yet can be created at the top of the same sheet and placed immediately, without a trip to the task tab.'],
+        ['Drag a range', 'The span is drawn as you hold and pull, so you never pass through a screen that asks for a time.'],
+        ['Release to pick', 'Letting go brings up the todos you already keep. The one you pick lands in that span and is selected right away.'],
+        ['Or make one there', 'A todo that does not exist yet is typed into the search field and created on the spot, without opening the todo list first.'],
       ],
       shots: {
         iphone: [
           { file: 'drag-create', alt: 'Dragging across an empty stretch to draw a new block' },
-          { file: 'todo-picker', alt: 'The task picker that comes up when you let go' },
+          { file: 'todo-picker', alt: 'The todo picker that comes up when you let go' },
         ],
         ipad: [{ file: 'hero', alt: 'The day timeline on iPad' }],
       },
     },
     {
+      label: 'All-day',
+      title: 'Some things only need a day, not an hour',
+      lead: 'A journal entry or a set of vocabulary only matters as "done today", and giving it a time slot is busywork. Flip the timeline/list toggle at the top to the list view, add it to the day as all-day, and check it off when it is done.',
+      points: [
+        'The + at the bottom right adds a todo to that day. The same todo can sit on the timeline one day and be all-day the next.',
+        'Every row carries its last seven days, so the place you check it off is also where you see the run you are keeping.',
+        'Below, the Schedule section lists that day\'s timed blocks in order. Tap one and the timeline opens on that block.',
+        'While you are on the timeline, the list button shows how many all-day items are still unchecked, so nothing you added gets forgotten.',
+      ],
+      shots: {
+        iphone: [{ file: 'list-view', alt: 'The list view: all-day todos with a seven-day strip on top, the day\'s schedule below' }],
+        ipad: [{ file: 'list-view', alt: 'The list view on iPad' }],
+      },
+    },
+    {
       label: 'Adjust',
       title: 'When the day goes differently, you drag',
-      lead: 'Few days run to plan, and the real cost is retyping times every time one does not. A block moves when you drag it and stretches when you grab its edge — that is the whole grammar for fixing a day.',
+      lead: 'A day does not go as planned. Things slip, move up, and slip again. A block moves when you drag it and stretches when you grab its edge, so nothing has to be deleted and made again.',
       points: [
-        'Edges land on five-minute steps and snap to the boundaries of neighbouring blocks, so you are not working out the exact minute.',
+        'Edges snap to neighbouring blocks, and while you drag a ruler shows the time left to the next one, so you are not working out the exact minute.',
         'Overlapping is allowed and nothing is asked about it. Only the overlapping stretch is hatched, and untangling it stays your call.',
-        'Dragging to the edge of the screen scrolls the day, and a block squashes against midnight so you feel the wall before you push past it.',
         'Anything you do comes back from the undo button in the bottom left, fifty steps deep.',
-        'The scrollbar on the right is the whole day drawn small — grab it and you see how the hours off screen are laid out.',
+        'When you only want to look, the lock in the bottom left makes the day read-only. You can still tap a block and read its note; you just cannot knock it out of place.',
       ],
       shots: {
         iphone: [{ file: 'move-drag', alt: 'A block held mid-drag on its way to a new time' }],
@@ -58,8 +73,8 @@ const copy: Copy = {
       title: 'When one thing slips, everything after it does too',
       lead: 'A meeting runs half an hour long and the rest of the day moves with it. Dragging blocks one at a time is how the order gets scrambled. Select a block, tap the chip below it, and everything after it is linked into one run you drag once.',
       points: [
-        'The upper chip links everything before the block, the lower one everything after. The chip fills in proportion to how much of that direction is already linked.',
-        'Anything that should stay put is unlinked with the button on its own block, so the rest still moves.',
+        'The upper chip links everything before the block, the lower one everything after. A solid chip means all of that side is linked, a faint one means some of it.',
+        'Anything that should stay put is unlinked with the link button on its own block, so the rest still moves.',
         'A linked block that runs into something standing still stops against it — a run never leaves new overlaps in its wake.',
         'Ten blocks moved, one undo.',
       ],
@@ -73,12 +88,12 @@ const copy: Copy = {
     },
     {
       label: 'Note',
-      title: 'The same task, but the note belongs to that day',
-      lead: 'One task placed on many days needs something different written on each of them. Tap a selected block once more and a composer docks above the keyboard; what you write there stays with that block only.',
+      title: 'The same todo, but the note belongs to that day',
+      lead: 'The same workbook needs different pages on different days. Tap a selected block once more and a composer docks above the keyboard; what you write there stays with that block only.',
       points: [
         'The keyboard comes up the moment the composer opens. There is no second tap into a note field.',
         'Tapping outside closes it and still saves. There is no path that throws away what you typed.',
-        'The top line of the composer is a link to the task itself, for when you want to change its name or colour.',
+        'The top line of the composer is a link to the todo itself, for when you want to change its name or colour.',
         'Notes show inside the block under the title — the taller the block, the more lines you see.',
       ],
       shots: {
@@ -89,12 +104,12 @@ const copy: Copy = {
     {
       label: 'Drawer',
       title: 'What you did not get to does not have to be deleted',
-      lead: 'Deleting an unfinished block takes the record with it; leaving it in place buries tomorrow. Drag it onto the drawer in the bottom right and it leaves the timeline with everything about it intact.',
+      lead: 'Deleting what you missed loses the record, and leaving it in place lets yesterday fill up today. Drag a block onto the drawer in the bottom right and it leaves the timeline with everything about it intact.',
       points: [
-        'Its note and its alarms are kept. Only the history drops it, so a task you skipped is not counted as one you did.',
-        'Blocks parked together stay one row in the drawer, and they come back out with the spacing they went in with.',
-        'They come back to the middle of whatever day you are looking at. There is no case where it cannot find room and gives up.',
-        'Relaying the whole day, or pushing just the unfinished blocks to tomorrow, lives in one Organize menu in the toolbar.',
+        'Its note and its alarm settings are kept. Blocks parked together stay one row, and they come back out spaced exactly as they went in.',
+        'Tap a row and it lands in the middle of the day you are looking at. Swipe it instead to pick a date and a time.',
+        'Each row says when it went in, and anything older than a week turns orange, so what has been sitting there stands out.',
+        'Deleting from the drawer brings up an undo right below it, so there is no confirmation dialog and no mistake that sticks.',
       ],
       shots: {
         iphone: [{ file: 'drawer', alt: 'The drawer sheet: one row for a bundle parked together, one for a single block' }],
@@ -104,33 +119,33 @@ const copy: Copy = {
     {
       label: 'Track',
       title: 'The record writes itself',
-      lead: 'Knowing what you actually spent the week on normally means logging it a second time, next to the plan. Here the blocks are the record, and the task tab adds them up, task by task.',
+      lead: 'A single day on its own never tells you whether it is going well. Here the blocks you finish are the record, and the todo button at the top adds them up, todo by todo.',
       points: [
-        'Every row in the task list carries a one-line contribution strip and the hours it has accumulated. The strip switches between days, weeks and months from the sort menu.',
-        'Opening one task shows its hours this week, this month, this year and all time, a calendar of the days it ran, and the notes you left.',
-        'Tapping a cell in the grid jumps straight to that day in the planner.',
-        'A task you have stopped doing is archived — it leaves the list and its past stays readable.',
+        'Every todo fills in a grid of the days it ran. Only what you checked off counts, so a day you planned and skipped is not coloured in as one you did.',
+        'Opening one todo shows its hours this week, this month and this year, the streak you are on, a calendar of the days it ran, and the notes you left.',
+        'Tapping a cell jumps straight to that day in the planner, and a past day you forgot to record can be filled in later.',
+        'A todo you have stopped doing is archived — it leaves the list and its past stays readable.',
       ],
       shots: {
         iphone: [
-          { file: 'todo-list', alt: 'The task tab: a contribution strip and total hours on every row' },
-          { file: 'todo-detail', alt: 'One task opened: period tiles and the calendar of days it ran' },
+          { file: 'todo-list', alt: 'The todo list: a contribution strip and total hours on every row' },
+          { file: 'todo-detail', alt: 'One todo opened: period tiles and the calendar of days it ran' },
         ],
         ipad: [
-          { file: 'todo-list', alt: 'The task tab on iPad' },
-          { file: 'todo-detail', alt: 'A task detail on iPad' },
+          { file: 'todo-list', alt: 'The todo list on iPad' },
+          { file: 'todo-detail', alt: 'A todo detail on iPad' },
         ],
       },
     },
     {
       label: 'Profiles',
-      title: 'Work and study do not share a timeline',
-      lead: 'Put the job and everything else on one timeline and neither is legible. Profiles split them: the screen only ever shows the tasks and blocks of the profile you are in.',
+      title: 'Everyone\'s day stays their own',
+      lead: 'When you look after more than one child, or plan work and home side by side, it gets hard to tell whose plan is whose. Profiles split them: the screen only shows the todos and blocks of the profile you are in.',
       points: [
-        'Each profile keeps its own tasks and its own history. You can have up to ten.',
-        'Which profile is open is remembered per device, so one can stay on work while another stays on study.',
-        'Set the alarms once in Settings — a reminder, the start, the end, each with its own sound — and every new block takes them. Pick which device rings and the same alarm does not go off on all of them.',
-        'History follows the iCloud account already signed in on the device. There is no account to make for this app and no sign-in screen.',
+        'Each profile keeps its own todos and its own history. The avatar at the top right switches between them in a tap.',
+        'Which profile is open is remembered per device, so a child\'s iPad can show only that child\'s plan.',
+        'A profile you no longer use can be archived: its history stays, its alarms stop, and it can be restored later.',
+        'Devices on the same Apple Account line up over iCloud. There is no account to make for this app and no sign-in screen.',
       ],
       shots: {
         iphone: [{ file: 'profiles', alt: 'The profile sheet: switching between personal, work and home' }],
@@ -140,15 +155,15 @@ const copy: Copy = {
     {
       label: 'View',
       title: 'The calendar unfolds, and the night goes dark',
-      lead: 'Pull the date strip down and the week opens into a month. Days with something planned carry a dot, so the empty ones show up on one screen.',
+      lead: 'Open the date strip and the week becomes a month. Days with something planned carry a dot, so the empty ones show up on one screen.',
       points: [
-        'You can pick a date with the month open, and folding it back leaves you on that week.',
+        'You can pick a date with the month open, and moving to another day keeps the hour you were looking at.',
         'Dark mode follows the system setting. Block colours are tuned so the same colour still reads the same on a dark ground.',
-        'Two Home Screen widgets — what is on now and what is next, and one task\'s contribution grid — update without opening the app.',
+        'Two Home Screen widgets — what just ended and what comes next, and one todo\'s contribution grid — show without opening the app.',
       ],
       shots: {
         iphone: [
-          { file: 'month', alt: 'The date strip pulled open into a month' },
+          { file: 'month', alt: 'The date strip opened into a month' },
           { file: 'dark', alt: 'The day timeline in dark mode' },
         ],
         ipad: [

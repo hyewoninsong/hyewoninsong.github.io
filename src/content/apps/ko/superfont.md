@@ -2,7 +2,7 @@
 title: "SuperFont"
 slug: "superfont"
 icon: "/apps/superfont/icon.png"
-summary: "보유한 폰트를 쓰는 iPhone. 파일을 넣고, 안내를 따라가고, 메모와 문서에서 그대로 쓰세요. 계정도 로그인도 없습니다."
+summary: "보유한 폰트를 쓰는 iPhone과 iPad. 파일을 넣고, 안내를 따라가고, 메모와 문서에서 그대로 쓰세요. 계정도 로그인도 없습니다."
 platforms:
   iphone: "released"
   ipad: "released"
@@ -13,6 +13,7 @@ order: 2
 
 받아 놓고 못 쓰던 폰트를 실제로 쓰게 됩니다. iOS가 요구하는 구성 프로파일 — 보통 회사 기기를 관리하는 기술자가 손으로 만드는 파일 — 을 앱이 대신 만들어 주니, 파일 안쪽을 알 필요가 없습니다.
 
+- 파일, Google Fonts, 내 폰트 어디서 고르든 하나로 모이는 설치 목록
 - 압축을 풀지 않아도 되는 ZIP — 안에 든 서체를 알아서 찾아냅니다
 - 두 번 설치되지 않는 중복 폰트
 - 끝에 가서야 실패하지 않도록 미리 걸러 주는 파일

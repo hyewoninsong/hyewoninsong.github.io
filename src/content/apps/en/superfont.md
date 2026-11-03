@@ -2,7 +2,7 @@
 title: "SuperFont"
 slug: "superfont"
 icon: "/apps/superfont/icon.png"
-summary: "An iPhone that uses the fonts you bought. Add the file, follow the guide, type with it in Notes and documents. No account, no sign-in."
+summary: "The fonts you bought, on iPhone and iPad. Add the file, follow the guide, type with it in Notes and documents. No account, no sign-in."
 platforms:
   iphone: "released"
   ipad: "released"
@@ -13,6 +13,7 @@ order: 2
 
 Typefaces that have been sitting in your downloads become fonts you actually use. iOS wants a configuration profile — the kind of file an IT administrator normally hand-builds for a company device — and the app builds it for you, so its internals stay none of your business.
 
+- One install list, whether a font comes from Files, Google Fonts or My Fonts
 - A ZIP you never have to unpack — the typefaces inside are found for you
 - The same font never installed twice
 - Unusable files set aside up front, not at the end of the process
