@@ -6,6 +6,8 @@ tags: ["devlog", "swiftui", "gesture"]
 summary: "New underline nodes now slot into their siblings in book order instead of at the end, without touching anything you reordered by hand. Keyboard commands, a + handle on the selected node and edge auto-scroll came with it, plus a fix for sort orders assigned from count."
 ---
 
+> Since 2026-11-03 map order is no longer changed by hand. Node dragging and ⌘↑↓ are gone, because the map and the book now scroll together and top to bottom has to mean book order.
+
 Every underline in SuperPDF becomes a mind-map node. Until now that node went after the last underline node under the same parent. Reading front to back, that is book order. Go back from page 20 to page 10 for one more line, and the node lands after page 20. For someone who re-reads only their underlines, a map that disagrees with the book is a map they stop opening.
 
 ## New nodes slot in by book order
