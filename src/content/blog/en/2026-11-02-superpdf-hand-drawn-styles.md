@@ -1,6 +1,6 @@
 ---
 title: "Underlines were ruler-straight. Now four marks look hand-drawn, and you pick the style after you draw"
-date: 2026-11-03T02:39:47+09:00
+date: 2026-11-03T12:38:23+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperPDF grew from two line styles to five: highlighter, underline, strikethrough, circle, box. The lines wobble like a pen stroke with a per-highlight fixed seed, and a tooltip opens right after you draw so you can switch."
@@ -73,7 +73,26 @@ Pushing out by 80% of the vertical radius looked like a pill; 55% looked like th
 
 A superellipse lost because its exponent has to be tuned per aspect ratio, and straight sides joined to half circles lost for looking ruler-made. Paths are not stored, so circles you already drew get the new shape too.
 
+## 2026-11-03 — You set the wobble
+
+Some people like the hand-drawn look; others want a straight line under a number in a table, and some want it rougher. The wobble is now a setting next to weight: under the three weights in the weight popover there is a Wobble slider from 0 to 100, with a sample stroke drawn at the current value.
+
+![The weight popover with a Wobble slider at 100 and a sample stroke above it](/blog/superpdf-hand-drawn-styles/wobble-slider.png)
+
+Change it in the underline tool's settings row and it applies to marks you draw next, and is remembered. Change it in a selected mark's tooltip and only that mark changes, as one undo step.
+
+0 is ruler-straight, 50 is exactly the old shape, 100 is twice as loose:
+
+![Wobble 100: a tilted circle with a long tail](/blog/superpdf-hand-drawn-styles/wobble-100.png)
+
+![Wobble 0: the same line inside a clean, round outline](/blog/superpdf-hand-drawn-styles/wobble-0.png)
+
+Every random-derived deviation is multiplied by value / 50 without changing the order the random numbers are drawn, so existing marks at 50 are untouched. The value lives per mark as a small versioned JSON in a slot line marks never used, instead of a schema bump; a single global setting lost because it would reshape old books' marks too.
+
+At first the slider was invisible on iPhone: the popover's arrow was pinned to the top, so it tried to open below a tooltip that already sat near the bottom of the screen and got squashed. Letting the system pick the arrow edge fixed it, and a UI test now drags the slider both ways.
+
 ## History
 
 - 2026-11-02 — Five line styles, hand-drawn marks, a tooltip after drawing
 - 2026-11-03 — Round ends on the circle, overlap on the top side
+- 2026-11-03 — Wobble slider (0–100), popover arrow no longer pinned
