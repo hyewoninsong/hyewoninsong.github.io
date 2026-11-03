@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-03T02:51:07+09:00
+date: 2026-11-03T09:12:42+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -125,11 +125,23 @@ We passed on one button cycling through the three states: getting from half back
 
 ## 2026-11-03 — The half view wasn't half
 
-The divider sat left of the screen's center even though the stored ratio was exactly 0.5.
+The divider sat left of the screen's center.
 
 The ratio was applied to the size `GeometryReader` reports, which is the size inside the safe area. With a status column on the right, half of that width is not the middle of the screen. The book draws to the screen edge, so it looks like the screen is being divided while the math divides something narrower. iPad's symmetric safe areas hid this.
 
 The ratio now uses the full screen length, dragging divides by the same length, and the toolbar sits on the same axis. On a simulator with a temporary 60pt right inset, the divider's offset from center went from -30pt to 0. It hasn't been checked yet on a device with the real status column.
+
+## 2026-11-03 — Fixing the formula didn't fix the split
+
+The same day came another report: still not centered. This time we measured the capture first. On a 951pt screen the book took 451pt, the divider 8pt and the map 492pt, which put the divider 20.5pt left of center.
+
+The map reached the screen edge, so safe areas weren't the cause. A ratio of 0.5 would give the book 472pt, and 451pt works out to about 0.478. The formula was right and the stored value wasn't. That number comes from the measurements; we couldn't read it off the device.
+
+A fresh simulator install only ever holds the default, so the earlier check had shown zero error. The divider saves any drag, even a brush, and nothing could undo it. The half button did nothing if the half view was already on.
+
+Now the half button always returns to the exact center, and a dragged divider snaps there within 3%, with one haptic. The stored ratio also moved to new keys, because the number changed meaning and an old value would have read as the new one. Dragged ratios reset once on update. Removing dragging would have cost a wider map, and resetting on every open would have lost a width you chose.
+
+UI tests now measure the real divider against the window. They pass on an iPad simulator; a check on an unfolded Duo is still open.
 
 ## History
 
@@ -142,3 +154,4 @@ The ratio now uses the full screen length, dragging divides by the same length, 
 - 2026-11-02 — The tooltip anchor is measured again from page coordinates whenever the board is re-laid out
 - 2026-11-02 — book, half and map buttons on wide windows; stacked half always scrolls; toolbar pinned to the window.
 - 2026-11-03 — the half view ratio uses the full screen, so the divider and toolbar sit at the exact center.
+- 2026-11-03 — half button recenters, the divider snaps to center, and the ratio moved to new keys.
