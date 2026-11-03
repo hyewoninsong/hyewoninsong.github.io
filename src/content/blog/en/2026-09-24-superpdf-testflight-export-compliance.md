@@ -1,6 +1,6 @@
 ---
 title: "The upload said success, but testers never got the build"
-date: 2026-09-24T21:30:00+09:00
+date: 2026-11-03T23:33:15+09:00
 app: "superpdf"
 tags: ["devlog", "appstore"]
 summary: "fastlane finished green and App Store Connect showed the build as VALID. TestFlight stayed empty. One unanswered encryption question had quietly parked four builds, and the only one that ever worked had been clicked through by hand."
@@ -35,3 +35,20 @@ This app's Fastfile increments the local build number instead of asking TestFlig
 ## Where it stands
 
 Build 7 is with testers and the plist key is in the repo. The deploy tooling is getting a post-upload beta-state check and a preflight rule that blocks when the key is missing, so the next app does not have to learn this the same way.
+
+## 2026-11-03 — This time the build never showed up at all
+
+Build 48, the first with the on-device neural voice engine (sherpa-onnx on onnxruntime), failed differently. The uploader printed `UPLOAD SUCCEEDED with no errors`, yet an hour later App Store Connect still listed no build 48, not even as processing. There was no beta state to read because there was no build. `altool --validate-app` on the same `.ipa` passed. The reason arrived only by email:
+
+> ITMS-90208: Invalid Bundle - The bundle MindPDF.app/Frameworks/onnxruntime.framework does not support the minimum OS Version specified in the Info.plist.
+
+Inside the `.ipa`, that framework's Info.plist said iOS 13.0 while its binary's `minos` said 26.2, and the binary was 51 KB instead of 44 MB. Both engine xcframeworks wrap static archives in `.framework` bundles. Through a Swift package `binaryTarget`, Xcode 27 links the code into the app and still embeds the empty shell, logging `Injecting stub binary into codeless framework`. The stub is compiled for the app's deployment target; the plist keeps the original 13.0.
+
+The fix was to stop shipping the shell, not to edit its plist. The vendor script now repacks both as library xcframeworks (`.a` + headers + module map), which are linked but never embedded. The new archive has no `Frameworks/` folder and the same engine code in the main binary. Patching the plist to 26.2 would have kept an empty framework in every build and broken again on the next deployment-target change.
+
+Same lesson as September: a success message only means Apple received the file. A build that has not appeared after fifteen minutes was rejected, and the reason is in the inbox. The `.ipa` inspector now compares each embedded framework's binary `minos` with its plist and blocks on a mismatch.
+
+## History
+
+- 2026-09-24 — four builds parked on the export-compliance question; a build number behind the server
+- 2026-11-03 — build 48 rejected with ITMS-90208 after Xcode embedded a stub into a static-library framework
