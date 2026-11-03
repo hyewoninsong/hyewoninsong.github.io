@@ -34,8 +34,21 @@ Paths we dropped: `PDFPage(image:)` (no control over compression — it goes in 
 
 One quiet way to get this wrong: compress the bitmap to JPEG, reopen it as an ordinary `CGImage`, draw it — and Quartz takes the pixels and re-encodes them with Flate. The file renders fine and is just as big. Wrapping the JPEG bytes with `CGImage(jpegDataProviderSource:)` makes Quartz embed the stream as DCTDecode untouched. You cannot see the difference, so a test guards it with a noise image: noise does not shrink under Flate, only under JPEG.
 
-The page coordinate system is preserved — new media box equals the original crop box, rotation is re-applied, original annotations move over. Underline coordinates stay valid, which keeps the door open for replacing the book's PDF in place later.
+The page coordinate system is preserved — new media box equals the original crop box, rotation is re-applied, original annotations move over. Underline coordinates stay valid, which is what makes the next step possible.
+
+## 2026-11-04 — Replace the book's own PDF
+
+Sharing a smaller copy does not free space on the device, and re-importing the copy makes a new book while the underlines stay on the old one. So the sheet now starts with a choice: share the copy, or replace this book's PDF.
+
+![Choosing 'Replace this book's PDF' turns the confirm button into 'Replace'](/blog/superpdf-compress-pdf/replace-option.png)
+
+Replacing moves the original to a temporary folder, puts the smaller file in its place and reopens it on the same page. The underline ledger and the OCR cache are left alone: the page coordinates are identical, so underlines stay where they were. The app keeps using its own OCR lines (which carry glyph boundaries) rather than the stretched Helvetica text layer — that layer is for other apps.
+
+![Right after replacing — '7.4 MB → 3.3 MB' with an Undo button; underlines still in place](/blog/superpdf-compress-pdf/replaced-toast.png)
+
+The original is kept for six seconds behind an Undo toast, the same grammar as deleting a book. A confirmation alert gets tapped through unread; a toast shows the result and still offers the way back. When the toast ends, another PDF is opened or the book is closed, the backup is deleted. Keeping the original permanently was rejected: a feature meant to save space would double it.
 
 ## History
 
 - 2026-11-04 — smaller PDF export (quality, grayscale, text layer)
+- 2026-11-04 — replace the book's PDF in place, six-second undo toast
