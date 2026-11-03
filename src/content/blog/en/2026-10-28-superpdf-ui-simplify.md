@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-03T11:22:18+09:00
+date: 2026-11-04T01:30:00+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -145,6 +145,8 @@ UI tests now measure the real divider against the window. They pass on an iPad s
 
 ## 2026-11-03 — Nine buttons, and one tool button
 
+(This changed again the next day: the tools are now six buttons in a bottom row, and everything else lives in the system navigation bar. See 11-04 below.)
+
 The tools took four slots while text and photo insertion hid in the second row, and page tone, scrolling and settings sat inside the `…` menu. The top row is now, in order: back, PDF list, tool, underlines only, page-turn/scroll toggle, view, page tone, export, settings.
 
 ![The nine-button top row, with undo, search and page controls below](/blog/superpdf-ui-simplify/toolbar-nine.png)
@@ -171,6 +173,24 @@ Now the stacked half follows the same page-turn ↔ scroll button as the book vi
 
 The UI test for that drag found two bugs. A map node overflowing its clipped pane sat invisibly on top of the divider. `.clipped()` clips drawing, not hit testing, so `.contentShape(Rectangle())` now clips the touch area too. And the divider measured its drag in its own moving coordinate space. It followed the finger at half speed, and together with the new center snap it could not leave 50% on a slow drag. Measured in global space, a 300pt drag now moves it 299pt. The test drags slowly and checks the distance, not just that something moved.
 
+## 2026-11-04 — Tools in one bottom row, everything else in the navigation bar
+
+The request came with four Goodnotes screenshots from an iPhone Duo: one row at the bottom, tap a tool and its settings appear as a second row, undo on the left.
+
+![Bottom rows: underline styles and colour above; undo/redo and six tools below](/blog/superpdf-ui-simplify/tool-row-bottom-underline.png)
+
+The six tools are buttons again, not a menu, and with undo/redo they fit one row on a portrait iPhone. Underline and pen add a settings row above. Everything else (PDF list, page controls, contents, bookmarks, read aloud, view options, search, export, settings) moved to the system navigation bar.
+
+![iPad portrait: every button fits in the navigation bar](/blog/superpdf-ui-simplify/tool-row-ipad-bar.png)
+
+I first wrote Duo detection (a phone whose screen ratio is under 1.7) and drew a right-hand rail myself. The user pointed out that the system would do it: the rail in Goodnotes shows the clock and battery, so it is the iOS 27.1 vertical bar, which moves navigation-bar items to the side. Putting the buttons in `ToolbarItemGroup`s was enough, and no ratio check will break on the next foldable.
+
+The cost: the workspace had turned that bar off the day before so that tapping the page could hide everything. It is back on, so in immersive reading on a Duo the system bar stays. On a portrait iPhone, iOS folds whole groups into `…`; the page group only stays visible without its arrows. Menus in the bar also lose their VoiceOver value, so the view-mode menu now carries the current mode in its label.
+
+![Portrait iPhone: back, PDF list, page number, contents, bookmark, read aloud, and the rest under …](/blog/superpdf-ui-simplify/tool-row-iphone-bar.png)
+
+Checked on iPhone and iPad in both orientations; the Duo side bar still needs a real device.
+
 ## History
 
 - 2026-10-28 — Read/Collect, three tools, one collect screen, underline on the page-turning view, the `UserDefaults` write loop.
@@ -185,3 +205,4 @@ The UI test for that drag found two bugs. A map node overflowing its clipped pan
 - 2026-11-03 — half button recenters, the divider snaps to center, and the ratio moved to new keys.
 - 2026-11-03 — nine-button top row: one tool menu, reading and select merged into the finger, view menu, no more `…` menu.
 - 2026-11-03 — the stacked half follows the page-turn/scroll setting; the divider drags in screen space and overflowing map nodes no longer cover it.
+- 2026-11-04 — tools and undo in one bottom row, settings above for underline/pen, the rest in the navigation bar (the system vertical bar on Duo); Duo detection dropped.
