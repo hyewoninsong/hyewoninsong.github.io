@@ -1,12 +1,12 @@
 ---
 title: "Pen nodes were already being created. Nobody could see them."
-date: 2026-11-03T17:58:00+09:00
+date: 2026-11-03T19:19:16+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
-summary: "A request to 'make pen strokes into nodes' turned out to be a visibility problem: the node existed as plain text and the 'node added' toast only fired for highlights. Handwriting is now an image node showing the ink, every creation path announces itself, colours went from four slots to free values to a ten-slot palette, and underline and pen have three widths."
+summary: "A request to 'make pen strokes into nodes' turned out to be a visibility problem: the node existed as plain text and the 'node added' toast only fired for highlights. Handwriting is now an image node showing the ink, every creation path announces itself, colours went from four slots to free values to a ten-slot palette with palettes of your own, and underline and pen have three widths."
 ---
 
-In SuperPDF, handwriting now lands in the mind map **as its own ink**. Whether you highlight, write, or crop, a "node added" toast appears whenever the map is off screen. Highlighter colours come from a ten-slot palette; change a slot or swap the whole palette and every underline in that slot follows (since 2026-11-03, see the end). Underline and pen have a weight picker.
+In SuperPDF, handwriting now lands in the mind map **as its own ink**. Whether you highlight, write, or crop, a "node added" toast appears whenever the map is off screen. Highlighter colours come from a ten-slot palette; change a slot or swap the whole palette and every underline in that slot follows, and you can make your own palettes beside the built-in ones (since 2026-11-03, see the end). Underline and pen have a weight picker.
 
 ## The request was a wrong diagnosis
 
@@ -85,7 +85,7 @@ There were two causes. `.frame(height:)` pinned the list, so when the system shr
 
 Free colours lasted six days. What the user actually wanted was not unlimited colours but one colour system to set up and keep, and when that system changes, the underlines already drawn should change with it. A stored hex value can never do that.
 
-So a highlight now stores a **palette slot index**, not a colour. The palette has ten slots and there is one for the whole app. The popover shows the ten slots in two rows; long-press a slot to change its colour, and a menu beside the title swaps in a preset (basic, pastel, marker) all at once. The three-section paged popover from 10-28 is gone; ten slots fit on one screen.
+So a highlight now stores a **palette slot index**, not a colour. The palette has ten slots and there is one for the whole app. The popover shows the ten slots in two rows; long-press a slot to change its colour (an Edit button arrived the same day, see below), and a menu beside the title swaps in a preset (basic, pastel, marker) all at once. The three-section paged popover from 10-28 is gone; ten slots fit on one screen.
 
 ![The colour popover: a five-dot strip and "basic" menu beside the title, ten colour circles in two rows, the second selected](/blog/superpdf-pen-nodes-color-weight/palette-ten-slots.png)
 
@@ -97,6 +97,24 @@ The presets share slot order (yellow, green, sky, pink, orange, purple, teal, bl
 
 What lost this time: leaving old hex highlights alone (then a palette swap would skip some underlines, which breaks the point; the six days of hex underlines are moved to the nearest slot when the book opens, and only text-box ink stays a fixed colour); snapping hex to a slot at draw time (two truths, and the slot could change with every palette swap); a palette per book (home cards and export draw colours outside any book); re-rendering handwriting thumbnails on palette change (closed books could never be re-rendered, so the thumbnail's alpha is tinted with the current slot colour instead, via `renderingMode(.template)`).
 
+## 2026-11-03 — Built-in palettes stay put; you make your own
+
+The next request came the same day: let me set the colours myself, not just pick from the three built-in palettes. Ten slots, a colour in each.
+
+Slot editing already existed, but its result had nowhere to live. Editing a slot of the basic palette renamed it "Custom" and overwrote the basic one in place. Try pastel for a moment, come back, and your colours were gone.
+
+Now there are two kinds. **Built-in** palettes (basic, pastel, marker) are read-only. **My palettes** are yours: named, as many as you like. Edit a slot while on a built-in palette and the app copies it into "My Palette 1" and saves the change there, and the editor says so.
+
+![The slot editor with a note under the hue bar: the built-in palette stays as it is and the change is saved to a copy](/blog/superpdf-pen-nodes-color-weight/custom-palette-editor.png)
+
+The popover's title row holds the palette menu and an **Edit** button. With Edit on, each slot shows a pencil and a tap opens its editor; saving returns to the grid so you can fill all ten in a row. The long-press stays, but a hidden gesture alone never made "put a colour in each slot" discoverable.
+
+![The palette menu: three built-ins, a My Palettes section with a checkmark, then new, rename and delete](/blog/superpdf-pen-nodes-color-weight/custom-palette-menu.png)
+
+A new palette starts as a copy of the current one, not empty, because an empty slot would hide every underline drawn with it. Deleting a palette falls back to basic; underlines keep their slot numbers and simply show basic's colours.
+
+What lost: a single custom palette (switching presets would still lose it), editable built-ins (pastel would stop meaning pastel, and we would need a reset), and a per-palette slot count (shrinking it leaves underlines with nowhere to go). Saved settings migrate on first launch: a palette matching a preset selects that preset, an edited "Custom" one becomes My Palette 1 with the same colours.
+
 ## What is left
 
 Annotated PDF export writes the current palette's slot colours. Re-importing maps them to the nearest of the old four, since import exists for other apps' annotations; pastel green can come back as the sky slot.
@@ -107,3 +125,4 @@ Annotated PDF export writes the current palette's slot colours. Re-importing map
 - 2026-10-28 — pick any colour from a popover, colour meanings removed, filters list every colour used
 - 2026-11-03 — popover reworked into two paged sections of two rows, pinned height and forced arrow removed
 - 2026-11-03 — back to slots: ten-slot app-wide palette, slot index stored, presets and slot edits recolour everything, old hex moved on open
+- 2026-11-03 — my palettes: built-ins stay read-only and edits go to a copy, palette menu and Edit button, deleting falls back to basic
