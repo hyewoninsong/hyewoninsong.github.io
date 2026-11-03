@@ -90,10 +90,19 @@ const statusLabel = (status: PlatformStatus) => t(statusLabelKey(status));
         )}
       </div>
 
-      {app.data.appStoreUrl && (
-        <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer" class="inline-block mt-5 text-sm text-primary hover:underline">
-          App Store →
-        </a>
+      {(app.data.appStoreUrl || app.data.playStoreUrl) && (
+        <div class="flex flex-wrap gap-x-5 mt-5">
+          {app.data.appStoreUrl && (
+            <a href={app.data.appStoreUrl} target="_blank" rel="noopener noreferrer" class="text-sm text-primary hover:underline">
+              App Store →
+            </a>
+          )}
+          {app.data.playStoreUrl && (
+            <a href={app.data.playStoreUrl} target="_blank" rel="noopener noreferrer" class="text-sm text-primary hover:underline">
+              Google Play →
+            </a>
+          )}
+        </div>
       )}
     </div>
 

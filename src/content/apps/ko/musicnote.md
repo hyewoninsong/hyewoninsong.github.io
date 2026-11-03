@@ -4,8 +4,12 @@ slug: "musicnote"
 icon: "/apps/musicnote/icon.png"
 summary: "악보가 읽히기 시작하는 연습. 볼 범위를 고르고, 세는 길을 익히고, 힌트를 하나씩 줄여 가세요. 계정도 로그인도 없습니다."
 platforms:
-  iphone: "in-development"
-  ipad: "in-development"
+  iphone: "released"
+  ipad: "released"
+  android: "released"
+appStoreUrl: "https://apps.apple.com/app/id6816625784"
+playStoreUrl: "https://play.google.com/store/apps/details?id=com.hyewoninsong.supermusicnote"
+releaseDate: 2026-09-30
 order: 3
 ---
 
@@ -17,4 +21,4 @@ order: 3
 - 통계 탭은 오선 지도 위에서 자리마다 색으로 약한 높이를 보여주고, 기록 탭은 한 판을 한 줄로 남깁니다.
 - 이름을 바꿔 가며 기록이 따로 쌓여, 한 기기를 여럿이 써도 성적이 섞이지 않습니다.
 
-기록도 계정도 기기 안에만 있습니다. 로그인도, 서버로 나가는 것도 없어요.
+기록도 계정도 기기 안에만 있습니다. 로그인도 필요 없어요.
