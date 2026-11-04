@@ -9,47 +9,47 @@ const t = useTranslations(lang);
 const app = (await getEntry('apps', 'en/timetable'))!;
 
 const copy: Copy = {
-  tagline: 'A timetable you draw by hand',
+  tagline: 'A weekly timetable you draw by hand',
   summary: 'Put the week already in your head straight onto the screen. Drag to draw it, glance at it on your Home Screen, pin it to a wall.',
   hero: { iphone: 'SuperTimetable weekly grid on iPhone', ipad: 'SuperTimetable weekly grid on iPad' },
   tabs: { iphone: 'iPhone', ipad: 'iPad' },
-  closing: ['Your timetables stay on the device.', 'No account, no sign-in.'],
+  closing: ['Your timetables are stored on your device.', 'No account, no sign-in.'],
   sections: [
     {
       label: 'Just Drag',
       title: 'Create, move, and resize. Just drag.',
       lead: {
-        iphone: 'Drag across an empty slot and the class appears right there. There is nothing to type into a form. A time label follows your finger and a tap of haptic feedback tells you where you landed.',
-        ipad: 'Drag across an empty slot and the class appears right there. There is nothing to type into a form. A time label follows your finger and tells you where you landed.',
+        iphone: 'Drag across an empty slot and the event appears right there, without typing a start and end time. A time label follows your finger and a tap of haptic feedback tells you where you landed.',
+        ipad: 'Drag across an empty slot and the event appears right there, without typing a start and end time. A time label follows your finger and tells you where you landed.',
       },
       steps: [
         ['Create', 'Swipe up or down over empty space and a block fills exactly that much.'],
         ['Move', 'Pick up a block and drop it on another day. The day and time travel with it, so nothing has to be deleted and remade.'],
-        ['Resize', 'Pull one end and only that end changes. When an exact value matters, set it in the edit screen.'],
+        ['Resize', 'Pull one end and only that end changes. When an exact time matters, fine-tune it in the editor.'],
       ],
       shots: {
         iphone: [
-          { file: 'drag-create', alt: 'Dragging across empty space to create a class' },
+          { file: 'drag-create', alt: 'Dragging across empty space to create an event' },
           { file: 'move-drag', alt: 'Moving a block to another day with the time label following' },
-          { file: 'resize-drag', alt: 'Pulling the bottom handle to extend a class' },
+          { file: 'resize-drag', alt: 'Pulling one end to extend an event' },
         ],
         ipad: [
-          { file: 'drag-create', alt: 'Dragging across empty space on the iPad grid to create a class' },
+          { file: 'style-sheet', alt: 'A new 13:00–14:30 event dragged out on the iPad grid, with the style picker open' },
         ],
       },
     },
     {
       label: 'Undo & Lock',
-      title: 'A layout you can keep changing',
+      title: 'A change of plans is not a fresh start',
       lead: 'A timetable is never right the first time. Most of the work is moving, stretching, and moving again, so the changing itself is made light.',
       points: [
-        'Guide lines appear on neighboring blocks as you drag, so nothing ends up a few minutes out of line.',
-        'Undo and redo have no limit, so you can rearrange as freely as you like.',
+        'Alignment guides snap a block to its neighbors’ start and end, so nothing ends up a few minutes out of line.',
+        'Undo and redo are always there, so you can rearrange as freely as you like.',
         'Lock a finished timetable and you will never nudge it while you are only looking.',
       ],
       shots: {
         iphone: [
-          { file: 'undo-redo', alt: 'Undoing a move from the bottom toolbar' },
+          { file: 'undo-redo', alt: 'Undoing a move' },
           { file: 'lock', alt: 'Lock indicator on a locked timetable' },
         ],
         ipad: [
@@ -60,154 +60,147 @@ const copy: Copy = {
     {
       label: 'Batch Edit',
       title: 'One edit that covers every repeat',
-      lead: 'If the same class meets three times a week, that is three places to rename. Blocks sharing a title and color are one group, so changing one asks whether to change the rest.',
+      lead: 'If the same class meets three times a week, that is three places to rename. Events sharing a title and color are one group, so changing one asks whether to change the rest.',
       points: [
         'Before and after sit side by side, so nothing changes without you seeing it first.',
-        'Each block keeps its own day, time, note, and alarms.',
+        'Each event keeps its own day, time, notes, and alerts.',
+        'Names and colors you have used stay in a list, so adding the same class again is a matter of picking it. If none of the colors is right, make your own.',
       ],
       shots: {
         iphone: [
-          { file: 'batch-edit', alt: 'Confirmation asking whether to change matching classes together' },
-          { file: 'batch-edit-after', alt: 'Grid with every matching class renamed and recolored' },
+          { file: 'batch-edit', alt: 'Batch Update Schedules asking whether to update 4 similar events too' },
+          { file: 'batch-edit-after', alt: 'Every matching event renamed at once' },
         ],
         ipad: [
-          { file: 'batch-edit', alt: 'Confirmation on iPad asking whether to change matching classes together' },
+          { file: 'batch-edit', alt: 'Batch Update Schedules on iPad asking whether to update 4 similar events too' },
         ],
       },
     },
     {
-      label: 'Your Style',
-      title: 'Pick any colour and name',
-      lead: 'Every title and color you have used stays in a list, so adding the same class again is a matter of picking it. If none of the colors is right, make your own.',
+      label: 'Class Periods',
+      title: 'School days, by period',
+      lead: 'A school day is remembered as first period, second period, not as clock times. Switch a timetable to By Period in Timetable Settings and every class sits in its period.',
       points: [
-        'Colors you make stay in your own palette, ready for the next class.',
-        'One color per subject, and the week sorts itself by color.',
+        'Set the class length, breaks, and lunch, and the time of each period is worked out for you.',
+        'By Time for daily life, By Period for school — chosen per timetable, and switchable whenever you need.',
       ],
       shots: {
         iphone: [
-          { file: 'style-sheet', alt: 'Style list of titles and colors already in use' },
-          { file: 'custom-color-picker', alt: 'Color editor for making your own color' },
-          { file: 'custom-color', alt: 'Style list with a custom color added' },
+          { file: 'period-settings', alt: 'Timetable Settings with By Period selected' },
+          { file: 'period-grid', alt: 'Classes laid out by period' },
         ],
         ipad: [
-          { file: 'style-sheet', alt: 'Style popover anchored to the color circle on iPad' },
+          { file: 'period-settings', alt: 'Timetable Settings on iPad with By Period selected' },
         ],
       },
     },
     {
-      label: 'Display',
+      label: 'Your View',
       title: 'A day only as long as yours',
       lead: 'Hours you never use take up the room the ones you do need. Narrow the days and hours shown, per timetable, and the time you actually use fills the screen.',
       points: [
-        'The first day of the week and the clock format stay the way you already read them.',
         'Widen to the weekend or keep weekdays only, decided per timetable.',
+        'The first day of the week and the time format stay the way you already read them.',
+        'Pick light or dark mode, or follow the device. Colors stay just as clear on a dark screen, so tomorrow’s first class is readable with the lights off.',
       ],
       shots: {
         iphone: [
-          { file: 'display-settings', alt: 'Display settings sheet for days and hour range' },
-        ],
-        ipad: [
-          { file: 'display-settings', alt: 'Display settings on iPad' },
-          { file: 'day-range', alt: 'Timetable widened to include Sunday on iPad' },
-        ],
-      },
-    },
-    {
-      label: 'Dark Mode',
-      title: 'Easy on the eyes at night',
-      lead: 'Let the appearance follow the room, or keep it the way you always see it. Colors stay just as clear on a dark screen, so tomorrow\'s first class is readable with the lights off.',
-      shots: {
-        iphone: [
+          { file: 'display-settings', alt: 'Timetable Settings with start and end time and the days shown' },
           { file: 'dark-mode', alt: 'Timetable in dark mode' },
         ],
         ipad: [
+          { file: 'display-settings', alt: 'Timetable Settings on iPad' },
+          { file: 'day-range', alt: 'Timetable widened to include Sunday on iPad' },
           { file: 'dark-mode', alt: 'Timetable in dark mode on iPad' },
         ],
       },
     },
     {
-      label: 'Alarms & Edit',
-      title: 'Get reminded before each class',
-      lead: 'The time to get ready and the time to start are not the same. Put up to two alarms on one class, so preparing and starting reach you separately.',
+      label: 'Alerts',
+      title: 'Alerts for getting ready and getting started',
+      lead: 'The time to get ready and the time to start are not the same. Put up to two alerts on one event, so preparing and starting reach you separately.',
       points: {
         iphone: [
-          'Hear an alarm sound before you choose it, so nothing rings as a surprise.',
-          'Title, color, time, alarms, and a note all live on one screen, so whatever you need to remember stays inside the class.',
+          'Hear an alert sound before you choose it, so nothing rings as a surprise.',
+          'Title, color, time, alerts, and notes all live on one screen, so whatever you need to remember stays inside the event.',
         ],
         ipad: [
-          'Hear an alarm sound before you choose it, so nothing rings as a surprise.',
-          'Editing happens in a panel beside the block. No sheet covers the grid, so you see the whole week while you change one class.',
+          'Hear an alert sound before you choose it, so nothing rings as a surprise.',
+          'Editing opens beside the event block. Nothing covers the grid, so you see the whole week while you change one class.',
         ],
       },
       shots: {
         iphone: [
-          { file: 'alarm', alt: 'Schedule editor with two alarms set' },
-          { file: 'quick-edit', alt: 'Schedule editor with title, days, time, alarm, and note' },
+          { file: 'alarm', alt: 'Event editor with two alerts set' },
+          { file: 'quick-edit', alt: 'Event editor with title, days, time, alerts, and notes' },
         ],
         ipad: [
-          { file: 'alarm', alt: 'Edit panel on iPad with two alarms set' },
-          { file: 'edit-panel', alt: 'Edit panel beside the block on iPad' },
+          { file: 'alarm', alt: 'Editor on iPad with two alerts set' },
+          { file: 'edit-panel', alt: 'Editor opening beside the event block on iPad' },
         ],
       },
     },
     {
-      label: 'Widgets',
-      title: 'The next class without opening the app',
+      label: 'Widgets & Siri',
+      title: 'What is next, without opening the app',
       lead: 'Opening an app just to check is the part you stop doing.',
       points: [
-        'The home screen widget shows the whole week; the today widget shows a timeline centered on right now.',
-        'The lock screen widget names the one class coming next.',
+        'The Home Screen widget shows the whole week; the Today widget shows today’s events around the current time.',
+        'The Lock Screen widget names the one event coming next.',
         'Choose which timetable each widget shows, so only what matters today is on screen.',
+        'Ask Siri or run a Shortcut to hear today’s classes or what is next.',
       ],
       shots: {
         iphone: [
-          { file: 'widget-light', alt: 'Week and Today widgets on a light home screen' },
-          { file: 'widget-dark', alt: 'Week and Today widgets on a dark home screen' },
+          { file: 'widget-light', alt: 'Week and Today widgets on a light Home Screen' },
+          { file: 'widget-dark', alt: 'Week and Today widgets on a dark Home Screen' },
         ],
         ipad: [
-          { file: 'widget-light', alt: 'Week and Today widgets on an iPad home screen' },
-          { file: 'widget-dark', alt: 'Week and Today widgets on a dark iPad home screen' },
+          { file: 'widget-light', alt: 'Week and Today widgets for three timetables on an iPad Home Screen' },
+          { file: 'widget-dark', alt: 'Week and Today widgets on a dark iPad Home Screen' },
         ],
       },
     },
     {
       label: 'Share & Print',
-      title: 'As a picture, a file, or on paper',
-      lead: 'Some timetables end up on a wall, others in someone else\'s hands.',
+      title: 'On paper, as a picture, or in your calendar',
+      lead: 'Some timetables end up on a wall, others in someone else’s hands.',
       points: {
         iphone: [
-          'Choose the paper size and orientation and print straight from the app, crisp and in the same colors as the screen.',
-          'Export an image, with the preview changing as you pick each setting, so you see it before you send it.',
-          'Share a file to keep a backup, and whoever receives it opens an editable copy and carries on.',
+          'Choose the paper size and orientation and print straight from the app.',
+          'Export as an image and see the finished result in the preview before you save it.',
+          'Export to a calendar app to see your classes alongside everything else.',
+          'Export as a file to keep a backup, and whoever receives it opens an editable copy and carries on.',
         ],
         ipad: [
           'Options sit in their own column on the right, so you choose while looking at a large preview.',
-          'Choose the paper size and orientation and print straight from the app, crisp and in the same colors as the screen.',
-          'Share a file to keep a backup, and whoever receives it opens an editable copy and carries on.',
+          'Choose the paper size and orientation and print straight from the app.',
+          'Export to a calendar app to see your classes alongside everything else.',
+          'Export as a file to keep a backup, and whoever receives it opens an editable copy and carries on.',
         ],
       },
       shots: {
         iphone: [
-          { file: 'image-share', alt: 'Share screen with a live preview' },
+          { file: 'image-share', alt: 'Export as Image screen with a live preview' },
           { file: 'print', alt: 'Print preview showing the timetable on the page' },
         ],
         ipad: [
-          { file: 'image-share', alt: 'Share screen on iPad with the preview and an options column' },
+          { file: 'image-share', alt: 'Export as Image on iPad with the preview and an options column' },
           { file: 'print', alt: 'Print screen on iPad with the page preview and an options column' },
         ],
       },
     },
     {
       label: 'Timetable List',
-      title: 'Every timetable in one app',
-      lead: 'Even one person has several weeks to keep track of. Keep separate timetables for each semester and each person at home.',
+      title: 'Separate timetables for different plans',
+      lead: 'Even one person has several weeks to keep track of. Keep school, extra classes, family plans, and semesters in timetables of their own.',
       points: [
         'Start a new semester by duplicating the last one and changing only what moved.',
-        'Flip through the previews and switch with a single tap.',
+        'Swipe through the previews and switch in a tap.',
       ],
       shots: {
         iphone: [
-          { file: 'timetable-list', alt: 'Timetable list with swipeable previews' },
+          { file: 'timetable-list', alt: 'Timetables list with search and a new-timetable button' },
         ],
         ipad: [
           { file: 'timetable-list', alt: 'Timetable list floating over the grid on iPad' },
@@ -216,8 +209,12 @@ const copy: Copy = {
     },
   ],
 };
+
+const footerLinks = [
+  { href: '/en/apps/timetable/privacy/', label: 'Privacy Policy' },
+];
 ---
 
 <BaseLayout title={`${app.data.title} - ${t('site.title')}`} description={app.data.summary} lang={lang}>
-  <AppPage lang={lang} slug="timetable" app={app} copy={copy} />
+  <AppPage lang={lang} slug="timetable" app={app} copy={copy} footerLinks={footerLinks} />
 </BaseLayout>

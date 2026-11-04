@@ -1,6 +1,6 @@
 ---
 title: "Switching to Arabic put our timetable under the wrong weekdays"
-date: 2026-11-02T17:12:00+09:00
+date: 2026-11-04T15:38:32+09:00
 app: "timetable"
 tags: ["devlog", "android", "design"]
 summary: "Compose mirrors only part of a right-to-left screen. The day header flipped, the schedules didn't, and reversing one list fixed it."
@@ -282,6 +282,34 @@ iOS got its ten new store pages ready for 1.2.6: ten iPhone and ten iPad cards p
 
 iPhone Duo cards, the App Store Connect upload and a native read of the translations are still to come.
 
+## 2026-11-04 — An Arabic title on an English screen pulled the time along with it
+
+Android's manual run of 1.2.6 in the ten new languages turned up about twenty bugs. We went through the fixes one by one against the iOS code and carried over the four that had the same shape there. The rest were Compose text rendering, `RemoteViews` clocks or system font scaling, which iOS doesn't have, or things iOS already did.
+
+### The string was right; the picture wasn't
+
+On an English screen, a next class titled "علوم" showed up in the widget header as `Next · 3:00 علوم PM`. The template is `Next · %1$@ %2$@` and the values are in order. The bidi algorithm redraws it: a European digit whose nearest preceding strong character is an Arabic letter is classed as an Arabic digit and joins that run. The title precedes `3:00`, so the time slid into the title's run and left `PM` behind. Titles ending in a non-joining letter happened to look fine, so it came and went.
+
+The 11-01 fix that holds a time together only switches on for right-to-left screens. This time the other side gets wrapped: a user-written title placed into a translated sentence is enclosed in FSI and PDI, whatever the app language. Inside the isolate, the first letter decides the direction; the sentence around it sees one neutral run. Titles standing alone stay untouched, since there is no sentence to isolate them from.
+
+The miss is easy to name. Every RTL seed was an Arabic screen. The 11-02 direction table added an Arabic title in a Korean app, but not that title inside a sentence followed by digits. The seed now carries the opposite pair.
+
+### Words without a dictionary strand one letter
+
+The 11-01 hyphenation only runs where CoreFoundation has a dictionary. Indonesian "Matematika" or Korean "컴퓨터공학개론" has none, so `Text` breaks where the line fills, leaving "Matemati / ka". Android fixed it first, initially only at the font-size floor, then everywhere after seeing it leak on the ordinary path where two lines fit. iOS now does the same: a word neither the dictionary nor Thai segmentation could break is cut between graphemes with at least three on the last piece, with a hyphen for Latin and Cyrillic and none for Korean.
+
+### Two constants assumed Latin type
+
+The style popover's set captions were pinned at 18 points, one line of 13-point footnote. Urdu Nastaliq runs 1.5 times taller, so the caption overlapped the swatch row below, and larger system text clipped it. The tall-script factor from 11-02 now multiplies that height, along with Dynamic Type, and the popover grows by the same amount. Latin at the default size stays at 492.
+
+Settings rows dropped straight to a horizontal scroll when the chips didn't fit beside the label, as Indonesian "Warna Teks Acara" with three chips didn't. Nothing hinted at a scroll, so a clipped chip read as a missing one. The chips now move under the label, and only scroll if that line overflows too.
+
+![Indonesian settings row — three chips sit on their own line under the label, right-aligned](/blog/timetable-rtl-grid/chips-under-label.png)
+
+### Where it stands
+
+The chip row was rendered offscreen at five widths and text sizes, but the large-text scroll case and the Urdu popover captions have not been captured in the simulator yet. Both are manual test items now.
+
 ## History
 
 - 2026-11-01: Fixed the grid's weekday mismatch.
@@ -298,3 +326,4 @@ iPhone Duo cards, the App Store Connect upload and a native read of the translat
 - 2026-11-02: Moved Urdu 12-hour labels to the system wheel's day-period words and limited monospace to digits in time labels.
 - 2026-11-02: Prepared Play store art in all 18 languages, with shaped text and mirrored RTL covers.
 - 2026-11-02: Prepared App Store cards in ten new languages, fixing the widget cache, language switch checks and RTL Home Screen steps.
+- 2026-11-04: Brought four Android 1.2.6 language fixes to iOS — title isolation in sentences, orphan letters in undictionaried words, popover caption height, chips under the label.

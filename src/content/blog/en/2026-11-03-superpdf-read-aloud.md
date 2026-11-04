@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-03T21:20:25+09:00
+date: 2026-11-04T15:00:24+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -44,7 +44,7 @@ Each page is spoken as one utterance. Speaking line by line would break every se
 
 PDFKit's Live Text attaches a per-character text layer to scanned pages on screen. We already got caught by this once, when quotes were saved as "D e l t a". Read aloud, that would come out one letter at a time. So the text comes from a second copy of the file opened just for reading. Scanned pages use only the app's own OCR lines, and a page that hasn't been recognized yet moves to the front of the queue.
 
-Running heads and page numbers are skipped: short lines in the top and bottom 7% of the page. Words hyphenated across a line break are rejoined.
+Running heads and page numbers are skipped: short lines whose center is in the top or bottom 10% of the page, and number-only lines anywhere (it started as the full line inside a 7% band; see 2026-11-04 below). Words hyphenated across a line break are rejoined.
 
 ## The scanned book stayed silent at first
 
@@ -82,7 +82,73 @@ Two things didn't go as expected:
 
 None of this has been measured on an iPhone yet. The sample timings in the sheet are how to choose on a device.
 
+## 2026-11-04 — Tables and formulas are skipped, and the voice says so
+
+Tables were the first thing that sounded wrong. A table came out as its cells in reading order: "Year Revenue Note 2023 120 up 2024 150 up". Page numbers slipped through now and then, and formulas and URLs were read character by character.
+
+Tables and formulas are no longer read. In their place the voice says "Table skipped." or "Formula skipped." and moves on to the next paragraph; while it says that, the blue band covers the whole table or formula block. Captions ("Table 1. Revenue by year") are outside the table and are still read. Skipping silently was an option, but a listener has to know something was left out to go and look at it. A **Read tables and formulas** toggle in the speed menu restores the old behavior.
+
+### Line geometry couldn't tell a table from text
+
+The first idea was geometry: several text boxes side by side at the same height make a table row. Two things broke it. In text PDFs, PDFKit merges the cells on one baseline into a single line, so there is only one box. And two-column books are also "boxes side by side".
+
+So the page is rendered to an image and handed to iOS 26's document recognizer (`RecognizeDocumentsRequest`), which returns paragraphs, lists, and tables as structure, with rows and cells. A line whose center falls inside a table's bounding box is a cell. Text PDFs and scans go through the same single path. It costs about a second per page, so the next page is analyzed while the current one is being read, and nothing is cached.
+
+A test page with a ruled 3×3 table between two paragraphs finds exactly one table in the simulator; the cells drop out of the script and the caption and body stay. How well it catches rule-less tables in Korean scans still has to be checked on real books. If it misses, the table is read as before; if it misfires, the toggle brings the text back.
+
+### Formulas are classified by their characters
+
+Vision doesn't report formulas, so the line's characters are counted. Two or more math symbols or sub/superscripts, and more symbols plus single-letter variables than words of two or more letters, means a formula. "Here E = mc² holds" stays text; "f(x) = ax² + bx + c" is a formula. Parentheses, hyphens, and slashes are too common in prose to count. Consecutive formula lines form one block with one notice.
+
+URLs, email addresses, and DOIs are removed from a line and the rest is read. Superscript footnote digits are removed too. Lines with no letters or digits at all (rules, dotted leaders) are dropped silently.
+
+### Why page numbers were still read
+
+Page numbers were already being skipped, but only when the **whole line** sat inside the top or bottom 7% band. A number straddling the band's edge was treated as body text. The test now uses the line's center and a 10% band, and a number-only line is dropped wherever it is.
+
+## 2026-11-04 afternoon — "8.8%" came out as "eight eight", and nothing in the chain was spelling numbers
+
+Listening to a Korean book with Supertonic 3, "8.8%" came out as "pal pal" (eight eight) and "6~10%" as something like "six point ten". "52 weeks" on the same line was fine. It looked like a model problem until the text was followed all the way to the model.
+
+- OCR was right: running the same page through Vision with the app's settings gave `8.8%` and `6~10%` with the period and tilde intact.
+- The script assembly was right: it only touches whitespace and line-end hyphens.
+- The engine's front end had no number rules at all. The app passes raw characters to sherpa-onnx, and its Supertonic preprocessing is quote and dash substitution, emoji removal, punctuation spacing, and Unicode decomposition. A digit is just a character, and the model reads `8` `.` `8` `%` however its training data happened to.
+- The dev-build character voices (VITS) were worse: their Korean cleaner spells only "digits + Korean counter" and reads every other digit one at a time, with `.` and `~` as pause symbols. "8.8%" literally became "eight, eight".
+
+Only Apple's system voice normalizes text on its own. None of the four on-device neural models know Korean decimals, ranges, or percents, so swapping models wouldn't help. The fix belongs right before the characters reach the model.
+
+### Decimals, ranges, and percents are spelled out; plain integers are left alone
+
+| Text | Spoken as |
+|---|---|
+| `8.8%` | pal jeom pal peosenteu (eight point eight percent) |
+| `6~10%` | yuk-eseo sip peosenteu (six to ten percent) |
+| `1,200.5` | cheon-ibaek jeom o |
+| `52주`, `1년`, `한 번`, `2026.` | unchanged |
+
+Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines; the system voice path is untouched.
+
+Ranges got one refinement the same afternoon. Korean has two number systems, and a range followed by a native counter (people, items, times, hours, animals, books…) reads with native numerals: "3~4명" becomes "서너 명" (three or four people), "1~2번" "한두 번", "10~20명" "열에서 스무 명". It applies from 1 to 99 and only for counters on a list. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
+
+### Three counters were left off the list on purpose
+
+Some counters take both number systems depending on what they mean, and the character alone doesn't say which:
+
+| Counter | Native reading | Sino reading | Common in books |
+|---|---|---|---|
+| 장 | sheets of paper | chapters (3장 4절) | chapters — "covered in chapters 3~4" |
+| 대 | vehicles, machines | age decades, eras (20~30대, 1990년대) | decades — `20~30대` is itself a range |
+| 분 | people (honorific) | minutes (3~4분) | minutes |
+
+Putting them on the list turns "3~4장" into "three or four" in native numerals, which is simply wrong when it means chapters. Leaving them off makes "3~4장" (sheets) come out Sino-Korean, which sounds stiff but is still understood. The two mistakes are not symmetric, so the rule leans toward the common meaning. Telling them apart properly needs context (is the subject a person, does "takes" follow), which is a job for a morphological analyzer or a model, not a rule.
+
+"개월" (months) and "시대" (eras) are a different case: the list check asks whether the next characters start with `개` or `시`, so "3~4개월" would match `개` and read natively. A short exception list sends those Sino-Korean counters back to Sino numerals while keeping `개` and `시` themselves.
+
+Next time something sounds off, the order is set: log the exact text entering the engine, then open the engine's preprocessing source. "It surely normalizes" was an assumption, and Supertonic didn't. Listening to that page again on a real phone is still to do.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
 - 2026-11-03 evening — four neural voices for testing, with samples and synthesis speed
+- 2026-11-04 — tables and formulas skipped with a spoken notice, page numbers dropped anywhere, URLs and footnote digits stripped, toggle to read them
+- 2026-11-04 afternoon — Korean decimals, ranges, and percents spelled out before neural synthesis

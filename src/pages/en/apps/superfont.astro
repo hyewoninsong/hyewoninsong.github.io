@@ -9,11 +9,11 @@ const t = useTranslations(lang);
 const app = (await getEntry('apps', 'en/superfont'))!;
 
 const copy: Copy = {
-  tagline: 'An iPhone that uses the fonts you bought',
+  tagline: 'The fonts you have, ready on your device',
   summary: 'Typefaces that have been sitting in your downloads start showing up in Notes, in documents, in slides.',
   hero: {
-    iphone: 'Installed fonts, each row drawn in its own typeface (iPhone)',
-    ipad: 'Installed fonts, each row drawn in its own typeface (iPad)',
+    iphone: 'My Fonts, each row drawn in its own typeface (iPhone)',
+    ipad: 'My Fonts, each row drawn in its own typeface (iPad)',
   },
   tabs: { iphone: 'iPhone', ipad: 'iPad' },
   closing: ['Your font files and install history stay on the device.', 'No account, no sign-in.'],
@@ -21,15 +21,16 @@ const copy: Copy = {
     {
       label: 'Import',
       title: 'Take the files exactly as they came',
-      lead: 'Buying or downloading a typeface is easy. Getting it onto an iPhone is where it stops — there is barely a way to even open the file. Drop in what the foundry sent you, unedited, with no detour through a Mac.',
+      lead: 'Buying or downloading a typeface is easy. Getting it onto an iPhone or iPad is where it stops — there is barely a way to even open the file. Drop in what the foundry sent you, unedited, with no detour through a Mac.',
       steps: [
+        ['One list', 'Pick from Files, Google Fonts or My Fonts with the same + button, and it all lands in Fonts to Install on the first screen — one install, not one per source.'],
         ['ZIP as-is', 'Add the archive without unpacking it and the typefaces inside are found for you. No round trip through the Files app.'],
         ['No duplicates', 'When the same typeface arrives as both TTF and OTF, one is kept. Your font list does not fill up with the same name twice.'],
         ['Sorted out early', 'Files that cannot be installed are set aside with the reason up front, instead of failing at the end of the process.'],
       ],
       shots: {
-        iphone: [{ file: 'import', alt: '13 families and 17 styles found inside a single ZIP' }],
-        ipad: [{ file: 'import', alt: 'A single ZIP loaded on iPad' }],
+        iphone: [{ file: 'import', alt: 'Fonts to Install, holding 13 families and 17 styles found inside a single ZIP' }],
+        ipad: [{ file: 'import', alt: 'Fonts to Install with a single ZIP loaded, on iPad' }],
       },
     },
     {
@@ -40,7 +41,7 @@ const copy: Copy = {
         'Thousands of free typefaces are there to flip through, right where you install them.',
         'Narrow to handwriting or monospace only, or to a language, and stop scrolling past what you will not use.',
         'Whether a font covers your language is shown in the list, so nothing breaks once you actually use it.',
-        'When one catches your eye, installing it continues right there — no browser, no download folder.',
+        'When one catches your eye, check it and it joins your install list — no browser, no download folder.',
       ],
       shots: {
         iphone: [
@@ -49,7 +50,6 @@ const copy: Copy = {
         ],
         ipad: [
           { file: 'browse', alt: 'Free fonts narrowed down by category on iPad' },
-          { file: 'browse-search', alt: 'A font found by name on iPad' },
         ],
       },
     },
@@ -123,13 +123,13 @@ const copy: Copy = {
       title: 'When they disappear, you do not start over',
       lead: 'Reset the device or delete the profile and the fonts go with it. Remembering where the original files came from is the next problem.',
       points: [
-        'The files you installed are kept, so you pick out the ones that vanished and bring them back in one go.',
+        'The files you installed are kept, so you check the ones that vanished, add them to the install list and bring them back in one go.',
         'Fonts you no longer want go from the same screen.',
         'Nothing to re-download, and no folder to remember.',
       ],
       shots: {
-        iphone: [{ file: 'reinstall', alt: 'Several fonts selected for reinstalling or removal' }],
-        ipad: [{ file: 'reinstall', alt: 'Several fonts selected for reinstalling on iPad' }],
+        iphone: [{ file: 'reinstall', alt: 'Five fonts picked in My Fonts, ready to go back on' }],
+        ipad: [{ file: 'reinstall', alt: 'Fonts picked in My Fonts for reinstalling, on iPad' }],
       },
     },
   ],
