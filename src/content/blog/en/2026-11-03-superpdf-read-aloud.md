@@ -126,7 +126,9 @@ Only Apple's system voice normalizes text on its own. None of the four on-device
 | `1,200.5` | cheon-ibaek jeom o |
 | `52주`, `1년`, `한 번`, `2026.` | unchanged |
 
-Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines; the system voice path is untouched. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
+Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines; the system voice path is untouched.
+
+Ranges got one refinement the same afternoon. Korean has two number systems, and a range followed by a native counter (people, items, times, hours, animals, books…) reads with native numerals: "3~4명" becomes "서너 명" (three or four people), "1~2번" "한두 번", "10~20명" "열에서 스무 명". It applies from 1 to 99 and only for counters on a list; counters that books mostly use with Sino-Korean numbers (chapters, age decades, minutes) were left out, because a Sino reading that should have been native is less jarring than the reverse. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
 
 Next time something sounds off, the order is set: log the exact text entering the engine, then open the engine's preprocessing source. "It surely normalizes" was an assumption, and Supertonic didn't. Listening to that page again on a real phone is still to do.
 
