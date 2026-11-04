@@ -24,4 +24,10 @@ Firebase Analytics·Crashlytics·AdMob 을 쓰므로 뱃지만 바꾸면 거짓�
   Android 패키지는 앱 저장소의 `applicationId`.
 - 앱이 출시로 바뀔 때마다 그 앱의 페이지·`.md` 에서 데이터 관련 문장을 개인정보 페이지와 맞춘다.
 
+## 테스트가 보는 것 (2026-11-03 추가)
+
+`tests/app-store-links.test.mjs` 가 frontmatter 끼리의 어긋남을 잡는다 — en/ko 의 `platforms`·스토어 링크·출시일이 같은지,
+`platforms.android: "released"` 와 `playStoreUrl` 이 함께 있는지, Apple 기기가 `released` 면 `appStoreUrl`·`releaseDate` 가 있는지,
+링크가 나라 없는 표준 형태인지. 스토어에 실제로 나갔는지는 테스트가 모르니 위 확인 방법은 여전히 손으로 한다.
+
 관련 결정: `docs/decisions/2026-11-03-play-store-link.md`
