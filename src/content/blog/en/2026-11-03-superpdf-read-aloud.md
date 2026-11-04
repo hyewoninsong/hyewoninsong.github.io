@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-04T10:42:48+09:00
+date: 2026-11-04T15:00:24+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -106,8 +106,33 @@ URLs, email addresses, and DOIs are removed from a line and the rest is read. Su
 
 Page numbers were already being skipped, but only when the **whole line** sat inside the top or bottom 7% band. A number straddling the band's edge was treated as body text. The test now uses the line's center and a 10% band, and a number-only line is dropped wherever it is.
 
+## 2026-11-04 afternoon — "8.8%" came out as "eight eight", and nothing in the chain was spelling numbers
+
+Listening to a Korean book with Supertonic 3, "8.8%" came out as "pal pal" (eight eight) and "6~10%" as something like "six point ten". "52 weeks" on the same line was fine. It looked like a model problem until the text was followed all the way to the model.
+
+- OCR was right: running the same page through Vision with the app's settings gave `8.8%` and `6~10%` with the period and tilde intact.
+- The script assembly was right: it only touches whitespace and line-end hyphens.
+- The engine's front end had no number rules at all. The app passes raw characters to sherpa-onnx, and its Supertonic preprocessing is quote and dash substitution, emoji removal, punctuation spacing, and Unicode decomposition. A digit is just a character, and the model reads `8` `.` `8` `%` however its training data happened to.
+- The dev-build character voices (VITS) were worse: their Korean cleaner spells only "digits + Korean counter" and reads every other digit one at a time, with `.` and `~` as pause symbols. "8.8%" literally became "eight, eight".
+
+Only Apple's system voice normalizes text on its own. None of the four on-device neural models know Korean decimals, ranges, or percents, so swapping models wouldn't help. The fix belongs right before the characters reach the model.
+
+### Decimals, ranges, and percents are spelled out; plain integers are left alone
+
+| Text | Spoken as |
+|---|---|
+| `8.8%` | pal jeom pal peosenteu (eight point eight percent) |
+| `6~10%` | yuk-eseo sip peosenteu (six to ten percent) |
+| `1,200.5` | cheon-ibaek jeom o |
+| `52주`, `1년`, `한 번`, `2026.` | unchanged |
+
+Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines; the system voice path is untouched. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
+
+Next time something sounds off, the order is set: log the exact text entering the engine, then open the engine's preprocessing source. "It surely normalizes" was an assumption, and Supertonic didn't. Listening to that page again on a real phone is still to do.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
 - 2026-11-03 evening — four neural voices for testing, with samples and synthesis speed
 - 2026-11-04 — tables and formulas skipped with a spoken notice, page numbers dropped anywhere, URLs and footnote digits stripped, toggle to read them
+- 2026-11-04 afternoon — Korean decimals, ranges, and percents spelled out before neural synthesis
