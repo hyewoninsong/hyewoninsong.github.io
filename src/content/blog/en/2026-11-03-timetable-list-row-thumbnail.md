@@ -1,6 +1,6 @@
 ---
 title: "The title list now shows a silhouette of each timetable"
-date: 2026-11-03T22:30:00+09:00
+date: 2026-11-04T16:00:16+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The timetable list's title view gets a small preview per row. It is not the card preview scaled down but a Canvas silhouette of the blocks, drawn in microseconds. The type icon gave up its spot."
@@ -38,8 +38,19 @@ Keeping both was considered. A 28pt icon beside a 40pt silhouette made the left 
 
 ## Where it stands
 
-Line widths and gaps are tuned for 40×52pt; a smaller use would need new constants. The Android list still shows the icon.
+Line widths and gaps are tuned for 40×52pt; a smaller use would need new constants.
+
+## 2026-11-04 — Android got the same thumbnail
+
+![Android timetable list with a silhouette on each row, the selected row outlined](/blog/timetable-list-row-thumbnail/android-titles-light.png)
+
+![The same list in dark mode](/blog/timetable-list-row-thumbnail/android-titles-dark.png)
+
+The Android title list now swaps the 28dp kind icon for a 40x52dp silhouette, drawn on a `Canvas` with plain rectangles for the same reason as on iOS: shrinking the card preview would lay out text per row and leave only color blobs at 40dp. The coordinates come from a pure function. Period timetables use the same virtual axis as the card preview, with lunch as an empty band, and right-to-left day order is flipped once there, never in the drawing code. There is no cache and no offscreen render, so an edit shows up on the next composition.
+
+The kind icon is gone visually, but a screen reader still hears the kind as the row's state description. The thumbnail itself is hidden from accessibility as decoration.
 
 ## History
 
 - 2026-11-03 — silhouette thumbnails in the title list, replacing the type icon.
+- 2026-11-04 — Android port: `Canvas` silhouette, pure-function coordinates, kind read as state description

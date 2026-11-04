@@ -1,6 +1,6 @@
 ---
 title: "A pass over the whole app, clearing four small points of friction"
-date: 2026-11-03T10:27:07+09:00
+date: 2026-11-04T16:00:16+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "An empty timetable that said nothing, a delete that asked for confirmation while promising undo, a name you could only change from the grid, and sheets that ignored large text."
@@ -44,6 +44,21 @@ The spec said iPad had no lock and that multi-select move existed; neither match
 
 Three proposals were left out on purpose: undo for timetable deletion, new timetables inheriting the current settings, and alarm snooze. All worth doing, but not about making the next action visible.
 
+## 2026-11-04 — The same pass, on Android
+
+Three of the four fixes moved to Android and one did not. What differed from the iOS version is what is worth writing down.
+
+**The empty-grid hint has one wording.** On iPad the hint differs because creation is a double tap. On Android both the phone and the wide-screen shell create a schedule with a single tap on an empty cell, so there is no iPad wording to port. The line sits in the visible grid window, not inside the scrolling content, where it would slide away as soon as you scroll.
+
+**"Once per session" for the lock tooltip is not saved state.** Three taps on a locked block still bring the tooltip back once. The "already shown in this process" flag is a process-level static, not screen state: saved state would survive a process restart and keep the tooltip from showing after a relaunch. The tap count is not persisted and resets on unlock.
+
+**The delete confirmation came out of three places.** On iOS the edit sheet was the only entry with an alert. On Android the edit sheet, the wide-screen inspector, and the grid's delete button plus hardware Delete key all went through one. All three now delete directly, one store call per undo step. Five strings went away in 18 languages. Deleting a timetable, range changes that cut schedules, and bulk deletion still ask.
+
+**Rename in the list cost some width.** The bottom bar becomes `[Duplicate] [Rename] Search [Delete]`. Because that bar morphs like a liquid, one more button meant a second leading slot in the morph geometry. At 320dp the search field is left with 152dp.
+
+**The Dynamic Type caps were not ported.** Android text is in `sp` and already follows the system size, and font scale 2.0 is covered by an environment test case. A cap would only cut text for people who need it large.
+
 ## History
 
 - 2026-11-03 — empty-grid hint, lock tooltip re-show, delete without alert, rename in list, Dynamic Type in sheets
+- 2026-11-04 — Android port: one hint wording, static flag, three delete paths, four-button bar, Dynamic Type caps skipped
