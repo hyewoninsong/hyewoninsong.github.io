@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-04T15:00:24+09:00
+date: 2026-11-05T03:17:15+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -146,9 +146,32 @@ Putting them on the list turns "3~4장" into "three or four" in native numerals,
 
 Next time something sounds off, the order is set: log the exact text entering the engine, then open the engine's preprocessing source. "It surely normalizes" was an assumption, and Supertonic didn't. Listening to that page again on a real phone is still to do.
 
+## 2026-11-05 — training our own anime-style Korean voice, and a path to run it on the phone
+
+The ask was a cute, anime-style girl's voice reading Korean books. No such model is public, so we are training one as a development-only voice and running it on device.
+
+### No public Korean weights
+
+Character voice models cluster around Bert-VITS2 and Style-Bert-VITS2, which have no Korean front end. Nexon Games published a Korean Style-Bert-VITS2, but as code only: you would train a base model from thousands of hours yourself. We used a community port (SBV2-KR) that starts from the Japanese base and initializes Korean phoneme embeddings from similar Japanese ones, so character voices can be fine-tuned directly. GPT-SoVITS lost because nothing ports its two-stage model to phones. Blue Archive lost because its students only speak Japanese.
+
+We picked 33 characters with Korean dubs from Genshin Impact and Honkai: Star Rail, using an eight-minute preview reel to choose, and dropped battle shouts.
+
+### Free Colab
+
+A three-voice test ran 4,000 steps in 1 h 40 min on a free T4 (0.45 steps/s) and sounded right. The full set is 24,560 lines, 37.4 hours, about 18 hours of training across several sessions with checkpoints parked in Drive. Along the way: the default Colab image moved to Python 3.13, the latest transformers silently requires torch 2.6 (pinned 5.18), and deleted checkpoints filled Drive's trash until uploads quietly stopped.
+
+### Running it on the phone
+
+sherpa-onnx, which runs our other neural voices, doesn't know this architecture, so the app calls onnxruntime's C API directly. Two ONNX files: the synthesizer (251 MB, identical to PyTorch) and a Korean BERT cut to the 22 layers actually used (621 MB fp16). int8 BERT scored 0.99 similarity but read the same sentence 9% longer, which only showed when we measured audio length, not feature similarity.
+
+The Korean pronunciation front end and the tokenizer were ported to Swift and match Python on 1,518 sentences plus 3,000 adversarial strings. Two traps: blanks must be interleaved into the language ids too (missing that made audio 4,608 samples short, found only by diffing whole input tensors), and the morphological analyzer changes 42% of phoneme sequences, so it has to come to the phone as well.
+
+The data is non-commercial, and the voices belong to the studio and the actors, so this stays in development builds. Training is still running; device speed and memory come next.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
 - 2026-11-03 evening — four neural voices for testing, with samples and synthesis speed
 - 2026-11-04 — tables and formulas skipped with a spoken notice, page numbers dropped anywhere, URLs and footnote digits stripped, toggle to read them
 - 2026-11-04 afternoon — Korean decimals, ranges, and percents spelled out before neural synthesis
+- 2026-11-05 — training an anime-style Korean voice (SBV2-KR on free Colab) and an on-device path via onnxruntime and a Swift port of the Korean front end (development only)
