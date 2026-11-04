@@ -1,6 +1,6 @@
 ---
 title: "Four modes, four tools, four review tabs became two places: Read and Collect"
-date: 2026-11-04T01:30:00+09:00
+date: 2026-11-04T12:45:34+09:00
 app: "superpdf"
 tags: ["devlog", "design", "swiftui"]
 summary: "The app is about reading a PDF full-screen, marking it up, and coming back to just the marks, but the screen didn't follow that loop. The top bar is now Read and Collect, there are three tools, and review is one screen. Along the way we found a hang that froze the app when you opened a book on iPad."
@@ -179,7 +179,7 @@ The request came with four Goodnotes screenshots from an iPhone Duo: one row at 
 
 ![Bottom rows: underline styles and colour above; undo/redo and six tools below](/blog/superpdf-ui-simplify/tool-row-bottom-underline.png)
 
-The six tools are buttons again, not a menu, and with undo/redo they fit one row on a portrait iPhone. Underline and pen add a settings row above. Everything else (PDF list, page controls, contents, bookmarks, read aloud, view options, search, export, settings) moved to the system navigation bar.
+The six tools are buttons again, not a menu, and with undo/redo they fit one row on a portrait iPhone. Underline and pen added a settings row above (later the same day it moved into the tool row itself; see the next section). Everything else (PDF list, page controls, contents, bookmarks, read aloud, view options, search, export, settings) moved to the system navigation bar.
 
 ![iPad portrait: every button fits in the navigation bar](/blog/superpdf-ui-simplify/tool-row-ipad-bar.png)
 
@@ -190,6 +190,23 @@ The cost: the workspace had turned that bar off the day before so that tapping t
 ![Portrait iPhone: back, PDF list, page number, contents, bookmark, read aloud, and the rest under …](/blog/superpdf-ui-simplify/tool-row-iphone-bar.png)
 
 Checked on iPhone and iPad in both orientations; the Duo side bar still needs a real device.
+
+## 2026-11-04 (midday) — Settings replace the tool row instead of stacking on it
+
+Goodnotes doesn't add a second row when you pick the pen. The tool row itself turns into the pen's settings, with a `<` on the left, and going back up leaves the pen selected. SuperPDF now works the same way, so the bottom bar is always one row.
+
+![Underline settings: `<`, the current style, weight and colour, next to undo](/blog/superpdf-ui-simplify/tool-row-drilldown-settings.png)
+
+- Pick underline or pen: the six tools become `<` | style · weight · colour (pen: `<` | pen · colour).
+- Tap `<`: the tools come back and the tool stays on, so you keep drawing.
+- Tap the active tool again: you're back in its settings.
+- Finger, crop, text and image have no settings, so the row stays as it is.
+
+![Back on the tool row with the underline tool still on](/blog/superpdf-ui-simplify/tool-row-drilldown-tools.png)
+
+The catch was width. Undo takes 96pt and the full underline settings take 363pt, but a portrait iPhone is 402pt wide. When the two don't fit, the five styles fold into one button showing the current style, which opens the five in a popover. Landscape and iPad keep them spread out. We decided this by counting cells rather than measuring views, because feeding measured sizes back into layout has frozen this app before.
+
+We passed on two other options. Hiding undo on portrait iPhone would make room, but people undo more often than they switch styles. Making the row scroll sideways would leave a half-cut style button and push weight and colour off screen. The cost: switching tools from the settings row takes one extra tap, and changing style on a portrait iPhone takes two taps instead of one.
 
 ## History
 
@@ -206,3 +223,4 @@ Checked on iPhone and iPad in both orientations; the Duo side bar still needs a 
 - 2026-11-03 — nine-button top row: one tool menu, reading and select merged into the finger, view menu, no more `…` menu.
 - 2026-11-03 — the stacked half follows the page-turn/scroll setting; the divider drags in screen space and overflowing map nodes no longer cover it.
 - 2026-11-04 — tools and undo in one bottom row, settings above for underline/pen, the rest in the navigation bar (the system vertical bar on Duo); Duo detection dropped.
+- 2026-11-04 (midday) — settings replace the tool row in place; `<` goes back with the tool still on; portrait iPhone folds the five styles into one popover button.
