@@ -1,6 +1,6 @@
 ---
 title: "The upload said success, but testers never got the build"
-date: 2026-11-03T23:33:15+09:00
+date: 2026-11-05T19:09:34+09:00
 app: "superpdf"
 tags: ["devlog", "appstore"]
 summary: "fastlane finished green and App Store Connect showed the build as VALID. TestFlight stayed empty. One unanswered encryption question had quietly parked four builds, and the only one that ever worked had been clicked through by hand."
@@ -48,7 +48,27 @@ The fix was to stop shipping the shell, not to edit its plist. The vendor script
 
 Same lesson as September: a success message only means Apple received the file. A build that has not appeared after fifteen minutes was rejected, and the reason is in the inbox. The `.ipa` inspector now compares each embedded framework's binary `minos` with its plist and blocks on a mismatch.
 
+## 2026-11-05 — This time it installed, then died on launch
+
+Builds 56 and 57 reached testers and read back as `IN_BETA_TESTING`, which is September's definition of deployed. Tapping the icon closed the app before anything drew. The TestFlight crash report was two lines:
+
+```
+Termination Reason: DYLD 1 Library missing
+Library not loaded: @rpath/AMSMB2.framework/AMSMB2
+```
+
+dyld could not find a library before a single line of app code ran. The Korean morphological analyzer Kiwi had landed the same day and looked guilty, but it and the voice engines are static archives inside the main binary. `otool -L` showed one `@rpath` dependency: AMSMB2, added two days earlier for importing PDFs from SMB file servers.
+
+AMSMB2 ships as a dynamic library product. A dynamic library needs a link entry and an Embed Frameworks entry that copies it into the app's `Frameworks/`. Adding the package in Xcode's UI creates both; this time the project file was edited by hand and only got the link. Build 57's archive had no `Frameworks/` folder at all.
+
+Why tests missed it is the point: on the simulator, dyld also searches Xcode's build products folder, where AMSMB2 sits, so the app ran and every test passed. Only the bundle that goes onto a device lacked it.
+
+The target now has an Embed Frameworks phase with AMSMB2 signed on copy, and the rebuilt archive contains it. The release lane checks every `@rpath` framework the binary loads against the app's `Frameworks/` before uploading, and the `.ipa` inspector does the same: build 57 now fails with a BLOCK line, the fixed build passes.
+
+Third time, same lesson, one layer deeper. Upload success, beta state and a simulator run are not proof that the app launches on a device. That proof lives in the shipped bundle, and a script should open it before a person does.
+
 ## History
 
 - 2026-09-24 — four builds parked on the export-compliance question; a build number behind the server
 - 2026-11-03 — build 48 rejected with ITMS-90208 after Xcode embedded a stub into a static-library framework
+- 2026-11-05 — builds 56 and 57 crashed at launch: a dynamic library linked but never embedded
