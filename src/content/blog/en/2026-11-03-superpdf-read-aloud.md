@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-06T00:29:51+09:00
+date: 2026-11-06T01:08:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -126,7 +126,7 @@ Only Apple's system voice normalizes text on its own. None of the four on-device
 | `1,200.5` | cheon-ibaek jeom o |
 | `52주`, `1년`, `한 번`, `2026.` | unchanged |
 
-Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines. The system voice path was left alone at first; since 2026-11-05 it gets the same step (see below).
+Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected that day: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does (two days later, integers followed by a native counter were spelled after all — see the 2026-11-06 afternoon section). The step runs for Korean pages only and for all four neural engines. The system voice path was left alone at first; since 2026-11-05 it gets the same step (see below).
 
 Ranges got one refinement the same afternoon. Korean has two number systems, and a range followed by a native counter (people, items, times, hours, animals, books…) reads with native numerals: "3~4명" becomes "서너 명" (three or four people), "1~2번" "한두 번", "10~20명" "열에서 스무 명". It applies from 1 to 99 and only for counters on a list. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
 
@@ -283,6 +283,31 @@ A lone year read correctly as 이천년. The failure was ranges: the voice's own
 
 Listening on a real device is still pending, as before.
 
+## 2026-11-06 afternoon — "1배" came out as "il-bae", and the counter list already existed in TTS open source
+
+Investment books say "1배, 2배, 10배" (one times, two times, ten times) constantly, and the voice read them with Sino-Korean numerals (일배, 이배, 십배) instead of native ones (한 배, 두 배, 열 배). The report came with a question: is there a compiled list of these, rather than finding them one at a time?
+
+### One cause for all three engines
+
+On November 4 the rule was "leave plain integers alone". The range fix that afternoon ("3~4명" → "서너 명") built a list of 46 native counters, but applied it only to ranges. "1배" went to the engines untouched. The trained Genshin/Star Rail voice uses a port of g2pK's normalizer, whose native-counter list has 32 entries — 개, 번, 살, 시, 마리, 권… and no 배, 명, 시간, 가지, 곳. That is why "한 번" and "두 개" sounded right while "한 배" and "세 명" did not: the edge of the list was the edge of the symptom. The system voice and Supertonic have no number rules at all, so they agreed.
+
+### The list lives in TTS projects, not at the language institute
+
+The National Institute of Korean Language publishes no such list; the dictionary only gives examples per counter. Korean TTS authors solved it already:
+
+| Source | What it has |
+|---|---|
+| g2pK `numerals.py` | 32 native counters; 1–4 as 한·두·세·네, 20 as 스무, Sino-Korean from 100 up |
+| CoreaSpeech N2gk | 33 native counters (배, 명, 번째, 시간, 가지, 곳, 살, 달, 건…) **and** about 60 Sino-Korean ones (분, 초, 년, 개월, 원, 회, 층, 대, 세기, 퍼센트…); native only up to 99 |
+
+Now an integer from 1 to 99 followed by a native counter is spelled with the native determiner: "1배" → "한 배", "3명이" → "세 명이", "20번" → "스무 번", "21살" → "스물한 살", "12시 30분" → "열두 시 30분". The counter list is the union of the app's, N2gk's and g2pK's, and the step runs for the trained voice too — "let its own normalizer read numbers" only ever held for counters that normalizer knew.
+
+### Counters the sources disagree on were left out
+
+Merging exposed the conflicts. 장 is native (sheets) in N2gk but usually means chapters in a book; 대 is native in g2pK and Sino-Korean in N2gk; 분 is people or minutes; 축 is "axis" in engineering texts. Those stay Sino-Korean, by the November 4 asymmetry: a stiff "삼배" is less wrong than a native "세 장" for chapter three. One rule no open-source list has: numbering positions. "제3번" (prefix 제), "3판" (edition), "3번 문제" / "3번 출구" (problem 3, exit 3) all stay Sino-Korean, and Sino-Korean units that begin with a native counter's character (달러, 배럴, 배속, 배수, 방향) went on the exception list.
+
+Listening on a device is still a TestFlight job; only the text handed to the engines changed, so the tests are the result.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -295,3 +320,4 @@ Listening on a real device is still pending, as before.
 - 2026-11-05 night — kiwi morphological analyzer on iOS so pronunciations match training; matched a tag difference between the C API and the Python binding
 - 2026-11-05 late — voice choice became a two-level sheet (engines → voices), the menu keeps one "Voice" row, you choose a voice and the engine follows
 - 2026-11-06 — charts skipped by line geometry, English words in the trained voice transliterated via the CMU dictionary and loanword rules, year ranges no longer read as phone numbers
+- 2026-11-06 afternoon — "1배" read with Sino-Korean numerals: integers 1–99 before a native counter now spelled natively, counter list merged from N2gk and g2pK, numbering positions kept Sino-Korean
