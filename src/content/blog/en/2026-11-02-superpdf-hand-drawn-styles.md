@@ -1,12 +1,12 @@
 ---
 title: "Underlines were ruler-straight. Now four marks look hand-drawn, and you pick the style after you draw"
-date: 2026-11-03T12:38:23+09:00
+date: 2026-11-05T22:26:33+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperPDF grew from two line styles to five: highlighter, underline, strikethrough, circle, box. The lines wobble like a pen stroke with a per-highlight fixed seed, and a tooltip opens right after you draw so you can switch."
 ---
 
-Draw across a line of text in SuperPDF, lift your finger, and a small tooltip appears next to it with five styles: highlighter, underline, strikethrough, circle, box. The four line styles are no longer ruler-straight. They wobble slightly and overshoot at the ends, the way a pen does on paper.
+SuperPDF has five line styles: highlighter, underline, strikethrough, circle, box. You pick one in the bottom tool row before drawing, and change a drawn mark from the tooltip that opens when you tap it. The four line styles are no longer ruler-straight. They wobble slightly and overshoot at the ends, the way a pen does on paper.
 
 ## Five styles, all per line
 
@@ -33,7 +33,7 @@ Paths are built in a "line space" whose origin is the top-left of the text line,
 
 ## Pick after drawing, and the pick becomes the default
 
-Before, you chose the style in the toolbar **before** drawing. Changing a drawn line meant switching to the select tool and tapping it again. Now the tooltip opens the moment you lift your finger.
+Before, you chose the style in the toolbar **before** drawing. Changing a drawn line meant switching to the select tool and tapping it again. So the tooltip opened the moment you lifted your finger (retired on November 5, see the last section).
 
 ![The settings row of the underline tool with five style buttons](/blog/superpdf-hand-drawn-styles/style-row.png)
 
@@ -91,8 +91,17 @@ Every random-derived deviation is multiplied by value / 50 without changing the 
 
 At first the slider was invisible on iPhone: the popover's arrow was pinned to the top, so it tried to open below a tooltip that already sat near the bottom of the screen and got squashed. Letting the system pick the arrow edge fixed it, and a UI test now drags the slider both ways.
 
+## 2026-11-05 — No tooltip on a fresh mark
+
+Three days later, "pick after drawing" is gone. Lift your finger and the new mark gets its two range handles, nothing else. It is drawn exactly as the bottom tool row says.
+
+![A fresh highlight with only its two handles, no tooltip; the highlighter tool is on in the bottom row](/blog/superpdf-hand-drawn-styles/new-underline-handles-only.png)
+
+The screen changed in between: tools moved to one row at the bottom, and tapping a tool turns that row into its style, weight and color settings. With settings always in reach, choosing before drawing is natural, and a tooltip popping up after every stroke only re-asked what you had just chosen. The handles stayed, because a range that is a word short is something you notice right away. The tooltip now opens only when you tap an existing mark, and a style picked there still becomes the next default. UI tests draw on both the paged and the scroll board and check that no tooltip appears.
+
 ## History
 
 - 2026-11-02 — Five line styles, hand-drawn marks, a tooltip after drawing
 - 2026-11-03 — Round ends on the circle, overlap on the top side
 - 2026-11-03 — Wobble slider (0–100), popover arrow no longer pinned
+- 2026-11-05 — Fresh marks get handles only; the tooltip is for tapped marks
