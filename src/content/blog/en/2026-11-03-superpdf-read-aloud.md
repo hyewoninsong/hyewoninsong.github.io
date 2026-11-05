@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-05T17:01:07+09:00
+date: 2026-11-05T17:12:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -58,7 +58,7 @@ The simulator only has one basic Korean voice. Enhanced and Premium voices, lock
 
 System voices are free but flat. Cloud voices sound natural but cost money per character. Free neural models that run on the phone sit in between. Which one sounds best is something you have to hear, so instead of picking one, all four are in the app for side-by-side testing.
 
-**Voice engines…** in the speed menu opens a sheet. Each model can be downloaded, removed, and selected, and you can hear the same sentence in Korean and English. The sample also shows time to first sound and how long synthesis took per second of speech. Under 1 keeps up with reading.
+**Voice engines…** in the speed menu opens a sheet. Each model can be downloaded, removed, and selected, and you can hear the same sentence in Korean and English. (This single-screen sheet became a two-level one on November 5 — see "Three places to choose" below.) The sample also shows time to first sound and how long synthesis took per second of speech. Under 1 keeps up with reading.
 
 ![Voice engine sheet: system voice, Supertonic 2 and 3, each with download, remove, select, and Korean and English samples](/blog/superpdf-read-aloud/engine-sheet.png)
 
@@ -237,6 +237,28 @@ Kiwi marks regular verbs that look irregular with `-R`. The C API does it only w
 
 Kiwi loads in 1.7 s on the simulator and analyzes all 1,518 sentences in 2.2 s. The engine's output length matches the Python reference with kiwi on. The 10,000-step bundle was rebuilt with kiwi. A real-iPhone speed and memory test is ready but hasn't run yet because the phone was off the wireless connection. Training is paused at 10,000 steps on the free GPU quota.
 
+## 2026-11-05 — Three places to choose a voice became one, shaped like Settings › Voices
+
+As the engines grew from four to thirteen and the model repository arrived, the places to choose grew with them. The speed menu held an engine picker, a voice picker for that model, and a voice picker for the system voice. The "Voice engines" sheet had, per model, download, trash, a select radio, a voice menu, per-language sample buttons, and timing, followed by the repository form and a license list. The system row showed selection with a checkmark, the model rows with a filled circle. The same voice picker lived in both the menu and the sheet; the system voice picker lived only in the menu.
+
+iOS Settings › Accessibility › Spoken Content › Voices already solves this: a list of languages, inside it a list of voices, tap a row to choose, a play button to preview. The sheet now follows that shape.
+
+![First screen: the system voice row with its chosen voice and a checkmark, then four models with download buttons](/blog/superpdf-read-aloud/voice-sheet-engines.png)
+
+The first screen lists engines: the system voice, the models, the development-only models, and the model repository at the bottom. Each row's subtitle is the chosen voice and the languages it reads; only the chosen engine gets a checkmark. A model that is not downloaded cannot be entered; its subtitle is "languages · size" and its trailing control is Download.
+
+![System voice screen: each Korean voice with a checkmark and a play button](/blog/superpdf-read-aloud/voice-sheet-system-voices.png)
+
+The second screen is that engine's voice list. Tap a row to choose, press play to hear it. System voices and model voices use the same row. A model's screen adds the sample language above (only when the model reads more than one), and languages, size, license, and Remove below. Timing is still measured, as the list footer.
+
+The rule is now: **you choose a voice; the engine follows.** So the three pickers left the speed menu. What remains is speed, the table/formula toggle, and one "Voice" row whose subtitle is the current voice ("Supertonic 2 · Female 1", "Yuna"); tapping it opens the sheet.
+
+Alternatives that lost: choosing everything in the menu (the menu cannot host download, preview, or remove, so the sheet was needed anyway, and the pickers were duplicated); one screen with the engines plus the chosen engine's voices (Kokoro has 28, the Chinese model 804 — they push the engine rows off the screen); tapping an engine row to select with an info button for the inside (breaks the Settings shape, and the chosen voice is not visible on the first screen — the subtitle gives that).
+
+### A subtitle on a menu item lost its test identifier
+
+Giving the "Voice" row a title and a subtitle (`Text` + `Text` + `Image`) made the UI test unable to find it by identifier; the hierarchy showed only `Button, label: 'Voice, Yuna'`. SwiftUI drops the accessibility identifier when it unpacks that label into a `UIAction` title, subtitle, and image, while a plain `Toggle` in the same menu keeps its identifier. The subtitle is the point of the row, so the test now matches the label prefix.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -247,3 +269,4 @@ Kiwi loads in 1.7 s on the simulator and analyzes all 1,518 sentences in 2.2 s. 
 - 2026-11-05 afternoon — model repository: enter a GitHub address, checked without a token first, token asked only for private repos
 - 2026-11-05 evening — trained voice no longer splits sentences at decimal points; minus signs and numbering dashes spelled out; number spelling also for the system voice
 - 2026-11-05 night — kiwi morphological analyzer on iOS so pronunciations match training; matched a tag difference between the C API and the Python binding
+- 2026-11-05 late — voice choice became a two-level sheet (engines → voices), the menu keeps one "Voice" row, you choose a voice and the engine follows
