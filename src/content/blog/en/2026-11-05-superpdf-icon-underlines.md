@@ -1,12 +1,12 @@
 ---
 title: "The SuperPDF icon is the SuperTimetable icon laid on its side — five underlines, each a different length"
-date: 2026-11-05T18:27:39+09:00
+date: 2026-11-05T22:37:24+09:00
 app: "superpdf"
 tags: ["devlog", "design"]
 summary: "The page-with-mind-map icon is gone. The timetable app's five hanging bars are now five underlines, left-aligned, in the same five colours. The timetable hangs; the PDF draws."
 ---
 
-SuperPDF has a new home-screen icon: five underlines in red, orange, yellow, green and blue, starting at the left edge and ending wherever each one ends.
+SuperPDF has a new home-screen icon: five underlines in red, orange, yellow, green and blue on a grey-framed page, starting at the left edge and ending wherever each one ends.
 If you know the SuperTimetable icon you will recognise it at once. It is the same five bars, turned on their side.
 
 ## The timetable hangs, the PDF draws
@@ -42,6 +42,22 @@ The box reads as a bar chart; the stroke reads as a marker underline, and the un
 
 The first stroke wobbled too much: 8pt of sway and 5% thickness change looked like worms at 1024. Halved to a 4pt bow, 1.2pt ripple and 2% thickness. Visible at 1024, straight from 120pt down.
 
+## 2026-11-05 — A page behind the lines
+
+Later the same day, one more change. Five strokes on plain white, even hand-drawn, could still pass for a bar chart. An underline sits on text, so the icon now shows where the text would be: a rounded grey rectangle, iOS systemGray2, a 26pt line with a near-white inside.
+
+![Top row: the whole page inside the icon. Middle row: the page running off the bottom. Bottom row: the previous icon with no page. Each at 256, 120 and 60pt](/blog/superpdf-icon-underlines/page-frame-sizes.png)
+
+The question was how much page to show. A full sheet inside the icon (top row) is the clearest "document", but the strokes shrink to 0.6x to fit inside it and at 60pt they are five thin colour bands — the exact size the old icon failed at.
+So the page runs off the bottom of the icon (middle row). Only the two rounded top corners and the side edges show, which is enough to read as paper, and the strokes stay at 0.8x, five clear lines at 60pt. The open bottom also reads as "more document below".
+
+The frame stays grey. Black fights the five colours, and a grey-filled page looked dull against the white icon background. One line is enough.
+
 ## What's left
 
-No Icon Composer layered icon yet. It is one 1024 bitmap, rendered from a script; the rounded-box variant stays in the script.
+No Icon Composer layered icon yet. It is one 1024 bitmap, rendered from a script; the rounded-box and full-page variants stay in the script.
+
+## History
+
+- 2026-11-05 — five underlines, the timetable icon on its side
+- 2026-11-05, evening — grey page frame behind the lines, running off the bottom
