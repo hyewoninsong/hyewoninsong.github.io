@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-05T03:17:15+09:00
+date: 2026-11-05T13:11:11+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -166,7 +166,37 @@ sherpa-onnx, which runs our other neural voices, doesn't know this architecture,
 
 The Korean pronunciation front end and the tokenizer were ported to Swift and match Python on 1,518 sentences plus 3,000 adversarial strings. Two traps: blanks must be interleaved into the language ids too (missing that made audio 4,608 samples short, found only by diffing whole input tensors), and the morphological analyzer changes 42% of phoneme sequences, so it has to come to the phone as well.
 
-The data is non-commercial, and the voices belong to the studio and the actors, so this stays in development builds. Training is still running; device speed and memory come next.
+The data is non-commercial, and the voices belong to the studio and the actors, so the app never ships or hosts it: it shows in development builds, and in public builds only when a repository you added has the bundle (see the 2026-11-05 afternoon section). Training is still running; device speed and memory come next.
+
+## 2026-11-05 afternoon — models come from your own GitHub repo, and the token field appears only when needed
+
+Converted voice bundles used to download from one hardcoded private repository, with a lone token field in the sheet. That is now a proper feature: a **Model repository** field at the bottom of the voice engine sheet takes any GitHub address and pulls models from its releases.
+
+### No token field until the repo refuses
+
+0.6 seconds after you stop typing, the app opens the repository without a token.
+
+| Response | What you see |
+|---|---|
+| Opens (public repo) | "Public repository · N models" and an **Add** button. No token field, ever |
+| 404 or 401 (private, or doesn't exist) | Only now the token field and **Check with token** appear |
+| 401 with a token | "The token is wrong or expired" — the field stays |
+| 403/404 with a token | "This token can't open the repository" |
+| Opens, but no known bundles | "No models this app can read" |
+
+GitHub answers a private repo with 404 to anyone without access, exactly like a missing one. So the first 404 asks for a token instead of declaring the repo gone; the same 404 *with* a token means no permission. Reading one status code differently depending on whether a token was sent is the whole trick.
+
+Full URLs, `owner/repo`, `.git` suffixes, and release-tag links all work. Tokens are stored in the device keychain, and only for private repos.
+
+### Why this shape
+
+- **No manifest format for arbitrary models.** Each engine needs its text-to-phoneme front end, which lives in app code; a description file can't make sound. Only files matching bundle names the app already knows count as models.
+- **No always-visible token field.** People adding a public repo don't need it.
+- **No character voices listed by default in public builds.** Until a repository is added, the public build shows only a plain repository field; the list then shows what the repository is confirmed to offer, plus anything already downloaded.
+
+Devices that only had the old token are migrated to the original repository automatically.
+
+The flow was tested against real GitHub in the simulator: public repo → no token field; private → token field; wrong token → error; right token → "Private · 7 models" → add → remove. Downloading the large bundles on a real device is still untested; that path is unchanged.
 
 ## History
 
@@ -175,3 +205,4 @@ The data is non-commercial, and the voices belong to the studio and the actors, 
 - 2026-11-04 — tables and formulas skipped with a spoken notice, page numbers dropped anywhere, URLs and footnote digits stripped, toggle to read them
 - 2026-11-04 afternoon — Korean decimals, ranges, and percents spelled out before neural synthesis
 - 2026-11-05 — training an anime-style Korean voice (SBV2-KR on free Colab) and an on-device path via onnxruntime and a Swift port of the Korean front end (development only)
+- 2026-11-05 afternoon — model repository: enter a GitHub address, checked without a token first, token asked only for private repos
