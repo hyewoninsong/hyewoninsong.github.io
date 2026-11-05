@@ -1,6 +1,6 @@
 ---
 title: "Swiping to turn the page drew a line instead — so reading and editing became two modes"
-date: 2026-11-04T15:50:00+09:00
+date: 2026-11-05T16:44:48+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "design"]
 summary: "With the pen or crop tool in hand, a sideways swipe drew a stroke instead of turning the page. Rather than guess intent from the gesture, a single button in the bottom-right corner now switches between reading and editing — and editing brings back the last tool you used."
@@ -48,18 +48,18 @@ Now, with the edit toggle off, those four stand where the tool row would be. No 
 
 ![Reading — read aloud, underlines only, view mode and page tone in the bottom row, pencil at the bottom right](/blog/superpdf-read-edit-toggle/reading-row.png)
 
-Underlines-only is a toggle. The other three drill down the way a tool drills into its settings: the row becomes `<` plus a second row.
+Underlines-only is a toggle. The other three drill down the way a tool drills into its settings: the row becomes a second row, led by the icon you tapped (it was a `<` at first — see 2026-11-05 below).
 
 | Button | Tap |
 |---|---|
-| Read aloud | starts reading at once: `<` · pause · speed and voice · stop |
+| Read aloud | starts reading at once: speaker · pause · speed and voice · stop |
 | Underlines only | on / off, row unchanged |
-| View mode | `<` · page turn · vertical scroll · horizontal scroll |
-| Page tone | `<` · original · sepia · night, each a paper-coloured dot |
+| View mode | current mode icon · page turn · vertical scroll · horizontal scroll |
+| Page tone | tone icon · original · sepia · night, each a paper-coloured dot |
 
 ![Page tone row — sepia selected, the page already sepia](/blog/superpdf-read-edit-toggle/tone-row.png)
 
-`<` keeps reading aloud; the button stays lit, and tapping it again reopens the controls. Stopping, or reaching the end of the book, returns to the four. Picks stay in the second row — people flip between sepia and night — and that matches how the tool row behaves.
+Going back up keeps reading aloud; the button stays lit, and tapping it again reopens the controls. Stopping, or reaching the end of the book, returns to the four. Picks stay in the second row — people flip between sepia and night — and that matches how the tool row behaves.
 
 ## The foldable's vertical bar only takes icons
 
@@ -79,7 +79,20 @@ The page number has to be text. Instead of sniffing the device, the app reads th
 
 The capture checklist already said that text buttons and custom button styles do not move. The design session never opened it. Any change to the top bar now ships with a folded-Duo capture — the folded cover is enough to see the vertical bar.
 
+## 2026-11-05 — the second row starts with its parent's icon, not `<`
+
+Picking the underline tool turns the tool row into style · weight · colour; picking the pen turns it into pen · colour. Both started with a `<`, and the colour buttons look the same, so the row alone did not tell you whose colour you were changing.
+
+Now the leftmost button is the icon of the item you came from, shown lit: the underline icon in its current style with a colour bar, or the pen. Tapping it goes back up, and the tool stays on — the same icon that took you down takes you up.
+
+![Underline settings row — the lit underline icon with a yellow bar on the left, then style and colour](/blog/superpdf-read-edit-toggle/underline-row-parent-icon.png)
+
+![Pen settings row — the lit pen icon on the left, then pen type and colour](/blog/superpdf-read-edit-toggle/pen-row-parent-icon.png)
+
+The reading row does the same: speaker, current view mode, or the half-filled tone circle. Keeping `<` and adding the icon beside it would overflow the portrait iPhone row; a text label above would make the toolbar two rows tall. The icon fits the old 40pt slot, so nothing else moves.
+
 ## History
 
 - 2026-11-04 — reading and editing split, bottom-right toggle, last tool remembered
 - 2026-11-04, afternoon — reading row (read aloud, underlines only, view mode, page tone) with drill-down; foldable vertical bar takes icon items only
+- 2026-11-05 — the second row leads with its parent's icon instead of `<`
