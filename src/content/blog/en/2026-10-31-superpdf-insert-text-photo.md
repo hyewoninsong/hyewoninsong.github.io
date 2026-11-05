@@ -1,6 +1,6 @@
 ---
 title: "Text boxes and photos on the page, moved and resized like handwriting"
-date: 2026-11-03T03:38:00+09:00
+date: 2026-11-05T17:58:22+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "You can now drop a note or a photo onto a PDF page. It arrives selected, so you drag it into place and resize it with the same handles as handwriting and crops."
@@ -52,6 +52,20 @@ iOS ships only gothic Korean glyphs, so serif or rounded fonts changed Latin let
 
 The first editor opened 62pt below the tap. The board frame was measured outside `.ignoresSafeArea()`, which reports the safe-area frame, while UIKit's origin is the expanded frame. Saved coordinates were right, so unit tests passed; a screenshot gave it away. A UI test now checks that the tapped point falls inside the editor's frame.
 
+## 2026-11-05 — Any font on the device
+
+Four Nanum fonts were not enough, so the font row above the keyboard now starts with All Fonts. The five built-in choices stay in the row, and the last eight fonts picked from the sheet join them.
+
+![The font row above the keyboard, with All Fonts first](/blog/superpdf-insert-text-photo/all-fonts-row.png)
+
+The sheet lists fonts already on the device and fonts Apple can download, Korean-capable ones first, each row drawn in its own font. A search field and a Korean-only switch keep hundreds of families manageable. Downloadable fonts are fetched when picked, the same way the Nanum fonts are.
+
+![The All Fonts sheet, Korean fonts on top](/blog/superpdf-insert-text-photo/all-fonts-sheet.png)
+
+Fonts installed by font apps go through the system font picker. Reading them directly needs the Fonts capability, and an entitlement the App ID lacks blocks distribution signing, which once kept this app off TestFlight for four weeks. The system picker grants access without it.
+
+One trap: `UIFont(descriptor:size:)` with a family that does not exist returns some fallback font instead of nil. The app now checks that the returned `familyName` matches before trusting it; missing families draw in the system font and keep their saved name.
+
 ## Where it stands
 
-Photos are stored as a single 2048px JPEG so pages draw quickly. On a PDF whose pages are rotated 90°, an exported annotated PDF may show a photo in a different orientation than the app does. Rotating the device while typing can misplace the editor, though no text is lost. Nanum fonts need a connection the first time and show as the system font until they arrive.
+Photos are stored as a single 2048px JPEG so pages draw quickly. On a PDF whose pages are rotated 90°, an exported annotated PDF may show a photo in a different orientation than the app does. Rotating the device while typing can misplace the editor, though no text is lost. Nanum and other Apple-downloaded fonts need a connection the first time and show as the system font until they arrive. Whether a font-app font stays usable after relaunch is not yet checked on a real device.
