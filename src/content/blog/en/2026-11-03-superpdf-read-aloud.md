@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-05T17:12:00+09:00
+date: 2026-11-06T00:29:51+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -259,6 +259,30 @@ Alternatives that lost: choosing everything in the menu (the menu cannot host do
 
 Giving the "Voice" row a title and a subtitle (`Text` + `Text` + `Image`) made the UI test unable to find it by identifier; the hierarchy showed only `Button, label: 'Voice, Yuna'`. SwiftUI drops the accessibility identifier when it unpacks that label into a `UIAction` title, subtitle, and image, while a plain `Toggle` in the same menu keeps its identifier. The subtitle is the point of the row, so the test now matches the label prefix.
 
+## 2026-11-06 — charts are skipped too, English words are spelled in Hangul, and year ranges read as ranges
+
+With tables out of the way, the next thing the voice read was a chart: the famous log-scale plot of real returns on stocks, bonds, gold, and the dollar from 1802 to 2012. It read every tick, legend entry, and year. The same report carried two more: the trained Genshin/Star Rail voice read English letter by letter ("ay pee pee ell ee"), and years sounded like digit strings.
+
+### Figures are found by the shape of their lines
+
+Vision's document recognizer returns tables; nobody returns figures. A chart arrives from OCR as short lines scattered over the page, so that scatter became the signal. A fragment is a line narrower than 30% of the page or made mostly of numbers. Vertically close fragments form a block; a wide prose line between them breaks it. A block is a figure only when it has six or more fragments, left edges in at least three places (lists and dialogue share one), and at least two pairs sitting side by side at the same height (a centered poem has none). The union rectangle is the figure; every line whose center falls inside is skipped, including a small table inside the chart. The title above and the source line below stay outside and are read like captions. The notice is "Figure skipped." and the toggle is now "Read tables, figures, and formulas".
+
+Ink-density line detection and image XObjects in text-layer PDFs were considered: letters are lines too, vector charts are not images, and a scanned page is one big image.
+
+The test page exposed a side effect of the November 4 page-number rule: the year row "1802 1822 … 2002" is all digits once spaces are removed, so it was being dropped as a page number and could not join the figure. Page numbers are now at most four digits.
+
+### English goes through a pronouncing dictionary into Hangul
+
+The trained voice knows 46 Korean jamo and nothing else; its normalizer spells Latin letters by name and discards the rest. So English words are transliterated before the normalizer: pronunciations come from the CMU dictionary (125k entries, 0.86 MB compressed), and the ARPAbet is packed into syllables by the Korean loanword orthography rules — a voiceless stop after a short vowel becomes a final consonant (stock → 스톡), long vowels and voiced consonants get an ㅡ syllable (gold → 골드), intervocalic l doubles (dollar → 달러), r before a consonant is silent (market → 마켓), and the weak vowel is guessed from spelling (apple → 애플, button → 버튼, Tesla → 테슬라). Out-of-dictionary words are estimated from spelling with a as ㅏ, since those are mostly Korean names (kakao, samsung). Upper-case acronyms (ETF, GDP) are left for the letter-name path, and an English gloss in parentheses right after Hangul is dropped so the word is not read twice.
+
+Splicing English spans from the system voice would defeat the character voice; ICU's Latin-Hangul transform is romanization, not English pronunciation; adding English phonemes to the model needs data and days. Some results differ from convention (bitcoin comes out as 빗코인 by the rules); an exception table can grow from what stands out.
+
+### "2000년" was fine; "2000~2010년" was not
+
+A lone year read correctly as 이천년. The failure was ranges: the voice's own normalizer turns `~` and every dash into `-`, then its phone-number rule reads "2000-2010" digit by digit. The November 5 decision to let that normalizer handle numbers and only fill its gaps was right, but it did not trace what the normalizer does to characters the app left alone. Tilde ranges are now spelled out in the app first ("이천에서 이천십년"), and a dash between two four-digit years is read as a range for every voice; a descending pair ("1588-1234") stays a number.
+
+Listening on a real device is still pending, as before.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -270,3 +294,4 @@ Giving the "Voice" row a title and a subtitle (`Text` + `Text` + `Image`) made t
 - 2026-11-05 evening — trained voice no longer splits sentences at decimal points; minus signs and numbering dashes spelled out; number spelling also for the system voice
 - 2026-11-05 night — kiwi morphological analyzer on iOS so pronunciations match training; matched a tag difference between the C API and the Python binding
 - 2026-11-05 late — voice choice became a two-level sheet (engines → voices), the menu keeps one "Voice" row, you choose a voice and the engine follows
+- 2026-11-06 — charts skipped by line geometry, English words in the trained voice transliterated via the CMU dictionary and loanword rules, year ranges no longer read as phone numbers
