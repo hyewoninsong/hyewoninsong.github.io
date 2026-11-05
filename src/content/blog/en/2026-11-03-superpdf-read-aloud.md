@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-05T15:11:05+09:00
+date: 2026-11-05T17:01:07+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -219,6 +219,24 @@ The rule runs for the other neural voices and now for the **system voice** too, 
 
 Unit tests cover each row above, the decimal-aware sentence split, and the position table. The page hasn't been re-listened to on a real iPhone yet.
 
+## 2026-11-05 night — the morphological analyzer now runs on the phone, and one tag letter differed
+
+The trained voice learned from pronunciations produced with the kiwi morphological analyzer on, so "책의" became [채게] and "볼게요" became [볼께요]. The phone was building pronunciations without kiwi, and 42% of the 1,518 reference sentences got different phonemes from training. Kiwi now runs on the phone and all 1,518 match.
+
+- **Built from source, not the official Swift package.** The official xcframework wraps a static library in a `.framework` shell. That shape got this app rejected once with ITMS-90208, so kiwi is packaged as a plain `.a` plus headers.
+- **Pinned to 0.23.2**, the same version the training used. 0.24 analyzes some endings differently.
+- **The 109MB analyzer model ships inside the voice bundle**, not the app. The bundle went from 791MB to 877MB.
+
+Verification compared 31,796 tokens from the 1,518 sentences against Python kiwipiepy, by form, tag, position and length, and then the resulting pronunciations. The pronunciations matched from the start. Two tokens did not:
+
+```
+아직 항복하긴 일러     C API: 이르/VV    kiwipiepy: 이르/VV-R
+```
+
+Kiwi marks regular verbs that look irregular with `-R`. The C API does it only when the stem ends in ㄷ, ㅂ or ㅅ. The Python binding also does it when the form is exactly "이르", which conjugates two ways. Reading only the C API docs, you would expect identical strings. The pronunciation rules compare tags as text, so other sentences could diverge. The Swift wrapper now applies the same special case. Comparing only the final phonemes would have missed this.
+
+Kiwi loads in 1.7 s on the simulator and analyzes all 1,518 sentences in 2.2 s. The engine's output length matches the Python reference with kiwi on. The 10,000-step bundle was rebuilt with kiwi. A real-iPhone speed and memory test is ready but hasn't run yet because the phone was off the wireless connection. Training is paused at 10,000 steps on the free GPU quota.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -228,3 +246,4 @@ Unit tests cover each row above, the decimal-aware sentence split, and the posit
 - 2026-11-05 — training an anime-style Korean voice (SBV2-KR on free Colab) and an on-device path via onnxruntime and a Swift port of the Korean front end (development only)
 - 2026-11-05 afternoon — model repository: enter a GitHub address, checked without a token first, token asked only for private repos
 - 2026-11-05 evening — trained voice no longer splits sentences at decimal points; minus signs and numbering dashes spelled out; number spelling also for the system voice
+- 2026-11-05 night — kiwi morphological analyzer on iOS so pronunciations match training; matched a tag difference between the C API and the Python binding
