@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-05T13:11:11+09:00
+date: 2026-11-05T15:11:05+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -126,7 +126,7 @@ Only Apple's system voice normalizes text on its own. None of the four on-device
 | `1,200.5` | cheon-ibaek jeom o |
 | `52주`, `1년`, `한 번`, `2026.` | unchanged |
 
-Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines; the system voice path is untouched.
+Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does. The step runs for Korean pages only and for all four neural engines. The system voice path was left alone at first; since 2026-11-05 it gets the same step (see below).
 
 Ranges got one refinement the same afternoon. Korean has two number systems, and a range followed by a native counter (people, items, times, hours, animals, books…) reads with native numerals: "3~4명" becomes "서너 명" (three or four people), "1~2번" "한두 번", "10~20명" "열에서 스무 명". It applies from 1 to 99 and only for counters on a list. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
 
@@ -198,6 +198,27 @@ Devices that only had the old token are migrated to the original repository auto
 
 The flow was tested against real GitHub in the simulator: public repo → no token field; private → token field; wrong token → error; right token → "Private · 7 models" → add → remove. Downloading the large bundles on a real device is still untested; that path is unchanged.
 
+## 2026-11-05 evening — the minus and decimal point in "-7.26%" vanished; the sentence splitter did it
+
+With the Genshin/Star Rail voice we trained, "-7.26%" on a fund performance page was read with neither the minus nor the decimal point, and "표 4-1" (Table 4-1) came out as "표사일". In Korean these should be "마이너스 칠 점 이육 퍼센트" and "표 사 다시 일".
+
+The first guess was wrong. That voice's normalizer handles "7.26" fine, so the system voice looked like the only path that could drop the point, and it got fixed first. Nobody asked which voice it was.
+
+The real cause sat in front of the normalizer. The engine splits long text into sentences and was cutting after every period, so "-7." and "26%, …" were normalized separately: the point became a silent sentence end and "26" a whole number. It no longer splits on a period between digits. Separately, the normalizer kept `-` as punctuation, a pause rather than "minus", and our rule for the other neural voices didn't know minus signs or numbering dashes either.
+
+What changed:
+
+| Text | Now read as | When |
+|---|---|---|
+| `-7.26%` | 마이너스 칠 점 이육 퍼센트 | right before a digit, not after a letter or digit |
+| `표 4-1`, `그림 2-3-10` | 사 다시 일, 이 다시 삼 다시 십 | each part 1–3 digits, no leading zero |
+| `6-10%` | 육에서 십 퍼센트 | two parts followed by % read as a range |
+| `010-1234-5678`, `2022-05-31` | unchanged | phone numbers and dates |
+
+The rule runs for the other neural voices and now for the **system voice** too, so the same text reads the same way everywhere. Spelling numbers out shifts every character position after them, and the system voice reports positions so the app can mark the line being read. So the rewrite also builds a table from each new position back to the original one, and the reported positions go through it. The trained voice gets only the minus and dash rules; the rest stays with the normalizer it was trained with.
+
+Unit tests cover each row above, the decimal-aware sentence split, and the position table. The page hasn't been re-listened to on a real iPhone yet.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -206,3 +227,4 @@ The flow was tested against real GitHub in the simulator: public repo → no tok
 - 2026-11-04 afternoon — Korean decimals, ranges, and percents spelled out before neural synthesis
 - 2026-11-05 — training an anime-style Korean voice (SBV2-KR on free Colab) and an on-device path via onnxruntime and a Swift port of the Korean front end (development only)
 - 2026-11-05 afternoon — model repository: enter a GitHub address, checked without a token first, token asked only for private repos
+- 2026-11-05 evening — trained voice no longer splits sentences at decimal points; minus signs and numbering dashes spelled out; number spelling also for the system voice
