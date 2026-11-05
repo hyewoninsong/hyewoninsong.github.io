@@ -1,6 +1,6 @@
 ---
 title: "Swiping to turn the page drew a line instead — so reading and editing became two modes"
-date: 2026-11-05T16:44:48+09:00
+date: 2026-11-06T03:26:40+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "design"]
 summary: "With the pen or crop tool in hand, a sideways swipe drew a stroke instead of turning the page. Rather than guess intent from the gesture, a single button in the bottom-right corner now switches between reading and editing — and editing brings back the last tool you used."
@@ -91,8 +91,21 @@ Now the leftmost button is the icon of the item you came from, shown lit: the un
 
 The reading row does the same: speaker, current view mode, or the half-filled tone circle. Keeping `<` and adding the icon beside it would overflow the portrait iPhone row; a text label above would make the toolbar two rows tall. The icon fits the old 40pt slot, so nothing else moves.
 
+## 2026-11-06 — empty glass buttons flashed at the bottom when reopening a book
+
+On the folded iPhone, going back and reopening a book briefly showed an empty glass circle and capsule at the bottom while the screen slid in. The vertical bar held only the back button, and the reading row was pushed up.
+
+![Right after reopening — the reading row is pushed up, with an empty glass circle and capsule below it](/blog/superpdf-read-edit-toggle/reopen-before.png)
+
+The cause was the few frames before the PDF finished opening. Until then the screen used the older toolbar, which has a text segmented control (Read | Collect). The vertical bar can't take text items, so the system put up a horizontal bottom bar for those frames, before any of its items had drawn. Now a book with a PDF gets the reading toolbar while it's still loading.
+
+![The same moment after the fix — buttons sit in the vertical bar from the first frame, no bottom bar](/blog/superpdf-read-edit-toggle/reopen-after.png)
+
+Two things slowed this down. The report came through the book cover, which never reproduced in the simulator; "go back and reopen" did on the first capture. And empty glass has no identity: I blamed the leading items, the trailing items, then the shelf's search field, and was wrong three times. Removing one candidate at a time and recapturing the same first frame was the only reliable test. The rule: when you swap toolbar item sets by state, every branch has to fit the vertical bar, even one that lives for a few frames.
+
 ## History
 
 - 2026-11-04 — reading and editing split, bottom-right toggle, last tool remembered
 - 2026-11-04, afternoon — reading row (read aloud, underlines only, view mode, page tone) with drill-down; foldable vertical bar takes icon items only
 - 2026-11-05 — the second row leads with its parent's icon instead of `<`
+- 2026-11-06 — the loading-state toolbar no longer raises an empty bottom bar on the folded iPhone
