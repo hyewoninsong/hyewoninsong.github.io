@@ -1,12 +1,12 @@
 ---
 title: "Fonts installed by a font app were missing from the list — iOS only hands them out by name"
-date: 2026-11-06T08:53:07+09:00
+date: 2026-11-06T14:57:42+09:00
 app: "superpdf"
 tags: ["devlog", "uikit"]
-summary: "Profile-installed fonts show up in none of the font enumeration APIs inside a third-party app, yet resolve by name. The list now comes from a cache file iOS leaves next to the font files."
+summary: "Profile-installed fonts are invisible to font enumeration in an app without the Fonts capability. A cache-file workaround came first; the Fonts entitlement fixed it properly."
 ---
 
-Fonts installed through SuperFont now appear in SuperPDF's text box font list. Yesterday's fix for the same report did not work on a real phone — it was a guess, and the guess was wrong.
+Fonts installed through SuperFont now appear in SuperPDF's text box font list. Yesterday's fix for the same report did not work on a real phone — it was a guess, and the guess was wrong. The cache-file approach below did not ship either; the final answer is in "Same afternoon" at the end.
 
 ## The report came back
 
@@ -38,7 +38,7 @@ No registration. `CTFontManagerRegisterFontsForURL` on those files returns 105, 
 
 ## What lost
 
-- The Fonts capability entitlement — the official way to enumerate user fonts, but an entitlement missing from the App ID blocks distribution signing; this app already lost four weeks to that with iCloud.
+- The Fonts capability entitlement — postponed at first because an entitlement missing from the App ID blocks distribution signing (four weeks lost to that with iCloud). It won the same afternoon.
 - Parsing all 174 files every time the sheet opens — 60 MB of reads for information the plist already has.
 - Routing users to the system font picker — yesterday's answer. It works, but a font that is on the device and not in "fonts on this device" is not explainable. The button stays, because fonts a font app registers with the Fonts capability still need it.
 
@@ -47,3 +47,25 @@ No registration. `CTFontManagerRegisterFontsForURL` on those files returns 105, 
 Writing "device-only verification" should have been the moment to verify. The phone was attached and it took ten minutes. There is now a test that asserts every profile family is listed and renders as itself; it skips silently on the simulator and on devices without profiles, and only bites on a real one.
 
 `Managed/` and `AddedFontCache.plist` are private layout. If iOS moves them the list quietly goes empty, nothing crashes, and the font picker button is still there.
+
+## Same afternoon — one entitlement, done properly
+
+The cache file worked, but it bypassed a restriction Apple put there on purpose: WWDC19 says apps cannot enumerate user-installed fonts for privacy reasons, and the Fonts capability is the opt-in.
+
+iOS Settings and Goodnotes both list profile fonts under "More Fonts". After enabling Fonts on the App ID and adding `com.apple.developer.user-fonts = [app-usage]`, the same probe ran again.
+
+| Condition | Profile families | Seen by the three list APIs |
+|---|---|---|
+| No entitlement (iPhone Duo) | 8 | 0 |
+| `app-usage` (iPhone 17) | 11 | all 11 |
+
+`UIFont.familyNames` simply returns them. The cache reader is no longer needed. Caveats: the control ran on a different device, and the picker screen itself was not checked visually.
+
+Two snags. The App Store Connect API cannot enable Fonts (not in its `capabilityType` enum, 409), so it had to be ticked in the developer portal. And the API does not list it either, so the check was to download a provisioning profile with the API key and read its entitlements. An Apple-approved "Font Enumeration" capability also turned up inside Xcode; it turned out not to be needed for profile fonts.
+
+The picker button is now "More fonts…", and a picked font goes through `CTFontManagerRequestFonts`, which font-provider fonts need before they resolve by name.
+
+## History
+
+- 2026-11-06 morning — confirmed on device that profile fonts are missing from every list API; read names from the cache file
+- 2026-11-06 afternoon — the Fonts capability (`app-usage`) makes the list APIs see them; the cache reader is dropped
