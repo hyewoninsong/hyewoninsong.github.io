@@ -57,3 +57,7 @@ The iPhone video never showed it: no long gap, so the clocks agreed, and with on
 The preview set types are `IPHONE_DUO` and `IPAD_PRO_3GEN_129`. The Duo value is in neither the public docs nor spaceship; a bogus value returns a 409 whose "Expected one of" list names it — the same trick that found `APP_IPHONE_DUO` for screenshots. It accepts the iPhone size, 1920×886.
 
 Two recordings per video means twice the places to be wrong. Whether both are cut on the same time base, and whether both start each scene in the same state, are now on the checklist.
+
+## 2026-11-06 — Pulled from the store
+
+This two-screen video was rejected with version 1.2.6 under Guideline 2.3.4: an App Preview must be the screen recording edge to edge, and the folded D-shape beside the open screen reads as a device image. No Duo posture fills a Duo preview size (1.42:1 and 0.69:1 against 2.17:1 and 0.46:1), so the Duo preview set was deleted. The recording and cutting technique here still serves ad videos. The preview fix is in the [30-second promo video post](/en/blog/2026-09-26-timetable-promo-video/).

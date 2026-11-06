@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-10-12T23:16:07+09:00
+date: 2026-11-06T11:44:11+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -91,9 +91,20 @@ The same night the other seven languages went through the same path and onto the
 
 The upload had one too. Setting the poster frame right after upload is refused as an asset not in a complete state, and the video stays up with its poster frozen at five seconds and one frame, the same freeze noted in late September. The refusal continues for a few minutes after the delivery state reads complete. The script now uploads without a poster, treats the refusal as still processing and retries every 30 s, then compares the read-back checksum with the local file. An "uploaded" line only means delivered.
 
+## 2026-11-06 — Rejected for the frame around the recording; now the recording is the whole video
+
+Version 1.2.6 was rejected over its previews under Guideline 2.3.4: "framing around the video screen capture" and "device images and/or device frames". An App Preview has to show the app the way it looks on the device, full screen, with text or narration allowed only on top. Everything above qualified: the white ground with a caption block, the shrunken phone screen with rounded corners and a shadow, the app-icon card at the end, and the new iPhone Duo version that stood the folded outer display next to the unfolded one. The same style had passed from 1.0.1 to 1.2.4, so passing was never evidence.
+
+![Before: caption block and a shrunken phone on a white ground (left). Now the recording fills the frame; the first frame is darkened under the caption (middle), then the veil lifts and the demo plays clean (right)](/blog/timetable-promo-video/full-bleed-before-after.png)
+
+Now the recording fills the canvas: 1320×2868 into 886×1920 crops 0.3 %, and the 13-inch iPad's 2752×2064 is exactly 1600×1200. Each scene freezes its first frame, darkens it 62 %, pops the caption in white, and lifts the veil 0.3 s after the headline settles. Fitting 30 s took two changes: long headlines (German runs past twenty letters) pop within 0.5 s, and the demo starts 0.5 s under the veil. Eighteen languages land between 26 and 29.7 s.
+
+Thin margins were still a frame. A caption bar pinned to the top hid the buttons the demo taps. And no Duo posture fills a Duo preview size (1.42:1 and 0.69:1 against 2.17:1 and 0.46:1), so the Duo preview set is gone; previews are optional and the Duo screenshots stay. The compositor now refuses App Store sizes unless the layout is full-bleed with no title card. Seven iPad languages whose raw recordings had been deleted were re-recorded, all aligned first time, and the iPhone and iPad sets were replaced in all 21 store languages.
+
 ## History
 
 - 2026-09-26 — First video; the same day, black ground for the store-card letterbox and the poster moved to 1.5 s.
 - 2026-10-12 — Korean re-recording for the new UI. Block lookup broken by accessibility `.combine`; recorder clock drifted up to 14 s under load. Confirmation cut end +2.05 → +1.6.
 - 2026-10-12 — Load gate and drift judgement moved into the recording script. Duration rule dropped; app-to-home transition against the last marker is the one check.
 - 2026-10-12 — All eight languages re-recorded and replaced on the store. Drift comes from load during recording; the poster frame is set after processing, with retries.
+- 2026-11-06 — Rejected under 2.3.4; recording now fills the canvas, caption over a darkened first frame, no title card, no Duo preview, seven iPad languages re-recorded.
