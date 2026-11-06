@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-11-06T11:44:11+09:00
+date: 2026-11-06T20:33:56+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -99,7 +99,19 @@ Version 1.2.6 was rejected over its previews under Guideline 2.3.4: "framing aro
 
 Now the recording fills the canvas: 1320×2868 into 886×1920 crops 0.3 %, and the 13-inch iPad's 2752×2064 is exactly 1600×1200. Each scene freezes its first frame, darkens it 62 %, pops the caption in white, and lifts the veil 0.3 s after the headline settles. Fitting 30 s took two changes: long headlines (German runs past twenty letters) pop within 0.5 s, and the demo starts 0.5 s under the veil. Eighteen languages land between 26 and 29.7 s.
 
-Thin margins were still a frame. A caption bar pinned to the top hid the buttons the demo taps. And no Duo posture fills a Duo preview size (1.42:1 and 0.69:1 against 2.17:1 and 0.46:1), so the Duo preview set is gone; previews are optional and the Duo screenshots stay. The compositor now refuses App Store sizes unless the layout is full-bleed with no title card. Seven iPad languages whose raw recordings had been deleted were re-recorded, all aligned first time, and the iPhone and iPad sets were replaced in all 21 store languages.
+Thin margins were still a frame. A caption bar pinned to the top hid the buttons the demo taps. And no Duo posture fills a Duo preview size (1.42:1 and 0.69:1 against 2.17:1 and 0.46:1), so the Duo preview set was removed for now (it came back that evening, below). The compositor now refuses App Store sizes unless the layout is full-bleed with no title card. Seven iPad languages whose raw recordings had been deleted were re-recorded, all aligned first time, and the iPhone and iPad sets were replaced in all 21 store languages.
+
+### That evening: device corners, the folded Duo, and a better poster
+
+We then chose to cut the corners the way the device screens are cut, with black outside. Nothing goes around the recording, but rounded corners could still read as a device shape and trigger another rejection. We accepted that risk, and the plain full-bleed set is kept so we can switch back.
+
+![Poster frames with each device's real screen corners: iPhone (left), iPad (middle), folded iPhone Duo (right, nearly square on the hinge side)](/blog/timetable-promo-video/device-corners.png)
+
+The curves come from the simulator's own screen masks (`framebufferMask`). The first try scaled the iPhone curve onto every device. On the iPad that made a 240 px corner that ate the clock and the list and more buttons. Even at its real 62 pt size, the iPhone curve still hid the clock, because iPad UI sits close to the iPad's 30 pt corners. So each device now uses its own curve.
+
+The Duo preview is back, using the folded outer screen. The whole 0.69:1 recording sits inside 886×1920 at 886×1289, with black above and below. Captions stay on the screen, never on the black. Its corners come from the real outer-screen mask: 7 pt on the hinge side and 65 pt on the right.
+
+The poster used to be 1.0 s, which in the full-bleed cut is a headline over a darkened frame. It is now the first still frame after the veil lifts, at 1.4–1.7 s depending on headline length. A script measures it for each video. All 63 uploads read back complete, with matching posters and checksums.
 
 ## History
 
@@ -108,3 +120,4 @@ Thin margins were still a frame. A caption bar pinned to the top hid the buttons
 - 2026-10-12 — Load gate and drift judgement moved into the recording script. Duration rule dropped; app-to-home transition against the last marker is the one check.
 - 2026-10-12 — All eight languages re-recorded and replaced on the store. Drift comes from load during recording; the poster frame is set after processing, with retries.
 - 2026-11-06 — Rejected under 2.3.4; recording now fills the canvas, caption over a darkened first frame, no title card, no Duo preview, seven iPad languages re-recorded.
+- 2026-11-06 evening — Real device screen corners (the iPad uses its own curve), the folded Duo preview is back, and the poster is the first clear timetable frame.
