@@ -1,6 +1,6 @@
 ---
 title: "A 30-second promo video, made in code and fixed by eye nine times"
-date: 2026-11-06T20:33:56+09:00
+date: 2026-11-07T08:35:01+09:00
 app: "timetable"
 tags: ["devlog", "appstore", "design"]
 summary: "SuperTimetable's App Store preview is a simulator recording cut and captioned by a Python script, in seven languages. The direction changed several times after watching it, and full-screen playback taught us that the viewer's Dynamic Island covers the top of the video."
@@ -113,6 +113,8 @@ The Duo preview is back, using the folded outer screen. The whole 0.69:1 recordi
 
 The poster used to be 1.0 s, which in the full-bleed cut is a headline over a darkened frame. It is now the first still frame after the veil lifts, at 1.4–1.7 s depending on headline length. A script measures it for each video. All 63 uploads read back complete, with matching posters and checksums.
 
+The next morning came the note that only the Duo poster showed a drag in progress. Laying all 54 posters out on one sheet showed it was most of the iPhone set too; only the Korean cut, the one we had opened, was clean. The simulator recording writes a frame only when the screen changes. The first scene starts at 29.21 s, but the recording jumps from a frame at 29.06 s to one at 30.53 s, mid-drag. Seeking to the start dropped the 29.06 s frame and filled the gap with the next one, so even the frozen opening showed the drag. The compositor now reads from the last real frame before each scene start, the first demo waits for the caption to lift, and the poster script fails if no clean frame exists. All 54 were rebuilt, checked on one sheet, and re-uploaded.
+
 ## History
 
 - 2026-09-26 — First video; the same day, black ground for the store-card letterbox and the poster moved to 1.5 s.
@@ -121,3 +123,4 @@ The poster used to be 1.0 s, which in the full-bleed cut is a headline over a da
 - 2026-10-12 — All eight languages re-recorded and replaced on the store. Drift comes from load during recording; the poster frame is set after processing, with retries.
 - 2026-11-06 — Rejected under 2.3.4; recording now fills the canvas, caption over a darkened first frame, no title card, no Duo preview, seven iPad languages re-recorded.
 - 2026-11-06 evening — Real device screen corners (the iPad uses its own curve), the folded Duo preview is back, and the poster is the first clear timetable frame.
+- 2026-11-07 — Drag ghost in the posters: scenes starting inside a still stretch of the recording were filled with the next frame. Read from the previous frame; check every poster on one sheet.
