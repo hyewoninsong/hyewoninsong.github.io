@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-08T01:15:00+09:00
+date: 2026-11-08T03:40:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -358,6 +358,22 @@ A UI test caught this. Tapping Done on the help page popped the help page and le
 
 After choosing a model in the model sheet, seeing its voices means closing it and opening Voice; the model info page says so. On a device with stub bundles, the checkmark moves only after a few seconds (the time it takes the model load to fail); real bundles should switch immediately. Not yet verified on a device.
 
+## 2026-11-08 early — figures were off, yet a percent chart was read: the page-number filter ate the ticks before the figure detector saw them
+
+Two days after figure skipping shipped, another chart from the same book got through: an efficient-frontier plot with percent ticks on both axes and a three-line legend. The voice read the axis titles and the legend, not the ticks. That asymmetry was the clue.
+
+### Reproduced from one screenshot
+
+Before touching a simulator, the user's screenshot went through Vision on the Mac, and the resulting lines went through the app's script code compiled on its own. One minute, and the first run already pointed at the answer: calling the figure detector directly found the figure, yet the script contained no ticks at all. The ticks were gone *before* the detector ran.
+
+### `%` is punctuation
+
+The November 4 page-number filter trims punctuation from both ends and drops what is left if it is a number of up to four digits. `CharacterSet.punctuationCharacters` includes `%` (Unicode Po), so `9%` became `9`, `13%` became `13`, and a tick that OCR read as `7%-` became `7`. Twenty-two tick lines vanished as page numbers; five fragments remained, one short of the figure threshold. The test from two days earlier passed because that chart's ticks were `$1,000,000`, and `$` is a currency symbol, not punctuation.
+
+The fix reorders the chain and narrows the trim: only the running-head band is removed first, figures are found on everything else, and page-number-shaped lines are dropped only outside a figure. The trim now takes only dashes, dots, bullets, bars, and brackets — the decoration around a page number — so `9%` and `$10` are never page numbers, and a chart whose axis reads `0 20 40 … 100` keeps its ticks as fragments too. Special-casing `\d+%` would have left that plain-number axis for the next report, and lowering the threshold would turn lists into figures.
+
+The filters are a chain, and an early one can eat the evidence a later one needs. The screenshot probe is now a script in the app repository; the next "it's off but it still reads" report starts there.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -373,3 +389,4 @@ After choosing a model in the model sheet, seeing its voices means closing it an
 - 2026-11-06 afternoon — "1배" read with Sino-Korean numerals: integers 1–99 before a native counter now spelled natively, counter list merged from N2gk and g2pK, numbering positions kept Sino-Korean
 - 2026-11-07 — per-speaker style vectors instead of one shared mean; small measured gain, remaining likeness is undertraining
 - 2026-11-08 — separate Model and Voice sheets (two menu rows, the voice sheet opens on the chosen model), multiple model repositories with a `?` format guide, inner-page Done now closes the sheet
+- 2026-11-08 early — percent-tick chart read with figures off: the page-number filter trimmed `%` as punctuation and dropped the ticks first; page numbers are now filtered after figures and only decoration is trimmed; a one-screenshot probe script
