@@ -110,7 +110,7 @@ Until now all four line marks were even-width, like a ballpoint. The handwriting
 
 ![A fountain-pen circle whose tail thins out](/blog/superpdf-hand-drawn-styles/fountain-circle.png)
 
-It uses the same width formula as the handwriting fountain pen, minus pressure: a mark is computed from the text line, so there is no force to read. Fountain marks are drawn as filled outlines with per-point width instead of a stroked line, computed in screen space so a rotated scan still gets a screen-aligned nib. The setting lives next to the wobble in the mark's small versioned JSON; older marks read as ballpoint, and a test checks the ballpoint path is unchanged point for point. Not yet tried with a Pencil on a real device.
+The width formula comes from the handwriting fountain pen, but the taper length is proportional to the stroke (half of it at sharpness 100) rather than the fixed 10–60pt handwriting uses, which left a 400pt underline needle-sharp for its last 13pt. There is no pressure: a mark is computed from the text line, so there is no force to read. Fountain marks are drawn as filled outlines with per-point width instead of a stroked line, computed in screen space so a rotated scan still gets a screen-aligned nib. The setting lives next to the wobble in the mark's small versioned JSON; older marks read as ballpoint, and a test checks the ballpoint path is unchanged point for point. Not yet tried with a Pencil on a real device.
 
 ## History
 
