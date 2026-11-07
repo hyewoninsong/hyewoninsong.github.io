@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-07T19:10:29+09:00
+date: 2026-11-08T01:15:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -251,7 +251,7 @@ The first screen lists engines: the system voice, the models, the development-on
 
 The second screen is that engine's voice list. Tap a row to choose, press play to hear it. System voices and model voices use the same row. A model's screen adds the sample language above (only when the model reads more than one), and languages, size, license, and Remove below. Timing is still measured, as the list footer.
 
-The rule is now: **you choose a voice; the engine follows.** So the three pickers left the speed menu. What remains is speed, the table/formula toggle, and one "Voice" row whose subtitle is the current voice ("Supertonic 2 · Female 1", "Yuna"); tapping it opens the sheet.
+The rule is now: **you choose a voice; the engine follows.** So the three pickers left the speed menu. What remains is speed, the table/formula toggle, and one "Voice" row whose subtitle is the current voice ("Supertonic 2 · Female 1", "Yuna"); tapping it opens the sheet. (Three days later this two-level sheet split into separate "Model" and "Voice" sheets — see 2026-11-08 below. The rule itself stayed.)
 
 Alternatives that lost: choosing everything in the menu (the menu cannot host download, preview, or remove, so the sheet was needed anyway, and the pickers were duplicated); one screen with the engines plus the chosen engine's voices (Kokoro has 28, the Chinese model 804 — they push the engine rows off the screen); tapping an engine row to select with an info button for the inside (breaks the Settings shape, and the chosen voice is not visible on the first screen — the subtitle gives that).
 
@@ -324,6 +324,40 @@ No retraining: we took 300 kept lines per speaker, embedded them with the same m
 
 Right direction, small effect. Most of the remaining likeness is training: 14k of 30k steps, and multi-speaker models learn the average voice first. The fix carries over to every later checkpoint.
 
+## 2026-11-08 — Changing to another voice of the same model took four taps; models and voices now have separate sheets
+
+The two-level sheet from three days ago was tidy, but one path stayed annoying. Comparing voices in a 33-voice model, switching to another one meant menu → Voice → **the model row** → voice: four taps, and the third one re-selects a model that is already selected. The two-level design had listed exactly this cost under "what we lose"; for someone who swaps voices often, it is paid every time.
+
+The menu now has two rows, **Model** and **Voice**, each with its current value as the subtitle.
+
+![Model sheet — system voice checked, four models with download buttons below](/blog/superpdf-read-aloud/model-sheet.png)
+
+The **Model** sheet chooses, downloads, and removes models. Tapping a row switches to that model, with the voice you last chose in it. Installed rows get an ⓘ for languages, size, license, and Remove; rows not yet downloaded keep the Download button and progress bar.
+
+![Voice sheet — a "Model" picker on top, then the chosen model's voices with checkmark and play](/blog/superpdf-read-aloud/voice-sheet-direct.png)
+
+The **Voice** sheet opens straight on the chosen model's voices: tap to choose, play to preview. Three taps now. A "Model" menu picker at the top lists only installed models — a shortcut for hopping between models while comparing, without closing the sheet.
+
+Alternatives that lost: no picker in the voice sheet (clean, but comparing becomes menu → Model → pick → menu → Voice, five taps; installed models are few enough for one picker row, and download/remove/repositories still need the model sheet); one sheet with model rows and voices below (rejected three days ago — the 804-voice model pushes the model rows away); a voice picker directly in the menu (same 804 rows).
+
+### Several repositories, and a `?` that explains the format
+
+The model repository used to be a single slot. Now the model sheet lists every saved repository ("N models"), swipe to delete, an "Add repository" row to add more; each repository keeps its own token in the keychain. Downloads ask the repository known to offer the bundle first, then the others in order.
+
+![Repository format help — where to upload, file name, what goes inside the bundle](/blog/superpdf-read-aloud/source-format-help.png)
+
+What to upload, and under which name, had lived only in the code. A `?` in the section header now explains it: GitHub releases, the address forms, token only for private repositories, the file name `<bundle>.tar.bz2` matched character for character, the top-level folder inside the archive, and **the list of bundles the app can read** — generated from the app's model catalog (name, archive name, languages, required files), so a new model extends the help by itself. The footer says why anything else cannot work: the text-to-phoneme front end for each bundle lives in the app.
+
+### "Done" on an inner page did not close the sheet
+
+A UI test caught this. Tapping Done on the help page popped the help page and left the model sheet open, so the next tap landed on the sheet.
+
+`@Environment(\.dismiss)` ends the **nearest** presentation. Inside a sheet's `NavigationStack`, a pushed page's `dismiss` is a pop, not a sheet dismissal. The shared Done modifier attached to every page therefore closed the sheet only from the root. The two-level sheet from three days ago had the same modifier on its inner pages; its test only pressed Done on the root. The sheet root now passes its own `dismiss` down as an environment value, and the shared Done calls that when present. Buttons that should go back one page (after Remove) keep their own `dismiss`. The test now asserts that the control behind the sheet is visible again after Done on an inner page.
+
+### What's left
+
+After choosing a model in the model sheet, seeing its voices means closing it and opening Voice; the model info page says so. On a device with stub bundles, the checkmark moves only after a few seconds (the time it takes the model load to fail); real bundles should switch immediately. Not yet verified on a device.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -338,3 +372,4 @@ Right direction, small effect. Most of the remaining likeness is training: 14k o
 - 2026-11-06 — charts skipped by line geometry, English words in the trained voice transliterated via the CMU dictionary and loanword rules, year ranges no longer read as phone numbers
 - 2026-11-06 afternoon — "1배" read with Sino-Korean numerals: integers 1–99 before a native counter now spelled natively, counter list merged from N2gk and g2pK, numbering positions kept Sino-Korean
 - 2026-11-07 — per-speaker style vectors instead of one shared mean; small measured gain, remaining likeness is undertraining
+- 2026-11-08 — separate Model and Voice sheets (two menu rows, the voice sheet opens on the chosen model), multiple model repositories with a `?` format guide, inner-page Done now closes the sheet
