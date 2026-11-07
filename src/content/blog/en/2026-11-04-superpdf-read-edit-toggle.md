@@ -1,18 +1,18 @@
 ---
 title: "Swiping to turn the page drew a line instead — so reading and editing became two modes"
-date: 2026-11-06T03:26:40+09:00
+date: 2026-11-08T02:40:54+09:00
 app: "superpdf"
 tags: ["devlog", "gesture", "design"]
 summary: "With the pen or crop tool in hand, a sideways swipe drew a stroke instead of turning the page. Rather than guess intent from the gesture, a single button in the bottom-right corner now switches between reading and editing — and editing brings back the last tool you used."
 ---
 
 With the pen or crop tool selected, swiping to the next page drew a horizontal line or started a crop box.
-Now a book opens in **reading** mode, and the pencil in the bottom-right corner switches to **editing**. In reading, a swipe always
+Now a book opens in **reading** mode, and the pencil (first floating in the bottom-right corner, since November 8 the last item of the right-hand bar — see that section) switches to **editing**. In reading, a swipe always
 turns the page. In editing, a drag always draws.
 
 ## One button for reading, a tool row for editing
 
-Reading has no tool row — it did not at first; the same afternoon a four-button reading row took that spot (see the afternoon section below). A pencil sits in the corner. Swipe to turn; tap an underline to get its tooltip for color or delete.
+Reading has no tool row — it did not at first; the same afternoon a four-button reading row took that spot (see the afternoon section below), and on November 8 that row went away again and its four functions moved into popovers on the right-hand bar (see the 2026-11-08 section). Today reading has no bottom row. A pencil sits in the corner. Swipe to turn; tap an underline to get its tooltip for color or delete.
 
 ![Reading — no tool row, only the pencil button in the corner](/blog/superpdf-read-edit-toggle/reading-pencil.png)
 
@@ -45,6 +45,7 @@ If it still feels heavy, two-finger turning is the next step. The folded foldabl
 While editing has the tool row, reading had an empty bottom. The things you touch while reading — read aloud, underlines-only view, view mode (page turn, vertical or horizontal scroll) and page tone (original, sepia, night) — sat in the navigation bar, three of them behind `…` on a portrait iPhone.
 
 Now, with the edit toggle off, those four stand where the tool row would be. No undo; there is nothing to undo while reading.
+(This row was removed on November 8 — see below. The "second row" in this and the next two sections describes the shape until then.)
 
 ![Reading — read aloud, underlines only, view mode and page tone in the bottom row, pencil at the bottom right](/blog/superpdf-read-edit-toggle/reading-row.png)
 
@@ -103,9 +104,40 @@ The cause was the few frames before the PDF finished opening. Until then the scr
 
 Two things slowed this down. The report came through the book cover, which never reproduced in the simulator; "go back and reopen" did on the first capture. And empty glass has no identity: I blamed the leading items, the trailing items, then the shelf's search field, and was wrong three times. Removing one candidate at a time and recapturing the same first frame was the only reliable test. The rule: when you swap toolbar item sets by state, every branch has to fit the vertical bar, even one that lives for a few frames.
 
+## 2026-11-08 — the bottom row is gone; everything lives in the right-hand bar
+
+Four days later the reading row came out. The trigger was a screenshot of another PDF app on a folding iPhone: a house at the top of the right-hand vertical bar, a blue pencil at the bottom, and a `…` that opens a "More" popover with a page thumbnail card and plain menu rows. Everything you touch while reading sits in one bar; below it is only the page. The ask: back becomes a house, the "documents" icon becomes a sidebar icon, every reading control moves to the right with the depth redrawn, and the edit button goes to the very bottom of that bar.
+
+![The folding iPhone's vertical bar — home, list, #, view, speaker, search, more; the blue pencil sits below the crop](/blog/superpdf-read-edit-toggle/right-bar.png)
+
+Top to bottom: home, PDF list, page (`#` on the vertical bar, "3 / 120" in a horizontal one → page popover with thumbnail card, go-to-page, bookmark, contents, bookmark list), view (view mode, page tone, underlines only, book/half/map), read aloud (starts immediately and opens pause/stop, speed, tables, voice), search, more (exports and settings), and the accent-colored pencil. Seven items won over five — the five-item variant hid view and read-aloud behind "more", one tap too deep for the things you touch most. Contents and bookmark left the bar and became rows of the page popover.
+
+### Rows first, choices one level in
+
+The first build spread every choice across one view popover as large cells — icon above, label below. The answer was to make it like GoodNotes' "More → Rotate page": the top level is a menu of rows, and a row with choices opens a second level inside the popover.
+
+![View popover — view mode, page tone, underlines only, pane; the current value and a chevron on the right](/blog/superpdf-read-edit-toggle/view-popover.png)
+
+A row is an icon, a title, the current value in grey ("Page turn", "Original") and `›`. Tapping it swaps the title for the row's name, puts `‹` on the left and lists the options as same-height rows with a checkmark. Picking one keeps you there, so sepia and night can be compared without re-entering.
+
+![Page tone level — ‹ and title, Original · Sepia · Night rows, Sepia checked](/blog/superpdf-read-edit-toggle/view-tone.png)
+
+Icons are text-colored; blue stayed only on the checkmark. Read-aloud speed went the same way — a − / + stepper became a "Speed 1.0× ›" row with six checkable options. A `Menu` was ruled out for the same reason as before: it closes on selection.
+
+### Three things that bit
+
+Every label in the popovers looked bold. A popover presented from a bar button inherits that button's font environment; only explicitly styled text looked right. One `.font(.body)` at the popover root.
+
+Tapping "Settings" in More closed the popover and no sheet appeared. The row set `isPresented` to false and the `onChange` presented the sheet at once — but false marks the start of the dismiss animation, UIKit still has a presentation in progress, and the new one is dropped silently. `.sheet` has `onDismiss` for exactly this; `.popover` does not. A 450 ms wait before presenting fixed it, and the UI test caught it on the first run.
+
+On a portrait iPhone, iOS folded the trailing items — search, more, and the pencil — into the system `…`. Search and More still work from there (their popovers attach to the `…`), but an edit toggle hidden in a menu row does not. On that one layout the pencil stays a floating button in the corner. The same folding broke the share sheet: its anchor was the More button, which no longer existed in the window. The anchor now lives on the always-present bottom area.
+
+Checked on the folded iPhone simulator and a portrait iPhone; the unfolded state and a real device are still to do.
+
 ## History
 
 - 2026-11-04 — reading and editing split, bottom-right toggle, last tool remembered
 - 2026-11-04, afternoon — reading row (read aloud, underlines only, view mode, page tone) with drill-down; foldable vertical bar takes icon items only
 - 2026-11-05 — the second row leads with its parent's icon instead of `<`
 - 2026-11-06 — the loading-state toolbar no longer raises an empty bottom bar on the folded iPhone
+- 2026-11-08 — reading row removed; eight-item right-hand bar (home, list, page, view, read aloud, search, more, edit) with row-menu drill-down popovers; the edit toggle is the last bar item (floating only on portrait iPhone)
