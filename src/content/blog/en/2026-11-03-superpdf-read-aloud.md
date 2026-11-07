@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-06T01:08:00+09:00
+date: 2026-11-07T19:10:29+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -308,6 +308,22 @@ Merging exposed the conflicts. 장 is native (sheets) in N2gk but usually means 
 
 Listening on a device is still a TestFlight job; only the text handed to the engines changed, so the tests are the result.
 
+## 2026-11-07 — The 33 voices sounded alike because they all got the same "average timbre"
+
+At 14,000 training steps the Genshin/Star Rail voices sounded too similar to each other, though the original dubs are easy to tell apart.
+
+Style-Bert-VITS2 feeds every sentence a style vector — a speaker embedding (wespeaker) that carries much of the timbre. Training uses each line's own vector, but preprocessing leaves a single row: the mean over all 33 speakers. That one row travelled all the way to the phone, so every speaker id got the same "average" hint. It is a harmless default for a single-speaker model, which is why nobody looked again.
+
+No retraining: we took 300 kept lines per speaker, embedded them with the same model, and averaged. The bundle keeps the old mean as row 0, adds 33 speaker rows, and maps speaker → row; older app builds still read row 0. On the Mac, the GPU path (MPS) was 6× slower than CPU (0.23 s vs 0.04 s per line) and looked hung.
+
+| | Before | After |
+|---|---|---|
+| Similarity between speakers (mean cosine) | 0.435 | 0.422 |
+| Similarity to the speaker's real voice | 0.782 | 0.796 |
+| Speakers closest to their own real voice | 4 / 6 | 6 / 6 |
+
+Right direction, small effect. Most of the remaining likeness is training: 14k of 30k steps, and multi-speaker models learn the average voice first. The fix carries over to every later checkpoint.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -321,3 +337,4 @@ Listening on a device is still a TestFlight job; only the text handed to the eng
 - 2026-11-05 late — voice choice became a two-level sheet (engines → voices), the menu keeps one "Voice" row, you choose a voice and the engine follows
 - 2026-11-06 — charts skipped by line geometry, English words in the trained voice transliterated via the CMU dictionary and loanword rules, year ranges no longer read as phone numbers
 - 2026-11-06 afternoon — "1배" read with Sino-Korean numerals: integers 1–99 before a native counter now spelled natively, counter list merged from N2gk and g2pK, numbering positions kept Sino-Korean
+- 2026-11-07 — per-speaker style vectors instead of one shared mean; small measured gain, remaining likeness is undertraining
