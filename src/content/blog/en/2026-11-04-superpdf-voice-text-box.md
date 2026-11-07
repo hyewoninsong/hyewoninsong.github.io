@@ -1,6 +1,6 @@
 ---
 title: "Dictating into a text box — Apple's new recognizer or a separate speech model?"
-date: 2026-11-04T14:12:00+09:00
+date: 2026-11-08T01:10:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "The text box bar got a microphone. iOS 26's on-device recognizer does the transcribing, and the on-device language model fixes punctuation and fillers when you stop. We wanted the feel of Claude's voice input, and it turned out that feel comes from the cleanup, not the recognizer."
@@ -25,13 +25,14 @@ Tap again and the on-device language model polishes what was dictated: punctuati
 | First tap | Permission and model check; a download percentage if the model is missing |
 | Listening | Red mic, lighter unfinished tail, typing is blocked |
 | Second tap | A polishing spinner, then "Original" |
-| Settings | An "Polish dictation" toggle in the AI section, on by default |
+| Settings | A "Polish dictation" toggle (on by default) and a "Dictation language" picker (device language by default) in the AI section |
+| Long press | Long-press the mic for the dictation language menu |
 
 ## "Siri dictation" is really two things
 
 The keyboard's mic uses the old `SFSpeechRecognizer`. The text box is a `UITextView`, so that already worked without a line of code, and its quality is exactly why the question came up.
 
-iOS 26 added `SpeechAnalyzer` with `SpeechTranscriber`: a new on-device model with long-form input, automatic punctuation and streaming partial results. The system downloads and manages the model. The app feeds microphone audio and reads results. If the device language is not in its list, the app falls back to `DictationTranscriber`, which covers the old dictation languages.
+iOS 26 added `SpeechAnalyzer` with `SpeechTranscriber`: a new on-device model with long-form input, automatic punctuation and streaming partial results. The system downloads and manages the model. The app feeds microphone audio and reads results. The language started out as the device language; it is now a dictation-language setting (see the 11-08 section). If that language is not in the new recognizer's list, the app falls back to `DictationTranscriber`, which covers the old dictation languages.
 
 ## Why no separate model
 
@@ -57,6 +58,21 @@ The Simulator has no microphone and the new recognizer reports an empty language
 
 Whether Korean is in the new recognizer's list, whether final chunks arrive with spaces between them, and whether the permission prompts appear on time still need a real device. Until then this is a record of a design, not a promise about quality.
 
+## 2026-11-08 — An English device only dictated English
+
+On a real device the text box transcribed English only. The recognizer was fine; tying the language to the device language was the mistake. Many people using this app keep the phone in English and read Korean books. Read-aloud already lets you pick a voice independent of the device language; dictation had no such choice.
+
+Dictation language is now an app-wide setting. The default is still the device language, so nothing changes unless you pick. Two places change it, one value: the "Dictation language" picker in the AI section of settings, and the same list on a **long press** of the microphone in the text box bar. A plain tap still starts listening. You notice the wrong language while dictating, so the fix should not require a trip to settings.
+
+![Long-pressing the mic opens the dictation language menu: Korean, Japanese, English and the checked device language](/blog/superpdf-voice-text-box/language-menu.png)
+
+The list is what this device can recognize: the union of `SpeechTranscriber` and `DictationTranscriber` support, with spelling variants like `ko_KR` and `ko-KR` folded into one, the device language first, the rest sorted by name. A previously chosen language stays listed even if its model was removed, so the choice is never lost. If neither recognizer knows the chosen language, the status line names it and says how to change it.
+
+Two alternatives lost. Detecting the book's language and matching it automatically fails because notes are often not in the book's language (Korean notes on an English paper are the norm). A separate language button next to the mic lost because the bar is already full; the long press is a hidden gesture, so the settings footer and the mic's accessibility hint spell it out.
+
+The Simulator still reports empty language lists, so the UI test uses a fixed set and only checks the menu and the moving checkmark. Whether Korean is in the new recognizer's list remains a device question.
+
 ## History
 
 - 2026-11-04 — Text box microphone, new recognizer plus on-device polishing
+- 2026-11-08 — Dictation language setting, long-press menu on the mic
