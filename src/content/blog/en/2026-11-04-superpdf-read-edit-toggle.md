@@ -108,7 +108,7 @@ Two things slowed this down. The report came through the book cover, which never
 
 Four days later the reading row came out. The trigger was a screenshot of another PDF app on a folding iPhone: a house at the top of the right-hand vertical bar, a blue pencil at the bottom, and a `…` that opens a "More" popover with a page thumbnail card and plain menu rows. Everything you touch while reading sits in one bar; below it is only the page. The ask: back becomes a house, the "documents" icon becomes a sidebar icon, every reading control moves to the right with the depth redrawn, and the edit button goes to the very bottom of that bar.
 
-![The folding iPhone's vertical bar — home, list, #, view, speaker, search, more; the blue pencil sits below the crop](/blog/superpdf-read-edit-toggle/right-bar.png)
+![The folding iPhone's vertical bar — home, list, #, view, speaker, search, more, and the blue pencil at the bottom](/blog/superpdf-read-edit-toggle/right-bar.png)
 
 Top to bottom: home, PDF list, page (`#` on the vertical bar, "3 / 120" in a horizontal one → page popover with thumbnail card, go-to-page, bookmark, contents, bookmark list), view (view mode, page tone, underlines only, book/half/map), read aloud (starts immediately and opens pause/stop, speed, tables, voice), search, more (exports and settings), and the accent-colored pencil. Seven items won over five — the five-item variant hid view and read-aloud behind "more", one tap too deep for the things you touch most. Contents and bookmark left the bar and became rows of the page popover.
 
