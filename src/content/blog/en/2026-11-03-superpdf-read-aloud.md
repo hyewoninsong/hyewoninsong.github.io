@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-10T03:02:48+09:00
+date: 2026-11-10T03:08:02+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -390,6 +390,12 @@ Now the player listens for that notification and for media-services resets. When
 
 The simulator doesn't change audio routes, so it never shows this crash. The cause comes from the log and the code, and still needs a check on a device: read, pause, dictate or swap headphones, resume.
 
+## 2026-11-10 — A Korean book suddenly said "Figure skipped" in an English voice
+
+A page with nothing but two bar charts was read as "Figure skipped." by an English male voice. The skip notice takes its language from the prose left after tables and figures are removed; here the chart titles sat inside the figure, the only other line was the page number, and empty text has no language — so the notice fell back to English. The reader then re-detected the page script as English and switched voices.
+
+The notice language now falls back in three steps: prose outside figures, then all text on the page (titles and legends included, used for detection only), then the language already being read. English is the last resort. A screenshot probe reproduced it in a minute, and two new tests cover a figure-only page and a numbers-only chart.
+
 ## 2026-11-10 — The figure was skipped but its title was read; numbered captions now belong to the figure
 
 On Figure 1-9, a bar chart of returns by holding period, the bars, ticks, and legend dropped out and "Figure skipped." played, but only after the label "그림 1-9" and both title lines were read in full.
@@ -421,4 +427,5 @@ Lost alternatives: treating any line right above a figure as its title (eats the
 - 2026-11-08 — separate Model and Voice sheets (two menu rows, the voice sheet opens on the chosen model), multiple model repositories with a `?` format guide, inner-page Done now closes the sheet
 - 2026-11-08 early — percent-tick chart read with figures off: the page-number filter trimmed `%` as punctuation and dropped the ticks first; page numbers are now filtered after figures and only decoration is trimmed; a one-screenshot probe script
 - 2026-11-09 — resuming a paused neural voice crashed: `AVAudioEngine.start()` raised an exception `catch` cannot catch after the audio graph changed; the player now rebuilds the engine and replays the current sentence
+- 2026-11-10 — figure-only page announced in English and switched to an English voice; notice language now falls back to all page text, then the language being read
 - 2026-11-10 — figure label and title were read before "Figure skipped.": numbered captions and source lines now join the figure; unlabeled titles still read
