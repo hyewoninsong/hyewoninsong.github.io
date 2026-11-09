@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-09T19:48:08+09:00
+date: 2026-11-10T02:48:45+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -390,6 +390,16 @@ Now the player listens for that notification and for media-services resets. When
 
 The simulator doesn't change audio routes, so it never shows this crash. The cause comes from the log and the code, and still needs a check on a device: read, pause, dictate or swap headphones, resume.
 
+## 2026-11-10 — A bar chart was read tick by tick: its only evidence of being a figure was one legend pair
+
+The next chart in the same book was a bar chart of 19 countries. With figures off, it was read as "8%, 6%, stocks, long bonds, short bonds, 4%…".
+
+The figure detector wants scattered short fragments, at least two of them side by side. Those pairs usually come from x-axis ticks or value labels on the bars. This chart had neither: no values on the bars, and slanted country names Vision barely reads. Only one pair was left.
+
+The screenshot probe first said "figure found". The status bar, the side buttons and the page pill `33 / 100` were in the capture, and the pill happened to sit beside the source line as the second pair. Painting the overlays white reproduced the bug.
+
+The fix: a vertical **axis ladder** — four or more single-number fragments sharing an edge, evenly spaced, changing by a constant step — is enough on its own. Lowering the pair threshold would have turned two-column lists into figures. If OCR drops one tick, the ladder breaks and the old rule decides.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -407,3 +417,4 @@ The simulator doesn't change audio routes, so it never shows this crash. The cau
 - 2026-11-08 — separate Model and Voice sheets (two menu rows, the voice sheet opens on the chosen model), multiple model repositories with a `?` format guide, inner-page Done now closes the sheet
 - 2026-11-08 early — percent-tick chart read with figures off: the page-number filter trimmed `%` as punctuation and dropped the ticks first; page numbers are now filtered after figures and only decoration is trimmed; a one-screenshot probe script
 - 2026-11-09 — resuming a paused neural voice crashed: `AVAudioEngine.start()` raised an exception `catch` cannot catch after the audio graph changed; the player now rebuilds the engine and replays the current sentence
+- 2026-11-10 — bar chart without value labels read tick by tick: one side-by-side pair only; an evenly stepped axis ladder now marks a figure, and the probe masks app overlays first
