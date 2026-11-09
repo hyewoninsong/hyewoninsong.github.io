@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-08T03:40:00+09:00
+date: 2026-11-09T19:48:08+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -374,6 +374,22 @@ The fix reorders the chain and narrows the trim: only the running-head band is r
 
 The filters are a chain, and an early one can eat the evidence a later one needs. The screenshot probe is now a script in the app repository; the next "it's off but it still reads" report starts there.
 
+## 2026-11-09 — Pause, then resume, and the app crashed: an exception `catch` can't catch
+
+A tester reported a crash: pause a neural voice, tap play again, and the app quits. The system voice never did this.
+
+### The line was `try engine.start()`
+
+The crash log's last exception ran from the resume button through the player's `resume()` into `engine.start()` and down into AVFAudio. That call was wrapped in `do/catch`. It didn't matter: AVFAudio raises an Objective-C `NSException` when its preconditions fail, and Swift's `catch` never sees it. (The system frames were labelled with function names from the app's SMB library. That was bad symbolication, not the culprit.)
+
+### The audio graph changed while paused
+
+Pausing stops only the player node; the engine and the audio session stay up. Meanwhile something else can change the audio setup — the app's own text-box dictation switches the session to `.playAndRecord` and deactivates it when done, and headphones, Bluetooth, other apps, or a media-services reset do the same. The engine posts `AVAudioEngineConfigurationChange` and stops itself. The app wasn't listening, and resume started the stale engine again.
+
+Now the player listens for that notification and for media-services resets. When the graph is stale it builds a fresh engine and node and replays the current chunk from its start. Before starting it checks that the output format isn't empty, and if the engine still can't start, that page falls back to the system voice instead of crashing. Stopping the old node fires its "finished playing" callback, so the generation token is bumped first — otherwise a sentence would be skipped.
+
+The simulator doesn't change audio routes, so it never shows this crash. The cause comes from the log and the code, and still needs a check on a device: read, pause, dictate or swap headphones, resume.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -390,3 +406,4 @@ The filters are a chain, and an early one can eat the evidence a later one needs
 - 2026-11-07 — per-speaker style vectors instead of one shared mean; small measured gain, remaining likeness is undertraining
 - 2026-11-08 — separate Model and Voice sheets (two menu rows, the voice sheet opens on the chosen model), multiple model repositories with a `?` format guide, inner-page Done now closes the sheet
 - 2026-11-08 early — percent-tick chart read with figures off: the page-number filter trimmed `%` as punctuation and dropped the ticks first; page numbers are now filtered after figures and only decoration is trimmed; a one-screenshot probe script
+- 2026-11-09 — resuming a paused neural voice crashed: `AVAudioEngine.start()` raised an exception `catch` cannot catch after the audio graph changed; the player now rebuilds the engine and replays the current sentence
