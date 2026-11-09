@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-09T19:48:08+09:00
+date: 2026-11-10T03:02:48+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -265,7 +265,7 @@ With tables out of the way, the next thing the voice read was a chart: the famou
 
 ### Figures are found by the shape of their lines
 
-Vision's document recognizer returns tables; nobody returns figures. A chart arrives from OCR as short lines scattered over the page, so that scatter became the signal. A fragment is a line narrower than 30% of the page or made mostly of numbers. Vertically close fragments form a block; a wide prose line between them breaks it. A block is a figure only when it has six or more fragments, left edges in at least three places (lists and dialogue share one), and at least two pairs sitting side by side at the same height (a centered poem has none). The union rectangle is the figure; every line whose center falls inside is skipped, including a small table inside the chart. The title above and the source line below stay outside and are read like captions. The notice is "Figure skipped." and the toggle is now "Read tables, figures, and formulas".
+Vision's document recognizer returns tables; nobody returns figures. A chart arrives from OCR as short lines scattered over the page, so that scatter became the signal. A fragment is a line narrower than 30% of the page or made mostly of numbers. Vertically close fragments form a block; a wide prose line between them breaks it. A block is a figure only when it has six or more fragments, left edges in at least three places (lists and dialogue share one), and at least two pairs sitting side by side at the same height (a centered poem has none). The union rectangle is the figure; every line whose center falls inside is skipped, including a small table inside the chart. The title above and the source line below stayed outside and were read like captions (reversed on Nov 10, see below). The notice is "Figure skipped." and the toggle is now "Read tables, figures, and formulas".
 
 Ink-density line detection and image XObjects in text-layer PDFs were considered: letters are lines too, vector charts are not images, and a scanned page is one big image.
 
@@ -390,6 +390,20 @@ Now the player listens for that notification and for media-services resets. When
 
 The simulator doesn't change audio routes, so it never shows this crash. The cause comes from the log and the code, and still needs a check on a device: read, pause, dictate or swap headphones, resume.
 
+## 2026-11-10 — The figure was skipped but its title was read; numbered captions now belong to the figure
+
+On Figure 1-9, a bar chart of returns by holding period, the bars, ticks, and legend dropped out and "Figure skipped." played, but only after the label "그림 1-9" and both title lines were read in full.
+
+![The second title line above the bar chart is highlighted as being read, even though the chart itself is skipped](/blog/superpdf-read-aloud/caption-read-before.png)
+
+That was the Nov 6 design: captions sit outside the figure, so read them. Listening, it sounds broken: a long name, then "skipped". The screenshot probe showed the figure region was exactly right, so detection stayed untouched and captions are attached afterwards.
+
+- A line that starts with a figure or table label and a number ("그림 1-9", "도표 6-1", "Figure 3.", "Table 2"), narrower than half the page and within 15% of page height above or below the figure, joins the figure along with up to three lines between (title, subtitle).
+- "출처:" / "Source:" lines next to the figure join too. The highlight during the notice now covers the caption.
+- Prose references don't count: "〈그림 1-10〉은 …" starts with a bracket, "그림 1-10에서" has a letter right after the number, and a wide "그림 1-9 를 보면 …" line fails the width check.
+
+Lost alternatives: treating any line right above a figure as its title (eats the last line of the preceding paragraph), and reading the caption in place of the notice (exactly what the report objected to). Unlabeled titles are still read; they can't be told from prose by shape alone.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -407,3 +421,4 @@ The simulator doesn't change audio routes, so it never shows this crash. The cau
 - 2026-11-08 — separate Model and Voice sheets (two menu rows, the voice sheet opens on the chosen model), multiple model repositories with a `?` format guide, inner-page Done now closes the sheet
 - 2026-11-08 early — percent-tick chart read with figures off: the page-number filter trimmed `%` as punctuation and dropped the ticks first; page numbers are now filtered after figures and only decoration is trimmed; a one-screenshot probe script
 - 2026-11-09 — resuming a paused neural voice crashed: `AVAudioEngine.start()` raised an exception `catch` cannot catch after the audio graph changed; the player now rebuilds the engine and replays the current sentence
+- 2026-11-10 — figure label and title were read before "Figure skipped.": numbered captions and source lines now join the figure; unlabeled titles still read
