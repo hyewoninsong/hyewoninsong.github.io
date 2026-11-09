@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-09T14:01:55+09:00
+date: 2026-11-10T02:30:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -70,7 +70,7 @@ One small catch: options built as `Button` inside a `List` are tinted blue down 
 
 Two more notes came back on the afternoon build. The six-line preview ("Nov 9 Siwoo / Nov 16 Ria / …") did not say **from when to when**, and assignment was week-only, so "this timetable from the 11th to the 20th" could not be written. Exam fortnights and the gap between terms do not start on Mondays.
 
-The Apply page gained a fifth option, "Date range". Choosing it adds "Start date ›" and "End date ›" rows; each opens a one-month calendar and pops the moment a day is tapped (paging months does not close it). If the end moves before the start, the other follows.
+The Apply page gained a fifth option, "Date range". In this build, choosing it added "Start date ›" and "End date ›" rows; each opened a one-month calendar and popped the moment a day was tapped. Those rows and the separate Preview page went away the next day, when the calendar moved to the top level (see 11-10 below).
 
 ![Top level with Date range chosen — Apply, Start date, End date, Timetable, Preview](/blog/timetable-calendar-plan/assignment-range.png)
 
@@ -86,8 +86,27 @@ Blue was removed one level in: the Apply checkmark is label-colored and the date
 
 The Android calendar is still week-only; `calendars.json` now carries `dateRanges` and Android needs the same key.
 
+## 2026-11-10 — the calendar is always on screen, and the range is picked on it
+
+The evening build had two calendars: one to pick a range (behind "Start date ›") and one to see the result (behind "Preview ›"). Same picture, two pages, and every correction meant going back and forth. The request was blunt: keep the calendar on screen and pick from-when-to-when on it.
+
+Both pages are gone. The sheet now shows the Apply and Timetable rows, a one-line hint, then the legend and three months of grid — drawn from the unsaved draft, so changing the scope or a timetable updates the bands in place. "Show more months" adds three at a time, up to twelve.
+
+![The sheet as opened — Apply, Week 1, Week 2 rows above, legend and the November grid with alternating bands below](/blog/timetable-calendar-plan/assign-sheet-calendar.png)
+
+Tap any day and the scope becomes "Date range" with that day as both start and end. The second tap sets the end; a tap before the start restarts from there; after a full range the next tap starts over. Start | End cells appear above, the one the next tap fills outlined; they are buttons, so tapping "End date" lets you adjust only the end. Endpoints are label-colored circles; days the save does not touch are dimmed.
+
+![After tapping the 11th and the 20th — a red band from 11 to 20 with circles at both ends](/blog/timetable-calendar-plan/assign-sheet-range-picked.png)
+
+The half-picked state is a one-day range instead of an empty end: the band never breaks and ✓ is always valid. The first month is fixed when the sheet opens, so tapping a trailing October day in the November grid does not grow a card above and shift everything down.
+
+One bug came out of the capture probe. The `onChange(of: scope)` that resizes the slots also reset "next tap fills the start" — and a calendar tap changes the scope, so the reset fired right after the first tap and the second tap became a new start. The reset now lives only in the Apply page. The probe itself tripped on an accessibility identifier set on the whole month card, which overrode every child day button; identifiers go on the title text only.
+
+Alternatives: keep the Preview page and only draw bands on the range page (still two calendars), or make taps work only in Date range scope (a calendar that ignores taps under a weekly rule is more confusing than one that switches).
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
 - 2026-11-09, afternoon — assignment sheet folded to one row per item with drill-in picking; timetables picked with the card/list picker.
 - 2026-11-09, evening — date-range assignment, calendar preview with bands and legend, timetable color palette, no blue one level in.
+- 2026-11-10 — preview and range pages removed; the calendar sits at the top of the sheet and the range is tapped on it.
