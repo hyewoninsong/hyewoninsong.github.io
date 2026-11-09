@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-10T03:08:02+09:00
+date: 2026-11-10T03:18:23+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -19,9 +19,9 @@ While reading, pause, speed, and stop take the place of contents and bookmarks. 
 | To | Do |
 |---|---|
 | Start | Speaker button, from the current page |
-| Pause / resume | The play-pause button, also on the lock screen |
-| Speed and voice | The `1.0×` menu: 0.75× to 2×, voices for the page's language |
-| Jump | Turn to another page by hand; reading restarts there |
+| Pause / resume | The pill under the page, also on the lock screen (it started out inside the popover; see 2026-11-10 below) |
+| Speed and voice | The bar button's popover: 0.75× to 2×, voices for the page's language |
+| Jump | Tap a line of text while reading to start there; turn to another page to start at its top |
 | Stop | The square button, or close the book |
 
 Reading continues with the screen off. A phone call pauses it, and it does not resume on its own afterwards.
@@ -410,6 +410,34 @@ That was the Nov 6 design: captions sit outside the figure, so read them. Listen
 
 Lost alternatives: treating any line right above a figure as its title (eats the last line of the preceding paragraph), and reading the caption in place of the notice (exactly what the report objected to). Unlabeled titles are still read; they can't be told from prose by shape alone.
 
+## 2026-11-10 — Pausing took two taps; a pill under the page fixes that, and tapping a line moves the reading there
+
+After the reading controls moved into the right-hand bar (November 8), pause and stop lived inside the popover behind the speaker button. Two taps to pause, every time. And the reading position was page-granular: turn the page and it restarts at the top, but inside a page there was no way to say "from here", even though the current line is painted blue on the page.
+
+### One pill while reading
+
+While reading, a glass pill sits under the page: pause/play on the left, the page being read in the middle, stop on the right. While text is being prepared, the pause slot shows a spinner. The pill hides with the rest of the buttons when you tap the page, and sits above the tool row while editing. On a device with a vertical bar (iPhone Duo) it stands in for the page-number pill. Speed, figures, model and voice stay in the popover; only the two frequent actions came out.
+
+![The pill under the page while reading — pause, 1 / 3, stop; the edit toggle bottom right](/blog/superpdf-read-aloud/transport-pill.png)
+
+### Tap a line to read from there
+
+Tap a line of text while reading and the voice starts there; if it was paused, it resumes there. On a two-page spread, tapping the facing page reads that page without turning.
+
+The hit test uses the script's line rectangles: inside a line, that line; in the gap between lines, the nearer one; outside the text width or farther than one line height from the nearest line, not a text tap at all, so the tap falls through to hiding the buttons or selecting an underline. Because one tap has to be split two ways synchronously, only pages whose script is already loaded answer: the page being read and the prefetched next page, which is exactly the two pages of a spread.
+
+![After tapping the middle of the body — the blue band moved to the tapped line and the buttons stayed](/blog/superpdf-read-aloud/tap-reads-from-line.png)
+
+### What lost
+
+- **Bar button tap = pause, long-press = popover.** The most literal reading of the request, but a system toolbar item's long press only opens a `Menu`, and the reasons for replacing menus with popovers on November 8 still stand. Stop would also hide behind the long press.
+- **Speed in the pill.** Rarely changed mid-read, and the longer pill fights the edit toggle on a portrait iPhone.
+- **Long-press to pick the position.** The finger tool's long press is free, but a listener reaching for a spot taps first.
+- **Fetch the tapped page's script on demand.** Asynchronous; meanwhile the tap cannot be routed.
+- **Word granularity.** The script only has line ranges, and the marker is per line.
+
+Costs: underlines on text lines cannot be selected while reading (stop first), and tapping text no longer hides the buttons (tap the margin). The Duo layout and facing-page taps have not been checked on a device yet.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -429,3 +457,4 @@ Lost alternatives: treating any line right above a figure as its title (eats the
 - 2026-11-09 — resuming a paused neural voice crashed: `AVAudioEngine.start()` raised an exception `catch` cannot catch after the audio graph changed; the player now rebuilds the engine and replays the current sentence
 - 2026-11-10 — figure-only page announced in English and switched to an English voice; notice language now falls back to all page text, then the language being read
 - 2026-11-10 — figure label and title were read before "Figure skipped.": numbered captions and source lines now join the figure; unlabeled titles still read
+- 2026-11-10 — a pill under the page (pause, page, stop) while reading, and tapping a text line reads from that line (loaded pages only; margin taps behave as before)
