@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-11T03:45:17+09:00
+date: 2026-11-11T08:51:27+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -12,7 +12,7 @@ A SuperTimetable timetable is a weekly template: weekday × time. It cannot say 
 
 ## Assign by week; alternating weeks are just a rule of length two
 
-Opening a calendar puts a strip above the familiar grid: ‹ Nov 9–15 ›, Today, a week/month toggle (the arrows and week range were removed on Nov 11 — it is now a year-and-month title and you swipe the date row, see below), and a capsule reading "This week: Siwoo · Week 1/2". The weekday header gains dates; today is a filled circle.
+Opening a calendar puts a strip above the familiar grid: ‹ Nov 9–15 ›, Today, a week/month toggle (the arrows and week range were removed on Nov 11 — it is now a year-and-month title and you swipe the date row; the week/month toggle went the same day, and the calendar now opens on the month, see below), and a capsule reading "This week: Siwoo · Week 1/2". The weekday header gains dates; today is a filled circle.
 
 ![Calendar week view — dates in the header, the assignment capsule, a pinned block](/blog/timetable-calendar-plan/week-view.png)
 
@@ -46,7 +46,7 @@ Two causes stacked. In the UI test, `-calendar.viewMode week` as a launch argume
 
 ## Where it stands
 
-Week and month views, the list segment and the virtual timetable are still there. Assignment, date exceptions and holidays were removed on the evening of 11-10 and replaced by the calendar's own repeating events (last section). Alarms do not know about calendar events yet; since AlarmKit repeats only weekly, a series with an end date will need one-shot alarms registered a few weeks ahead. That decision, widgets and Siri, and Android come next.
+Week and month views, the list segment and the virtual timetable are still there (only the toggle between week and month was removed on 11-11, last section). Assignment, date exceptions and holidays were removed on the evening of 11-10 and replaced by the calendar's own repeating events (last section). Alarms do not know about calendar events yet; since AlarmKit repeats only weekly, a series with an end date will need one-shot alarms registered a few weeks ahead. That decision, widgets and Siri, and Android come next.
 
 ## 2026-11-09, afternoon — one row per item, and timetables are picked as cards
 
@@ -145,11 +145,11 @@ Calendar events have no alarms yet, and widgets and Siri still see timetables on
 
 ## 2026-11-11 — no arrows; swipe the date row to change weeks
 
-The ‹ Nov 9–15 › label is gone. The top-left now shows only the year and month — a dimmed "2026" next to a bold "November" — and you change weeks by swiping the date row under it. The weekday letters stay put; only the date numbers slide, exactly one week per swipe. It is how Apple's Calendar does it. (A few hours later the grid started sliding too — next section.)
+The ‹ Nov 9–15 › label is gone. The top-left now shows only the year and month — a dimmed "2026" next to a bold "November" — and you change weeks by swiping the date row under it. The weekday letters stay put; only the date numbers slide, exactly one week per swipe. It is how Apple's Calendar does it. (A few hours later the grid started sliding too — two sections down.)
 
 ![Week header — dimmed year and bold month at top left, fixed weekday row, dates below with today circled](/blog/timetable-calendar-plan/week-title.png)
 
-The header is now two layers: a fixed row of weekday labels, and under it a horizontal pager that holds only date numbers, one week per page. The pager keeps 520 weeks on either side of an anchor and quietly re-anchors when you get near an end. Pages are lazy, so only the visible week and its neighbours are ever drawn. (This scroll-view pager was removed in the next section; there are now just three pages.)
+The header is now two layers: a fixed row of weekday labels, and under it a horizontal pager that holds only date numbers, one week per page. The pager keeps 520 weeks on either side of an anchor and quietly re-anchors when you get near an end. Pages are lazy, so only the visible week and its neighbours are ever drawn. (This scroll-view pager was removed two sections down; there are now just three pages.)
 
 What changes during the swipe and what changes after it are split. The title follows your finger — drag halfway into a week that crosses a month and it already says "December". The grid switches once, after the scroll settles, so the app is not rebuilding a week of events for every frame of a swipe. (The week still changes once, on release — but the grid's picture now follows the finger.)
 
@@ -157,7 +157,7 @@ What changes during the swipe and what changes after it are split. The title fol
 
 The title's month is the month of the week's fourth day, so a week that straddles two months names the one with more days. The week containing today is the exception: it always shows today's month.
 
-Keeping the arrows next to the swipe would have filled the corner right back up. Today, tapping a day in month view, and VoiceOver cover the rest — the title is an adjustable element that steps one week per swipe and reads the week's date range as its value. Paging the whole grid lost too: dragging a block and swiping weeks would fight over the same surface. Paging just the date row leaves every grid gesture alone. (Reversed hours later: there was a way to slide the grid while keeping a single one — next section.)
+Keeping the arrows next to the swipe would have filled the corner right back up. Today, tapping a day in month view, and VoiceOver cover the rest — the title is an adjustable element that steps one week per swipe and reads the week's date range as its value. Paging the whole grid lost too: dragging a block and swiping weeks would fight over the same surface. Paging just the date row leaves every grid gesture alone. (Reversed hours later: there was a way to slide the grid while keeping a single one — two sections down.)
 
 ### The title said an Islamic month; the dates said November
 
@@ -175,13 +175,33 @@ The rule is "does it name the same month as the numbers". Buddhist, Japanese-era
 
 In Arabic and Urdu you swipe right for the next week; the header already mirrors, so the pager needed nothing extra. Tests now include Saudi Arabia, Iran and Thailand as regions. Stepping the title with VoiceOver on a device and a full seven-day week are still unchecked.
 
-## 2026-11-11, before dawn — the grid now slides with the dates
+## 2026-11-11, later — the calendar opens on the month; tap a date to enter its week
+
+A calendar now opens on the month view. Tap a date and you are in the week that contains it; tap ‹ November 2026 on the week strip and you are back on the month. The week/month toggle at the top right is gone. The two views are no longer side-by-side modes but two levels: pick a week from the month, go back up to the month.
+
+![Calendar's first screen — the November 2026 grid with a color bar per event and today circled; no week/month toggle](/blog/timetable-calendar-plan/month-first.png)
+
+![After tapping the 19th — the week of the 16th to 20th, a back chevron and "November 2026" at the left of the strip, Today at the right](/blog/timetable-calendar-plan/week-back.png)
+
+Back goes to the month the title currently names, not the one you came from: enter from November, swipe the date row into December, and ‹ lands on December. The year-and-month text is tappable too, because a lone chevron is a small target.
+
+The previous section removed the ‹ › pair from this very spot, so the distinction matters. What left was a pair of arrows that moved sideways between weeks. What came back is one arrow that goes up a level. Weeks still change only by swiping the date row. (That changes in the very next section: swiping the grid works too.)
+
+Four options lost. Keeping the toggle and merely defaulting to month leaves two routes to the same place. Remembering the last view means the first screen differs from one launch to the next, so the view mode is no longer stored at all (which also removes the stored value behind the segmented-control problem above). A real navigation push would rebuild the grid as a new screen and drop its zoom, selection and date pager; swapping layers in place keeps the grid as it stands. And a back button in the navigation bar's top-left would collide with the timetable list button that already lives there.
+
+One exception: arriving with a specific event in hand skips the month and opens that event's week directly.
+
+Verified on iPhone in Korean and Arabic. iPad and the unfolded iPhone Duo are not checked yet, and on an unfolded Duo the week view's date row was seen sitting a few columns off from the weekday letters. It looks like the date pager mis-sizing itself next to the side toolbar; that one is still open.
+
+## 2026-11-11, morning — the grid now slides with the dates
 
 Changing weeks now moves the date row and the event grid as one piece, and you can swipe the grid itself, not just the header. Only the weekday letters and the time axis stay put.
 
-The version in the previous section lasted a few hours. Date numbers slid sideways while the events sat still, then swapped a beat after the numbers stopped — dates and events looked unrelated. And most of the screen is grid, where a swipe did nothing.
+The swipe-the-date-row version, two sections up, lasted a few hours. Date numbers slid sideways while the events sat still, then swapped a beat after the numbers stopped — dates and events looked unrelated. And most of the screen is grid, where a swipe did nothing.
 
 ![Mid-drag — weekday letters and time axis in place, date numbers and event blocks shifted half a column to the left together, cut off at the end of the Friday column](/blog/timetable-calendar-plan/week-grid-mid-swipe.png)
+
+(Both captures in this section predate the month-first change above, so the week/month toggle that no longer exists is still visible at the top right.)
 
 | Gesture | Result |
 |---|---|
@@ -207,7 +227,7 @@ On iPhone Duo the toolbar moves to a vertical strip at the side. Next Monday's d
 
 A horizontal `ScrollView` extends its frame into an adjacent side safe area, the same way a vertical one lets content show under the home indicator. On an ordinary iPhone in portrait the side inset is zero, so nothing shows. Every earlier capture was on such a device, and I looked at screenshots without measuring the frame.
 
-The scroll view is gone. Three pages are enough — this week and one on each side — stacked, moved with `.offset`, pinned to the column width and clipped horizontally only (today's circle pokes slightly below the row). The frame is now 334pt, and the 520-page pager from the previous section no longer exists.
+The scroll view is gone. Three pages are enough — this week and one on each side — stacked, moved with `.offset`, pinned to the column width and clipped horizontally only (today's circle pokes slightly below the row). The frame is now 334pt, and the 520-page pager from two sections up no longer exists.
 
 ### A drag that stopped, then released, was read as a flick
 
@@ -219,7 +239,7 @@ A quick flick and a short drag-and-release both passed. It took a third capture 
 
 In Arabic the direction flips. The offset is in screen coordinates, so the sliding layer is pinned left-to-right and only the weekday order inside each page is turned back. The earlier "the pager needed nothing extra" was the scroll view doing that work.
 
-Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, a real device, iPad, Reduce Motion and VoiceOver are not checked yet. And since this is no longer a scroll view, a two-finger horizontal trackpad scroll does not change weeks — still to do.
+Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, a real device, iPad, Reduce Motion and VoiceOver are not checked yet. So whether the unfolded-Duo misalignment noted at the end of the previous section shares a root with this frame overflow is also unknown. And since this is no longer a scroll view, a two-finger horizontal trackpad scroll does not change weeks — still to do.
 
 ## History
 
@@ -229,4 +249,5 @@ Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, 
 - 2026-11-10 — preview and range pages removed; the calendar sits at the top of the sheet and the range is tapped on it.
 - 2026-11-10, evening — assignment model dropped; the calendar holds dated events: weekly/biweekly repeat, two edit scopes, three delete scopes.
 - 2026-11-11 — week strip shows year and month only; weeks change by swiping the date row under fixed weekdays. Fixed title and date numbers disagreeing in Islamic-calendar regions.
-- 2026-11-11, before dawn — the date row and the event grid slide together when changing weeks, and swiping the grid works too. The date row is no longer a scroll view (fixes next week's dates leaking under a side toolbar, and a paused release being read as a flick).
+- 2026-11-11, later — the calendar opens on the month view; tapping a date opens its week, ‹ year-and-month on the strip goes back. Week/month toggle removed, view mode no longer stored.
+- 2026-11-11, morning — the date row and the event grid slide together when changing weeks, and swiping the grid works too. The date row is no longer a scroll view (fixes next week's dates leaking under a side toolbar, and a paused release being read as a flick).
