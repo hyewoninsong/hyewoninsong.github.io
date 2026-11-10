@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-10T12:18:06+09:00
+date: 2026-11-11T01:21:30+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -12,7 +12,7 @@ A SuperTimetable timetable is a weekly template: weekday × time. It cannot say 
 
 ## Assign by week; alternating weeks are just a rule of length two
 
-Opening a calendar puts a strip above the familiar grid: ‹ Nov 9–15 ›, Today, a week/month toggle, and a capsule reading "This week: Siwoo · Week 1/2". The weekday header gains dates; today is a filled circle.
+Opening a calendar puts a strip above the familiar grid: ‹ Nov 9–15 ›, Today, a week/month toggle (the arrows and week range were removed on Nov 11 — it is now a year-and-month title and you swipe the date row, see below), and a capsule reading "This week: Siwoo · Week 1/2". The weekday header gains dates; today is a filled circle.
 
 ![Calendar week view — dates in the header, the assignment capsule, a pinned block](/blog/timetable-calendar-plan/week-view.png)
 
@@ -143,6 +143,38 @@ Old files are not migrated. The calendar has not shipped, so there is no user da
 
 Calendar events have no alarms yet, and widgets and Siri still see timetables only. The scope question after a drag and the period-axis calendar are covered by tests but not yet checked on screen.
 
+## 2026-11-11 — no arrows; swipe the date row to change weeks
+
+The ‹ Nov 9–15 › label is gone. The top-left now shows only the year and month — a dimmed "2026" next to a bold "November" — and you change weeks by swiping the date row under it. The weekday letters stay put; only the date numbers slide, exactly one week per swipe. It is how Apple's Calendar does it.
+
+![Week header — dimmed year and bold month at top left, fixed weekday row, dates below with today circled](/blog/timetable-calendar-plan/week-title.png)
+
+The header is now two layers: a fixed row of weekday labels, and under it a horizontal pager that holds only date numbers, one week per page. The pager keeps 520 weeks on either side of an anchor and quietly re-anchors when you get near an end. Pages are lazy, so only the visible week and its neighbours are ever drawn.
+
+What changes during the swipe and what changes after it are split. The title follows your finger — drag halfway into a week that crosses a month and it already says "December". The grid switches once, after the scroll settles, so the app is not rebuilding a week of events for every frame of a swipe.
+
+![Mid-swipe — weekday letters in place, date numbers shifted sideways, title already showing December](/blog/timetable-calendar-plan/week-mid-swipe.png)
+
+The title's month is the month of the week's fourth day, so a week that straddles two months names the one with more days. The week containing today is the exception: it always shows today's month.
+
+Keeping the arrows next to the swipe would have filled the corner right back up. Today, tapping a day in month view, and VoiceOver cover the rest — the title is an adjustable element that steps one week per swipe and reads the week's date range as its value. Paging the whole grid lost too: dragging a block and swiping weeks would fight over the same surface. Paging just the date row leaves every grid gesture alone.
+
+### The title said an Islamic month; the dates said November
+
+While checking swipe direction in Arabic, with the region set to Saudi Arabia, the title read "جمادى الآخرة، ١٤٤٨ هـ" — the sixth month of 1448 in the Islamic calendar. The dates right under it were 9, 10, 11: Gregorian November.
+
+![Before — an Islamic month and the year 1448 in the title, Gregorian dates 9–13 below](/blog/timetable-calendar-plan/hijri-title.png)
+
+A `DateFormatter` given only a locale uses that locale's default calendar: Islamic for Saudi Arabia, Persian for Iran, Buddhist for Thailand. The app's date model is Gregorian, so numbers came from one calendar and words from another. It was not new, either — the old week-range label, the month view title and the dates VoiceOver reads had done this since the calendar shipped to main three days earlier. The text was just small.
+
+It slipped through because the calendar is decided by **region**, not language. Tests built locales from a bare `"ar"`, which is Gregorian. Right-to-left checks ran with Egypt as the region — also Gregorian by default.
+
+The rule is "does it name the same month as the numbers". Buddhist, Japanese-era and ROC calendars differ only in the year, so they stay: "พฤศจิกายน 2569" is the right title in Thailand. Calendars with different months get the same language's Gregorian form. Setting only the formatter's calendar is not enough — the date pattern is chosen from the locale's calendar, so you get an Islamic template (era marker included) filled with Gregorian values. Swap the calendar on the locale itself.
+
+![After — نوفمبر ٢٠٢٦, the same month as the dates; the layout is mirrored so the title sits on the right](/blog/timetable-calendar-plan/gregorian-title.png)
+
+In Arabic and Urdu you swipe right for the next week; the header already mirrors, so the pager needed nothing extra. Tests now include Saudi Arabia, Iran and Thailand as regions. Stepping the title with VoiceOver on a device and a full seven-day week are still unchecked.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -150,3 +182,4 @@ Calendar events have no alarms yet, and widgets and Siri still see timetables on
 - 2026-11-09, evening — date-range assignment, calendar preview with bands and legend, timetable color palette, no blue one level in.
 - 2026-11-10 — preview and range pages removed; the calendar sits at the top of the sheet and the range is tapped on it.
 - 2026-11-10, evening — assignment model dropped; the calendar holds dated events: weekly/biweekly repeat, two edit scopes, three delete scopes.
+- 2026-11-11 — week strip shows year and month only; weeks change by swiping the date row under fixed weekdays. Fixed title and date numbers disagreeing in Islamic-calendar regions.
