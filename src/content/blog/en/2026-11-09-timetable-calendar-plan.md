@@ -1,12 +1,14 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-10T02:30:00+09:00
+date: 2026-11-10T12:18:06+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
 ---
 
 A SuperTimetable timetable is a weekly template: weekday × time. It cannot say "week A, then week B", or "this Wednesday is cancelled". So the timetable stays what it is, and a **calendar** sits on top of it: which timetable each week uses, and what is different on a specific date.
+
+> On the evening of 2026-11-10 this assignment model was removed. The calendar no longer takes timetables; it **holds dated events of its own** — see the last section. Everything above it is the two days that led there.
 
 ## Assign by week; alternating weeks are just a rule of length two
 
@@ -44,7 +46,7 @@ Two causes stacked. In the UI test, `-calendar.viewMode week` as a launch argume
 
 ## Where it stands
 
-Week and month views, assignment, date exceptions, holidays and the list segment are the prototype. Alarms do not know about calendars yet — the timetable's weekly alarm still fires on a cancelled day — and since AlarmKit repeats only weekly, calendar alarms will have to be one-shot alarms registered a few weeks ahead. That decision, a "this day only / whole timetable" scope in the edit sheet, widgets and Siri, and Android parity for the file format come next.
+Week and month views, the list segment and the virtual timetable are still there. Assignment, date exceptions and holidays were removed on the evening of 11-10 and replaced by the calendar's own repeating events (last section). Alarms do not know about calendar events yet; since AlarmKit repeats only weekly, a series with an end date will need one-shot alarms registered a few weeks ahead. That decision, widgets and Siri, and Android come next.
 
 ## 2026-11-09, afternoon — one row per item, and timetables are picked as cards
 
@@ -84,7 +86,7 @@ The band color tripped once. It started as the month view's "most used block col
 
 Blue was removed one level in: the Apply checkmark is label-colored and the date picker's selection circle is `.tint(Color(.label))`. The selection outline hiding behind the thumbnail in the title list was fixed alongside — rows in a scroll view were exactly the thumbnail's height, so they got vertical padding (`List` rows already have it).
 
-The Android calendar is still week-only; `calendars.json` now carries `dateRanges` and Android needs the same key.
+`dateRanges` did not last a day: it went away with the weekly rule when the model changed the next evening.
 
 ## 2026-11-10 — the calendar is always on screen, and the range is picked on it
 
@@ -104,9 +106,47 @@ One bug came out of the capture probe. The `onChange(of: scope)` that resizes th
 
 Alternatives: keep the Preview page and only draw bands on the range page (still two calendars), or make taps work only in Date range scope (a calendar that ignores taps under a weekly rule is more confusing than one that switches).
 
+## 2026-11-10, evening — assignment is gone; the calendar holds its own dated events
+
+Four revisions of the assignment sheet in two days, and the problem was never the sheet. To add one class you made a timetable, assigned it to weeks or a date range, then recorded what differed on a given day. The request was one line: put things on dates directly, like Google Calendar or Apple Calendar. So everything above is removed — week assignment, the rotation rule, date ranges, holidays, date exceptions, the assignment sheet and the day sheet.
+
+The calendar now owns its events. The + button opens the same edit sheet a timetable uses, with one more group: Repeat — Never, Weekly, Every 2 weeks. With repeat on, the weekday chips become multi-select and you get 8 weeks / 16 weeks / 1 year presets plus a start and end date.
+
+![New event sheet: Monday and Friday chips both selected, weekly for 8 weeks, start and end date above the calendar](/blog/timetable-calendar-plan/event-recurrence.png)
+
+The calendar underneath is the tap-to-pick range calendar built that morning for the assignment sheet — the one thing carried over from the discarded model. The range is a gray band; days that actually get an event are bold with a dot. A summary line under it — the weekdays, the date span and the count, 16 in the capture above — says how many you are about to create.
+
+![Range calendar: a gray band starting Nov 12 and running past New Year, a dot under every Thursday](/blog/timetable-calendar-plan/event-range-dots.png)
+
+Touching a repeating event asks for scope: two choices when editing, three when deleting.
+
+| Action | Question |
+|---|---|
+| Edit title, time, color, memo | This event · All events |
+| Delete | This event · This and following · All events |
+| Drag or resize on the grid | Same question after you let go; Cancel puts it back |
+| Change weekdays, range, weekly/biweekly | No question — the whole series |
+
+![Delete alert for a repeating event: this event, this and following, all events, cancel](/blog/timetable-calendar-plan/event-delete-scope.png)
+
+Editing has no "this and following" because it means splitting the series, after which "all events" stops having a clear meaning. Deleting gets it because it is just moving the end date one day back.
+
+"All events" is not a blanket overwrite. The edit is compared field by field and **only the fields that changed** are applied to the series and to occurrences edited on their own. A memo on week 3 survives a series-wide rename. Resetting every individually edited occurrence was far less code, and silently lost that memo.
+
+A series is a template event, a start and end date, weekdays, an interval (1 or 2), edited occurrences and deleted occurrences. A one-day event is a series whose start and end are the same day. Each occurrence's id is derived from the series id and its original date, so selection, an in-flight drag and VoiceOver focus survive a save. There is no open-ended repeat: an end date is required, two years at most.
+
+What survived is the virtual timetable. The grid still reads `store.timetable(id:)`; what comes back is now "the occurrences that fall in this week". The vertical axis has no timetable to borrow from, so each calendar keeps its own settings (clock or period axis, visible hours, weekdays) and opens the existing timetable settings sheet. The month view lost its week strip, pins and holidays and shows a color bar per event.
+
+![Month view: color bars per day, no week strip](/blog/timetable-calendar-plan/event-month.png)
+
+Old files are not migrated. The calendar has not shipped, so there is no user data to protect: older files keep their name, order and week start and drop the assignments, with no backup copy. After release the answer would be different.
+
+Calendar events have no alarms yet, and widgets and Siri still see timetables only. The scope question after a drag and the period-axis calendar are covered by tests but not yet checked on screen.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
 - 2026-11-09, afternoon — assignment sheet folded to one row per item with drill-in picking; timetables picked with the card/list picker.
 - 2026-11-09, evening — date-range assignment, calendar preview with bands and legend, timetable color palette, no blue one level in.
 - 2026-11-10 — preview and range pages removed; the calendar sits at the top of the sheet and the range is tapped on it.
+- 2026-11-10, evening — assignment model dropped; the calendar holds dated events: weekly/biweekly repeat, two edit scopes, three delete scopes.
