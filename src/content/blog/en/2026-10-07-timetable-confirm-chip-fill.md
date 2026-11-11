@@ -1,6 +1,6 @@
 ---
 title: "A disabled confirm button is now filled grey, not faded"
-date: 2026-11-11T23:19:42+09:00
+date: 2026-11-11T23:43:24+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The primary button at the top right of a sheet fills with ink when it can be tapped. A hand-drawn chip first gave the disabled state a grey fill, but on the folding iPhone that chip was the one button that did not follow the others to the side bar, so navigation bars went back to the system style."
@@ -214,7 +214,26 @@ The sheet's own close button hides in edit mode, so the button moves up one slot
 
 Three alternatives lost. A pencil is the obvious "edit", but edit mode already puts a rename pencil in the same strip. Square-and-pencil reads as "compose", next to a `+` that already means "new". Baking the word into an image does not fit a circle in eighteen languages. The change applies to every device: an app cannot ask whether its buttons are currently in the strip, and a per-device button is one more thing to keep in sync. VoiceOver still reads "Edit" and "Done".
 
-Two things are left. The "currently open" badge on a card is also a circled checkmark, and on the folded Duo the two sit on one screen; if they read as the same thing the icon gets picked again. And the "Today" button on the calendar screen is text, so it stays on the top bar on a Duo. It has no paired state to jump to, so it was left alone.
+### One picture, one meaning
+
+The first version left one snag. The "currently open" badge on a card was also a circled checkmark, and it sat on the same screen as the new edit button. One picture meant both "open" and "edit".
+
+That was settled the same day. The open badge is gone, and the picture now marks the edit target.
+
+| | Normal | Edit mode |
+|---|---|---|
+| Open timetable | Card ring, row outline | No mark |
+| Edit target | None | Circled-checkmark badge |
+
+Edit mode always has one target for duplicate, rename and delete: the card resting in the centre, or the row tapped last. Only the title list used to show it, with a thin checkmark; card view just dimmed the neighbours. Now both views use the badge. Tap the circled checkmark, and the same picture lands on the thing you are about to change.
+
+![Card view in edit mode. A black circled-checkmark badge sits at the top left of the centre card, and the ring around the card is gone](/blog/timetable-confirm-chip-fill/list-edit-target-card.png)
+
+![Title list in edit mode. The same badge sits at the end of the target row, before the reorder handle](/blog/timetable-confirm-chip-fill/list-edit-target-row.png)
+
+The badge is a filled circle, not the outline glyph from the toolbar: a timetable preview is full of the user's own colours and a thin outline gets lost on it. In the title list every row keeps the badge's slot, so names do not shift when the target moves.
+
+One thing is left. The "Today" button on the calendar screen is text, so it stays on the top bar on a Duo. It has no paired state to jump to, so it was left alone.
 
 One more line for the rule above: a toolbar button whose label changes with state gets one Duo capture per state. With one capture, the button looks like it is where it should be.
 
@@ -226,3 +245,4 @@ One more line for the rule above: a toolbar button whose label changes with stat
 - 2026-10-07 — Always-tappable primary buttons (Settings checkmark, image share, copy time) lost their fill; the fill is only for buttons that can be disabled
 - 2026-10-08 — Export to Calendar joined the top-right chip; its glyph follows the export target and record state
 - 2026-11-11 — List edit entry changed from text to a glyph; the Duo strip only takes image labels
+- 2026-11-11 — Open badge removed; the circled checkmark now marks the edit target
