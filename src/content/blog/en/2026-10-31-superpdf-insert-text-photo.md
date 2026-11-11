@@ -1,6 +1,6 @@
 ---
 title: "Text boxes and photos on the page, moved and resized like handwriting"
-date: 2026-11-03T03:38:00+09:00
+date: 2026-11-08T04:21:24+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "You can now drop a note or a photo onto a PDF page. It arrives selected, so you drag it into place and resize it with the same handles as handwriting and crops."
@@ -52,6 +52,38 @@ iOS ships only gothic Korean glyphs, so serif or rounded fonts changed Latin let
 
 The first editor opened 62pt below the tap. The board frame was measured outside `.ignoresSafeArea()`, which reports the safe-area frame, while UIKit's origin is the expanded frame. Saved coordinates were right, so unit tests passed; a screenshot gave it away. A UI test now checks that the tapped point falls inside the editor's frame.
 
+## 2026-11-05 — Any font on the device
+
+Four Nanum fonts were not enough, so the font row above the keyboard now starts with All Fonts. The five built-in choices stay in the row, and the last eight fonts picked from the sheet join them.
+
+![The font row above the keyboard, with All Fonts first](/blog/superpdf-insert-text-photo/all-fonts-row.png)
+
+The sheet lists fonts already on the device and fonts Apple can download, Korean-capable ones first, each row drawn in its own font. A search field and a Korean-only switch keep hundreds of families manageable. Downloadable fonts are fetched when picked, the same way the Nanum fonts are.
+
+![The All Fonts sheet, Korean fonts on top](/blog/superpdf-insert-text-photo/all-fonts-sheet.png)
+
+Fonts installed by font apps go through the system font picker. Reading them directly needs the Fonts capability, and an entitlement the App ID lacks blocks distribution signing, which once kept this app off TestFlight for four weeks. The system picker grants access without it.
+
+One trap: `UIFont(descriptor:size:)` with a family that does not exist returns some fallback font instead of nil. The app now checks that the returned `familyName` matches before trusting it; missing families draw in the system font and keep their saved name.
+
+## 2026-11-08 — Moving things to another page
+
+Until now a region could only move within its own page: the drag stopped at the page edge and only the rectangle was stored. Handwriting, crops, text boxes and photos can now change pages, two ways.
+
+**In a two-page spread, drag it across.** Grab inside the region and carry it over the facing page; it keeps its size and the spot you grabbed. Drop it and the page number changes with it.
+
+![A crop dragged from page 1 onto page 2 in the spread, still selected](/blog/superpdf-insert-text-photo/dragged-to-facing-page.png)
+
+**For a page further away, cut and paste.** The tooltip has a scissors button. The region leaves the page and a banner stays at the bottom — "Cut crop · Paste · ✕" — for as long as it takes you to turn to the right page. Paste puts it in the middle of the current page at the same size, selected, so you drag it into place like anything you insert. ✕ puts it back.
+
+![Right after cutting a crop: it is gone from the page and the paste banner waits](/blog/superpdf-insert-text-photo/cut-banner.png)
+
+![Paste on the next page drops it in the middle, selected](/blog/superpdf-insert-text-photo/pasted-on-next-page.png)
+
+Cutting does not delete anything. The record stays and is only hidden from the page; paste is a single "move to page" edit, so one undo brings it back to the original page, and quitting the app leaves a cut item where it was. Delete-and-recreate was the first idea, but it would orphan the Collect node, drop notes and break undo. The node keeps its place in the map; only its page reference and thumbnail follow. A crop on a new page is a crop of that spot, so its image is re-rendered.
+
+The paste button could have gone in the tool row, but that row shows only in edit mode and is already full on an iPhone. A long-press edit menu would need a second gesture path in both reading layouts. The banner is the same in every layout. While dragging, the facing page draws the incoming region as a guest — selection frame and handles included — since its overlay only knows its own highlights; the source page hides it until you let go. The continuous scroll layout does not drag across pages; cut and paste works there too.
+
 ## Where it stands
 
-Photos are stored as a single 2048px JPEG so pages draw quickly. On a PDF whose pages are rotated 90°, an exported annotated PDF may show a photo in a different orientation than the app does. Rotating the device while typing can misplace the editor, though no text is lost. Nanum fonts need a connection the first time and show as the system font until they arrive.
+Photos are stored as a single 2048px JPEG so pages draw quickly. On a PDF whose pages are rotated 90°, an exported annotated PDF may show a photo in a different orientation than the app does. Rotating the device while typing can misplace the editor, though no text is lost. Nanum and other Apple-downloaded fonts need a connection the first time and show as the system font until they arrive. Whether a font-app font stays usable after relaunch is not yet checked on a real device.

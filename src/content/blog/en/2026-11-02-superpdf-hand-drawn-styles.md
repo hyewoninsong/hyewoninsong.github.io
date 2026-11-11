@@ -1,12 +1,12 @@
 ---
 title: "Underlines were ruler-straight. Now four marks look hand-drawn, and you pick the style after you draw"
-date: 2026-11-03T12:38:23+09:00
+date: 2026-11-07T18:41:09+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperPDF grew from two line styles to five: highlighter, underline, strikethrough, circle, box. The lines wobble like a pen stroke with a per-highlight fixed seed, and a tooltip opens right after you draw so you can switch."
 ---
 
-Draw across a line of text in SuperPDF, lift your finger, and a small tooltip appears next to it with five styles: highlighter, underline, strikethrough, circle, box. The four line styles are no longer ruler-straight. They wobble slightly and overshoot at the ends, the way a pen does on paper.
+SuperPDF has five line styles: highlighter, underline, strikethrough, circle, box. You pick one in the bottom tool row before drawing, and change a drawn mark from the tooltip that opens when you tap it. The four line styles are no longer ruler-straight. They wobble slightly and overshoot at the ends, the way a pen does on paper.
 
 ## Five styles, all per line
 
@@ -33,7 +33,7 @@ Paths are built in a "line space" whose origin is the top-left of the text line,
 
 ## Pick after drawing, and the pick becomes the default
 
-Before, you chose the style in the toolbar **before** drawing. Changing a drawn line meant switching to the select tool and tapping it again. Now the tooltip opens the moment you lift your finger.
+Before, you chose the style in the toolbar **before** drawing. Changing a drawn line meant switching to the select tool and tapping it again. So the tooltip opened the moment you lifted your finger (retired on November 5, see the last section).
 
 ![The settings row of the underline tool with five style buttons](/blog/superpdf-hand-drawn-styles/style-row.png)
 
@@ -91,8 +91,31 @@ Every random-derived deviation is multiplied by value / 50 without changing the 
 
 At first the slider was invisible on iPhone: the popover's arrow was pinned to the top, so it tried to open below a tooltip that already sat near the bottom of the screen and got squashed. Letting the system pick the arrow edge fixed it, and a UI test now drags the slider both ways.
 
+## 2026-11-05 — No tooltip on a fresh mark
+
+Three days later, "pick after drawing" is gone. Lift your finger and the new mark gets its two range handles, nothing else. It is drawn exactly as the bottom tool row says.
+
+![A fresh highlight with only its two handles, no tooltip; the highlighter tool is on in the bottom row](/blog/superpdf-hand-drawn-styles/new-underline-handles-only.png)
+
+The screen changed in between: tools moved to one row at the bottom, and tapping a tool turns that row into its style, weight and color settings. With settings always in reach, choosing before drawing is natural, and a tooltip popping up after every stroke only re-asked what you had just chosen. The handles stayed, because a range that is a word short is something you notice right away. The tooltip now opens only when you tap an existing mark, and what you pick there changes that mark only; the bottom tool row sets the default. UI tests draw on both the paged and the scroll board and check that no tooltip appears.
+
+## 2026-11-07 — Pen shapes for marks: ends that taper
+
+Until now all four line marks were even-width, like a ballpoint. The handwriting pen already had fountain and ballpoint; the marks did not. The weight popover now has the same choice under the wobble slider.
+
+![Weight popover with ballpoint and fountain options, nib sharpness and nib flatness sliders, and tapered underline and circle samples](/blog/superpdf-hand-drawn-styles/pen-shape-popover.png)
+
+- **Ballpoint** — even width, exactly as before, and the default.
+- **Fountain** — *nib sharpness* thins both ends (down to 15% of the width at 100); *nib flatness* imitates a flat nib held at 45°, so width changes with direction. On a circle that reads like a brush stroke.
+
+![A fountain-pen circle whose tail thins out](/blog/superpdf-hand-drawn-styles/fountain-circle.png)
+
+The width formula comes from the handwriting fountain pen, but the taper length is proportional to the stroke (half of it at sharpness 100) rather than the fixed 10–60pt handwriting uses, which left a 400pt underline needle-sharp for its last 13pt. There is no pressure: a mark is computed from the text line, so there is no force to read. Fountain marks are drawn as filled outlines with per-point width instead of a stroked line, computed in screen space so a rotated scan still gets a screen-aligned nib. The setting lives next to the wobble in the mark's small versioned JSON; older marks read as ballpoint, and a test checks the ballpoint path is unchanged point for point. Not yet tried with a Pencil on a real device.
+
 ## History
 
 - 2026-11-02 — Five line styles, hand-drawn marks, a tooltip after drawing
 - 2026-11-03 — Round ends on the circle, overlap on the top side
 - 2026-11-03 — Wobble slider (0–100), popover arrow no longer pinned
+- 2026-11-05 — Fresh marks get handles only; the tooltip is for tapped marks
+- 2026-11-07 — Pen shapes for marks: ballpoint / fountain (nib sharpness, flatness)
