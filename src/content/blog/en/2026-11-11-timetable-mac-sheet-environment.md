@@ -1,6 +1,6 @@
 ---
 title: "The menu did nothing — because the app was crashing and relaunching"
-date: 2026-11-11T16:56:20+09:00
+date: 2026-11-11T19:02:39+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "mac"]
 summary: "On the Mac build of the timetable app, the timetable list would not open. The sheet never received the window's shared objects, so the app crashed. It was the same root cause as the popover bug fixed that morning."
@@ -42,4 +42,12 @@ The Mac was locked the whole time, so `screencapture` returned black and Accessi
 
 ## What's left
 
-We still need to see the widget in the Mac widget gallery and to open the toolbar's `…` menu. We did confirm that the widget extension is registered with the system and that the app writes its data to the shared app group.
+The `…` menu and mouse dragging were checked later that evening (below). What remains is the desktop widget, which does not draw the timetable.
+
+## Evening update — menus and drag work, the widget shows only a placeholder
+
+Once the screen was unlocked, the toolbar's `…` menu opened with all its items, including the share submenu and calendar export. With the grid unlocked, dragging a block with the mouse moved it by an hour. Both ⌘Z and the toolbar's undo button moved it back, and the saved start time went from 600 to 660 minutes and back.
+
+The widget gallery lists the app's widgets under "On this Mac". Placed on the desktop, though, a widget stays a gray placeholder. System logs show that the system cannot resolve the widget's App Intents configuration. A build run from its build folder is never indexed. A copy in `~/Applications` is indexed, but loading the default value fails with "action not found". The cause is not confirmed yet.
+
+Two detours are worth noting. In zsh, `log` is a built-in math function, so `log show` silently prints nothing; call `/usr/bin/log`. And the black rectangle over the app window in every capture was not an app bug. It was a system permission window that screenshots render black, and it was also taking the clicks.
