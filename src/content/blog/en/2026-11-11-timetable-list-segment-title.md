@@ -1,43 +1,39 @@
 ---
-title: "The title and the tabs said the same thing twice — so the tabs became the title"
-date: 2026-11-11T23:50:00+09:00
+title: "The title and the tabs said the same thing twice — the title is gone, and the device decides where the tabs go"
+date: 2026-11-12T00:10:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "The list sheet lost its title text and the Timetables | Calendars segmented control moved into the title slot. One row saved where the words are short; where they are long, the control stays put."
+summary: "The list sheet lost its title. The Timetables | Calendars control moves into the top row only on the foldable; everywhere else it stays in a thinner row under the buttons. A first attempt that split by language was thrown away."
 ---
 
-The list sheet had a title, "Timetables", and right under it a segmented control: `Timetables | Calendars`. Pick the other segment and the title changed to "Calendars". The same information, twice, at the cost of a row.
+The list sheet had a title, "Timetables", and right under it a segmented control: `Timetables | Calendars`. Pick the other segment and the title changed to "Calendars". The same information, twice.
 
-## The segmented control is the title now
+## No title, and the device decides where the control goes
 
-The title text is gone and the control sits in the navigation bar's title slot, next to close, view style and Edit. The cards move up by one row.
+The title text is gone everywhere. Where the control sits depends on the device.
 
-![Korean list sheet with the segmented control in the title slot and no title text](/blog/timetable-list-segment-title/ko-title-slot.png)
+On the foldable, the folded screen is short, but close and view-style move to a vertical strip on the side, leaving only Edit in the top row. The control moves up beside it and a whole row is saved.
 
-In SwiftUI this is a `Picker` in `ToolbarItem(placement: .principal)`. The `navigationTitle` value stays, unseen, because VoiceOver still reads it as the screen's name.
+![Foldable list sheet: the segmented control shares the top row with Edit; the other buttons sit in a side strip](/blog/timetable-list-segment-title/duo-top-row.png)
 
-## It fit in Korean. It did not fit in French.
+On a regular iPhone the screen is tall and the top row is full of buttons. The control stays right under them, with its top padding removed.
+
+![Regular iPhone list sheet: the control sits in a full-width row directly under the buttons, no title](/blog/timetable-list-segment-title/phone-row-below.png)
+
+## The first version split by language. It was the wrong axis.
+
+At first the control went into the title slot on every device. Korean looked clean. French did not.
 
 ![French list sheet with the control truncated to Emplois… | Calendr…](/blog/timetable-list-segment-title/fr-truncated.png)
 
-The title slot has 150–190pt left after the bar buttons. A segmented control gives both segments the width of the longer word, so the Korean labels need 116pt and "Emplois du temps | Calendriers" needs about 280pt. The longer "Modifier" button takes even more of the bar. Out of 18 languages, most did not fit, English included.
+A regular iPhone leaves 150–190pt in the title slot, and a segmented control gives both segments the width of the longer word. Most of the app's 18 languages did not fit, English included.
 
-The control is now the only text that says which list you are in. Two truncated words cannot do that job.
+So the next version measured text and moved the control up only where it fit. It worked, but the same phone now had two layouts depending on language, and few languages qualified. Whether the top row is free is not a property of the language. It is a property of the device's toolbar layout — and splitting there means everyone on the same device sees the same screen.
 
-## Where it does not fit, it does not move
+## Detecting the side strip
 
-The title text is gone in every language. The control moves up only where it fits; elsewhere it stays in its own row below the bar.
-
-![French list sheet with the control in a full-width row below the bar, nothing truncated](/blog/timetable-list-segment-title/fr-row-below.png)
-
-What lost:
-
-- **Move it everywhere and let it truncate.** See above.
-- **Shorten the long labels.** They are the app's vocabulary; one screen should not rename things to save space.
-- **`ViewThatFits` on the real remaining width.** That width changes with state: Edit turns into an X in edit mode, and an empty list has no buttons at all. A borderline language would see the control jump rows on every tap.
-
-Instead the decision is made once, from measured text widths, against the bar at its most crowded. If it fits there it fits in every other state, so the control never changes rows within a language. A unit test pins the expected side for several languages, so a copy change that crosses the line shows up as a failing test.
+The check does not ask for a device name. It reads the sheet's horizontal safe-area insets: a strip is a wide inset on one side only. A landscape iPhone has insets too, but on both sides. The text-width check survives as a guard: on the foldable, a language too long to sit beside Edit — French, today — keeps the control in the row below.
 
 ## Where it stands
 
-Languages with short words saved a row; the rest only lost the redundant title. On the foldable, where bar buttons move to a side strip, the top row has far more room than the check assumes — long languages could move up there too. iPad and real devices are still unchecked.
+Verified on the simulator's folded posture and a regular iPhone. The unfolded posture, iPad and real devices are still unchecked.
