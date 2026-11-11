@@ -128,7 +128,7 @@ Only Apple's system voice normalizes text on its own. None of the four on-device
 
 Only those three patterns are expanded, and only then is the integer part read as a Sino-Korean number. Spelling every integer was considered and rejected that day: the models already read "52주" correctly, and Korean counters like "한 번" (one time) use native numerals that a rule would get wrong more often than the model does (two days later, integers followed by a native counter were spelled after all — see the 2026-11-06 afternoon section). The step runs for Korean pages only and for all four neural engines. The system voice path was left alone at first; since 2026-11-05 it gets the same step (see below).
 
-Ranges got one refinement the same afternoon. Korean has two number systems, and a range followed by a native counter (people, items, times, hours, animals, books…) reads with native numerals: "3~4명" becomes "서너 명" (three or four people), "1~2번" "한두 번", "10~20명" "열에서 스무 명". It applies from 1 to 99 and only for counters on a list. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
+Ranges got one refinement the same afternoon. Korean has two number systems, and a range followed by a native counter (people, items, times, hours, animals, books…) reads with native numerals: "3\~4명" becomes "서너 명" (three or four people), "1\~2번" "한두 번", "10\~20명" "열에서 스무 명". It applies from 1 to 99 and only for counters on a list. Patching sherpa-onnx itself would have meant carrying a C++ fork and still fixing Kokoro and the VITS voices separately.
 
 ### Three counters were left off the list on purpose
 
@@ -136,11 +136,11 @@ Some counters take both number systems depending on what they mean, and the char
 
 | Counter | Native reading | Sino reading | Common in books |
 |---|---|---|---|
-| 장 | sheets of paper | chapters (3장 4절) | chapters — "covered in chapters 3~4" |
-| 대 | vehicles, machines | age decades, eras (20~30대, 1990년대) | decades — `20~30대` is itself a range |
-| 분 | people (honorific) | minutes (3~4분) | minutes |
+| 장 | sheets of paper | chapters (3장 4절) | chapters — "covered in chapters 3\~4" |
+| 대 | vehicles, machines | age decades, eras (20\~30대, 1990년대) | decades — `20~30대` is itself a range |
+| 분 | people (honorific) | minutes (3\~4분) | minutes |
 
-Putting them on the list turns "3~4장" into "three or four" in native numerals, which is simply wrong when it means chapters. Leaving them off makes "3~4장" (sheets) come out Sino-Korean, which sounds stiff but is still understood. The two mistakes are not symmetric, so the rule leans toward the common meaning. Telling them apart properly needs context (is the subject a person, does "takes" follow), which is a job for a morphological analyzer or a model, not a rule.
+Putting them on the list turns "3\~4장" into "three or four" in native numerals, which is simply wrong when it means chapters. Leaving them off makes "3\~4장" (sheets) come out Sino-Korean, which sounds stiff but is still understood. The two mistakes are not symmetric, so the rule leans toward the common meaning. Telling them apart properly needs context (is the subject a person, does "takes" follow), which is a job for a morphological analyzer or a model, not a rule.
 
 "개월" (months) and "시대" (eras) are a different case: the list check asks whether the next characters start with `개` or `시`, so "3~4개월" would match `개` and read natively. A short exception list sends those Sino-Korean counters back to Sino numerals while keeping `개` and `시` themselves.
 
