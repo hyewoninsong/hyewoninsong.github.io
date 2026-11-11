@@ -1,6 +1,6 @@
 ---
 title: "The title list now shows a silhouette of each timetable"
-date: 2026-11-11T18:47:05+09:00
+date: 2026-11-12T03:31:51+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The timetable list's title view gets a small preview per row. It is not the card preview scaled down but a Canvas silhouette of the blocks, drawn in microseconds. The type icon gave up its spot."
@@ -60,7 +60,7 @@ Each calendar's card is the current month, paged sideways. Unlike the timetable 
 
 ![Calendar title list: a small month on each row, days with events filled in the event's color](/blog/timetable-list-row-thumbnail/calendar-title-rows.png)
 
-In the title list, the 40×52pt slot holds a small month drawn on a `Canvas`: one square per day, the first event's color where there is one, an outline on today, and nothing for the neighboring months' days, so the stepped first and last weeks make it read as a calendar.
+In the title list, the 40×52pt slot holds a small month drawn on a `Canvas`: at first one square per day filled with the first event's color (the picture above). That version lasted a day; it is now a scaled-down month card, for the reason in the 2026-11-12 section below.
 
 ### After a delete, every button went dead
 
@@ -70,8 +70,19 @@ The list state was one struct passed down as a `@Binding`, and the alert's `isPr
 
 Not yet checked on iPad widths, the foldable iPhone, or a real device.
 
+## 2026-11-12 — The small month has to be the big month, shrunk
+
+After a day of use, the small month and the month card did not read as the same calendar. The card has white cells, a day number, and colored bars under it. The small month was a mosaic of color-filled tiles. Switching views flies the card into its row thumbnail, and it landed as a different drawing.
+
+![The small month at real size, enlarged four times, and the month card: the same bars on the same days](/blog/timetable-list-row-thumbnail/calendar-thumb-month-style.png)
+
+The thumbnail is now the card in miniature: hairlines between weeks, a 1.5pt dot where the day number goes (a filled circle for today, weekend colors, dimmed neighbors), and the day's event bars underneath in the card's order, as many as the row height holds: two in a six-week month, three in a five-week one.
+
+The original reasoning was that numbers and four bars are unreadable at 40pt. True for the numbers, but the thing that needs to survive is the shape, "a mark with colored lines under it", and dots and 1pt bars keep it. Still one `Canvas` pass at the same size. Not yet checked in the real list, in right-to-left languages, or on iPad.
+
 ## History
 
 - 2026-11-03 — silhouette thumbnails in the title list, replacing the type icon.
 - 2026-11-04 — Android port: `Canvas` silhouette, pure-function coordinates, kind read as state description
 - 2026-11-11 — the calendar list gets both views: a month card and a small month per row; an alert setter writing back a stale struct copy
+- 2026-11-12 — the calendar thumbnail becomes a miniature of the month card: day dots, event bars, week lines; the filled-tile version is gone
