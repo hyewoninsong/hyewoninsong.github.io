@@ -1,6 +1,6 @@
 ---
 title: "The title list now shows a silhouette of each timetable"
-date: 2026-11-04T16:00:16+09:00
+date: 2026-11-11T18:47:05+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The timetable list's title view gets a small preview per row. It is not the card preview scaled down but a Canvas silhouette of the blocks, drawn in microseconds. The type icon gave up its spot."
@@ -50,7 +50,28 @@ The Android title list now swaps the 28dp kind icon for a 40x52dp silhouette, dr
 
 The kind icon is gone visually, but a screen reader still hears the kind as the row's state description. The thumbnail itself is hidden from accessibility as decoration.
 
+## 2026-11-11 — The calendar list follows the same two views
+
+The calendar segment of the same sheet was a plain list of names with swipe-to-delete, a grammar the timetable side had already dropped. The view-style button now applies to both segments, and duplicate, rename, delete and reorder live in edit mode on both.
+
+![Calendar card view: this month's grid with colored bars under the days that have events](/blog/timetable-list-row-thumbnail/calendar-month-card.png)
+
+Each calendar's card is the current month, paged sideways. Unlike the timetable card, it is not a baked image. A month is 42 day cells and a few bars, so the card is built from the same parts as the real month view and changes whenever that view does. What got cheaper is the data: the whole grid is resolved in one pass and grouped by date, where per-cell lookups would run 42 times per card. A test compares the two per day. The month shown is today's, not wherever the calendar was last scrolled, because a list is for comparing calendars side by side.
+
+![Calendar title list: a small month on each row, days with events filled in the event's color](/blog/timetable-list-row-thumbnail/calendar-title-rows.png)
+
+In the title list, the 40×52pt slot holds a small month drawn on a `Canvas`: one square per day, the first event's color where there is one, an outline on today, and nothing for the neighboring months' days, so the stepped first and last weeks make it read as a calendar.
+
+### After a delete, every button went dead
+
+Deleting a calendar in edit mode should hand the target to the next one. The delete worked, but the target vanished and duplicate, rename and delete were all disabled. The screen right after the alert closed looked fine; it only showed on the second delete.
+
+The list state was one struct passed down as a `@Binding`, and the alert's `isPresented` was a binding built from one of its fields. Logging showed the setter being called twice on dismissal: the first call sees the state after the delete, the second, 35 ms later, sees the state from before it. Writing one field through a struct binding reads, modifies and writes the whole struct, so the second call put the deleted calendar back as the target. A guard in the setter does not help, since the stale copy passes it too. The state is now an `@Observable` class, so a field write goes to the one live object. Anything confirmed through an alert now gets one more step after it closes.
+
+Not yet checked on iPad widths, the foldable iPhone, or a real device.
+
 ## History
 
 - 2026-11-03 — silhouette thumbnails in the title list, replacing the type icon.
 - 2026-11-04 — Android port: `Canvas` silhouette, pure-function coordinates, kind read as state description
+- 2026-11-11 — the calendar list gets both views: a month card and a small month per row; an alert setter writing back a stale struct copy
