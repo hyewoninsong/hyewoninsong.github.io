@@ -1,6 +1,6 @@
 ---
 title: "The lock zoom stuttered because we were measuring toolbar buttons"
-date: 2026-10-06T20:40:35+09:00
+date: 2026-11-11T17:07:32+09:00
 app: "timetable"
 tags: ["devlog", "swiftui"]
 summary: "Unlocking a timetable zooms the grid to 1.5x. The animation was running at 30fps. The curve and the coordinates were right; the cause was toolbar button frames being measured during the same moment."
@@ -42,4 +42,21 @@ The cost: for about a second after unlocking, the time label does not know where
 
 Extracting video at 60fps hides dropped frames, because a dropped frame is the same picture twice. Tick intervals show them directly. We also stopped tapping through a UI test, which adds its own stalls, and had the app toggle itself from a launch argument.
 
-These numbers come from a debug build on the simulator. The check on a 120Hz device is still to come.
+These numbers come from a debug build on the simulator. The device check found one more problem — see the November 11 section.
+
+## 2026-11-11 — The timing was right, the order was not
+
+A screen recording came in from the calendar's week view: unlocking and locking made the blocks shrink and grow with a ghosting shimmer, and it felt slow. No frames were dropped this time; the recording was a full 60fps.
+
+![Four consecutive frames while locking: the blocks shrink evenly, but between the second and third frame the whole grid jumps down](/blog/timetable-lock-zoom-jank/zigzag-frames.png)
+
+We measured positions as numbers, one pixel column per frame. Block height went 904 → 876 → 819 → 783, always one way. Block top went 741 → 777 → 852 → **834** → 883 → 930 → 1025 → **1005**: the scroll offset kept stepping backwards.
+
+The offset is corrected every frame so the time you were looking at stays put. That correction ran in a `CADisplayLink` callback, which fires on the same refresh as SwiftUI's layout update but in no fixed order. When the link ran first it used last frame's content height, and the new height went to screen with the old offset.
+
+The fix moves the correction to the moment the height changes: KVO on the scroll view's `contentSize`, so the offset is set in the same transaction as the height. The display link only ends the tracking. On the simulator the block's bottom edge went from 1429 → 1451 → 1411 → 1425 to 1373 → 1369 → 1365 → 1361. The animation curve is unchanged; the slowness was the shimmer.
+
+## History
+
+- 2026-10-06 — Toolbar measurements invalidated the view every frame during the zoom
+- 2026-11-11 — The scroll anchor ran on the display link and fell a frame behind SwiftUI's layout
