@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-11T23:46:01+09:00
+date: 2026-11-12T01:45:10+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -118,18 +118,18 @@ The calendar underneath is the tap-to-pick range calendar built that morning for
 
 ![Range calendar: a gray band starting Nov 12 and running past New Year, a dot under every Thursday](/blog/timetable-calendar-plan/event-range-dots.png)
 
-Touching a repeating event asks for scope: two choices when editing, three when deleting.
+Touching a repeating event asks for scope: three choices, editing or deleting (editing started with two; "This and following" was added on 2026-11-12, below).
 
 | Action | Question |
 |---|---|
-| Edit title, time, color, memo | This event · All events |
+| Edit title, time, color, memo | This event · This and following · All events |
 | Delete | This event · This and following · All events |
 | Drag or resize on the grid | Same question after you let go; Cancel puts it back |
 | Change weekdays, range, weekly/biweekly | No question — the whole series |
 
 ![Delete alert for a repeating event: this event, this and following, all events, cancel](/blog/timetable-calendar-plan/event-delete-scope.png)
 
-Editing has no "this and following" because it means splitting the series, after which "all events" stops having a clear meaning. Deleting gets it because it is just moving the end date one day back.
+At first editing had no "this and following", because it means splitting the series and "all events" seemed to lose its meaning afterwards. That was reversed two days later: editing now splits the series at that date (see 2026-11-12 below). Deleting had it from the start because it is just moving the end date one day back.
 
 "All events" is not a blanket overwrite. The edit is compared field by field and **only the fields that changed** are applied to the series and to occurrences edited on their own. A memo on week 3 survives a series-wide rename. Resetting every individually edited occurrence was far less code, and silently lost that memo.
 
@@ -333,6 +333,34 @@ A popover was the first idea and lost for three reasons: on iPad the event edito
 
 One precaution: with button cells a swipe could end up picking the day it passed over, so cells are now tap gestures (a tap fails on movement) with the button trait and an accessibility action added back. The swipe is recognized alongside the sheet's vertical scroll and pages only when it ends at least 50pt sideways and 1.5× more horizontal than vertical. iPad popover and Arabic layouts are not yet checked by eye.
 
+## 2026-11-12 — "This and following" now edits too, by splitting the series at that date
+
+Editing a repeating event now asks the same three questions as deleting. Pick "This and following" and the series splits in two at that date: earlier occurrences stay as they were, and only the ones from that day on change.
+
+| You pick | What happens |
+|---|---|
+| This event | Only that occurrence changes |
+| This and following | The series splits at that date; only the later part changes |
+| All events | Every occurrence of that series changes |
+
+The same three appear after the ✓ in the edit sheet and after dragging or resizing a block. Changing the rule itself (days, range, weekly or biweekly) still applies to the whole series without asking.
+
+Two days ago this option was left out on purpose, because after a split "all events" seemed to lose its meaning. But a room or time changing mid-semester is the most common edit a timetable sees, and with only two choices you either fix the remaining weeks one by one or rewrite the weeks that already happened. Apple Calendar and Outlook settled this long ago: once split, the two are unrelated, and "all events" means all of the series you are touching.
+
+Three options lost.
+
+- **No split, one per-occurrence override for each later date.** The save format stays the same, but overrides pile up and a one-off edit can no longer be told apart from "everything after".
+- **Link the two halves with a group id.** You could still edit the original series as one, but "all events" would need a second question, and the save format would change.
+- **Let the earlier half keep the original id.** See below.
+
+An occurrence's id is derived from the series id and its original date. The block you picked belongs to the later half, so the later half keeps the series id and that block's id never changes: the selection survives, the alarm keeps its slot, and a dragged block does not blink out for a frame after the question. At the first occurrence there is nothing before it to split off, so it behaves like "All events". At the last one the later half becomes a single-day event. Occurrences you had edited or deleted individually go to whichever half their date falls in. Saving with nothing changed does not split.
+
+Undo is one step. The split and the edit are saved together; saving them separately would leave a middle state after one undo, two series with identical contents. One undo merges them back, redo splits again. Dragging several blocks at once splits each series only once, at its earliest picked date.
+
+Writing the tests surfaced two older bugs. With a Wed/Fri series that starts on a Friday, moving Friday to Tuesday for "All events" pulled the start date back three days and created a Wednesday occurrence that never existed. Dates of other weekdays inside the extended margin are now recorded as deleted. And deleting "This and following" at the first occurrence of a Monday series that starts on a Sunday left a single-day event on that Sunday; the series is now removed outright when nothing would remain before the cut.
+
+Unit tests cover the split, undo and the edge cases. The four-button alert, the screen after a drag, and the iPad edit popover have not been checked by eye yet.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -346,3 +374,4 @@ One precaution: with button cells a swipe could end up picking the day it passed
 - 2026-11-11, midday — month → week lifts the tapped week row into the week header; week → month settles it back. Back returns to the month you entered from (the title's month once you swipe out of it). Fixed a spring completion firing before settle and a bottom toolbar that lingered.
 - 2026-11-11, evening — in the month ↔ week transition the color bars grow into their event blocks and shrink back; the real blocks hide meanwhile (derived from the replica's state). The block image is centered in the growing frame.
 - 2026-11-11, night — the repeat range calendar is a single month card paged with ‹ › or a swipe; cells and presets jump to their date's month. "Show more months" removed.
+- 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
