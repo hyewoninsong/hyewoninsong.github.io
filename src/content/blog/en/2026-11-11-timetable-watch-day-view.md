@@ -1,6 +1,6 @@
 ---
 title: "We put the watch app back a month after removing it — one day per page"
-date: 2026-11-11T20:09:37+09:00
+date: 2026-11-11T20:48:14+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Scroll today's schedule on your wrist and swipe sideways for yesterday and tomorrow. Calendar recurrence is not re-implemented on the watch; the iPhone expands it into dated days and sends those."
@@ -49,9 +49,9 @@ The removed version had a watch-face complication, which brought a watch app gro
 
 The morning version had no picker. That lasted half a day: to look at a different timetable on your wrist you had to take out the iPhone and open it there.
 
-The watch app now sits on a document list — timetables first, then calendars, in the same order as the iPhone.
+The watch app now sits on a document list — timetables first, then calendars, in the same order as the iPhone. Each timetable row carries the icon of its type: a ruler for clock-based timetables, numbered slots for period-based ones — the same drawings the iPhone settings use. The watch cannot share the phone app's code, so the drawing is copied and a test compares the two sources character for character.
 
-![Document list — a checkmark marks the one the app would open](/blog/timetable-watch-day-view/document-list.png)
+![Document list — a checkmark marks the one the app would open; period and clock timetables get different icons](/blog/timetable-watch-day-view/document-list.png)
 
 | Gesture | Result |
 |---|---|
