@@ -1,6 +1,6 @@
 ---
 title: "SuperPDF reads the book aloud and turns the page when it's done"
-date: 2026-11-10T03:18:23+09:00
+date: 2026-11-11T09:08:00+09:00
 app: "superpdf"
 tags: ["devlog", "swiftui"]
 summary: "One button reads from the current page and keeps going, page after page. Why it uses on-device voices rather than a cloud TTS, why the text never comes from the document on screen, and four on-device neural voices added side by side for testing."
@@ -438,6 +438,20 @@ The hit test uses the script's line rectangles: inside a line, that line; in the
 
 Costs: underlines on text lines cannot be selected while reading (stop first), and tapping text no longer hides the buttons (tap the margin). The Duo layout and facing-page taps have not been checked on a device yet.
 
+## 2026-11-11 — Saving every 500 steps finally made progress, then filled the trash and lost it
+
+Voice training runs on free Colab sessions stitched together. Each session spends about two hours on setup before training starts, and the last one died before its first 2000-step save, so it kept nothing. Saving every 500 steps (about 15 minutes on a T4) fixed that: this session went from 14,000 to 20,500.
+
+**What went wrong.** The syncer copied each checkpoint into the mounted Drive and deleted the previous one, which on a mounted Drive means moving it to the trash. About 1.6 GB per save landed there, and nine saves filled the free 15 GB. After that, copies into the mount still looked successful in Colab, but the cloud upload failed quietly in the background. The syncer kept deleting the previous set anyway, so the newest cloud copy of every checkpoint lived only in the trash. I emptied the trash to free space without checking that the newest set existed outside it. Everything after step 14,000 was gone, and only an inference-only 14,000 model on the Mac survived.
+
+**The fix.**
+- Upload through the Drive API, list the folder again, and delete the old set only when every new file shows the local size.
+- Delete directly instead of to trash, so there is no trash to fill. The old rule left emptying the trash to a person because permanent deletion should not be automated, and that rule is what put the only copy in the trash.
+- Check free space first. If the new set does not fit, upload nothing, delete nothing, and print a loud warning.
+- Resume from a generator-only file: merge its 1,164 tensors into the pretrained model, keep only the 103 posterior-encoder (enc_q) tensors from pretraining, retrain the discriminators, and continue counting from 14,000.
+
+The cost is 6,500 steps and the discriminators' state. The next session asks for two consents, Drive mount and account auth. Before emptying Drive trash, check the storage page for the newest set outside it.
+
 ## History
 
 - 2026-11-03 — read aloud with system voices, automatic page turns, scanned pages from OCR
@@ -458,3 +472,4 @@ Costs: underlines on text lines cannot be selected while reading (stop first), a
 - 2026-11-10 — figure-only page announced in English and switched to an English voice; notice language now falls back to all page text, then the language being read
 - 2026-11-10 — figure label and title were read before "Figure skipped.": numbered captions and source lines now join the figure; unlabeled titles still read
 - 2026-11-10 — a pill under the page (pause, page, stop) while reading, and tapping a text line reads from that line (loaded pages only; margin taps behave as before)
+- 2026-11-11 — saving every 500 steps on free Colab reached 20,500, but trash filled the 15 GB quota, uploads failed silently and the newest copy lived only in the trash until it was emptied: uploads now go through the Drive API with a size check before deleting (no trash), a free-space guard, and a generator-only resume path
