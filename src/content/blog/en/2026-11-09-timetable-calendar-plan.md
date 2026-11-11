@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-11T08:51:27+09:00
+date: 2026-11-11T11:43:40+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -183,7 +183,7 @@ A calendar now opens on the month view. Tap a date and you are in the week that 
 
 ![After tapping the 19th — the week of the 16th to 20th, a back chevron and "November 2026" at the left of the strip, Today at the right](/blog/timetable-calendar-plan/week-back.png)
 
-Back goes to the month the title currently names, not the one you came from: enter from November, swipe the date row into December, and ‹ lands on December. The year-and-month text is tappable too, because a lone chevron is a small target.
+Back goes to the month you came from while the week on screen is still one of its rows; once you have swiped out of that grid it goes to the month the title names. Enter from November, swipe well into December, and ‹ lands on December. (At first it was always the title's month. That broke for weeks straddling two months and changed in the midday section below.) The year-and-month text is tappable too, because a lone chevron is a small target.
 
 The previous section removed the ‹ › pair from this very spot, so the distinction matters. What left was a pair of arrows that moved sideways between weeks. What came back is one arrow that goes up a level. Weeks still change only by swiping the date row. (That changes in the very next section: swiping the grid works too.)
 
@@ -240,6 +240,35 @@ A quick flick and a short drag-and-release both passed. It took a third capture 
 In Arabic the direction flips. The offset is in screen coordinates, so the sliding layer is pinned left-to-right and only the weekday order inside each page is turned back. The earlier "the pager needed nothing extra" was the scroll view doing that work.
 
 Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, a real device, iPad, Reduce Motion and VoiceOver are not checked yet. So whether the unfolded-Duo misalignment noted at the end of the previous section shares a root with this frame overflow is also unknown. And since this is no longer a scroll view, a two-finger horizontal trackpad scroll does not change weeks — still to do.
+## 2026-11-11, midday — the tapped week row becomes the week view's header
+
+Tap a date on the month grid and that week's row rises in place to become the week view's date row. The rows above slide up, the rows below slide down, and the event grid shows through the gap. Going back runs it in reverse: the rows close and the header's dates settle into their row. It is the move Apple's Calendar makes. Until now this was a 0.2s crossfade, which cannot show that both screens are talking about the same dates.
+
+![Mid-rise — the 9–13 row is moving toward the header, the 16–22 row is being pushed down, and the grid is visible between them. Saturday and Sunday, absent from the week view, fade out](/blog/timetable-calendar-plan/zoom-open-mid.png)
+
+What moves is a replica of the month view, not the real screens. The real week view mounts under the replica on tap; the replica's date numbers travel to the measured weekday slots of the real header, and then the replica is removed. The month always has seven columns and the week view only the visible days, so on a weekdays-only setup the weekend numbers fade and the weekday numbers spread to five columns.
+
+Three options lost. `matchedGeometryEffect` on the date numbers: the two views swap in one slot, so one must leave before the other exists, and the splitting rows have no counterpart to match. Keeping the real month view alive over the grid and moving its rows: the month would have to stay mounted at all times. Reversing mid-flight: not worth it for a 0.5s decoration. Instead a 1.2s deadline removes the replica even if the completion never arrives, and Reduce Motion keeps the plain switch.
+
+### Which month you return to
+
+The last row of the November grid runs from November 30 to December 6. Tap it and the week view's title says December. Under the earlier rule, ‹ would open December and the header would settle into the top row — but it rose from the bottom row. So the calendar now remembers the month you entered from and returns to it while the week on screen is still in that grid. The cost: on a straddling week you can tap "‹ December 2026" and get November. The title says which month the week belongs to; ‹ goes back where you came from.
+
+### A spring's completion fires before it settles
+
+The first version used a spring, and the rows jumped 6–8pt on the frame the replica was removed. `withAnimation`'s completion defaults to `logicallyComplete`, which for a spring is the perceptual `duration`; the value keeps easing toward the target afterwards. Measured from recorded frames, 6–8pt of roughly 450pt was still left, about 1.4%. Invisible on an opacity or a few points of travel; visible when hundreds of points move and the completion's job is to remove the stand-in and reveal the real thing. A `timingCurve` ends exactly at its duration. The `removed` criterion was not tried, on the judgment that the replica would sit there swallowing touches through the tail.
+
+### The bottom toolbar outlived the view that showed it
+
+The week view has a lock button in the bottom toolbar; the month view has no bottom toolbar. After settling and swapping to the month view, the lock button hung over the month's last row for about half a second. The first guess, a late completion, was wrong: the callback came at 0.52s and the button's pixels disappeared at 1.05s. Declaring the toolbar hidden on the month view did not help. In the old 0.2s `withAnimation` swap it vanished on the same frame, and why the two paths differ is not established.
+
+So the toolbar is hidden when the closing transition starts, and it is gone within the 0.45s the transition takes. The replica is also drawn at the size the month view last occupied rather than the current frame, which is shorter by the toolbar's height.
+
+![Mid-settle — the rows are closing with the grid still visible in the gap; the lock button at the bottom left is already gone](/blog/timetable-calendar-plan/zoom-close-mid.png)
+
+Neither problem shows in before/after screenshots. They showed up with the frame before and after the completion side by side, and the 30 frames after the end laid out.
+
+Checked on iPhone in Korean and Arabic, with Reduce Motion, and when landing directly in the week view. iPad, iPhone Duo, the seven-day layout, a real device and VoiceOver are not checked yet.
 
 ## History
 
@@ -251,3 +280,4 @@ Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, 
 - 2026-11-11 — week strip shows year and month only; weeks change by swiping the date row under fixed weekdays. Fixed title and date numbers disagreeing in Islamic-calendar regions.
 - 2026-11-11, later — the calendar opens on the month view; tapping a date opens its week, ‹ year-and-month on the strip goes back. Week/month toggle removed, view mode no longer stored.
 - 2026-11-11, morning — the date row and the event grid slide together when changing weeks, and swiping the grid works too. The date row is no longer a scroll view (fixes next week's dates leaking under a side toolbar, and a paused release being read as a flick).
+- 2026-11-11, midday — month → week lifts the tapped week row into the week header; week → month settles it back. Back returns to the month you entered from (the title's month once you swipe out of it). Fixed a spring completion firing before settle and a bottom toolbar that lingered.
