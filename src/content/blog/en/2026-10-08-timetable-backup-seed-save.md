@@ -1,12 +1,14 @@
 ---
 title: "On a new device, the first launch was erasing the backup before offering to restore it"
-date: 2026-10-13T09:59:44+09:00
+date: 2026-11-11T15:13:21+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "Before the app could offer to restore, the empty timetable it creates on first launch had already replaced the iCloud backup. Two reasonable rules met at the seed save."
 ---
 
-Open the timetable app on a new phone and it asks whether to restore from your backup. Until this week, the freshly installed app had already replaced that backup with one empty timetable by the time the question appeared. Now a freshly installed app writes nothing to the backup until you have decided whether to restore.
+Open the timetable app on a new phone and it asks whether to restore from your backup. Until this week, the freshly installed app had already replaced that backup with one empty timetable by the time the question appeared. The fix made a freshly installed app write nothing to the backup until you had decided whether to restore.
+
+The safeguards described here were all removed with the backup feature on October 13, and the app no longer asks about restoring on first launch. The last section covers how backup is returning in November in a different shape; everything above it stays as the record of how that decision was reached.
 
 ## Two rules, each fine on its own
 
@@ -195,6 +197,61 @@ The alert now has "Start a new backup from this device" as a third option and en
 
 Account switches and late metadata cannot be proven on the simulator. The classification is a pure function tested across all four combinations, and the first-write guard is tested with a file placed in a temporary folder first: no write, hold re-armed, original bytes intact. The two-device, two-account sequence stays a hardware check. Conflict versions that iCloud keeps when devices alternate writes are still not consulted; this file is a one-way recovery copy, not sync, and that decision stands.
 
+## November 11, 2026 — Instead of deciding whether a write is safe, remove the overwrite
+
+On the evening of October 13, after the four reviews above, the backup feature was removed entirely. Every pass ended with the same two-device check still open, and each new condition for arming or releasing the hold exposed the next gap. The worry had always been one thing: a timetable disappearing without the user knowing. A backup that could not rule that out was worse than none.
+
+A month later it is coming back in a different shape.
+
+### One file written by every device was the root
+
+Every gap above came from the same premise: one backup file per iCloud account, replaced by whichever device saved last. So each write needed a verdict on whether it was safe, and the inputs to that verdict were all things a device cannot be sure of. Is this a first launch? Was the load complete? Has the file finished downloading? Is this the same account?
+
+Now each install owns its own set. The app writes only to its set and only reads the others. It keeps one file per day, rewrites that file within the day, and retains the newest seven. The payload is the save file's bytes, copied as they are, so an older app can no longer drop fields it does not know on the way to the backup.
+
+| What the old design had to prevent | In the new design |
+|---|---|
+| A new device's empty timetable replaces the backup | A new install writes to a new set; the old device's set is untouched |
+| A partially read file replaces a complete backup | After a lossy load the day's file is closed and a new one is started; the closed file stays |
+| An undownloaded backup is read as "none" | An empty list never triggers a write or a delete |
+| The account changed while the app was closed | The new account simply gains a set for this install |
+
+The hold flag, the account-token comparison and the first-write existence check did not return. There is no longer a single recovery copy to defend.
+
+### Restore is one backup you pick; the app never brings it up
+
+Restore lives only under Settings › Restore from Backup. Each row shows when it was saved, the device type and the number of timetables. Tapping a row shows a confirmation that repeats the time and count; confirming replaces every timetable and calendar on the device with that backup.
+
+![Restore list: rows with a save time and "iPhone · 4 timetables · This device", then "Undo a restore" rows and "Delete All iCloud Backups" (Korean UI)](/blog/timetable-backup-seed-save/restore-list.png)
+
+Before replacing anything, the current save file is kept on the device. If that copy cannot be written, the restore does not happen. The copies appear under the list as a way back, behind the same confirmation. Several rows share a date in the capture because the restore was run several times: each restore closes that day's file, so the backup you picked is never rewritten straight away.
+
+![Restore confirmation: the backup's time and timetable count, and a note that the current data stays on this device so you can go back (Korean UI)](/blog/timetable-backup-seed-save/restore-confirm.png)
+
+The app never offers a restore on its own: not on first launch, not on an empty device, not after an account change, not after a lossy load. The offer alert refined above was helpful, but "should I ask now?" was one more verdict, and backups had to pause while it waited for an answer. Having to open Settings on a new phone is the price.
+
+Three alternatives lost:
+
+- **Merge the devices' timetables.** When the same timetable changed differently on two devices, something has to pick a winner. That is sync, which was removed in September.
+- **Keep the old design and always ask before overwriting.** This was the first proposal. The app still has to know when to ask, so the verdict stays.
+- **Keep one file and add dated copies.** Deferred on October 8. Devices still compete for today's copy.
+
+### Deletion is also only what you pick
+
+The app prunes its own set past seven and nothing else. Everything else is a choice: swipe a row to delete one backup, or use Delete All iCloud Backups to remove every set, including ones made by other devices. Both confirm first, and the alert says the backups disappear on other devices on the same account, and that devices with backup turned on will create a new one later, so turn it off first to stop.
+
+Turning the switch off only stops writing. Backups already in iCloud stay, and the restore list still opens. The Settings card that clears the device does not touch backups either; the button that empties a device should not take the last recovery copy with it.
+
+### What went wrong on the way
+
+In Arabic the row subtitle scrambled: in "iPhone · 4 جداول · هذا الجهاز" the count left its noun and attached to the Latin "iPhone". In bidirectional text a number follows the direction of the preceding strong character. Wrapping the device type in directional isolates (FSI…PDI) put it back, and an Arabic capture of this screen is now part of the checklist.
+
+Re-adding the iCloud entitlement nearly brought back an old problem too. With the entitlement present, looking up the container really goes to iCloud, and unrelated unit tests used to stall for 127 seconds on that call. The lookup now happens only on the I/O queue and never under test; tests supply a temporary folder as the container. All 2,402 run in under 25 seconds.
+
+### Where it stands
+
+Not shipped yet. The simulator cannot sign in to iCloud, so the captures above use an on-device folder in place of the container. Upload, download on another device and deletion reaching another device have not been observed. Eight checks for two real devices are written down, and the feature does not ship before they pass. Because backup is on by default, the privacy policy has to be published first.
+
 ## History
 
 - October 8, 2026 — Hold backup writes before a fresh install creates its default timetable.
@@ -203,3 +260,4 @@ Account switches and late metadata cannot be proven on the simulator. The classi
 
 - October 13, 2026 — Remove quiet-query auto-release, move coordinated I/O off the UI actor, distinguish upload completion, and clear pre-restore undo/redo.
 - October 13, 2026 — Compare the account token at every launch (sign-out is not a switch), check for an existing file at the first write after a discovery release, never rewrite the backup right after a restore and warn on newer-app backups, add "Start a new backup from this device" to the offer.
+- November 11, 2026 — Record the October 13 removal; one set per install (one file a day, newest seven); restore only a backup picked from the list, with a pre-restore copy; no restore offers; deletion only by choice (not shipped yet).
