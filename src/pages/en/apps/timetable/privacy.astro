@@ -15,7 +15,7 @@ const t = useTranslations(lang);
     <div class="text-center mb-16 md:mb-20">
       <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperTimetable</span>
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
-      <p class="text-sm text-text-sub">Effective Date: October 30, 2026</p>
+      <p class="text-sm text-text-sub">Effective Date: November 18, 2026</p>
     </div>
 
     <div class="prose prose-gray max-w-none
@@ -39,12 +39,20 @@ const t = useTranslations(lang);
 
       <h2>1. What You Create</h2>
       <p>
-        Timetables, schedule titles, colors, memos, and alarm settings — <strong>everything you enter is stored only on your device.</strong>
-        The app never sends it to a server, and the developer cannot see it. There is no cloud sync or backup feature.
+        Timetables, schedule titles, colors, memos, and alarm settings — <strong>everything you enter is stored on your device.</strong>
+        The app never sends it to the developer's servers, and the developer cannot see it. There is no sync between devices.
       </p>
       <ul>
+        <li>
+          <strong>iCloud Backup (iOS app)</strong>: while "iCloud Backup" in the app's settings is on (it is on by default and you can turn it off),
+          a copy of your timetables and calendar events is stored in <strong>your own iCloud</strong>.
+          Apple keeps this copy in your iCloud account; the developer cannot access it, and it is never sent to the developer's servers.
+          A backup holds what you entered, plus the model of the device that made it (for example, iPhone) and the app version.
+          Restoring happens only when you pick a backup from the list yourself; the app never restores on its own.
+          This item applies from the iOS app version that includes iCloud Backup. The Android app has no cloud backup.
+        </li>
         <li>Exporting a file or sharing an image or PDF happens <strong>only when you start it</strong>, and the result goes only where you send it.</li>
-        <li>Deleting the app also deletes the timetables stored on the device. If you want a backup, export a <code>.supertimetable</code> file first.</li>
+        <li>Deleting the app also deletes the timetables stored on the device. If you do not use iCloud Backup, export a <code>.supertimetable</code> file first. Backups already in iCloud stay there after the app is deleted (see 6. Retention Period).</li>
       </ul>
 
       <h2>2. Information Collected Automatically</h2>
@@ -144,14 +152,16 @@ const t = useTranslations(lang);
       <ul>
         <li><strong>Firebase Analytics data</strong>: automatically deleted after at most 14 months</li>
         <li><strong>Firebase Crashlytics data</strong>: crash reports kept for at most 90 days</li>
+        <li><strong>iCloud Backup (iOS)</strong>: up to the 7 most recent backups per device are kept in your iCloud; older ones are removed by the app on that device when it makes a new backup. Turning iCloud Backup off or deleting the app leaves existing backups in iCloud until you delete them yourself.</li>
       </ul>
-      <p>Data past its retention period is destroyed without delay.</p>
+      <p>Firebase data past its retention period is destroyed without delay.</p>
 
       <h2>7. Your Rights</h2>
       <ul>
         <li><strong>Opting out of tracking (iOS)</strong>: choose "Ask App Not to Track" in the ATT prompt, or turn SuperTimetable off in iOS <strong>Settings → Privacy &amp; Security → Tracking</strong>; the advertising identifier (IDFA) is then never read. Where consent is required, change it in the app under <strong>Settings → Ad privacy</strong>.</li>
         <li><strong>Turning off personalized ads (Android)</strong>: delete or reset the advertising ID in your device's <strong>Settings → Privacy → Ads</strong>. Where consent is required, change it in the app under <strong>Settings → Ad privacy</strong>.</li>
         <li><strong>Stopping collection</strong>: deleting the app stops all further analytics, crash and ad data collection. Buying Remove Ads stops ad requests and ad data collection. There is no in-app switch to turn collection off separately.</li>
+        <li><strong>Deleting iCloud backups (iOS)</strong>: in the app, open <strong>Settings → Restore from Backup</strong> to delete backups one at a time, or use "Delete All iCloud Backups" to remove them all. You can also delete this app's data from iCloud storage management in iOS Settings. Backups exist only in your iCloud, so the developer cannot delete them for you.</li>
         <li><strong>Deletion requests</strong>: contact us at the address below to request deletion of collected data. Deletion within Firebase is handled within the limits of Firebase's own policy.</li>
       </ul>
 
