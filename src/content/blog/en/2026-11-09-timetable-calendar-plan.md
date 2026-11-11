@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-11T18:36:00+09:00
+date: 2026-11-11T23:46:01+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -312,6 +312,27 @@ Getting those frames took a wrong turn too. Simulator screen recording writes a 
 
 Checked on iPhone in Korean (first, middle and last rows) and in Arabic with the mirrored layout. Period-based calendars, going back with a block selected, days with overlapping events, iPad, iPhone Duo and a real device are not checked yet.
 
+## 2026-11-11, night — the repeat calendar is one month, paged sideways
+
+Turning on repeat used to make the event sheet two or three screens long: the range calendar stacked three month cards, and a year-long repeat stacked more than twelve, with alerts and notes below all of it. Now there is **one** month card.
+
+![Event sheet — biweekly repeat with the 16-week preset, start and end cells above a single month card titled February 2027 with back and forward arrows](/blog/timetable-calendar-plan/recurrence-one-month.png)
+
+| Action | Result |
+|---|---|
+| `‹ ›` in the card header, or a horizontal swipe on the card | previous / next month |
+| Tap the start or end cell | the calendar jumps to that date's month |
+| 8 weeks · 16 weeks · 1 year chip | the calendar jumps to the new end date's month |
+| Tap a day | start, then end. The month does not move |
+
+The card always draws six weeks, so paging never changes the sheet's height. Picking works as before: first tap is the start, second the end.
+
+The calendar follows changes made outside it and ignores its own. If tapping a dimmed next-month day paged the card under your finger, the second tap would land on the wrong day.
+
+A popover was the first idea and lost for three reasons: on iPad the event editor is already a popover, an iPhone popover makes day cells too small, and it brings back the separate range screen removed a day earlier. A collapsible calendar is shorter still, but the calendar stops being always visible and the sheet height jumps on every expand.
+
+One precaution: with button cells a swipe could end up picking the day it passed over, so cells are now tap gestures (a tap fails on movement) with the button trait and an accessibility action added back. The swipe is recognized alongside the sheet's vertical scroll and pages only when it ends at least 50pt sideways and 1.5× more horizontal than vertical. iPad popover and Arabic layouts are not yet checked by eye.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -324,3 +345,4 @@ Checked on iPhone in Korean (first, middle and last rows) and in Arabic with the
 - 2026-11-11, morning — the date row and the event grid slide together when changing weeks, and swiping the grid works too. The date row is no longer a scroll view (fixes next week's dates leaking under a side toolbar, and a paused release being read as a flick).
 - 2026-11-11, midday — month → week lifts the tapped week row into the week header; week → month settles it back. Back returns to the month you entered from (the title's month once you swipe out of it). Fixed a spring completion firing before settle and a bottom toolbar that lingered.
 - 2026-11-11, evening — in the month ↔ week transition the color bars grow into their event blocks and shrink back; the real blocks hide meanwhile (derived from the replica's state). The block image is centered in the growing frame.
+- 2026-11-11, night — the repeat range calendar is a single month card paged with ‹ › or a swipe; cells and presets jump to their date's month. "Show more months" removed.
