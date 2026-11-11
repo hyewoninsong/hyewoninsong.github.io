@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-11T11:43:40+09:00
+date: 2026-11-11T18:36:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -270,6 +270,48 @@ Neither problem shows in before/after screenshots. They showed up with the frame
 
 Checked on iPhone in Korean and Arabic, with Reduce Motion, and when landing directly in the week view. iPad, iPhone Duo, the seven-day layout, a real device and VoiceOver are not checked yet.
 
+## 2026-11-11, evening — the color bars grow into their event blocks
+
+The midday transition carried only the dates. The tapped row's color bars faded as they reached the header, and the week view's blocks were already drawn underneath, simply revealed as the rows parted. Now each bar travels to its own block's place, its weekday column and its time, growing to the block's size while the title appears. Going back, the blocks shrink into the bars of their date cells.
+
+![Mid-rise — under the 30th and the 2nd, red rectangles are growing into blocks with their titles appearing; the dimmed bar of the 2nd, a date outside the month, has reached full color](/blog/timetable-calendar-plan/zoom-blocks-open.png)
+
+The month view draws at most four bars per day; the week view draws only events inside the visible days and hours. So some have no partner.
+
+| Bar in the month view | Block in the week view | In the transition |
+|---|---|---|
+| yes | yes | the bar grows into the block, and shrinks back |
+| yes | not visible (outside shown days or hours) | fades with the row, as before |
+| none (fifth event onward) | yes | appears from the fourth bar's slot and grows |
+| dimmed bar of an out-of-month date | yes | reaches full color on the way |
+
+Curve and duration match the dates: 0.5s in, 0.45s out. Alarm badges appear once the block has nearly arrived.
+
+### One more layer on the replica; the real blocks hide meanwhile
+
+The flying blocks are one extra layer on top of the midday replica: an `Animatable` view that derives position, size, corner radius and title opacity from a single progress value, riding the same `withAnimation` as the dates. No new completion signal, no new deadline. Bars and blocks are matched by the event occurrence's id.
+
+Each flying piece is two things: a colored rectangle that grows from the bar's frame to the block's frame, and the real block view at its real size centered in it, revealed during the first half. The rectangle fades near the end, leaving the same pixels as the real block underneath. The grid reports its own frame and layout metrics, and the layer reads that frame on every frame it draws, so blocks keep heading for the right place while the week view scrolls itself into position.
+
+While the replica carries the blocks, the real grid hides its own. That flag is derived from the replica's state rather than toggled separately. The replica can go away on completion, on the 1.2s deadline, or because another screen abandons the transition; a separate switch would eventually miss one of those and leave the blocks invisible. Un-hiding is not animated either: riding the replica's 0.12s fade would give a moment where both copies are half transparent.
+
+![Mid-settle — the 9–13 row is coming back down and three blocks are shrinking toward their date cells, titles still centered](/blog/timetable-calendar-plan/zoom-blocks-close.png)
+
+### What lost
+
+- `matchedGeometryEffect` between bar and block: same reasons as for the dates, plus the blocks live in a scroll view that clips them under the header.
+- Moving the live block views: their frames are already owned by selection, dragging and resistance, and the scroll view clips them, so they cannot start from a row outside the viewport.
+- Scaling the block image up from the bar (`scaleEffect`): a 40×3 bar to a 60×70 block is a different ratio on each axis, so the title flies squashed.
+- Crossfade in place: the point was to move like the dates.
+
+### The title flew clipped and popped in late
+
+The first cut aligned the block image to the top left of the growing frame. Laid out frame by frame, the title was cut off below the frame while it was still flat and only came up near the end, because a block centers its title and a small top-left window shows the empty top. Centering the image in the frame keeps the title visible from the start. The final picture is identical in both versions; only the middle frames differ.
+
+Getting those frames took a wrong turn too. Simulator screen recording writes a frame only when the screen changes, so idle time has no frames and "the tap happened at second N" does not hold; a 0.5s transition fits entirely inside that error. Cutting by time gave the wrong frames. Reading each frame's timestamp and splitting where the gap exceeds 0.25s yields one burst per transition (40–48 frames for 0.5s, 36–41 for 0.45s), which can then be extracted by frame number.
+
+Checked on iPhone in Korean (first, middle and last rows) and in Arabic with the mirrored layout. Period-based calendars, going back with a block selected, days with overlapping events, iPad, iPhone Duo and a real device are not checked yet.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -281,3 +323,4 @@ Checked on iPhone in Korean and Arabic, with Reduce Motion, and when landing dir
 - 2026-11-11, later — the calendar opens on the month view; tapping a date opens its week, ‹ year-and-month on the strip goes back. Week/month toggle removed, view mode no longer stored.
 - 2026-11-11, morning — the date row and the event grid slide together when changing weeks, and swiping the grid works too. The date row is no longer a scroll view (fixes next week's dates leaking under a side toolbar, and a paused release being read as a flick).
 - 2026-11-11, midday — month → week lifts the tapped week row into the week header; week → month settles it back. Back returns to the month you entered from (the title's month once you swipe out of it). Fixed a spring completion firing before settle and a bottom toolbar that lingered.
+- 2026-11-11, evening — in the month ↔ week transition the color bars grow into their event blocks and shrink back; the real blocks hide meanwhile (derived from the replica's state). The block image is centered in the growing frame.
