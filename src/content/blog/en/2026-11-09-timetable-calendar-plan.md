@@ -1,8 +1,8 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-12T01:45:10+09:00
+date: 2026-11-12T03:05:39+09:00
 app: "timetable"
-tags: ["devlog", "swiftui", "data"]
+tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
 ---
 
@@ -46,7 +46,7 @@ Two causes stacked. In the UI test, `-calendar.viewMode week` as a launch argume
 
 ## Where it stands
 
-Week and month views, the list segment and the virtual timetable are still there (only the toggle between week and month was removed on 11-11, last section). Assignment, date exceptions and holidays were removed on the evening of 11-10 and replaced by the calendar's own repeating events (last section). Alarms do not know about calendar events yet; since AlarmKit repeats only weekly, a series with an end date will need one-shot alarms registered a few weeks ahead. That decision, widgets and Siri, and Android come next.
+Week and month views, the list segment and the virtual timetable are still there (only the toggle between week and month was removed on 11-11, last section). Assignment, date exceptions and holidays were removed on the evening of 11-10 and replaced by the calendar's own repeating events (last section). Alarms came next: since AlarmKit repeats only weekly, each calendar occurrence gets a one-shot alarm, registered 28 days ahead and capped at 64. Android followed on 11-12 (last section). Widgets and Siri reading the calendar come after that.
 
 ## 2026-11-09, afternoon — one row per item, and timetables are picked as cards
 
@@ -333,6 +333,57 @@ A popover was the first idea and lost for three reasons: on iPad the event edito
 
 One precaution: with button cells a swipe could end up picking the day it passed over, so cells are now tap gestures (a tap fails on movement) with the button trait and an accessibility action added back. The swipe is recognized alongside the sheet's vertical scroll and pages only when it ends at least 50pt sideways and 1.5× more horizontal than vertical. iPad popover and Arabic layouts are not yet checked by eye.
 
+## 2026-11-12 — the same calendar on Android: same file, a different moment to roll the alarm window
+
+The Android app now has the calendar too: the `Timetables | Calendars` segment in the list, a month view where tapping a date opens its week, repeats with scope questions, week swiping, the month ↔ week transition, and per-occurrence alarms. Only the **final shape** of everything above was ported; the assignment model that was dropped along the way never crossed over. The code is up in three parts (model and storage, screens, motion and alarms) and is not released yet.
+
+`calendars.json` is the same file on both platforms: same keys, same version numbers, same rules for older versions, unknown newer versions and broken elements.
+
+| Action | Result |
+|---|---|
+| `Calendars` segment in the list sheet | calendar cards, a title list, search |
+| Tap a date in the month view | the tapped week row rises into the date row and the color bars grow into blocks |
+| Swipe sideways in the week view | date row and grid slide together to the previous / next week |
+| `‹`, system back, the back gesture | the same transition in reverse, back to the month |
+| Edit, drag or delete a repeating event | a scope question; one question is one undo |
+| An alarm on a calendar event | rings once, on that date at that time; opening it lands on that occurrence's week |
+
+### A platform with a back button
+
+Android has something iOS does not: system back. In the week view it means "back to the month"; in the month view it is left alone. The back gesture starts the closing transition when it commits. Tying the transition to the finger's progress would look better, but it adds one more cancel path to a transition that already guards against double taps, rotation and an alarm cutting in (a generation counter and a 1.2-second deadline).
+
+Week swipes do not start at the screen edges, which belong to the back gesture. `systemGestureExclusion` could claim them, at the cost of back not working in the week view only.
+
+### One live grid and two pictures, not three grids
+
+A `HorizontalPager` with three week grids is the easy way to page weeks, and it splits scroll position, selection and the zoom anchor three ways. iOS dropped that route for the same reason. There is one live grid; the neighboring weeks are pictures with no gestures and no accessibility nodes. On release the week changes and the week you left becomes the picture on the other side.
+
+One deliberate difference from iOS: a grid that is locked and zoomed does not page. A horizontal drag there is an editing gesture, and a zoom anchor that crosses into another week would leave the grid locked on the wrong one.
+
+### No midnight signal, so a ringing alarm rolls the window
+
+Each occurrence gets a dated alarm, from today through 28 days, nearest first, up to 64 slots: the same numbers as iOS. What differs is **when** that window moves forward. iOS rolls it on launch and at midnight. Android has no midnight signal, so it rolls when the app comes to the foreground, on reboot or a time zone change, and **whenever any alarm rings**.
+
+A daily WorkManager job was not chosen, which leaves one limit: if no alarm rings and the app stays closed for more than 28 days, later occurrences will not ring. Weekly alarms with a date check at ring time lost as well. They cannot express biweekly repeats, end dates or a single changed occurrence, and discarding at ring time lights the screen for nothing.
+
+### A cleanup that never ran for calendars
+
+Found on the emulator: discard a new event with X in the calendar's week view, or move to another week with a block selected, and the bottom buttons stayed in their duplicate / delete shape with nothing selected.
+
+The grid clears the selection of an event that no longer exists, but only "when the grid is drawing the current timetable", a guard that stops an outgoing grid from clearing an incoming grid's selection. A calendar never becomes the current timetable. It enters the grid as a virtual timetable outside the list, so that widgets and alarms keep one meaning of "current document". The guard was always false, the cleanup never ran for calendars, and the unit tests only ever built the grid from a timetable.
+
+The guard now asks "is this grid drawing the document on screen" instead, and the decision is a pure function tested with calendars too.
+
+Two more gaps of the same family turned up, neither written as a guard.
+
+The "Remove alarms from all timetables" row in Settings clears calendar alarms too, but the value that enables the row still counted timetable alarms only. With alarms on calendar events alone, the row was disabled. This one came over from iOS unchanged, so the "does it match iOS" check passed. It matched, and both were wrong. Both apps are fixed.
+
+The other is the grid's change animation. On Android the grid moves from its old state to the new one whenever the event list changes, whatever the cause: removed events fade out, new ones fade in. Changing the calendar's week swaps the whole list under the same document, so the mechanism read it as an edit that deleted everything and added something else. Mid-slide back to today, the leaving week's block was still fading inside a grid that already carried this week's dates. It only showed with animations slowed ten times. Another week is another page, not an edit, so the mechanism is rebuilt when the week changes.
+
+The traps iOS hit above (a stale velocity after a pause read as a flick, a spring completing before it settles, the bottom bar lingering over the month view while closing) have the same causes in Compose, so they were blocked during the port. `VelocityTracker` stops reporting once the finger stops, too.
+
+So far this has been checked on an emulator at phone width and in unit tests. Alarms ringing on their dates on a real device, tablets and unfolded foldables, dark mode, and the case of not opening the app for more than 28 days are still to be checked.
+
 ## 2026-11-12 — "This and following" now edits too, by splitting the series at that date
 
 Editing a repeating event now asks the same three questions as deleting. Pick "This and following" and the series splits in two at that date: earlier occurrences stay as they were, and only the ones from that day on change.
@@ -374,4 +425,5 @@ Unit tests cover the split, undo and the edge cases. The four-button alert, the 
 - 2026-11-11, midday — month → week lifts the tapped week row into the week header; week → month settles it back. Back returns to the month you entered from (the title's month once you swipe out of it). Fixed a spring completion firing before settle and a bottom toolbar that lingered.
 - 2026-11-11, evening — in the month ↔ week transition the color bars grow into their event blocks and shrink back; the real blocks hide meanwhile (derived from the replica's state). The block image is centered in the growing frame.
 - 2026-11-11, night — the repeat range calendar is a single month card paged with ‹ › or a swipe; cells and presets jump to their date's month. "Show more months" removed.
+- 2026-11-12 — calendar ported to Android: the same `calendars.json`, system back returns to the month, week swiping with one live grid and picture neighbors, the alarm window also rolls when an alarm rings. Fixed a selection cleanup that never ran for calendars, a remove-alarms row that stayed disabled with calendar-only alarms (iOS too), and blocks fading on a week change.
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
