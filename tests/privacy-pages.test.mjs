@@ -118,15 +118,15 @@ test('a Korean policy is written in 합니다체', { todo: 'musicnote Android po
   assert.deepEqual(casual, []);
 });
 
-test('the SuperTimetable policy discloses iCloud Backup and the app page does not claim device-only storage', () => {
+test('the SuperTimetable policy discloses iCloud Backup and Google Drive Backup and the app page does not claim device-only storage', () => {
   // iCloud Backup came back to the iOS app on 2026-11-11 as a per-device copy in the
   // user's own iCloud, on by default (docs/decisions/2026-11-11-timetable-icloud-backup-policy.md,
   // which supersedes 2026-10-13-timetable-icloud-backup-removed.md). The policy has to say
   // where the copy goes, that it is on by default, who can read it, how long it stays and
   // how to delete it; and neither page may still promise that nothing leaves the device.
   const required = {
-    ko: [/사용자 본인의 iCloud/, /기본으로 켜져/, /개발자는 접근할 수 없/, /최근 7개/, /iCloud 백업 모두 삭제/, /앱을 삭제해도/, /Android 앱에는 클라우드 백업 기능이 없습니다/],
-    en: [/your own iCloud/, /on by default/, /developer cannot access/, /7 most recent/, /Delete All iCloud Backups/, /deleting the app leaves existing backups/i, /The Android app has no cloud backup/],
+    ko: [/사용자 본인의 iCloud/, /기본으로 켜져/, /개발자는 접근할 수 없/, /최근 7개/, /iCloud 백업 모두 삭제/, /앱을 삭제해도/, /Google Drive 백업/, /직접 켠 경우에만/, /drive\.appdata/, /개발자도 볼 수 없습니다/, /백업 모두 삭제/, /서드 파티 액세스/],
+    en: [/your own iCloud/, /on by default/, /developer cannot access/, /7 most recent/, /Delete All iCloud Backups/, /deleting the app leaves existing backups/i, /Google Drive Backup/, /only if you turn/, /drive\.appdata/, /developer cannot see them/, /Delete all backups/, /Third-party access/],
   };
   const deviceOnly = /기기 안에만|stored only on your device|stay on the device|클라우드 동기화·백업 기능이 없습니다|no cloud sync or backup/;
   const problems = [];

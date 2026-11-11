@@ -15,7 +15,7 @@ const t = useTranslations(lang);
     <div class="text-center mb-16 md:mb-20">
       <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperTimetable</span>
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">Privacy Policy</h1>
-      <p class="text-sm text-text-sub">Effective Date: November 18, 2026</p>
+      <p class="text-sm text-text-sub">Effective Date: November 19, 2026</p>
     </div>
 
     <div class="prose prose-gray max-w-none
@@ -49,10 +49,18 @@ const t = useTranslations(lang);
           Apple keeps this copy in your iCloud account; the developer cannot access it, and it is never sent to the developer's servers.
           A backup holds what you entered, plus the model of the device that made it (for example, iPhone) and the app version.
           Restoring happens only when you pick a backup from the list yourself; the app never restores on its own.
-          This item applies from the iOS app version that includes iCloud Backup. The Android app has no cloud backup.
+          This item applies from the iOS app version that includes iCloud Backup.
+        </li>
+        <li>
+          <strong>Google Drive Backup (Android app)</strong>: <strong>only if you turn "Google Drive Backup" on</strong> in the app's settings (it is off by default),
+          the save files for your timetables and calendar events are uploaded to <strong>your own Google Drive</strong>.
+          What goes up is what you entered, plus the model of the device that made the backup, the app version and item counts.
+          The backup is stored in a hidden, app-only folder in your Drive. The app asks for a single permission, <code>drive.appdata</code>, so it cannot see any other file in your Drive.
+          Backups do not pass through the developer's servers, and the developer cannot see them.
+          This item applies from the Android app version that includes Google Drive Backup.
         </li>
         <li>Exporting a file or sharing an image or PDF happens <strong>only when you start it</strong>, and the result goes only where you send it.</li>
-        <li>Deleting the app also deletes the timetables stored on the device. If you do not use iCloud Backup, export a <code>.supertimetable</code> file first. Backups already in iCloud stay there after the app is deleted (see 6. Retention Period).</li>
+        <li>Deleting the app also deletes the timetables stored on the device. If you do not use iCloud Backup or Google Drive Backup, export a <code>.supertimetable</code> file first. Backups already in iCloud or Google Drive stay there after the app is deleted (see 6. Retention Period).</li>
       </ul>
 
       <h2>2. Information Collected Automatically</h2>
@@ -153,6 +161,7 @@ const t = useTranslations(lang);
         <li><strong>Firebase Analytics data</strong>: automatically deleted after at most 14 months</li>
         <li><strong>Firebase Crashlytics data</strong>: crash reports kept for at most 90 days</li>
         <li><strong>iCloud Backup (iOS)</strong>: up to the 7 most recent backups per device are kept in your iCloud; older ones are removed by the app on that device when it makes a new backup. Turning iCloud Backup off or deleting the app leaves existing backups in iCloud until you delete them yourself.</li>
+        <li><strong>Google Drive Backup (Android)</strong>: up to the 7 most recent backups per device are kept in your Google Drive. Turning Drive backup off or deleting the app leaves existing backups in Drive until you delete them yourself.</li>
       </ul>
       <p>Firebase data past its retention period is destroyed without delay.</p>
 
@@ -162,6 +171,7 @@ const t = useTranslations(lang);
         <li><strong>Turning off personalized ads (Android)</strong>: delete or reset the advertising ID in your device's <strong>Settings → Privacy → Ads</strong>. Where consent is required, change it in the app under <strong>Settings → Ad privacy</strong>.</li>
         <li><strong>Stopping collection</strong>: deleting the app stops all further analytics, crash and ad data collection. Buying Remove Ads stops ad requests and ad data collection. There is no in-app switch to turn collection off separately.</li>
         <li><strong>Deleting iCloud backups (iOS)</strong>: in the app, open <strong>Settings → Restore from Backup</strong> to delete backups one at a time, or use "Delete All iCloud Backups" to remove them all. You can also delete this app's data from iCloud storage management in iOS Settings. Backups exist only in your iCloud, so the developer cannot delete them for you.</li>
+        <li><strong>Deleting Google Drive backups (Android)</strong>: in the app's settings, choose <strong>"Delete all backups"</strong> to remove the backups this device uploaded. You can also cut the app's connection in your Google Account under <strong>Security → Third-party access</strong>, after which the app can no longer reach your Drive. Backups exist only in your Google Drive, so the developer cannot delete them for you.</li>
         <li><strong>Deletion requests</strong>: contact us at the address below to request deletion of collected data. Deletion within Firebase is handled within the limits of Firebase's own policy.</li>
       </ul>
 
