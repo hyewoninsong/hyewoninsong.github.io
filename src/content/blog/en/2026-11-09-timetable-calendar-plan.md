@@ -422,7 +422,9 @@ The cap hurt because it was measured from the start date. A cap measured from to
 - **Measure the cap from today** — the smallest change, but you would still have to extend again every two years.
 - **Keep it and split to continue** — a split series means "All events" edits only reach one half.
 
-There is still no "never ends" option; an end date is required and the presets stay at 8 weeks, 16 weeks and 1 year. The one remaining edge is the last date the calendar handles, 2100-12-31. That is a storage-format limit, not a length cap: later dates cannot be read back, so the January 2101 days that show in the December 2100 grid are dimmed and not tappable.
+There is still no "never ends" option; an end date is required and the presets stay at 8 weeks, 16 weeks and 1 year.
+
+One more edge turned up. When reading dates from the file, the app rejected anything after 2100-12-31 — a line it had drawn itself to filter out garbage dates. With the length cap gone you could page the calendar to 2101, and a series saved that way would fail to load on the next launch. The first reaction was to make those days untappable. But it is not an OS limit, just our own line, so the line was removed: the upper end is no longer checked.
 
 The cap had been hiding one thing. Occurrences are not stored; dates are derived from the rule (start, end, weekdays, every N weeks). The derivation walked from start to end one day at a time — 732 steps at most, which was fine, but about 27,000 out to 2100, and the edit sheet ran it three times per render.
 
@@ -455,4 +457,4 @@ Alarms and the watch were not touched; both look at a window near today, not the
 - 2026-11-11, night — the repeat range calendar is a single month card paged with ‹ › or a swipe; cells and presets jump to their date's month. "Show more months" removed.
 - 2026-11-12 — calendar ported to Android: the same `calendars.json`, system back returns to the month, week swiping with one live grid and picture neighbors, the alarm window also rolls when an alarm rings. Fixed a selection cleanup that never ran for calendars, a remove-alarms row that stayed disabled with calendar-only alarms (iOS too), and blocks fading on a week change.
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
-- 2026-11-12, midday — removed the two-year length cap on repeat ranges; the only edge left is the calendar's last date (2100-12-31). The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
+- 2026-11-12, midday — removed the two-year length cap on repeat ranges; the 2100 date ceiling is gone too. The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
