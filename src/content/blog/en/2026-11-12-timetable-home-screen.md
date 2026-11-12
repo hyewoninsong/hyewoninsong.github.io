@@ -1,6 +1,6 @@
 ---
 title: "The timetable list is now the home screen — the card you pick grows into the document"
-date: 2026-11-12T02:32:30+09:00
+date: 2026-11-12T14:52:36+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The list used to be a sheet over the open timetable. Now it is the floor of the app, and the card you tap grows in place into the timetable. To keep the document alive, home sits underneath it instead of on top."
@@ -57,3 +57,20 @@ It slipped through because every check used the first timetable, where "didn't s
 ## Where it stands
 
 Verified on an iPhone simulator: opening and returning from cards and rows for both timetables and calendars, relaunching with the switch on and off, a right-to-left language, and the end state under Reduce Motion. Not yet checked: iPad, the folding iPhone, Mac, a real device, VoiceOver. The first-run intro clips and store screenshots still show the old sheet, and home has no entry to Settings yet — that still opens from a document's menu.
+
+## 2026-11-12 afternoon — the previous timetable showed through the one you picked
+
+Picking a different timetable on home made the growing document carry a faint copy of the one you had just left: its blocks, its weekday header doubled up. The report came as a screen recording from the folding iPhone; a regular iPhone showed it too, for the first few frames.
+
+![Left, before the fix: the growing timetable overlaid with the previous one's weekday header and 08:00 time axis. Right, after: only the picked timetable.](/blog/2026-11-12-timetable-home-screen/ghost-before-after.png)
+
+It follows straight from the structure above. The document stays mounted, so picking from home swaps it while it is still underneath, then starts the growth. The grid has had a 0.2s crossfade on timetable switches for a month, meant for keyboard switching while the grid is visible. That crossfade does not stop just because the document is covered, so for the first 0.2s of a 0.45s growth the old grid was still fading out on top. On the folding iPhone the growth runs on a snapshot taken 60ms in, which froze the overlap for the whole transition.
+
+The fix: the crossfade only runs when home is not attached. Picking from home always skips it; switching while the grid is visible keeps it. The rule lives in one place, the home state, rather than at the five places that open a document.
+
+It slipped through for the same reason as the page dot: transition recordings always reopened the same timetable, where old and new grids look identical. Recordings now pick a different one.
+
+## History
+
+- 2026-11-12 early — list moved from a sheet to a home screen; the picked card grows into the document
+- 2026-11-12 afternoon — crossfade disabled while home is attached, so the previous timetable no longer shows through
