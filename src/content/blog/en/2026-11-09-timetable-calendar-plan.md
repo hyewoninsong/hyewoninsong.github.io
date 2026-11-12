@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-12T18:50:12+09:00
+date: 2026-11-12T22:46:03+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -448,13 +448,40 @@ On a landscape iPad or an unfolded iPhone Duo the calendar now splits the screen
 
 ![Landscape iPad: month on the left, the week grid on the right, the shown week tinted](/blog/timetable-calendar-plan/split-month-week.png)
 
-Tap a date in the month and the grid slides into the left half while the right half shows that single day, one column of the week view. Swipe it to step a day at a time; stepping past Friday moves the week on the left as well. `‹` goes back to month and week. Portrait stays a single pane.
+Switch to week | day and the grid slides into the left half while the right half shows that single day, one column of the week view. (The first version switched on tapping a date; later that night the switch moved to a menu, see below.) Swipe it to step a day at a time; stepping past Friday moves the week on the left as well. Portrait stays a single pane.
 
 ![After tapping a date: week on the left, that day on the right](/blog/timetable-calendar-plan/split-week-day.png)
 
 There is still only one live grid. The grid owns window-wide things (the edit popover anchor, keyboard shortcuts, the lock, the bottom toolbar), so two of them would fight. The day pane is a picture built from the same piece that draws neighbouring weeks during a swipe; you edit on the left and the day follows. The grid keeps its place in the view tree, so it slides from right to left without losing its lock state or scroll.
 
 One trap on the way: the first build stayed split after rotating to portrait. The split decision read the content's own size, but in split mode each pane has a fixed half width, so the content never shrank and the decision never changed. Deciding from the size a `GeometryReader` is offered fixed it. Checked on the iPad simulator only; Duo, Mac and devices are still to do.
+
+## 2026-11-12, night — four pairs, picked from a menu in the top-right corner
+
+Two pairs left half the wide screen underused, and editing still opened a popover on top of a half-width pane. Now there are four pairs, picked from a "Month | Week ⌃⌄" menu in the top-right corner, where Apple Calendar keeps its view menu.
+
+![The menu: Month | Week, Week | Day, Week | Edit, Day | Edit](/blog/timetable-calendar-plan/split-mode-menu.png)
+
+| Pair | Left | Right |
+|---|---|---|
+| Month \| Week | month; tapping a date moves the week | week grid |
+| Week \| Day | week; picking an event moves the day | that day (a picture) |
+| Week \| Edit | week | editor for the picked event |
+| Day \| Edit | one-day grid | editor for the picked event |
+
+Tapping a date no longer changes the layout. When one tap rearranged the screen, anyone who only wanted to move the week lost the month every time. The pair is a layout choice, not a place you go into, so there is no `‹` in split mode, and the choice survives a relaunch.
+
+**One tap opens the editor.** With the popover, a first tap only selected and a second opened it, because the popover covered the block. The pane covers nothing, so one tap is enough and a second tap shows no popover. The pane is the same screen as the popover (save, delete, scope questions, new events from `+`); one window-wide flag turns the popover off while the pane is on screen.
+
+![Week | Edit: the tapped event opens on the right](/blog/timetable-calendar-plan/split-week-edit.png)
+
+One difference: with the pane open you can still drag the block on the left. The form holds the old time as its draft, so ✓ would put the block back. The pane rebuilds its form whenever the stored day or time changes.
+
+**Day | Edit uses the live grid, not the picture.** The picture has no toolbar (lock, undo, `+`, Today) and no dragging. Instead the live grid is narrowed to one weekday. Its week swipe is off there, because the neighbour it slides in is the same weekday next week, not tomorrow. You step days by swiping the date strip above it.
+
+![Day | Edit: one-day grid and the editor](/blog/timetable-calendar-plan/split-day-edit.png)
+
+Checked on the iPad simulator in landscape only. iPhone Duo, Mac, devices and Arabic are still to do.
 
 ## History
 
@@ -473,3 +500,4 @@ One trap on the way: the first build stayed split after rotating to portrait. Th
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
 - 2026-11-12, midday — removed the two-year length cap on repeat ranges; the 2100 date ceiling is gone too. The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
 - 2026-11-12, evening — wide landscape screens split in half: month | week, then week | day after tapping a date. The day pane is a picture; one live grid. Fixed a split that survived rotation (it measured its own content).
+- 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap and replaces the popover. Day | Edit narrows the live grid to one column.
