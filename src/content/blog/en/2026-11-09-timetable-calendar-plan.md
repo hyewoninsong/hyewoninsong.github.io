@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-12T12:02:30+09:00
+date: 2026-11-12T18:50:12+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -442,6 +442,20 @@ Rendering the edit sheet no longer depends on how long the range is. The whole r
 
 Alarms and the watch were not touched; both look at a window near today, not the whole range. Picking an end date past two years on screen, and how a decades-long range feels, have not been checked by eye yet.
 
+## 2026-11-12, evening — on wide screens the calendar splits in half: month beside week, then week beside day
+
+On a landscape iPad or an unfolded iPhone Duo the calendar now splits the screen exactly in half. It opens with the month on the left and that week's grid on the right; the week being shown is tinted in the month, and swiping weeks on the right moves the month along.
+
+![Landscape iPad: month on the left, the week grid on the right, the shown week tinted](/blog/timetable-calendar-plan/split-month-week.png)
+
+Tap a date in the month and the grid slides into the left half while the right half shows that single day, one column of the week view. Swipe it to step a day at a time; stepping past Friday moves the week on the left as well. `‹` goes back to month and week. Portrait stays a single pane.
+
+![After tapping a date: week on the left, that day on the right](/blog/timetable-calendar-plan/split-week-day.png)
+
+There is still only one live grid. The grid owns window-wide things (the edit popover anchor, keyboard shortcuts, the lock, the bottom toolbar), so two of them would fight. The day pane is a picture built from the same piece that draws neighbouring weeks during a swipe; you edit on the left and the day follows. The grid keeps its place in the view tree, so it slides from right to left without losing its lock state or scroll.
+
+One trap on the way: the first build stayed split after rotating to portrait. The split decision read the content's own size, but in split mode each pane has a fixed half width, so the content never shrank and the decision never changed. Deciding from the size a `GeometryReader` is offered fixed it. Checked on the iPad simulator only; Duo, Mac and devices are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -458,3 +472,4 @@ Alarms and the watch were not touched; both look at a window near today, not the
 - 2026-11-12 — calendar ported to Android: the same `calendars.json`, system back returns to the month, week swiping with one live grid and picture neighbors, the alarm window also rolls when an alarm rings. Fixed a selection cleanup that never ran for calendars, a remove-alarms row that stayed disabled with calendar-only alarms (iOS too), and blocks fading on a week change.
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
 - 2026-11-12, midday — removed the two-year length cap on repeat ranges; the 2100 date ceiling is gone too. The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
+- 2026-11-12, evening — wide landscape screens split in half: month | week, then week | day after tapping a date. The day pane is a picture; one live grid. Fixed a split that survived rotation (it measured its own content).
