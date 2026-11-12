@@ -1,6 +1,6 @@
 ---
 title: "Switch the list to cards and the thumbnail becomes the card — flying a copy instead of fading the screen"
-date: 2026-11-11T23:22:05+09:00
+date: 2026-11-12T10:34:46+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Switching between the card pager and the title list now moves each preview and name from its old place to its new one. The two screens never share a view tree, so a copy layer outside the stack flies between measured frames."
@@ -50,4 +50,23 @@ A few rules we kept:
 
 ## Where it stands
 
-With Reduce Motion on, the old fade remains. We verified the mid-flight frames with the flight slowed to three seconds; the landing at real speed, right-to-left languages, and iPad are still to be checked.
+With Reduce Motion on, the old fade remains. The first check used a flight slowed to three seconds, which hid a blink that showed up at real speed (see November 12). Right-to-left languages and iPad are still to be checked.
+
+## 2026-11-12 — The card dimmed once before it flew
+
+A day later: "it blinks once, then animates." A real-speed recording, split into 60 fps frames and scanned for brightness changes, showed about ten frames (0.2 s) where the centred card sat half-faded before it brightened and took off.
+
+![Before — the card stays washed out for several frames after the tap](/blog/2026-11-11-timetable-list-style-flight/blink-before.png)
+
+![After — only the segment and page dots fade; the card leaves at full colour](/blog/2026-11-11-timetable-list-style-flight/blink-after.png)
+
+The toggle button writes to its binding inside `withAnimation(.easeInOut(duration: 0.2))`, and the binding's setter runs synchronously inside that transaction. So placing the copy and hiding the original — meant to happen instantly in one frame — both rode the 0.2 s curve: the copy faded in while the original faded out, and for a moment neither was opaque. When the old stack was swapped out, only the copy remained and the card snapped back to full colour.
+
+The fix wraps those two state changes in `withTransaction` with animations disabled, including the path that cancels a flight on a quick double tap. A source-contract test now guards it.
+
+Two lessons. A three-second debug flight hides a 0.2 s fade that is half of a 0.36 s real one, so record decorative transitions at real speed too. And `simctl io recordVideo` writes the last frame of a still screen late: the video showed the card 5% too small at rest, while screenshots and measured frames said it was full size. Judge still screens from screenshots, not recordings.
+
+## History
+
+- 2026-11-11 — fade replaced by flying preview and name copies
+- 2026-11-12 — removed the blink caused by the toggle's animation leaking into the copy placement; landing frames re-read during the flight
