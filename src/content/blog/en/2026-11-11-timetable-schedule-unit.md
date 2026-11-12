@@ -1,12 +1,12 @@
 ---
 title: "To allow 5-minute events, the grid had to grow six times taller first"
-date: 2026-11-11T14:31:00+09:00
+date: 2026-11-13T01:14:28+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "Each timetable now picks its event unit: 5, 10, 15, 20 or 30 minutes. One unit is always as tall as today's 30-minute cell, so a 5-minute block can still be tapped, dragged and resized."
 ---
 
-Each timetable in Super Timetable now has an **event unit**: 5, 10, 15, 20 or 30 minutes. The unit is the shortest an event can be in that timetable. Until now the floor was 30 minutes everywhere, so a 10-minute break or a 5-minute roll call could not be written down at all.
+Each timetable in Super Timetable now has an **event unit**: 5, 10, 15, 20 or 30 minutes. The unit is the shortest an event can be when you drag it out or resize it on the grid; two days later the setting was renamed "minimum drag length" (see the 11-13 section). Until now the floor was 30 minutes everywhere, so a 10-minute break or a 5-minute roll call could not be written down at all.
 
 ## One unit is always the same height
 
@@ -40,7 +40,7 @@ Add a few 10-minute breaks at a 5-minute unit, then set the unit back to 30. Wha
 
 - **Stretch them to 30 minutes.** They would collide with their neighbours. A settings change must not rewrite events.
 - **Ask in an alert.** That is the first option with a permission slip.
-- **Leave them alone.** This is what shipped. A 10-minute event stays 10 minutes, and editing its title or color still saves. Only changing its length applies the new floor: it can grow, it cannot shrink.
+- **Leave them alone.** This is what shipped. A 10-minute event stays 10 minutes, and editing its title or color still saves. Only dragging its length on the grid is blocked (the first version let it grow from the new floor; see the 11-13 section). The event editor still changes its length in 5-minute steps.
 
 That choice reaches into the loader too. The app raises too-short events to a floor when it reads the file. If that floor were the timetable's unit, the next launch after raising the unit would silently lengthen events. The load floor is a fixed 5 minutes. A user-changeable setting is the wrong baseline for a load-time repair.
 
@@ -57,3 +57,22 @@ The too-short message had "30" written into it, separately from the constant the
 ## Where it stands
 
 Verified on the iOS simulator: the settings row, the list, and the grid at 15 and 5 minutes. Not yet checked on a real device, iPad, or the folding iPhone at the 5-minute unit. The save file gained one value per timetable, so the Android app is being brought to the same key and version. A timetable left at 30 minutes writes exactly the file it wrote before.
+
+## 2026-11-13 — Short events move; only their length is locked
+
+The day before, events shorter than the unit could not be dragged at all: a block smaller than a fingertip cannot tell "grab the edge" from "grab the middle". Blocking the move as well turned out to be too much — moving a 10-minute break to another day meant opening the editor and changing day and time.
+
+Now a short event **moves wherever you grab it**. Its edges move it rather than resize it, no resize handles are drawn, and dragging the time pill on the axis shows the notice. In a multi-selection, one short event keeps the whole group to moving only.
+
+![Dragging a 10-minute event — the start time sits above the finger, the end time below it](/blog/timetable-schedule-unit/short-move-pills.png)
+
+While you drag, the start and end time pills used to sit 22pt above and below the block. On a long block your finger is in the middle and covers neither. On a 10-minute block both ended up under your fingertip. Resizing already pushed its pill 66pt away from the finger, so moving a short event now does the same: start pill 66pt above the finger, end pill 66pt below. If the block stops against another event and the finger keeps going, the pills return to the block once the finger is far enough away. Events of 30 minutes or more are unchanged.
+
+![Tapping a short event selects it without handles and shows the notice](/blog/timetable-schedule-unit/short-select-toast.png)
+
+The notice now says the event can be moved but not resized by dragging, in all 18 languages. It appears on a tap, not while a long press is already moving the event — a "can't" message under a move that is working reads as wrong.
+
+## History
+
+- 2026-11-11 — Per-timetable event unit; one unit = one 30-minute cell
+- 2026-11-13 — Short events: move allowed, length locked, time pills step out from under the finger
