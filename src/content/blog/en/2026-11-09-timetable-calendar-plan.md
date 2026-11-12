@@ -412,7 +412,7 @@ Writing the tests surfaced two older bugs. With a Wed/Fri series that starts on 
 
 Unit tests cover the split, undo and the edge cases. The four-button alert, the screen after a drag, and the iPad edit popover have not been checked by eye yet.
 
-## 2026-11-12, midday — the two-year cap on repeat ranges is gone
+## 2026-11-12, midday — the two-year cap on repeat ranges is gone, and the sheet stops counting
 
 A repeating event's end date could be at most two years after its start. That cap is removed: open a series that is running out, move the end date later, and the past occurrences stay where they are.
 
@@ -424,7 +424,19 @@ The cap hurt because it was measured from the start date. A cap measured from to
 
 There is still no "never ends" option; an end date is required and the presets stay at 8 weeks, 16 weeks and 1 year. The one remaining edge is the last date the calendar handles, 2100-12-31. That is a storage-format limit, not a length cap: later dates cannot be read back, so the January 2101 days that show in the December 2100 grid are dimmed and not tappable.
 
-The cap had been hiding one thing. Occurrences are not stored; dates are derived from the rule (start, end, weekdays, every N weeks). The derivation walked from start to end one day at a time, asking "does this day have an occurrence?" — 732 steps at most, which was fine, but the edit sheet runs it three times per render (the dots, the count in the summary line, whether ✓ is enabled). Out to 2100 that is about 27,000 steps each. It now jumps week to week and builds the selected weekdays directly, so the work scales with the number of occurrences instead of days. A test compares the result with the day-by-day answer across weekdays, intervals, week-start days and mid-week starts.
+The cap had been hiding one thing. Occurrences are not stored; dates are derived from the rule (start, end, weekdays, every N weeks). The derivation walked from start to end one day at a time — 732 steps at most, which was fine, but about 27,000 out to 2100, and the edit sheet ran it three times per render.
+
+The first fix was to make it faster: jump week to week and build the selected weekdays directly, so the work scales with occurrences instead of days. But a weekly series on all seven weekdays has as many occurrences as days. So the direction changed: stop counting wherever a count is not needed.
+
+| Place | Before | Now |
+|---|---|---|
+| Summary line | "Weekly Mon, Wed · range · 16 times" | no count |
+| Whether ✓ is enabled | counted everything and checked for zero | only looks for a first occurrence (about 12 weeks at most) |
+| Dots on the range calendar | built every date in the range | asks only the 42 visible cells |
+| "Stop repeating?" alert | "7 other schedules will be deleted." | "The other schedules will be deleted." |
+| 50 events per day limit | checked every occurrence's day on save | limit removed |
+
+Rendering the edit sheet no longer depends on how long the range is. The whole range is still needed when splitting or deleting "this and following" and when applying a style to a series — once per tap, and those use the week-by-week derivation.
 
 Alarms and the watch were not touched; both look at a window near today, not the whole range. Picking an end date past two years on screen, and how a decades-long range feels, have not been checked by eye yet.
 
@@ -443,4 +455,4 @@ Alarms and the watch were not touched; both look at a window near today, not the
 - 2026-11-11, night — the repeat range calendar is a single month card paged with ‹ › or a swipe; cells and presets jump to their date's month. "Show more months" removed.
 - 2026-11-12 — calendar ported to Android: the same `calendars.json`, system back returns to the month, week swiping with one live grid and picture neighbors, the alarm window also rolls when an alarm rings. Fixed a selection cleanup that never ran for calendars, a remove-alarms row that stayed disabled with calendar-only alarms (iOS too), and blocks fading on a week change.
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
-- 2026-11-12, midday — removed the two-year length cap on repeat ranges; the only edge left is the calendar's last date (2100-12-31). Occurrence dates are built week by week instead of day by day.
+- 2026-11-12, midday — removed the two-year length cap on repeat ranges; the only edge left is the calendar's last date (2100-12-31). The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
