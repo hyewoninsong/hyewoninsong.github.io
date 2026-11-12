@@ -1,6 +1,6 @@
 ---
 title: "The timetable list is now the home screen — the card you pick grows into the document"
-date: 2026-11-12T14:52:36+09:00
+date: 2026-11-13T00:16:22+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The list used to be a sheet over the open timetable. Now it is the floor of the app, and the card you tap grows in place into the timetable. To keep the document alive, home sits underneath it instead of on top."
@@ -50,13 +50,13 @@ The list has a card pager and a title list, and [previews fly between them](/en/
 
 The pager is rebuilt on every switch, and a freshly created `ScrollView` does not use a value already sitting in `scrollPosition(id:)` as its starting offset. The binding means "follow when this changes", not "start here". State pointed at the third card; the scroll offset was zero.
 
-In a sheet that is a mismatch you fix with one swipe. On home it is worse: the rule is "tap the centred card and it grows", so when state and screen disagree, a different document opens than the one you tapped. The pager is now wrapped in a `ScrollViewReader` that calls `scrollTo(id, anchor: .center)` once, right after it is attached.
+In a sheet that is a mismatch you fix with one swipe. On home it is worse: the rule is "tap the centred card and it grows", so when state and screen disagree, a different document opens than the one you tapped. The pager is now wrapped in a `ScrollViewReader` that calls `scrollTo(id, anchor: .center)` once, right after it is attached. (On wide screens, where cards now sit two at a time, the anchor is the leading edge instead; see the 2026-11-13 section.)
 
 It slipped through because every check used the first timetable, where "didn't scroll" and "scrolled to the right place" look identical. Scroll-position checks now use an item that is not first.
 
 ## Where it stands
 
-Verified on an iPhone simulator: opening and returning from cards and rows for both timetables and calendars, relaunching with the switch on and off, a right-to-left language, and the end state under Reduce Motion. Not yet checked: iPad, the folding iPhone, Mac, a real device, VoiceOver. The first-run intro clips and store screenshots still show the old sheet, and home has no entry to Settings yet — that still opens from a document's menu.
+Verified on an iPhone simulator: opening and returning from cards and rows for both timetables and calendars, relaunching with the switch on and off, a right-to-left language, and the end state under Reduce Motion. Not yet checked: the folding iPhone, Mac, a real device, VoiceOver. iPad was checked on a simulator on 2026-11-13 (see below). The first-run intro clips and store screenshots still show the old sheet, and home has no entry to Settings yet — that still opens from a document's menu.
 
 ## 2026-11-12 afternoon — the previous timetable showed through the one you picked
 
@@ -70,7 +70,48 @@ The fix: the crossfade only runs when home is not attached. Picking from home al
 
 It slipped through for the same reason as the page dot: transition recordings always reopened the same timetable, where old and new grids look identical. Recordings now pick a different one.
 
+## 2026-11-13 — On wide screens, cards sit two at a time
+
+On an iPad in landscape and on the folding iPhone's inner display, one card took the full width. It only got wider, never taller, so the preview sat small inside it with empty space on both sides. Wide screens now show two cards side by side, and a swipe moves one card: 1 and 2, then 2 and 3.
+
+![Home on an iPad in landscape — two timetable cards side by side, a sliver of the previous and next card at each edge, and two page dots lit for the two visible cards](/blog/2026-11-12-timetable-home-screen/two-up-landscape.png)
+
+| | One-up | Two-up |
+|---|---|---|
+| Where | iPhone, iPad portrait, folded display | Wider than tall and at least 700pt wide |
+| Gap between cards | 8pt | 24pt |
+| Side margin | 28pt | 60pt |
+| Neighbour showing past the edge | 20pt | 36pt |
+| Page dots | One per card, one lit | One per card, two lit |
+
+The rule is about size, not device type; it is the same test the calendar uses to split into two panes.
+
+The spacing took two passes. Reusing the one-up 8pt gap made two cards read as one slab in the middle of the screen. Widening only the gap would have left 4pt of neighbour showing, so the margin grew with it. Dots stay one per card rather than one per position, so their count still equals the number of timetables and does not change on rotation.
+
+### Scroll position and "the selected one" are now separate values
+
+With one card visible, the card the pager settled on was the edit target; one `scrollPosition(id:)` value meant both. With two visible it only means "the leading card", so the edit target is its own value and tapping the other visible card moves it.
+
+Splitting them exposed two things that used to line up for free. Overscrolling at the end reported the last card as leading, a position that does not exist, so the value is clamped to the last real position. And reordering a card with the arrow buttons pushed it off-screen, because the scroll value had not changed and nothing told the scroll view to move; each move now calls `scrollTo` for that card. That one was also true in one-up, and is fixed there too.
+
+Two-up uses `.viewAligned(limitBehavior: .alwaysByOne)`. It limits inertia only: a drag longer than one card width still travels as far as the finger does.
+
+### The first preview drawn after launch was blank
+
+While checking two-up, a launch that started on home left one card showing nothing but its background.
+
+![Before the fix — the right-hand card is an empty white surface with no grid or events; the left one is fine](/blog/2026-11-12-timetable-home-screen/blank-card.png)
+
+Previews are rendered from an off-window `UIHostingController` with `drawHierarchy(in:afterScreenUpdates:)`. It returns a `Bool` that was being discarded. Logging it showed that in six launches out of six, the process's first call alone returned `false` (6 of 56 calls) and produced a fully transparent image; every later call returned `true`. App state, orientation and one-up versus two-up made no difference.
+
+A transparent image is not `nil`, so it was cached as a finished preview. Why the first call fails is not established. The fix is on the result: an image whose alpha is zero everywhere at 8×8 is not treated as a preview, is not cached, and the card retries up to three times. It was missed because the check for the new launch path was "home appears, the open card is in place" and never said the card had to contain a picture.
+
+### Seen and not seen
+
+Checked on an iPad Pro 11-inch simulator: two-up in landscape, one-up in portrait, timetables and calendars, one card per swipe, edit target and reordering, previews after a home-first launch. Not yet checked: the folding iPhone's inner display that prompted this, Mac, a real device, right-to-left languages, iPad Split View, and whether the first-call failure happens on hardware.
+
 ## History
 
 - 2026-11-12 early — list moved from a sheet to a home screen; the picked card grows into the document
 - 2026-11-12 afternoon — crossfade disabled while home is attached, so the previous timetable no longer shows through
+- 2026-11-13 — two cards at a time on wide screens, one per swipe; fixed the first preview after launch coming out blank
