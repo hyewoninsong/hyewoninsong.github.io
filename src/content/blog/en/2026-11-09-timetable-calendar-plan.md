@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T03:01:29+09:00
+date: 2026-11-13T03:37:14+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -501,6 +501,18 @@ Timetables now split too: on a wide landscape screen a timetable is always Week 
 
 Checked on the iPad simulator in both orientations. iPhone Duo, Mac, devices, Arabic and narrow Split View windows are still to do.
 
+## 2026-11-13, afternoon — a week strip above the day view; swipe the grid and the day follows your finger
+
+The day view lost its "Thursday, November 12" title and gained a **row of the week's weekdays and dates**, as in Apple's Calendar. The day you are looking at sits in a filled circle — the accent color for today, the text color for any other day — and an unselected today keeps an accent-colored number. Tap a date to go there.
+
+Swiping changed too. You used to swipe the title to change days; the grid ignored horizontal swipes. Now **the grid slides with your finger and the previous or next day shows beside it.** Past the halfway point the circle in the strip moves first; let go and the new day settles in. Stop short and it springs back; a quick flick is enough. Only visible weekdays count, so a weekdays-only calendar goes from Friday to next Monday, and the strip slides to the new week. Tapping a date, swiping the grid and the Today button all select that day's first event and scroll to it, and Today now jumps to today's date, not just today's week.
+
+No new machinery: the week pager (a UIKit pan, one offset value, commit on release then spring the rest) now takes a unit — a week or a day. Yesterday's reason for disabling swipes in the one-day grid — the neighbor picture was the same weekday next week — goes away once the neighbor is drawn as that date's column.
+
+One trap on the way: in landscape Day | Edit the app froze on the splash screen at 99% CPU, with `sample` showing grid bodies re-evaluating forever. The parent was handing a freshly built closure down through the environment on every render. Closures can't be compared, so SwiftUI treats the environment as changed each time and redraws the grid; something the grid touches redraws the parent, and the loop closes. Portrait never ran that branch, so builds and unit tests stayed green. The fix is a reference box held in `@State` (only its closure is swapped per render), with the shown date passed as a plain comparable value.
+
+Checked on the iPad simulator in landscape. Mid-swipe frames, iPhone Duo, Mac, Arabic and VoiceOver are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -520,3 +532,4 @@ Checked on the iPad simulator in both orientations. iPhone Duo, Mac, devices, Ar
 - 2026-11-12, evening — wide landscape screens split in half: month | week, then week | day after tapping a date. The day pane is a picture; one live grid. Fixed a split that survived rotation (it measured its own content).
 - 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap, replaces the popover, and saves as you edit (undo per field, scope and style asked once). Day | Edit narrows the live grid to one column.
 - 2026-11-13 — three split pairs (Week | Day and its day picture removed). Portrait shows the picked pair's left view full screen, with the menu reading Month · Week · Day. Timetables split into Week | Edit on wide landscape screens.
+- 2026-11-13, afternoon — week strip above the day view (filled circle on the shown day, tap to jump). The grid slides a day at a time with the finger, neighbors visible. Today goes to today's date. Fixed an infinite redraw from a per-render closure in the environment.
