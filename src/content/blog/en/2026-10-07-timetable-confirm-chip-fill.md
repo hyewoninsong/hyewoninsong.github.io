@@ -1,6 +1,6 @@
 ---
 title: "A disabled confirm button is now filled grey, not faded"
-date: 2026-10-08T14:22:00+09:00
+date: 2026-11-11T23:43:24+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The primary button at the top right of a sheet fills with ink when it can be tapped. A hand-drawn chip first gave the disabled state a grey fill, but on the folding iPhone that chip was the one button that did not follow the others to the side bar, so navigation bars went back to the system style."
@@ -108,7 +108,7 @@ Swapping only the button, in the same place:
 | Unstyled system button | Yes | Faded glyph (never filled) |
 | `.glassProminent` with label tint | Yes | Depends on the device |
 
-Placement made no difference. What mattered was whether the system draws the button. The `.sharedBackgroundVisibility(.hidden)` added in the morning, to avoid a circle inside a circle, also removed the item from the set the system relocates.
+Placement made no difference. What mattered was whether the system draws the button. (A month later a second condition turned up: the label has to be an image — last section.) The `.sharedBackgroundVisibility(.hidden)` added in the morning, to avoid a circle inside a circle, also removed the item from the set the system relocates.
 
 ![The same sheet with a system button. Print now sits under the X in the strip](/blog/timetable-confirm-chip-fill/duo-system-in-bar.png)
 
@@ -188,6 +188,55 @@ Two alternatives lost. A text pill at the top right, the way Apple's Calendar ap
 
 Identifiers stayed with each branch, so the existing UI tests and capture scripts run unchanged, plus one new test that walks all four states and checks the labels. Remove and remove-all stay at the bottom as their own group. The remaining exceptions are two: a confirmation with two choices, and destructive actions.
 
+## 2026-11-11 — A text button did not follow the strip either
+
+A month later a different button tripped on the same strip: "Edit" at the top right of the timetable list. On a folded iPhone Duo, tapping it made the word disappear from the top bar and an X appear in the strip on the right. Tapping the X sent it back to the top as "Edit". One button, jumping across the screen on every tap.
+
+In code it is one toolbar item and one button. Only the label changes: text normally, an `xmark` image while editing. And this is a stock system button, so "does the system draw it" was not the whole rule. The strip takes only items whose label is an `Image`. Its buttons are circles, and a word does not fit in a circle.
+
+| Label | Moves to the strip |
+|---|---|
+| SF Symbol, or a baked template image | Yes |
+| Text | No — stays on the top bar |
+| A drawing made with `Canvas` or `Shape` | No — stays on the top bar |
+
+The third row turned up the same day on the list's view-style toggle, whose hand-drawn icon kept it on the top bar in one state only. Baking the drawing into an image fixed that one. Text has no such fix.
+
+### The entry became a glyph too
+
+The entry button is now a checkmark in a circle; the exit is still an X. Both states are images, so both stay in the strip.
+
+![The timetable list on a folded iPhone Duo. The strip reads close, view-style toggle, edit (a circled checkmark); the title row has no button](/blog/timetable-confirm-chip-fill/duo-list-edit-icon.png)
+
+![Edit mode. The edit button turned into an X inside the strip, and the lower buttons became duplicate, rename, search and delete](/blog/timetable-confirm-chip-fill/duo-list-edit-exit.png)
+
+The sheet's own close button hides in edit mode, so the button moves up one slot. It is still the same strip.
+
+Three alternatives lost. A pencil is the obvious "edit", but edit mode already puts a rename pencil in the same strip. Square-and-pencil reads as "compose", next to a `+` that already means "new". Baking the word into an image does not fit a circle in eighteen languages. The change applies to every device: an app cannot ask whether its buttons are currently in the strip, and a per-device button is one more thing to keep in sync. VoiceOver still reads "Edit" and "Done".
+
+### One picture, one meaning
+
+The first version left one snag. The "currently open" badge on a card was also a circled checkmark, and it sat on the same screen as the new edit button. One picture meant both "open" and "edit".
+
+That was settled the same day. The open badge is gone, and the picture now marks the edit target.
+
+| | Normal | Edit mode |
+|---|---|---|
+| Open timetable | Card ring, row outline | No mark |
+| Edit target | None | Circled-checkmark badge |
+
+Edit mode always has one target for duplicate, rename and delete: the card resting in the centre, or the row tapped last. Only the title list used to show it, with a thin checkmark; card view just dimmed the neighbours. Now both views use the badge. Tap the circled checkmark, and the same picture lands on the thing you are about to change.
+
+![Card view in edit mode. A black circled-checkmark badge sits at the top left of the centre card, and the ring around the card is gone](/blog/timetable-confirm-chip-fill/list-edit-target-card.png)
+
+![Title list in edit mode. The same badge sits at the end of the target row, before the reorder handle](/blog/timetable-confirm-chip-fill/list-edit-target-row.png)
+
+The badge is a filled circle, not the outline glyph from the toolbar: a timetable preview is full of the user's own colours and a thin outline gets lost on it. In the title list every row keeps the badge's slot, so names do not shift when the target moves.
+
+One thing is left. The "Today" button on the calendar screen is text, so it stays on the top bar on a Duo. It has no paired state to jump to, so it was left alone.
+
+One more line for the rule above: a toolbar button whose label changes with state gets one Duo capture per state. With one capture, the button looks like it is where it should be.
+
 ## History
 
 - 2026-10-07 — Disabled checkmark filled grey; iPad popover header insets
@@ -195,3 +244,5 @@ Identifiers stayed with each branch, so the existing UI tests and capture script
 - 2026-10-07 — Navigation-bar primary buttons back to the system style (iPhone Duo strip); hand-drawn chip only outside bars
 - 2026-10-07 — Always-tappable primary buttons (Settings checkmark, image share, copy time) lost their fill; the fill is only for buttons that can be disabled
 - 2026-10-08 — Export to Calendar joined the top-right chip; its glyph follows the export target and record state
+- 2026-11-11 — List edit entry changed from text to a glyph; the Duo strip only takes image labels
+- 2026-11-11 — Open badge removed; the circled checkmark now marks the edit target

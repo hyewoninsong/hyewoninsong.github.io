@@ -15,7 +15,7 @@ const t = useTranslations(lang);
     <div class="text-center mb-16 md:mb-20">
       <span class="block text-xs font-semibold uppercase tracking-[0.1em] text-primary mb-3">SuperTimetable</span>
       <h1 class="text-3xl md:text-4xl font-semibold text-text tracking-tight mb-4">개인정보처리방침</h1>
-      <p class="text-sm text-text-sub">시행일: 2026년 11월 18일</p>
+      <p class="text-sm text-text-sub">시행일: 2026년 11월 19일</p>
     </div>
 
     <div class="prose prose-gray max-w-none
@@ -49,10 +49,18 @@ const t = useTranslations(lang);
           이 사본은 Apple이 사용자의 iCloud 계정에 보관하며, 개발자는 접근할 수 없고 개발자의 서버로 전송되지도 않습니다.
           백업에는 입력한 내용과 함께 백업을 만든 기기의 모델(예: iPhone)과 앱 버전이 들어갑니다.
           백업에서 복원하는 일은 사용자가 목록에서 백업 하나를 직접 고를 때만 일어나며, 앱이 스스로 복원하지 않습니다.
-          이 항목은 iCloud 백업이 포함된 iOS 앱 버전부터 적용됩니다. Android 앱에는 클라우드 백업 기능이 없습니다.
+          이 항목은 iCloud 백업이 포함된 iOS 앱 버전부터 적용됩니다.
+        </li>
+        <li>
+          <strong>Google Drive 백업 (Android 앱)</strong>: 설정에서 "Google Drive 백업"을 <strong>직접 켠 경우에만</strong>(기본은 꺼져 있습니다)
+          시간표와 캘린더 일정의 저장 파일이 <strong>사용자 본인의 Google Drive</strong>에 올라갑니다.
+          올라가는 것은 입력한 내용과 함께 백업을 만든 기기의 모델, 앱 버전, 항목 개수입니다.
+          백업은 Drive 안의 이 앱 전용 숨김 폴더에 저장되고, 앱은 <code>drive.appdata</code> 권한 하나만 요청하므로 사용자의 다른 Drive 파일은 볼 수 없습니다.
+          백업은 개발자의 서버를 거치지 않으며, 개발자도 볼 수 없습니다.
+          이 항목은 Google Drive 백업이 포함된 Android 앱 버전부터 적용됩니다.
         </li>
         <li>파일로 내보내거나 이미지·PDF로 공유하는 동작은 <strong>사용자가 직접 실행할 때만</strong> 일어나며, 내보낸 파일은 사용자가 고른 곳으로만 갑니다.</li>
-        <li>앱을 삭제하면 기기에 저장된 시간표도 함께 삭제됩니다. iCloud 백업을 쓰지 않는다면 삭제 전에 <code>.supertimetable</code> 파일로 내보내 두세요. iCloud에 이미 있는 백업은 앱을 삭제해도 남습니다(6. 보관 기간).</li>
+        <li>앱을 삭제하면 기기에 저장된 시간표도 함께 삭제됩니다. iCloud 백업이나 Google Drive 백업을 쓰지 않는다면 삭제 전에 <code>.supertimetable</code> 파일로 내보내 두세요. iCloud나 Google Drive에 이미 있는 백업은 앱을 삭제해도 남습니다(6. 보관 기간).</li>
       </ul>
 
       <h2>2. 자동으로 수집되는 정보</h2>
@@ -153,6 +161,7 @@ const t = useTranslations(lang);
         <li><strong>Firebase Analytics 데이터</strong>: 최대 14개월 보관 후 자동 삭제</li>
         <li><strong>Firebase Crashlytics 데이터</strong>: 충돌 보고서 최대 90일 보관</li>
         <li><strong>iCloud 백업 (iOS)</strong>: 기기마다 최근 7개까지 사용자의 iCloud에 보관되며, 그보다 오래된 백업은 그 기기의 앱이 새 백업을 만들 때 지웁니다. iCloud 백업을 끄거나 앱을 삭제해도 이미 있는 백업은 사용자가 직접 지울 때까지 iCloud에 남습니다.</li>
+        <li><strong>Google Drive 백업 (Android)</strong>: 기기마다 최근 7개까지 사용자의 Google Drive에 보관됩니다. Drive 백업을 끄거나 앱을 삭제해도 이미 있는 백업은 사용자가 직접 지울 때까지 남습니다.</li>
       </ul>
       <p>보관 기간이 지난 Firebase 데이터는 지체 없이 파기됩니다.</p>
 
@@ -162,6 +171,7 @@ const t = useTranslations(lang);
         <li><strong>맞춤 광고 끄기 (Android)</strong>: 기기의 <strong>설정 → 개인정보 보호 → 광고</strong>에서 광고 ID를 삭제하거나 재설정할 수 있습니다. 동의가 필요한 지역에서는 앱의 <strong>설정 → 광고 개인정보 설정</strong>에서 동의를 바꿀 수 있습니다.</li>
         <li><strong>수집 중단</strong>: 앱을 삭제하면 이후의 분석·충돌·광고 데이터 수집이 중단됩니다. 광고 제거를 구매하면 광고 요청과 광고 데이터 수집이 멈춥니다. 앱 안에는 수집을 개별적으로 끄는 설정이 없습니다.</li>
         <li><strong>iCloud 백업 삭제 (iOS)</strong>: 앱의 <strong>설정 → 백업에서 복원</strong> 화면에서 백업을 하나씩 지우거나 "iCloud 백업 모두 삭제"로 한 번에 지울 수 있습니다. iOS 설정의 iCloud 저장 공간 관리에서 이 앱의 데이터를 지워도 됩니다. 백업은 사용자의 iCloud에만 있어 개발자가 대신 지울 수 없습니다.</li>
+        <li><strong>Google Drive 백업 삭제 (Android)</strong>: 앱의 설정에서 <strong>"백업 모두 삭제"</strong>를 누르면 이 기기에서 올린 백업을 지웁니다. Google 계정의 <strong>보안 → 서드 파티 액세스</strong>에서 이 앱의 연결을 끊으면 앱이 더 이상 Drive에 접근하지 못합니다. 백업은 사용자의 Google Drive에만 있어 개발자가 대신 지울 수 없습니다.</li>
         <li><strong>삭제 요청</strong>: 아래 연락처로 문의하시면 수집된 데이터의 삭제를 요청할 수 있습니다. Firebase에 수집된 데이터의 삭제는 Firebase 정책 범위 내에서 처리됩니다.</li>
       </ul>
 
