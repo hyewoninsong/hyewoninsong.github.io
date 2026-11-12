@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-12T23:25:00+09:00
+date: 2026-11-13T03:01:29+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -458,7 +458,7 @@ One trap on the way: the first build stayed split after rotating to portrait. Th
 
 ## 2026-11-12, night — four pairs, picked from a menu in the top-right corner
 
-Two pairs left half the wide screen underused, and editing still opened a popover on top of a half-width pane. Now there are four pairs, picked from a "Month | Week ⌃⌄" menu in the top-right corner, where Apple Calendar keeps its view menu.
+Two pairs left half the wide screen underused, and editing still opened a popover on top of a half-width pane. Now there are four pairs (three since the next day — see below), picked from a "Month | Week ⌃⌄" menu in the top-right corner, where Apple Calendar keeps its view menu.
 
 ![The menu: Month | Week, Week | Day, Week | Edit, Day | Edit](/blog/timetable-calendar-plan/split-mode-menu.png)
 
@@ -483,6 +483,24 @@ The pane rebuilds its form when the stored event changes from outside (a drag on
 
 Checked on the iPad simulator in landscape only. iPhone Duo, Mac, devices and Arabic are still to do.
 
+## 2026-11-13 — three pairs; portrait shows one of them full screen; timetables get Week | Edit too
+
+The menu now offers three pairs: Month | Week, Week | Edit, Day | Edit. Week | Day is gone — its day pane was a picture you could not edit, and Day | Edit already shows the same day as a live grid. A stored Week | Day choice falls back to Month | Week.
+
+Rotating an iPad to portrait used to drop you into the iPhone layout whatever pair you had picked. Now portrait shows **the left view of the picked pair, full screen**:
+
+| Pair | Landscape | Portrait |
+|---|---|---|
+| Month \| Week | month and week | month (tap a date for its week, `‹` back) |
+| Week \| Edit | week and editor | week |
+| Day \| Edit | one-day grid and editor | one-day grid |
+
+The menu stays in portrait and reads "Month · Week · Day"; it is one setting, so choosing Day in portrait gives Day | Edit in landscape. Hiding it would strand a portrait user in Week | Edit with no way back to the month. Editing falls back to the popover. iPhone is unchanged.
+
+Timetables now split too: on a wide landscape screen a timetable is always Week | Edit, with the same split rule and centered divider as the calendar and no menu. One tap on a block opens it in the pane.
+
+Checked on the iPad simulator in both orientations. iPhone Duo, Mac, devices, Arabic and narrow Split View windows are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -501,3 +519,4 @@ Checked on the iPad simulator in landscape only. iPhone Duo, Mac, devices and Ar
 - 2026-11-12, midday — removed the two-year length cap on repeat ranges; the 2100 date ceiling is gone too. The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
 - 2026-11-12, evening — wide landscape screens split in half: month | week, then week | day after tapping a date. The day pane is a picture; one live grid. Fixed a split that survived rotation (it measured its own content).
 - 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap, replaces the popover, and saves as you edit (undo per field, scope and style asked once). Day | Edit narrows the live grid to one column.
+- 2026-11-13 — three split pairs (Week | Day and its day picture removed). Portrait shows the picked pair's left view full screen, with the menu reading Month · Week · Day. Timetables split into Week | Edit on wide landscape screens.
