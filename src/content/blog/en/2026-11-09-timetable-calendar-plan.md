@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-12T22:46:03+09:00
+date: 2026-11-12T23:25:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -473,13 +473,13 @@ Tapping a date no longer changes the layout. When one tap rearranged the screen,
 
 **One tap opens the editor.** With the popover, a first tap only selected and a second opened it, because the popover covered the block. The pane covers nothing, so one tap is enough and a second tap shows no popover. The pane is the same screen as the popover (save, delete, scope questions, new events from `+`); one window-wide flag turns the popover off while the pane is on screen.
 
-![Week | Edit: the tapped event opens on the right](/blog/timetable-calendar-plan/split-week-edit.png)
+**The pane has no X or ✓; edits apply as you go.** One undo step is one field: tapped values save at once, the time wheel saves when it stops, title and memo save when typing pauses for about a second or focus leaves. Saving on every keystroke would make undo useless; one step per selected event would undo the title when you only wanted the time back. The questions ✓ used to ask (which occurrences of a repeating event, whether to restyle matching events) are asked once per event and the answer is reused; cancelling drops that change.
 
-One difference: with the pane open you can still drag the block on the left. The form holds the old time as its draft, so ✓ would put the block back. The pane rebuilds its form whenever the stored day or time changes.
+![Week | Edit: no X or ✓, the block on the left follows each edit](/blog/timetable-calendar-plan/split-week-edit.png)
+
+The pane rebuilds its form when the stored event changes from outside (a drag on the grid, undo). The first version compared the store against the value the form sent, but saving a single occurrence adds fields in the store, so the pane read its own save as an outside change, rebuilt, and forgot the scope it had just been given. It now compares against the value read back after saving, and the answers live in the pane rather than the form.
 
 **Day | Edit uses the live grid, not the picture.** The picture has no toolbar (lock, undo, `+`, Today) and no dragging. Instead the live grid is narrowed to one weekday. Its week swipe is off there, because the neighbour it slides in is the same weekday next week, not tomorrow. You step days by swiping the date strip above it.
-
-![Day | Edit: one-day grid and the editor](/blog/timetable-calendar-plan/split-day-edit.png)
 
 Checked on the iPad simulator in landscape only. iPhone Duo, Mac, devices and Arabic are still to do.
 
@@ -500,4 +500,4 @@ Checked on the iPad simulator in landscape only. iPhone Duo, Mac, devices and Ar
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
 - 2026-11-12, midday — removed the two-year length cap on repeat ranges; the 2100 date ceiling is gone too. The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
 - 2026-11-12, evening — wide landscape screens split in half: month | week, then week | day after tapping a date. The day pane is a picture; one live grid. Fixed a split that survived rotation (it measured its own content).
-- 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap and replaces the popover. Day | Edit narrows the live grid to one column.
+- 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap, replaces the popover, and saves as you edit (undo per field, scope and style asked once). Day | Edit narrows the live grid to one column.
