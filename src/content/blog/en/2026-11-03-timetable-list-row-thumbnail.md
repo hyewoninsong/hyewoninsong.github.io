@@ -1,6 +1,6 @@
 ---
 title: "The title list now shows a silhouette of each timetable"
-date: 2026-11-12T03:31:51+09:00
+date: 2026-11-13T16:40:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The timetable list's title view gets a small preview per row. It is not the card preview scaled down but a Canvas silhouette of the blocks, drawn in microseconds. The type icon gave up its spot."
@@ -80,9 +80,33 @@ The thumbnail is now the card in miniature: hairlines between weeks, a 1.5pt dot
 
 The original reasoning was that numbers and four bars are unreadable at 40pt. True for the numbers, but the thing that needs to survive is the shape, "a mark with colored lines under it", and dots and 1pt bars keep it. Still one `Canvas` pass at the same size. Not yet checked in the real list, in right-to-left languages, or on iPad.
 
+## 2026-11-13 — One line of text next to the picture: what is on now, what comes next
+
+Even with the silhouette, a row was a picture, a name, and a lot of empty space. The thumbnail already makes the row tall enough for a second line, so the question was only what to write there.
+
+The rule: write what the picture cannot say. Day range, hours, and event count are already in the silhouette. What you can answer without opening the timetable is "what is happening now, and what is next". The logic is the one the widget and the Siri shortcut use, and the first version borrowed the widget's wording too.
+
+![First version, with the widget's wording: no end time for the event in progress, and a finished day reads only "Done for today · Mon 11:00"](/blog/timetable-list-row-thumbnail/row-status-first.png)
+
+On screen, two of those sentences fell short. A widget can stop at "Now · English", but in a list the next question is "until when". And "Done for today · Mon 11:00" never says what is at 11 on Monday.
+
+![Final version: the row in progress carries its end time, and a finished day names the next event with its day and time](/blog/timetable-list-row-thumbnail/row-status-final.png)
+
+| State | The row says |
+|---|---|
+| An event is in progress | Now · English · until 17:05 |
+| More events later today | Next · English 13:00 |
+| Today is over or empty | Next · Music Theory · Mon 11:00 |
+| Nothing in the next week | No events today |
+
+Calendar rows follow the same rule, looking seven days ahead. Each row recomputes on its own every minute.
+
+One thing went in and came back out: a small bell at the end of rows whose timetable has alarms. The app removed its per-timetable alarm switch two months ago, and a bell in that spot reads as something you can tap. The two new sentences shipped in all eighteen languages. Checked on screen in Korean with a 24-hour clock only; 12-hour time, long titles, dark mode, right-to-left languages, and iPad are still to see.
+
 ## History
 
 - 2026-11-03 — silhouette thumbnails in the title list, replacing the type icon.
 - 2026-11-04 — Android port: `Canvas` silhouette, pure-function coordinates, kind read as state description
 - 2026-11-11 — the calendar list gets both views: a month card and a small month per row; an alert setter writing back a stale struct copy
 - 2026-11-12 — the calendar thumbnail becomes a miniature of the month card: day dots, event bars, week lines; the filled-tile version is gone
+- 2026-11-13 — a second line per row: what is on now and what is next, with the end time and the next event's title; the alarm bell was tried and dropped
