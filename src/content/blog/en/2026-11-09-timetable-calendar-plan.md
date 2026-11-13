@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T13:26:41+09:00
+date: 2026-11-13T19:26:59+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -590,6 +590,37 @@ A layer drawn into the bar row looked right but the navigation bar swallowed its
 
 Checked on an iPad simulator in landscape. The Duo, Mac and real devices are still pending.
 
+## 2026-11-13, evening — put a timetable into a calendar, as a copy
+
+Once calendars started owning their own dated events, one thing was missing: there was no way to bring an existing timetable in. Now there are two.
+
+- In a timetable, `…` › Export to Calendar, pick **Calendar in This App** as the destination, then a new calendar or one you already have.
+- In a calendar, `…` › **Import Timetable**, and pick a timetable.
+
+Either way you choose a period and which events to include, and the timetable's events land as **weekly repeating events** for that period.
+
+![The Export to Calendar sheet — below the period card and event picker, the destination is "Calendar in This App" and the target is a new calendar](/blog/timetable-calendar-plan/export-in-app-target.png)
+
+![November in the new calendar — title chips on each weekday from the 13th onward](/blog/timetable-calendar-plan/timetable-imported-month.png)
+
+### One more branch on an existing sheet, not a new screen
+
+The export sheet already asked for a period, the events to include, and where to put them (new calendar or existing). Sending to an in-app calendar asks exactly the same things. A dedicated sheet would have duplicated the period card and the checklist and added a near-identical menu row, so the destination menu got one more option instead. Import Timetable opens the same sheet with the receiving calendar fixed.
+
+### After the copy, the two are strangers
+
+The first design at the top of this post had the calendar *point at* timetables, and it was torn out within two days. This time it is a copy from the start: edit the timetable afterwards and the calendar does not change, and vice versa.
+
+| Decision | Value |
+|---|---|
+| Grouping | Events with the same title, time, color and notes merge into one repeating event across weekdays |
+| Alarms | Not copied — they would ring twice |
+| New calendar | Inherits the timetable's name, axis type, visible hours and day range |
+| Existing calendar | Appended; one undo removes the whole import |
+| Over the limit | Nothing is added rather than a partial import |
+
+There is no "update": importing the same timetable twice gives two sets. Verified end to end on the iPhone simulator; iPad, Duo, Mac and real devices are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -614,3 +645,4 @@ Checked on an iPad simulator in landscape. The Duo, Mac and real devices are sti
 - 2026-11-13, midday — month day cells show title chips instead of color bars (titles cut without an ellipsis, line count from the cell's height, a gray "+n" last line on overflow). The month ↔ week transition is chip ↔ block, with folded events leaving from the "+n" line. The day cell is one accessibility element (42 cells had become 88 elements and a UI test tapped the wrong week).
 - 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
 - 2026-11-13, midday — fixed a block dragged from the open edit pane snapping back (the disappearing form compared against its live input). The pane follows a drag. The timetable split's title sits over the left pane (inside the toolbar, still tappable), and the edit pane reaches the toolbar row.
+- 2026-11-13, evening — two ways to put a timetable into an in-app calendar: "Calendar in This App" in the export sheet (new or existing calendar) and Import Timetable in the calendar menu. A copy as weekly repeating events; no alarms, no update.
