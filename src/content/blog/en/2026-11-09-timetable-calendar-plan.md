@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T12:29:14+09:00
+date: 2026-11-13T13:19:35+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -276,7 +276,7 @@ The midday transition carried only the dates. The tapped row's color bars faded 
 
 ![Mid-rise — under the 30th and the 2nd, red rectangles are growing into blocks with their titles appearing; the dimmed bar of the 2nd, a date outside the month, has reached full color](/blog/timetable-calendar-plan/zoom-blocks-open.png)
 
-The month view draws at most four bars per day; the week view draws only events inside the visible days and hours. So some have no partner.
+At this point the month view drew at most four bars per day; the week view draws only events inside the visible days and hours. So some have no partner. (Since midday on 2026-11-13 the bars are title chips, stacked as far as the cell's height allows, and overflow events leave from the "+n" line rather than the fourth bar's slot — see that day's section below.)
 
 | Bar in the month view | Block in the week view | In the transition |
 |---|---|---|
@@ -527,6 +527,30 @@ Fixed along the way: moving from a timetable to a calendar in Day | Edit made th
 
 Checked on the iPad simulator in landscape. iPhone Duo, dark mode and Mac are still to do.
 
+## 2026-11-13, midday — the month view's color bars become title chips, with "+5" on the last line when they don't fit
+
+A day cell in the month view used to show its events as unlabeled color bars, four at most. With the repeat-range and per-day caps gone, days with dozens of events are real. If some days can never show everything, the few that are shown should at least be readable. So each bar is now a **title chip**: the event's color with one line of title.
+
+![The November month view — each day cell stacks colored chips with event titles. The 13th shows three chips and a gray "+5" line; long titles are cut at the chip's edge with no ellipsis](/blog/timetable-calendar-plan/month-title-chips.png)
+
+Three rules:
+
+- A title wider than its chip is **cut at the chip's edge, with no ellipsis.** In a seventh of the screen's width, "…" costs a letter or two of the title. Half a glyph showing is fine.
+- The number of lines comes from the **cell's measured height**, not a fixed count. Cell height more than doubles between a six-row month on an iPhone and a five-row month on an iPad.
+- When a day doesn't fit, **the last line is a gray "+n".** It takes the last chip's line instead of spilling out of the cell, so "+1" never appears — one leftover event simply gets that line.
+
+Text color follows the same setting as week-view blocks, and chips in out-of-month cells are dimmed. The calendar card on the home screen draws the same cell, so it changed too. The tiny month thumbnail in the title list keeps its color bars; there is no room for letters.
+
+Cutting without an ellipsis is not a one-line setting: give a `Text` a width and SwiftUI adds "…" for you. The chip is an empty frame with only a height; the title is laid over it at its natural width with `fixedSize()`, aligned to the leading edge, and the rounded rectangle clips whatever sticks out. Which edge is leading follows the title's own script, as block titles do.
+
+The month ↔ week transition follows: chips grow into blocks where bars used to. The chip's small title fades as soon as it leaves, so the same words never read twice at two sizes. Events folded into "+n" start from that line, transparent, and grow into their blocks; on the way back they shrink into it.
+
+Adding the chips broke a UI test that nobody touched — it **passed while opening the wrong week.** The day cell carried a date label and an identifier but was never made an accessibility element. On a container that is not an element, an identifier and label apply to each element inside it. With only a date number inside, 42 cells were 42 elements; with titles, the same identifier matched 88, and a test that picked cells by index was off everywhere. Hiding the chips from accessibility did not bring the count down. The cell is now one element (`accessibilityElement(children: .ignore)`) whose value is the first three titles plus "and n more" — better for VoiceOver too, which reads full titles rather than stopping on each clipped chip.
+
+A source check meant to catch exactly this already existed, but its pattern matched only lowercase-and-underscore identifiers and skipped interpolated ones — the kind used on repeated cells and rows, where index-based tests are most exposed. The pattern is wider now.
+
+Checked on the iPhone simulator in Korean, light mode: a six-row month and the transition both ways. iPad, iPhone Duo, Mac, a real device, dark mode, Arabic titles, the largest text size and the home card's chips are still to do. The Android month view still draws bars.
+
 ## 2026-11-13, midday — in the edit pane, touch and hold an empty slot and the event is simply there
 
 The edit pane saves as you edit, with no close or confirm buttons. New events were the exception: double-tapping an empty slot opened a "New Event" form in the pane, and that form alone still had its X and checkmark. On screens that show the pane, touching and holding an empty slot (drag while holding to set the length) now saves the event right away and opens it in the pane for editing, with the cursor in the title field.
@@ -562,4 +586,5 @@ Checked on an iPad simulator in landscape with a timetable. Calendar split pairs
 - 2026-11-13 — three split pairs (Week | Day and its day picture removed). Portrait shows the picked pair's left view full screen, with the menu reading Month · Week · Day. Timetables split into Week | Edit on wide landscape screens.
 - 2026-11-13, afternoon — week strip above the day view (filled circle on the shown day, tap to jump). The grid slides a day at a time with the finger, neighbors visible. Today goes to today's date. Fixed an infinite redraw from a per-render closure in the environment.
 - 2026-11-13, morning — edit pane color reaches the top and spans the pane (wide layouts hide the bar background). Day strip, day-grid text scale and the Month | Week weekday letters use the week header's metrics. Fixed the popover appearing beside the pane after switching documents.
+- 2026-11-13, midday — month day cells show title chips instead of color bars (titles cut without an ellipsis, line count from the cell's height, a gray "+n" last line on overflow). The month ↔ week transition is chip ↔ block, with folded events leaving from the "+n" line. The day cell is one accessibility element (42 cells had become 88 elements and a UI test tapped the wrong week).
 - 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
