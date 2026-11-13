@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T03:37:14+09:00
+date: 2026-11-13T10:03:23+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -513,6 +513,20 @@ One trap on the way: in landscape Day | Edit the app froze on the splash screen 
 
 Checked on the iPad simulator in landscape. Mid-swipe frames, iPhone Duo, Mac, Arabic and VoiceOver are still to do.
 
+## 2026-11-13, morning — the edit pane's color reaches the top, and the left headers match across pairs
+
+On an unfolded Duo, two things looked off. The edit pane's event color started below the toolbar, leaving a white band at the top, and the left pane's header changed shape between Week | Edit and Day | Edit — the day strip ran from the screen edge with big 34pt circles, and the time axis labels grew larger in the day view.
+
+![iPad landscape timetable split — the edit pane's event color fills up to the toolbar and across the whole pane](/blog/timetable-calendar-plan/split-pane-header-full.png)
+
+The grid painted an opaque navigation bar background, and the pane's header stopped under it. Wide (regular) layouts now hide the bar background and let the document paint what sits under it. Hiding it only while the edit pane was visible applied inconsistently within one run, so it is fixed per layout. The pane's 560pt readable width moved from the whole form to the cards, so the color band spans the full pane on iPad.
+
+The day strip now uses the week header's exact metrics — offset by the time axis, same column width, 13pt weekday, 12pt date, same height and rule — with the filled circle on the shown day as the only difference. A one-column day grid scales its text by the week's column width rather than its own wide column. In Month | Week, the month's weekday letters match the week header's size.
+
+Fixed along the way: moving from a timetable to a calendar in Day | Edit made the edit popover appear next to the pane. Both documents toggled one window-wide "pane is editing" flag, and the leaving view's `onDisappear` ran after the arriving view had switched it on. The flag is now "does any owner hold it", with one owner per view instance.
+
+Checked on the iPad simulator in landscape. iPhone Duo, dark mode and Mac are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -533,3 +547,4 @@ Checked on the iPad simulator in landscape. Mid-swipe frames, iPhone Duo, Mac, A
 - 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap, replaces the popover, and saves as you edit (undo per field, scope and style asked once). Day | Edit narrows the live grid to one column.
 - 2026-11-13 — three split pairs (Week | Day and its day picture removed). Portrait shows the picked pair's left view full screen, with the menu reading Month · Week · Day. Timetables split into Week | Edit on wide landscape screens.
 - 2026-11-13, afternoon — week strip above the day view (filled circle on the shown day, tap to jump). The grid slides a day at a time with the finger, neighbors visible. Today goes to today's date. Fixed an infinite redraw from a per-render closure in the environment.
+- 2026-11-13, morning — edit pane color reaches the top and spans the pane (wide layouts hide the bar background). Day strip, day-grid text scale and the Month | Week weekday letters use the week header's metrics. Fixed the popover appearing beside the pane after switching documents.
