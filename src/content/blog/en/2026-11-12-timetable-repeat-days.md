@@ -52,7 +52,7 @@ A group means "these days, same time." The first version made a block leave the 
 
 The walls are the union of every day the group occupies: a schedule at 8 pm on Tuesday stops Monday and Thursday too. The drag code is the single-block one with two filters widened — "other schedules on my day" became "on the days the group would occupy", and "not me" became "not anyone in the group".
 
-Past the wall, a group behaves exactly like a single block: push until your finger is inside the blocking schedule's time and the whole group overlaps it; reach into a gap that is too short and every day's block shrinks to fit. The first cut left both out, and it read as broken rather than blocked. The only group-specific rules left are which walls count and how far sideways it can go.
+Push past the wall until your finger is inside the blocking schedule's time and the whole group overlaps it, exactly as a single block does — the first cut left that out and it read as broken, not blocked. Shrinking to fit a narrow gap went in for an hour and came back out: one tight gap on Tuesday should not shorten Monday and Thursday. A group stays at the last place it fit.
 
 Selection is still one block. Real multi-select already exists here, but it closes the editor and only moves vertically; the other days ride along as companions for drawing, dragging and saving only. Companions must share the exact start and end, so a calendar occurrence you moved on its own stays put.
 
