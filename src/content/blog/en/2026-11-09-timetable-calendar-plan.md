@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T22:47:07+09:00
+date: 2026-11-14T01:50:52+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -685,7 +685,25 @@ Delete and the edit sheet's checkmark still use alerts. The options are the same
 
 ![English: the chip opens a menu with the three scopes and a checkmark on the current one](/blog/timetable-calendar-plan/drag-scope-menu.png)
 
-Checked on the iPhone simulator in Korean and English. Not yet checked: the iPad split with the edit pane open, the Duo, Mac, a real device, right-to-left languages. Android still asks with the alert.
+Checked on the iPhone simulator in Korean and English. The iPad split, the folded Duo, Arabic and dark mode were checked the next day (below). Android still asks with the alert.
+
+## 2026-11-14 — picking "This and following" turned the bar into a chip and pushed it left
+
+Going through the cases left unchecked the day before turned up a bug right away on a Korean iPhone. Tapping **"This and following"** in the three-segment bar replaced it with a single chip stuck to the left, and it never came back. The day before, only "All schedules" had been tapped, and that one was fine.
+
+![Before the fix — after picking "This and following", the bar collapsed into one chip on the left](/blog/timetable-calendar-plan/drag-scope-bar-chip-bug.png)
+
+The bar sits in a `ZStack` inside the grid's `overlay`, and a `ViewThatFits` picks between the segments and the chip. Measuring with `onGeometryChange` showed the chip version was 129pt wide and placed where the segments had started, not centered. `ViewThatFits` was choosing against roughly the segments' own width (about 256pt), not the screen's 370pt. Only the selected segment was semibold, so the row's width changed by a few points per choice; the longest label going bold pushed it over. Fixing only the weight made the chip appear from the start, so the narrow width was the cause and the weight only the trigger. Why the overlay offered that width wasn't pinned down.
+
+The fixes:
+
+- `.frame(maxWidth: .infinity)` on the bar, so it gets the overlay's full width and centers itself. That alone keeps the segments centered for every choice.
+- Segment widths are reserved at the bold weight (a hidden bold copy under the real label), so the row no longer shifts when you tap.
+- The chip's text was accent blue; a `Menu` label prefers the tint over the inner text color. `.tint(.primary)` matches the segments.
+
+![After the fix — with "This and following" picked, the three segments stay centered](/blog/timetable-calendar-plan/drag-scope-bar-following-fixed.png)
+
+Also checked: "This and following" from the screen (this week stays, later weeks move, one undo restores all of them); the iPad [Week | Edit] and [Day | Edit] splits with the edit pane open while switching scopes; the folded Duo and dark mode; Arabic, which gets the chip because three segments don't fit an iPhone. The quick time sheet only opens from the "Time" pointer menu in a narrow iPad window, which UI tests can't trigger, so that stays a manual step. The lesson: a bar that changes shape gets tapped through every value, and its position is measured, not eyeballed. Still open: the unfolded Duo, Mac, and real devices.
 
 ## History
 
@@ -714,3 +732,4 @@ Checked on the iPhone simulator in Korean and English. Not yet checked: the iPad
 - 2026-11-13, evening — two ways to put a timetable into an in-app calendar: "Calendar in This App" in the export sheet (new or existing calendar) and Import Timetable in the calendar menu. A copy as weekly repeating events; no alarms, no update.
 - 2026-11-13, night — fixed a block dragged to another weekday still snapping back (the repeat-rule part of the reference is pinned at open time; a form the pane replaced doesn't save on teardown). Fixed a hang when unlocking in the wide split (the toolbar title item's width comes from layout, not from its own measured position).
 - 2026-11-13, night — removed the scope alert after dragging or resizing a repeating event. The drop applies to that occurrence only and a scope bar under the grid changes it; the choice lasts while the selection does, and a scope change stays one undo step. Delete and the edit sheet still ask.
+- 2026-11-14 — fixed the scope bar collapsing into a left-aligned chip after picking "This and following" (full overlay width, bold-width segments, chip ink). Checked the iPad split, folded Duo, Arabic, dark mode and "This and following".
