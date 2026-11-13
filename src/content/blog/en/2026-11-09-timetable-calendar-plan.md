@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T10:03:23+09:00
+date: 2026-11-13T12:29:14+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -527,6 +527,20 @@ Fixed along the way: moving from a timetable to a calendar in Day | Edit made th
 
 Checked on the iPad simulator in landscape. iPhone Duo, dark mode and Mac are still to do.
 
+## 2026-11-13, midday — in the edit pane, touch and hold an empty slot and the event is simply there
+
+The edit pane saves as you edit, with no close or confirm buttons. New events were the exception: double-tapping an empty slot opened a "New Event" form in the pane, and that form alone still had its X and checkmark. On screens that show the pane, touching and holding an empty slot (drag while holding to set the length) now saves the event right away and opens it in the pane for editing, with the cursor in the title field.
+
+![iPad landscape timetable: an untitled block created by touch and hold is selected, and the edit pane on the right waits for a title with no X or checkmark](/blog/timetable-calendar-plan/pane-long-press-create.png)
+
+To back out, use Delete Event at the bottom of the pane, the same button editing uses, or undo once. The toolbar `+` and the right-click "New Event" save the same way. The popover on a portrait iPad and the sheet on iPhone are unchanged: they still open a draft you confirm.
+
+Two alternatives lost. Moving the buttons down (Add and Cancel where Delete sits) puts the save button below the alarm and memo cards, out of sight, and still leaves a form that has to be confirmed inside a pane that otherwise never asks. A single tap that saves immediately turns every stray tap into a real event, and would need a hidden rule to delete untouched ones. Touch and hold was already the start of drag-to-create (0.2 s) and does not happen by accident, so while the pane is visible a tap on empty space only deselects and a double tap creates nothing.
+
+The cost: touch and hold, then walk away, and an untitled event stays. There is no automatic cleanup; delete and undo are enough.
+
+Checked on an iPad simulator in landscape with a timetable. Calendar split pairs, period-based timetables, the unfolded Duo, Mac and real devices are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -548,3 +562,4 @@ Checked on the iPad simulator in landscape. iPhone Duo, dark mode and Mac are st
 - 2026-11-13 — three split pairs (Week | Day and its day picture removed). Portrait shows the picked pair's left view full screen, with the menu reading Month · Week · Day. Timetables split into Week | Edit on wide landscape screens.
 - 2026-11-13, afternoon — week strip above the day view (filled circle on the shown day, tap to jump). The grid slides a day at a time with the finger, neighbors visible. Today goes to today's date. Fixed an infinite redraw from a per-render closure in the environment.
 - 2026-11-13, morning — edit pane color reaches the top and spans the pane (wide layouts hide the bar background). Day strip, day-grid text scale and the Month | Week weekday letters use the week header's metrics. Fixed the popover appearing beside the pane after switching documents.
+- 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
