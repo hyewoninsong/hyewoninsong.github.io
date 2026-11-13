@@ -1,6 +1,6 @@
 ---
 title: "The title list now shows a silhouette of each timetable"
-date: 2026-11-13T16:40:00+09:00
+date: 2026-11-13T17:10:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The timetable list's title view gets a small preview per row. It is not the card preview scaled down but a Canvas silhouette of the blocks, drawn in microseconds. The type icon gave up its spot."
@@ -101,7 +101,11 @@ On screen, two of those sentences fell short. A widget can stop at "Now · Engli
 
 Calendar rows follow the same rule, looking seven days ahead. Each row recomputes on its own every minute.
 
-One thing went in and came back out: a small bell at the end of rows whose timetable has alarms. The app removed its per-timetable alarm switch two months ago, and a bell in that spot reads as something you can tap. The two new sentences shipped in all eighteen languages. Checked on screen in Korean with a 24-hour clock only; 12-hour time, long titles, dark mode, right-to-left languages, and iPad are still to see.
+One thing went in and came back out: a small bell at the end of rows whose timetable has alarms. The app removed its per-timetable alarm switch two months ago, and a bell in that spot reads as something you can tap. The two new sentences shipped in all eighteen languages. Later the same day the remaining states went on screen: 12-hour time, dark mode, Arabic, iPad, and the folding iPhone. One thing broke. A one-line limit truncates at the tail by default, so a long title pushed out the end time, the very thing this line added.
+
+![Bottom row: a long title shrinks in the middle and the end time stays](/blog/timetable-list-row-thumbnail/row-status-long-title.png)
+
+Truncation now happens in the middle. Splitting the title into its own text would look cleaner, but where the time sits in the sentence differs per language. Not yet checked on a real device or on Mac.
 
 ## History
 
@@ -110,3 +114,4 @@ One thing went in and came back out: a small bell at the end of rows whose timet
 - 2026-11-11 — the calendar list gets both views: a month card and a small month per row; an alert setter writing back a stale struct copy
 - 2026-11-12 — the calendar thumbnail becomes a miniature of the month card: day dots, event bars, week lines; the filled-tile version is gone
 - 2026-11-13 — a second line per row: what is on now and what is next, with the end time and the next event's title; the alarm bell was tried and dropped
+- 2026-11-13 — remaining states checked on screen; long titles now truncate in the middle so the end time survives
