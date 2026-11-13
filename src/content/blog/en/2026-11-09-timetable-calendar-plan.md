@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T13:18:44+09:00
+date: 2026-11-13T13:26:41+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -240,6 +240,7 @@ A quick flick and a short drag-and-release both passed. It took a third capture 
 In Arabic the direction flips. The offset is in screen coordinates, so the sliding layer is pinned left-to-right and only the weekday order inside each page is turned back. The earlier "the pager needed nothing extra" was the scroll view doing that work.
 
 Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, a real device, iPad, Reduce Motion and VoiceOver are not checked yet. So whether the unfolded-Duo misalignment noted at the end of the previous section shares a root with this frame overflow is also unknown. And since this is no longer a scroll view, a two-finger horizontal trackpad scroll does not change weeks — still to do.
+
 ## 2026-11-11, midday — the tapped week row becomes the week view's header
 
 Tap a date on the month grid and that week's row rises in place to become the week view's date row. The rows above slide up, the rows below slide down, and the event grid shows through the gap. Going back runs it in reverse: the rows close and the header's dates settle into their row. It is the move Apple's Calendar makes. Until now this was a 0.2s crossfade, which cannot show that both screens are talking about the same dates.
@@ -551,6 +552,20 @@ A source check meant to catch exactly this already existed, but its pattern matc
 
 Checked on the iPhone simulator in Korean, light mode: a six-row month and the transition both ways. iPad, iPhone Duo, Mac, a real device, dark mode, Arabic titles, the largest text size and the home card's chips are still to do. The Android month view still draws bars.
 
+## 2026-11-13, midday — in the edit pane, touch and hold an empty slot and the event is simply there
+
+The edit pane saves as you edit, with no close or confirm buttons. New events were the exception: double-tapping an empty slot opened a "New Event" form in the pane, and that form alone still had its X and checkmark. On screens that show the pane, touching and holding an empty slot (drag while holding to set the length) now saves the event right away and opens it in the pane for editing, with the cursor in the title field.
+
+![iPad landscape timetable: an untitled block created by touch and hold is selected, and the edit pane on the right waits for a title with no X or checkmark](/blog/timetable-calendar-plan/pane-long-press-create.png)
+
+To back out, use Delete Event at the bottom of the pane, the same button editing uses, or undo once. The toolbar `+` and the right-click "New Event" save the same way. The popover on a portrait iPad and the sheet on iPhone are unchanged: they still open a draft you confirm.
+
+Two alternatives lost. Moving the buttons down (Add and Cancel where Delete sits) puts the save button below the alarm and memo cards, out of sight, and still leaves a form that has to be confirmed inside a pane that otherwise never asks. A single tap that saves immediately turns every stray tap into a real event, and would need a hidden rule to delete untouched ones. Touch and hold was already the start of drag-to-create (0.2 s) and does not happen by accident, so while the pane is visible a tap on empty space only deselects and a double tap creates nothing.
+
+The cost: touch and hold, then walk away, and an untitled event stays. There is no automatic cleanup; delete and undo are enough.
+
+Checked on an iPad simulator in landscape with a timetable. Calendar split pairs, period-based timetables, the unfolded Duo, Mac and real devices are still to do.
+
 ## 2026-11-13, midday — drag a block open in the edit pane: the pane follows, and the block stays put
 
 A screen recording from an unfolded Duo showed the timetable's Week | Edit split. With an event open in the right pane, dragging that block on the left and letting go made it **animate back to where it started**. The same recording asked for three more things: let the pane follow the drag, move the title to the top center of the left pane, and pull the pane's content up into the empty strip at the top.
@@ -597,4 +612,5 @@ Checked on an iPad simulator in landscape. The Duo, Mac and real devices are sti
 - 2026-11-13, afternoon — week strip above the day view (filled circle on the shown day, tap to jump). The grid slides a day at a time with the finger, neighbors visible. Today goes to today's date. Fixed an infinite redraw from a per-render closure in the environment.
 - 2026-11-13, morning — edit pane color reaches the top and spans the pane (wide layouts hide the bar background). Day strip, day-grid text scale and the Month | Week weekday letters use the week header's metrics. Fixed the popover appearing beside the pane after switching documents.
 - 2026-11-13, midday — month day cells show title chips instead of color bars (titles cut without an ellipsis, line count from the cell's height, a gray "+n" last line on overflow). The month ↔ week transition is chip ↔ block, with folded events leaving from the "+n" line. The day cell is one accessibility element (42 cells had become 88 elements and a UI test tapped the wrong week).
+- 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
 - 2026-11-13, midday — fixed a block dragged from the open edit pane snapping back (the disappearing form compared against its live input). The pane follows a drag. The timetable split's title sits over the left pane (inside the toolbar, still tappable), and the edit pane reaches the toolbar row.
