@@ -1,10 +1,12 @@
 ---
 title: "To allow 5-minute events, the grid had to grow six times taller first"
-date: 2026-11-13T02:52:12+09:00
+date: 2026-11-13T09:41:01+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
-summary: "Each timetable now picks its event unit: 5, 10, 15, 20 or 30 minutes. One unit is always as tall as today's 30-minute cell, so a 5-minute block can still be tapped, dragged and resized."
+summary: "The per-timetable event unit lasted two days — the grid is back to 30-minute cells, and events of 30 minutes or less get handles outside both ends, down to 5 minutes."
 ---
+
+> Update, 2026-11-13 evening: the per-timetable unit setting is gone. The grid always uses 30-minute cells; events of 30 minutes or less get outside handles on both ends — see the last section.
 
 Each timetable in Super Timetable now has an **event unit**: 5, 10, 15, 20 or 30 minutes. The unit is the shortest an event can be when you drag it out or resize it on the grid; two days later the setting was renamed "minimum drag length" (see the 11-13 section). Until now the floor was 30 minutes everywhere, so a 10-minute break or a 5-minute roll call could not be written down at all.
 
@@ -84,8 +86,22 @@ Select a short event and both resize handles sit **outside** the block. Anywhere
 
 The floor: "grow only" lost to "down to 5 minutes", the same floor as the event editor. Events at or above the unit keep the unit as their floor. Which rule applies is decided by the saved length, not the length mid-drag, so the bands never change under your finger. The time pill, multi-selection resizing and the save path all read the same rule, and the notice is gone in all 18 languages. The setting's name is the open question: it is no longer a floor for short events.
 
+## 2026-11-13, evening — The setting is gone: 30-minute cells, outside handles up to 30 minutes
+
+After two days the per-timetable unit setting is removed. The grid, share image, print and list preview always use 30-minute cells, and the settings row is gone. The sections above stay as the record of those two days.
+
+The outside handles from the afternoon already did what the setting was for: a 5-minute block can be moved and resized in 5-minute steps without stretching the grid six times. So the rule for outside handles widened instead — any event of **30 minutes or less** now gets a handle above and below, adjusting start and end separately down to 5 minutes. Before, a 30-minute event was a regular block with an inside handle on one side only.
+
+![A selected 30-minute event gets a handle outside on each end](/blog/timetable-schedule-unit/thirty-outside-handles.png)
+
+![Dragging the bottom handle all the way up stops at 5 minutes](/blog/timetable-schedule-unit/thirty-shrunk-5min.png)
+
+Longer events keep inside handles and a 30-minute floor. The saved unit value stays in the file but nothing reads it — removing or rewriting it would change the file format shared with Android for no gain.
+
+
 ## History
 
 - 2026-11-11 — Per-timetable event unit; one unit = one 30-minute cell
 - 2026-11-13 — Short events: move allowed, length locked, time pills step out from under the finger
 - 2026-11-13 (afternoon) — Short events resize: outside handles, 5-minute floor, notice removed
+- 2026-11-13 (evening) — Unit setting removed (fixed at 30); events up to 30 minutes get two outside handles, 5-minute floor
