@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T19:26:59+09:00
+date: 2026-11-13T21:32:47+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -576,7 +576,7 @@ A screen recording from an unfolded Duo showed the timetable's Week | Edit split
 
 The pane saves as you edit, and it saves once more when it goes away, so nothing is lost. When the stored event changes from outside (a drag on the grid, an undo), the pane rebuilds its form so a stale draft can't overwrite that change. But the rebuild signal (`onChange`) arrives after one more render, and in that render the old form already received the new event as its input while its `@State` draft still held the old position. When the old form disappeared it compared its draft against that fresh input, saw a difference, and saved the old position.
 
-The fix: compare against the event **as it was when the form opened**, captured once in `@State`. The calendar's edit pane uses the same form and is fixed too. The checklist line for this screen now says "drop, wait two seconds, the block is still there".
+The fix: compare against the event **as it was when the form opened**, captured once in `@State`. The calendar's edit pane uses the same form and is fixed too. (This covered only drags within one weekday column. A drag to another weekday still snapped back until that night — see "2026-11-13, night" below.) The checklist line for this screen now says "drop, wait two seconds, the block is still there".
 
 ![After the drop — the block stays at 11:15–13:15 and the pane agrees](/blog/timetable-calendar-plan/split-drag-dropped.png)
 
@@ -621,6 +621,42 @@ The first design at the top of this post had the calendar *point at* timetables,
 
 There is no "update": importing the same timetable twice gives two sets. Verified end to end on the iPhone simulator; iPad, Duo, Mac and real devices are still to do.
 
+## 2026-11-13, night — a drag to another weekday still snapped back; a form the pane replaced no longer saves on its way out
+
+Another recording arrived from the screen fixed at midday. A block open in the edit pane, dragged and dropped, went back to where it started, and follow-up drags sometimes stuck and sometimes returned to an earlier position. The guess that came with it was duplicate event ids, which had once produced exactly this. It wasn't that: there was one event in the save file, and the midday fix had a hole.
+
+![Before — art class dragged from Tuesday to Saturday, after the drop. The pane says Saturday 12:55–14:05 while the block is back in Tuesday's column](/blog/timetable-calendar-plan/pane-drag-cross-day-before.png)
+
+### The reference had two parts and only one was pinned
+
+The form's "was this edited?" reference is the event plus its repeat rule (which weekdays it sits on). Midday pinned the event at open time. The rule was a constant recomputed in `init` from whatever event the form was handed. A vertical drag within one column leaves the rule alone, so it passed; a drag across columns moved the rule's reference to the new weekday and the disappearing form again looked edited. The midday check had only dragged vertically.
+
+The erratic follow-ups came one step later. The pane remembers the last value its form saved, and treats a store change to that value as the form's own save, so it doesn't rebuild. After the old form rewrote the old position, that memory and the store disagreed, and some drags stuck while others reverted.
+
+### What closes the path: a replaced form doesn't save
+
+Three changes:
+
+- The rule part of the reference is captured at open time too (`@State`).
+- A form the pane replaced (its `.id` changed) does not save when it disappears. The pane hands the form its revision number; if the number differs at teardown, the form only cancels its pending save. A form that disappears because the user picked another event still saves.
+- When an outside change triggers a rebuild, the pane clears its "last value the form saved" memory.
+
+The first alone fixes the recording, but it is the same kind of fix as midday's and reopens the day another input-following part joins the reference. The second closes the path. Checking the store at teardown ("don't save if it isn't what I opened") lost because the form would need its own save log to tell its saves from outside changes, while the pane already knows it did the replacing.
+
+The cost: an edit made in the pane and followed within 0.4 seconds (the save debounce) by a drag of that block on the grid is dropped. The later action wins.
+
+![After — the same drag, after the drop. The block sits where it was dropped on Saturday and matches the pane](/blog/timetable-calendar-plan/pane-drag-cross-day-after.png)
+
+The check drags the block Tuesday → Saturday, back, and across again, reading its frame 0.4, 1.6 and 3.6 seconds after each drop. Before the fix the block was already back in Tuesday's column at 0.4 seconds (363pt from the drop point); after, all three drags stay put at all three times.
+
+### Found while reproducing: unlocking froze the app
+
+On an iPad simulator in landscape, unlocking the grid to reproduce the drag hung the app, every time — not a crash, the main thread never left layout. The cause was the title moved over the left pane at midday. It is a toolbar item that measured where its own leading edge landed and derived its leading padding from that, and the padding was the item's width. On the locked screen this settled in a few passes. Unlocking adds the undo and redo buttons, the toolbar moves its items, and during that move each new width got a different position: the measured value changed 108,686 times in 62 seconds. Why the toolbar places the item differently per width during that move is not something I confirmed.
+
+The fix breaks the loop: the item's width comes from layout values only, and the measured edge decides only how far the title shifts **inside** that fixed width. Across three lock toggles the measurement updated 99 times and stopped, with the title within 0.5pt of the pane's center, right-to-left included. The midday checklist had a line for "unlock, title stays centered" that was never run; every capture ended on the locked screen. Both problems have the same shape: a written check exercised only in its easiest case.
+
+Verified on an iPad simulator in the timetable's Week | Edit split. The calendar splits, the undo path (unit-tested only), the unfolded Duo, Mac and real devices are pending, and the hang was reproduced on this one simulator only.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -646,3 +682,4 @@ There is no "update": importing the same timetable twice gives two sets. Verifie
 - 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
 - 2026-11-13, midday — fixed a block dragged from the open edit pane snapping back (the disappearing form compared against its live input). The pane follows a drag. The timetable split's title sits over the left pane (inside the toolbar, still tappable), and the edit pane reaches the toolbar row.
 - 2026-11-13, evening — two ways to put a timetable into an in-app calendar: "Calendar in This App" in the export sheet (new or existing calendar) and Import Timetable in the calendar menu. A copy as weekly repeating events; no alarms, no update.
+- 2026-11-13, night — fixed a block dragged to another weekday still snapping back (the repeat-rule part of the reference is pinned at open time; a form the pane replaced doesn't save on teardown). Fixed a hang when unlocking in the wide split (the toolbar title item's width comes from layout, not from its own measured position).
