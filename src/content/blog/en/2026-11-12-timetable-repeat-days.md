@@ -1,6 +1,6 @@
 ---
 title: "Make Mon/Wed/Fri classes in one go — a Repeat switch for the timetable"
-date: 2026-11-12T16:34:25+09:00
+date: 2026-11-13T20:52:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Turn on Repeat in the schedule editor, pick several weekdays, and the same class lands on each one. We kept one block per weekday and tied them with a group id instead of storing one schedule with a list of days."
@@ -36,12 +36,33 @@ So blocks stay one per weekday, and blocks from the same repeat share a `seriesI
 
 ## When a block leaves the group
 
-A group means "these days, same time." Drag one block to a different time on the grid and it leaves the group. Otherwise the next save from another day's editor would quietly pull it back. Undo restores the group. Duplicates start outside any group, and deleting one block deletes only that block.
+A group means "these days, same time." The first version made a block leave the group when you dragged it alone. A day later that changed: dragging a repeating schedule now moves every day's block together and the group stays (see the Nov 13 section). A block still leaves the group when a quick time edit changes only that block — otherwise the next save from another day's editor would quietly pull it back. Undo restores the group. Duplicates start outside any group, and deleting one block deletes only that block.
+
+## 2026-11-13 — A repeating schedule is selected and dragged as a group
+
+"Drag one and it drops out" ran against the reason for grouping. Nudging a Mon/Tue/Thu class by 30 minutes would peel one block off and leave two more to drag by hand. So, for timetable repeats and for calendar repeats (the occurrences in the visible week):
+
+| You do | You get |
+|---|---|
+| Select one block | The same-time blocks on the other days get the selection border too; handles and time pills stay on the one you picked |
+| Drag any of them | All move by the same amount — time and day column |
+| Drag sideways | Stops when the rightmost block reaches the last shown day, or the leftmost reaches the first |
+| Any day hits another schedule | Everything stops, with the same rubber-band tension as a single block |
+| Resize by the handle | Every day gets the same start and end |
+
+The walls are the union of every day the group occupies: a schedule at 8 pm on Tuesday stops Monday and Thursday too. The drag code is the single-block one with two filters widened — "other schedules on my day" became "on the days the group would occupy", and "not me" became "not anyone in the group".
+
+Two things a single block can do, a group cannot: overlap another schedule by pushing through, and shrink to fit a narrow gap. A group stays at the last place it fit until your finger reaches a gap that takes all of it.
+
+Selection is still one block. Real multi-select already exists here, but it closes the editor and only moves vertically; the other days ride along as companions for drawing, dragging and saving only. Companions must share the exact start and end, so a calendar occurrence you moved on its own stays put.
+
+The cost: you can no longer pull a single day away by dragging. Change that day's time in the editor instead.
 
 ## What's left
 
-Verified on the iPhone simulator. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
+Verified on the iPhone simulator; for group drag that covers the calendar week view (group selection, side and bottom walls, one scope prompt), not yet the mid-drag squish or the timetable grid. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
 
 ## History
 
 - 2026-11-12 — Repeat switch in the timetable editor; one block per day plus a group id (schedule save v20)
+- 2026-11-13 — Repeating schedules are selected and dragged as a group; reverses "dragging one block detaches it"
