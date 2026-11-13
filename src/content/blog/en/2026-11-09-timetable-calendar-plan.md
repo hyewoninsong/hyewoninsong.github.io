@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T13:19:35+09:00
+date: 2026-11-13T13:26:41+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -240,6 +240,7 @@ A quick flick and a short drag-and-release both passed. It took a third capture 
 In Arabic the direction flips. The offset is in screen coordinates, so the sliding layer is pinned left-to-right and only the weekday order inside each page is turned back. The earlier "the pager needed nothing extra" was the scroll view doing that work.
 
 Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, a real device, iPad, Reduce Motion and VoiceOver are not checked yet. So whether the unfolded-Duo misalignment noted at the end of the previous section shares a root with this frame overflow is also unknown. And since this is no longer a scroll view, a two-finger horizontal trackpad scroll does not change weeks — still to do.
+
 ## 2026-11-11, midday — the tapped week row becomes the week view's header
 
 Tap a date on the month grid and that week's row rises in place to become the week view's date row. The rows above slide up, the rows below slide down, and the event grid shows through the gap. Going back runs it in reverse: the rows close and the header's dates settle into their row. It is the move Apple's Calendar makes. Until now this was a 0.2s crossfade, which cannot show that both screens are talking about the same dates.
@@ -565,6 +566,30 @@ The cost: touch and hold, then walk away, and an untitled event stays. There is 
 
 Checked on an iPad simulator in landscape with a timetable. Calendar split pairs, period-based timetables, the unfolded Duo, Mac and real devices are still to do.
 
+## 2026-11-13, midday — drag a block open in the edit pane: the pane follows, and the block stays put
+
+A screen recording from an unfolded Duo showed the timetable's Week | Edit split. With an event open in the right pane, dragging that block on the left and letting go made it **animate back to where it started**. The same recording asked for three more things: let the pane follow the drag, move the title to the top center of the left pane, and pull the pane's content up into the empty strip at the top.
+
+![Mid-drag — the block's time pills and the pane's start and end both read 10:45 and 12:45](/blog/timetable-calendar-plan/split-drag-live.png)
+
+### Why the block jumped back
+
+The pane saves as you edit, and it saves once more when it goes away, so nothing is lost. When the stored event changes from outside (a drag on the grid, an undo), the pane rebuilds its form so a stale draft can't overwrite that change. But the rebuild signal (`onChange`) arrives after one more render, and in that render the old form already received the new event as its input while its `@State` draft still held the old position. When the old form disappeared it compared its draft against that fresh input, saw a difference, and saved the old position.
+
+The fix: compare against the event **as it was when the form opened**, captured once in `@State`. The calendar's edit pane uses the same form and is fixed too. The checklist line for this screen now says "drop, wait two seconds, the block is still there".
+
+![After the drop — the block stays at 11:15–13:15 and the pane agrees](/blog/timetable-calendar-plan/split-drag-dropped.png)
+
+### The pane only displays the drag
+
+While a drag is in progress, the grid publishes the dragged event (only when the pane is visible, only when the 5-minute snap changes) and the pane draws it in the weekday chips and the start and end rows. The form's draft is untouched; swapping the draft would trigger live saving mid-drag.
+
+### Moving the toolbar title without breaking the tap
+
+A layer drawn into the bar row looked right but the navigation bar swallowed its taps, and `.offset` inside the principal item moved only the pixels while the hit area stayed put. What worked was padding the opposite side by twice the shift, computed from layout, so the slot itself grows. Screenshots looked identical in all three attempts; `isHittable` and a real tap told them apart. The edit pane now ignores the top safe area except the status bar (read from the window via UIKit), so its header sits in the toolbar row.
+
+Checked on an iPad simulator in landscape. The Duo, Mac and real devices are still pending.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -588,3 +613,4 @@ Checked on an iPad simulator in landscape with a timetable. Calendar split pairs
 - 2026-11-13, morning — edit pane color reaches the top and spans the pane (wide layouts hide the bar background). Day strip, day-grid text scale and the Month | Week weekday letters use the week header's metrics. Fixed the popover appearing beside the pane after switching documents.
 - 2026-11-13, midday — month day cells show title chips instead of color bars (titles cut without an ellipsis, line count from the cell's height, a gray "+n" last line on overflow). The month ↔ week transition is chip ↔ block, with folded events leaving from the "+n" line. The day cell is one accessibility element (42 cells had become 88 elements and a UI test tapped the wrong week).
 - 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
+- 2026-11-13, midday — fixed a block dragged from the open edit pane snapping back (the disappearing form compared against its live input). The pane follows a drag. The timetable split's title sits over the left pane (inside the toolbar, still tappable), and the edit pane reaches the toolbar row.
