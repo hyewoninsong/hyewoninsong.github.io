@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-13T21:32:47+09:00
+date: 2026-11-13T22:47:07+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -124,7 +124,7 @@ Touching a repeating event asks for scope: three choices, editing or deleting (e
 |---|---|
 | Edit title, time, color, memo | This event · This and following · All events |
 | Delete | This event · This and following · All events |
-| Drag or resize on the grid | Same question after you let go; Cancel puts it back |
+| Drag or resize on the grid | No question: that occurrence moves, and a scope bar under the grid changes it (see 2026-11-13, night; at first this asked the same question after the drop) |
 | Change weekdays, range, weekly/biweekly | No question — the whole series |
 
 ![Delete alert for a repeating event: this event, this and following, all events, cancel](/blog/timetable-calendar-plan/event-delete-scope.png)
@@ -657,6 +657,36 @@ The fix breaks the loop: the item's width comes from layout values only, and the
 
 Verified on an iPad simulator in the timetable's Week | Edit split. The calendar splits, the undo path (unit-tested only), the unfolded Duo, Mac and real devices are pending, and the hang was reproduced on this one simulator only.
 
+## 2026-11-13, night — dragging a repeating event no longer asks; a bar under the grid changes the scope
+
+Every drag or resize of a repeating event used to raise an alert: this event, this and following, all events, cancel. Nudge a class three times and you answered three times. Now the drop moves **that occurrence only**, and a small scope bar appears above the bottom buttons.
+
+![Right after a drop: a scope bar above the bottom buttons, with "this event only" selected](/blog/timetable-calendar-plan/drag-scope-bar.png)
+
+| You do | What happens |
+|---|---|
+| Drop a repeating event | Only that occurrence moves; the bar shows "This schedule only" |
+| Tap another segment | The drag you just made is re-applied with that scope |
+| Drag again without deselecting | It goes in with the scope you picked |
+| Deselect, or pick another event | The bar goes away; next time starts from "only" again |
+| Undo | One per drag, however many times you changed the scope |
+
+There is no Cancel any more. Undo does that.
+
+**The choice lasts as long as the selection.** Pick "All schedules" once and the following drags keep using it, which is what makes repeated fine-tuning painless. It is forgotten when the selection ends. Remembering it app-wide would let a careless drag a week later move a whole term.
+
+Three alternatives lost. Guessing from the change (weekday moved means one, time changed means all) asks nothing but hides its rule. A "default drag scope" setting cannot fit a choice that differs per situation. A chip next to the selected block, set before dragging, competes with the handles and time pills already there.
+
+Delete and the edit sheet's checkmark still use alerts. The options are the same three everywhere; only how they are asked differs, by how often the action repeats.
+
+**Changing the scope keeps a single undo step.** Tapping another segment calls `undo()` on the drag and saves it again with the new scope in the same pass. `UndoManager` clears the redo stack when a new action registers, so one entry remains. This is only done when the top of the stack is still that drag: the event list is recorded right after the save and compared at tap time. If you undid or edited something in between, the bar is already gone.
+
+**Long labels fall back to one chip.** Three segments fit on an iPhone in Korean, Japanese and Chinese. "This and following schedules" does not, so `ViewThatFits` drops to a chip showing the current scope, with the three options in a menu.
+
+![English: the chip opens a menu with the three scopes and a checkmark on the current one](/blog/timetable-calendar-plan/drag-scope-menu.png)
+
+Checked on the iPhone simulator in Korean and English. Not yet checked: the iPad split with the edit pane open, the Duo, Mac, a real device, right-to-left languages. Android still asks with the alert.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -683,3 +713,4 @@ Verified on an iPad simulator in the timetable's Week | Edit split. The calendar
 - 2026-11-13, midday — fixed a block dragged from the open edit pane snapping back (the disappearing form compared against its live input). The pane follows a drag. The timetable split's title sits over the left pane (inside the toolbar, still tappable), and the edit pane reaches the toolbar row.
 - 2026-11-13, evening — two ways to put a timetable into an in-app calendar: "Calendar in This App" in the export sheet (new or existing calendar) and Import Timetable in the calendar menu. A copy as weekly repeating events; no alarms, no update.
 - 2026-11-13, night — fixed a block dragged to another weekday still snapping back (the repeat-rule part of the reference is pinned at open time; a form the pane replaced doesn't save on teardown). Fixed a hang when unlocking in the wide split (the toolbar title item's width comes from layout, not from its own measured position).
+- 2026-11-13, night — removed the scope alert after dragging or resizing a repeating event. The drop applies to that occurrence only and a scope bar under the grid changes it; the choice lasts while the selection does, and a scope change stays one undo step. Delete and the edit sheet still ask.
