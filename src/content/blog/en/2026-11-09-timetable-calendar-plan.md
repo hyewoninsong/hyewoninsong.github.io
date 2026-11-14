@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-14T16:05:38+09:00
+date: 2026-11-14T17:49:03+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -721,6 +721,43 @@ The pane's header row used to sit in the navigation bar's row, which was fine fo
 
 Checked on an iPad landscape timetable; the calendar split, scope questions, unfolded Duo and real devices are still to check.
 
+## 2026-11-14, evening — two memos: one for every date, one for that date
+
+A repeating event had one memo field. If it held the room number, there was nowhere to write "quiz this week" without choosing "This event only" and replacing the memo for that occurrence, which hid the room number on that day. The memo is now two fields.
+
+- **Notes for all dates** show on every occurrence.
+- **Notes for this date** show on that occurrence only.
+
+Opening an occurrence of a repeating event shows both fields in the edit sheet. New events and one-off events keep a single field.
+
+![The lower part of the edit sheet: a field labelled for all dates, and below it a field labelled with the occurrence's date](/blog/timetable-calendar-plan/date-memo-edit-fields.png)
+
+Everywhere the order is title, notes for all dates, notes for this date: on the grid block and on the card that appears when you tap an event in a locked calendar.
+
+![The info card on a locked calendar: under the title and time, one box for the common notes and one for the date's notes](/blog/timetable-calendar-plan/date-memo-locked-card.png)
+
+### Memos never ask for a scope
+
+Editing a repeating occurrence normally asks "This event only / This and following / All events". Memos skip that question, because the field you typed in already answers it.
+
+| What you edited | Where it goes |
+|---|---|
+| Notes for all dates | The whole repeating event |
+| Notes for this date | That occurrence |
+| Title, time, color | The scope picked in the alert |
+
+A save that changed only memos closes without an alert. If the title changed too, the alert appears but applies to the title alone; the common notes still reach every date. The one exception is "This and following", which splits the series at that date, so edited common notes land on the later part only.
+
+### Both show; neither hides the other
+
+The first design let the date's notes replace the common notes on the block, to save space. It was dropped: the room number matters on quiz day too. Blocks still show at most two memo lines, one each when both exist.
+
+### The date's notes follow the occurrence
+
+They are stored per date on the series, not inside the "edited occurrence" record. Stored there, an "All events" edit would overwrite them, and an occurrence with only a note would count as edited when dragging. Moving an occurrence carries its note; splitting a series sends each note to its side; deleting an occurrence or shortening the range removes it, and undo brings it back. Turning repeat off joins the two memos into the single field, common notes first. The widget and the watch join them the same way. Memos saved earlier with "This event only" become that date's notes.
+
+Checked on iPhone only so far; the iPad edit pane, the foldable, and right-to-left languages are still to be looked at.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -750,3 +787,4 @@ Checked on an iPad landscape timetable; the calendar split, scope questions, unf
 - 2026-11-13, night — removed the scope alert after dragging or resizing a repeating event. The drop applies to that occurrence only and a scope bar under the grid changes it; the choice lasts while the selection does, and a scope change stays one undo step. Delete and the edit sheet still ask.
 - 2026-11-14 — fixed the scope bar collapsing into a left-aligned chip after picking "This and following" (full overlay width, bold-width segments, chip ink). Checked the iPad split, folded Duo, Arabic, dark mode and "This and following".
 - 2026-11-14, afternoon — the edit pane is back to X and checkmark: edits save on the checkmark, X discards, the pane clears afterwards, and new events are drafts again. The button row sits below the toolbar row (in it, the checkmark was covered and X ignored taps).
+- 2026-11-14, evening — a repeating event has two memos (all dates, this date), shown in that order on the block and the locked info card. Saving only memos never asks for a scope: common notes reach the whole series (the later part for "This and following"), date notes stay on that occurrence. Older "This event only" memos become date notes.
