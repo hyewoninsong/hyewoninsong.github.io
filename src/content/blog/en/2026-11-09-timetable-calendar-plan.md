@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-14T01:50:52+09:00
+date: 2026-11-14T16:05:38+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -476,7 +476,7 @@ Tapping a date no longer changes the layout. When one tap rearranged the screen,
 
 **The pane has no X or ✓; edits apply as you go.** One undo step is one field: tapped values save at once, the time wheel saves when it stops, title and memo save when typing pauses for about a second or focus leaves. Saving on every keystroke would make undo useless; one step per selected event would undo the title when you only wanted the time back. The questions ✓ used to ask (which occurrences of a repeating event, whether to restyle matching events) are asked once per event and the answer is reused; cancelling drops that change.
 
-![Week | Edit: no X or ✓, the block on the left follows each edit](/blog/timetable-calendar-plan/split-week-edit.png)
+![Week | Edit as of Nov 12: no X or ✓ (brought back on Nov 14)](/blog/timetable-calendar-plan/split-week-edit.png)
 
 The pane rebuilds its form when the stored event changes from outside (a drag on the grid, undo). The first version compared the store against the value the form sent, but saving a single occurrence adds fields in the store, so the pane read its own save as an outside change, rebuilt, and forgot the scope it had just been given. It now compares against the value read back after saving, and the answers live in the pane rather than the form.
 
@@ -553,6 +553,8 @@ A source check meant to catch exactly this already existed, but its pattern matc
 Checked on the iPhone simulator in Korean, light mode: a six-row month and the transition both ways. iPad, iPhone Duo, Mac, a real device, dark mode, Arabic titles, the largest text size and the home card's chips are still to do. The Android month view still draws bars.
 
 ## 2026-11-13, midday — in the edit pane, touch and hold an empty slot and the event is simply there
+
+(Reversed on Nov 14 — new events in the pane are drafts with X and a checkmark again; see the last section.)
 
 The edit pane saves as you edit, with no close or confirm buttons. New events were the exception: double-tapping an empty slot opened a "New Event" form in the pane, and that form alone still had its X and checkmark. On screens that show the pane, touching and holding an empty slot (drag while holding to set the length) now saves the event right away and opens it in the pane for editing, with the cursor in the title field.
 
@@ -705,6 +707,20 @@ The fixes:
 
 Also checked: "This and following" from the screen (this week stays, later weeks move, one undo restores all of them); the iPad [Week | Edit] and [Day | Edit] splits with the edit pane open while switching scopes; the folded Duo and dark mode; Arabic, which gets the chip because three segments don't fit an iPhone. The quick time sheet only opens from the "Time" pointer menu in a narrow iPad window, which UI tests can't trigger, so that stays a manual step. The lesson: a bar that changes shape gets tapped through every value, and its position is measured, not eyeballed. Still open: the unfolded Duo, Mac, and real devices.
 
+## 2026-11-14 — the edit pane gets its X and checkmark back
+
+For two days the edit pane saved as you typed and a touch and hold saved a new event on the spot. Put next to Apple Calendar on iPad, which keeps an X and a checkmark in the same place, that felt off, so the buttons are back.
+
+The pane now uses the same form as the popover: X, "Edit Event", checkmark. Edits preview on the grid and are saved once when you tap the checkmark (one undo step); X throws them away. Repeating-event scope and the shared-style question are asked at the checkmark. After either button the selection clears and the pane says nothing is selected. New events are drafts again: touch and hold, `+` or a secondary click opens a "New Event" form that the checkmark adds and X discards.
+
+Keeping live saving and only adding buttons lost: a checkmark over edits that are already saved has nothing to confirm. Keeping the event open after the checkmark lost to matching the popover.
+
+### Buttons in the toolbar row didn't respond
+
+The pane's header row used to sit in the navigation bar's row, which was fine for a title. With buttons there, the checkmark hid under the grid toolbar's trailing buttons and X didn't receive taps — the bar takes touches in its row first. The button row now sits just below the bar row, which stays filled with the event color.
+
+Checked on an iPad landscape timetable; the calendar split, scope questions, unfolded Duo and real devices are still to check.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -733,3 +749,4 @@ Also checked: "This and following" from the screen (this week stays, later weeks
 - 2026-11-13, night — fixed a block dragged to another weekday still snapping back (the repeat-rule part of the reference is pinned at open time; a form the pane replaced doesn't save on teardown). Fixed a hang when unlocking in the wide split (the toolbar title item's width comes from layout, not from its own measured position).
 - 2026-11-13, night — removed the scope alert after dragging or resizing a repeating event. The drop applies to that occurrence only and a scope bar under the grid changes it; the choice lasts while the selection does, and a scope change stays one undo step. Delete and the edit sheet still ask.
 - 2026-11-14 — fixed the scope bar collapsing into a left-aligned chip after picking "This and following" (full overlay width, bold-width segments, chip ink). Checked the iPad split, folded Duo, Arabic, dark mode and "This and following".
+- 2026-11-14, afternoon — the edit pane is back to X and checkmark: edits save on the checkmark, X discards, the pane clears afterwards, and new events are drafts again. The button row sits below the toolbar row (in it, the checkmark was covered and X ignored taps).
