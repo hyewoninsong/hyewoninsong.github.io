@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-14T17:49:03+09:00
+date: 2026-11-15T03:27:54+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -758,6 +758,20 @@ They are stored per date on the series, not inside the "edited occurrence" recor
 
 Checked on iPhone only so far; the iPad edit pane, the foldable, and right-to-left languages are still to be looked at.
 
+## 2026-11-15 — month, week and day on iPhone too; timetables get week and day
+
+The month · week · day menu used to live only on wide single-pane screens like an iPad in portrait. On iPhone and a folded Duo a calendar opened on the month and you tapped a date to reach its week. Now the same menu sits at the top right on iPhone, sharing one value with the wide layouts. Month is still the default.
+
+![iPhone calendar month view with a "Month" menu next to Today](/blog/timetable-calendar-plan/iphone-month-menu.png)
+
+Timetables get the menu too, with only Week and Day. A timetable is a repeating week with no dates, so laying it out four times on a month grid tells you nothing new.
+
+The timetable day view reuses the calendar's: one weekday column, a weekday strip on top (no date numbers, the shown day in a filled pill), and swiping the grid or the strip steps through the visible weekdays. The pager keys pages by date, so the timetable borrows this week's date for that weekday — keeping only the weekday would make Friday → Monday slide in backwards.
+
+![iPhone timetable day view: Monday highlighted in the strip, one column filling the screen](/blog/timetable-calendar-plan/iphone-timetable-day.png)
+
+Checked as still screens in the iPhone simulator only; swipes, the folded Duo and devices are next. With the menu, Today and the ⋯ button side by side, long calendar names get truncated in week and day views.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -788,3 +802,4 @@ Checked on iPhone only so far; the iPad edit pane, the foldable, and right-to-le
 - 2026-11-14 — fixed the scope bar collapsing into a left-aligned chip after picking "This and following" (full overlay width, bold-width segments, chip ink). Checked the iPad split, folded Duo, Arabic, dark mode and "This and following".
 - 2026-11-14, afternoon — the edit pane is back to X and checkmark: edits save on the checkmark, X discards, the pane clears afterwards, and new events are drafts again. The button row sits below the toolbar row (in it, the checkmark was covered and X ignored taps).
 - 2026-11-14, evening — a repeating event has two memos (all dates, this date), shown in that order on the block and the locked info card. Saving only memos never asks for a scope: common notes reach the whole series (the later part for "This and following"), date notes stay on that occurrence. Older "This event only" memos become date notes.
+- 2026-11-15 — month · week · day menu for calendars on iPhone and the folded Duo (same value as wide screens); timetables get week · day (no month), with a weekday strip and one swipeable column.
