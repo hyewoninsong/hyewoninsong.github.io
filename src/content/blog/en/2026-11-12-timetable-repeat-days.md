@@ -1,6 +1,6 @@
 ---
 title: "Make Mon/Wed/Fri classes in one go — a Repeat switch for the timetable"
-date: 2026-11-14T02:19:44+09:00
+date: 2026-11-14T21:54:31+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Turn on Repeat in the schedule editor, pick several weekdays, and the same class lands on each one. We kept one block per weekday and tied them with a group id instead of storing one schedule with a list of days."
@@ -75,6 +75,24 @@ Two things felt off after a day. Dragging a Tue–Fri class down until Thursday 
 
 The first capture showed both swapping blocks hatched as overlapping: the overlap check compares against saved positions, and mid-swap each block sits on the other's saved day. Blocks of the same repeat are no longer each other's overlap reference. The unit tests on the day math were green; only a mid-drag screenshot showed it.
 
+## 2026-11-14, later — Push to the nearest empty day instead of swapping
+
+Swapping felt fine one column over, but a long drag scrambled the order: with a b c d e on Mon–Fri, dragging a to Wednesday sent c two columns back to Monday, giving c b a d e.
+
+Now a block in the way is pushed toward the **nearest empty day**, and any same-repeat blocks in between shift one column along with it; on a tie it goes toward where the drag started. The starting day is always empty during the drag, so a full week behaves like reordering a list:
+
+| Finger on | Grid |
+|---|---|
+| Mon | a b c d e |
+| Tue | b a c d e |
+| Wed | b c a d e |
+| Thu | b c d a e |
+| Fri | b c d e a |
+
+With gaps, the block steps into the closest gap. The layout is recomputed from the start day and the current day only, so moving back un-shifts the blocks.
+
+On drop, the set of days the repeat occupies differs by at most one (the start day out, the filled gap in), so only the dragged block's day is saved and selection passes to the block that was under the finger. Same-repeat blocks look identical, so nothing jumps. The trade-off: per-block notes stay with the weekday rather than travelling with the block.
+
 ## What's left
 
 Verified on the iPhone simulator; for group drag that covers the calendar week view (group selection, the squish on only the blocked block, the swap and what is saved after it), not yet a sideways wall, resizing against a wall, or the timetable grid. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
@@ -84,3 +102,4 @@ Verified on the iPhone simulator; for group drag that covers the calendar week v
 - 2026-11-12 — Repeat switch in the timetable editor; one block per day plus a group id (schedule save v20)
 - 2026-11-13 — Repeating schedules are selected and dragged as a group; reverses "dragging one block detaches it"
 - 2026-11-14 — Only the blocked block squishes; only the dragged block changes day; same-repeat blocks swap. Reverses "sideways moves the whole group"
+- 2026-11-14, later — Blocks in the way are pushed to the nearest empty day (a full week shifts like a list) instead of swapping; only the dragged block's day is saved
