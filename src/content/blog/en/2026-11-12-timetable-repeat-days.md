@@ -1,6 +1,6 @@
 ---
 title: "Make Mon/Wed/Fri classes in one go — a Repeat switch for the timetable"
-date: 2026-11-14T21:54:31+09:00
+date: 2026-11-15T00:54:35+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Turn on Repeat in the schedule editor, pick several weekdays, and the same class lands on each one. We kept one block per weekday and tied them with a group id instead of storing one schedule with a list of days."
@@ -93,6 +93,16 @@ With gaps, the block steps into the closest gap. The layout is recomputed from t
 
 On drop, the set of days the repeat occupies differs by at most one (the start day out, the filled gap in), so only the dragged block's day is saved and selection passes to the block that was under the finger. Same-repeat blocks look identical, so nothing jumps. The trade-off: per-block notes stay with the weekday rather than travelling with the block.
 
+## 2026-11-15 — The group flickered back to where it started
+
+A day after the push behavior landed, a screen recording showed the group sometimes jumping back to its pre-drag position for a frame on release, then returning. The final result was always right.
+
+It only happened when the block was dropped on a day another block of the same repeat occupied — the one case where selection moves to that other block on release. Even then it was intermittent. Logging every block position showed one evaluation in between where the selection (a parent `@State` passed down as `@Binding`) was already new while the grid's own `@State` — the held drop position and the drag values — was still old. Both swapped blocks then drew at their stored, pre-drag spots. The opposite order showed up too; which came first varied by run.
+
+Moving the held position into the same `withTransaction` as the selection swap did not help (4 of 6 fresh-launch drags still flickered): a transaction picks the animation, it does not make a parent binding and child state land in the same evaluation. The fix was in the display function: it now finds the drag values even in the "new selection, old drag state" combination, so any order reads drag frame → held position → stored position. Zero of six after the fix, and no backward frame in a 30 fps recording.
+
+Earlier checks looked at the shape during the drag and the result after it, both correct; a one-frame glitch passes screenshots and frame assertions. Releases that change selection now get a log probe, run across fresh launches.
+
 ## What's left
 
 Verified on the iPhone simulator; for group drag that covers the calendar week view (group selection, the squish on only the blocked block, the swap and what is saved after it), not yet a sideways wall, resizing against a wall, or the timetable grid. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
@@ -103,3 +113,4 @@ Verified on the iPhone simulator; for group drag that covers the calendar week v
 - 2026-11-13 — Repeating schedules are selected and dragged as a group; reverses "dragging one block detaches it"
 - 2026-11-14 — Only the blocked block squishes; only the dragged block changes day; same-repeat blocks swap. Reverses "sideways moves the whole group"
 - 2026-11-14, later — Blocks in the way are pushed to the nearest empty day (a full week shifts like a list) instead of swapping; only the dragged block's day is saved
+- 2026-11-15 — Fixed a one-frame jump back to the pre-drag position when dropping onto a same-repeat day; display now handles a selection that updates ahead of the grid's own state
