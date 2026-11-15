@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-15T03:52:24+09:00
+date: 2026-11-16T04:19:17+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -125,7 +125,7 @@ Touching a repeating event asks for scope: three choices, editing or deleting (e
 | Edit title, time, color, memo | This event · This and following · All events |
 | Delete | This event · This and following · All events |
 | Drag or resize on the grid | No question: that occurrence moves, and a scope bar under the grid changes it (see 2026-11-13, night; at first this asked the same question after the drop) |
-| Change weekdays, range, weekly/biweekly | No question — the whole series |
+| Change weekdays, range, weekly/biweekly | Follows the scope you picked: "this and following" changes only from that date, "all" changes the whole series (see 2026-11-16; it used to be the whole series, always) |
 
 ![Delete alert for a repeating event: this event, this and following, all events, cancel](/blog/timetable-calendar-plan/event-delete-scope.png)
 
@@ -711,6 +711,8 @@ Also checked: "This and following" from the screen (this week stays, later weeks
 
 ## 2026-11-14 — the edit pane gets its X and checkmark back
 
+(Reversed again on 2026-11-16: the pane has no X or checkmark, and edits save when the selection ends. See the last sections. This one stays as the reasoning of that day.)
+
 For two days the edit pane saved as you typed and a touch and hold saved a new event on the spot. Put next to Apple Calendar on iPad, which keeps an X and a checkmark in the same place, that felt off, so the buttons are back.
 
 The pane now uses the same form as the popover: X, "Edit Event", checkmark. Edits preview on the grid and are saved once when you tap the checkmark (one undo step); X throws them away. Repeating-event scope and the shared-style question are asked at the checkmark. After either button the selection clears and the pane says nothing is selected. New events are drafts again: touch and hold, `+` or a secondary click opens a "New Event" form that the checkmark adds and X discards.
@@ -776,6 +778,8 @@ Checked as still screens in the iPhone simulator only; swipes, the folded Duo an
 
 ## 2026-11-15 — pick the scope before you change anything
 
+(Taken one step further on 2026-11-16: the question now comes when you select the event, not after the first drag.)
+
 Two days ago a drag stopped asking. The bar was easy to ignore, and that was the problem: a drop quietly landed as "this event only", and someone who meant to move the whole term found out a week later. Now **you always pick the scope — once.**
 
 | You do | What happens |
@@ -800,6 +804,44 @@ What lost: keeping the silent default (fast, but wrong commits surface late), as
 The memory lives in the per-window selection state, not the grid, so the grid, the iPhone sheet, the iPad popover and the wide-screen edit pane all read the same value. It holds the scope plus the block ids it covers, follows an id when "All schedules" moves the block to another weekday, and is dropped when the selection leaves those blocks. The scope bar under the grid stays, and a scope picked there is remembered too.
 
 Checked on the iPhone simulator end to end; the screen check caught a missing one-line hookup that unit tests passed over. iPad popover, the edit pane, Duo and devices are still to do.
+
+## 2026-11-16 — the pane loses its buttons again; edits save when the selection ends, as one undo step
+
+The X and checkmark are gone from the wide-screen edit pane, but this is not a return to save-as-you-type. Edits in the pane show on the grid as a preview and are saved once, at the moment the selected event loses the selection: a tap on empty space, another event, `+`, a week swipe, going home.
+
+![iPad landscape timetable: a selected block on the left, and an edit pane whose header shows only the title, no X or checkmark](/blog/timetable-calendar-plan/pane-no-buttons.png)
+
+Everything done after selecting is one group. Rename in the pane, drag the block, resize it, change the alert, deselect: one undo takes all of it back. Pressing undo while the event is still selected discards everything since the selection and keeps the selection. Undo does what X used to do.
+
+| You do | What happens |
+|---|---|
+| Change a value in the pane | The block follows. Not saved yet |
+| Drag the block with unsaved edits | No question. The edits are saved first, then the drag goes on |
+| Deselect | Everything is saved; one undo restores it all |
+| Undo while selected | Everything since the selection is discarded |
+| Leave a new-event draft | Created if it has a title, dropped if not |
+
+### Grouping undo by pausing registration
+
+A drag has to be saved on release, because scope handling and group drags all run on saved state. That makes three drags and one form edit four undo steps. Turning off undo registration at each edit path would have meant fifty-odd call sites in the grid alone. Instead the document's `UndoManager` is paused in one place: on selection, keep a copy of the document and call `disableUndoRegistration()`; when the selection ends, call `enableUndoRegistration()` and register a single "restore the copy" action if the document changed.
+
+Two things bit. Calling `undo()` while registration is paused throws away its redo counterpart, so undo and redo close the group first and reopen it after. And "changed" must ignore modification timestamps, because merely selecting a block stamps one to raise its stacking order.
+
+The save itself is owned by the selection state, not by the form disappearing. The form only reports "what I would save now"; the function that changes the selection saves it before changing anything.
+
+### Repeat settings follow the scope too
+
+Changing weekdays, interval or range used to apply to the whole series whatever scope was picked. Now "this event only" locks the repeat controls, "this and following" splits the series at that date and changes only the later part, and "all" changes everything.
+
+## 2026-11-16, evening — a repeating event asks for its scope when you select it
+
+Asking after the first drag left three places that asked about scope, and a drag preview that did not match the answer. Now tapping a repeating event in an unlocked calendar shows "This event only · This and following · All events" at the tap, before it is selected. Pick one and the event is selected with that scope; tap outside and nothing is selected. A touch and hold shows the same menu and does not lift the block.
+
+The scope then applies to everything until the selection ends, including delete and duplicate, which no longer ask again.
+
+Changing the scope mid-selection had three candidates: not allowed, rewrite everything so far with the new scope, or cut there. We cut there. What you did so far keeps its old scope, what you do next uses the new one, and the undo group splits at that point. Rewriting was good for fixing a wrong pick, but hard to predict after several drags and edits.
+
+The pane's save and undo grouping were checked with a finger probe on iPad landscape. The scope menu on calendar screens, touch and hold, the foldable iPhone and Mac have not been seen on screen yet.
 
 ## History
 
@@ -833,3 +875,5 @@ Checked on the iPhone simulator end to end; the screen check caught a missing on
 - 2026-11-14, evening — a repeating event has two memos (all dates, this date), shown in that order on the block and the locked info card. Saving only memos never asks for a scope: common notes reach the whole series (the later part for "This and following"), date notes stay on that occurrence. Older "This event only" memos become date notes.
 - 2026-11-15 — month · week · day menu for calendars on iPhone and the folded Duo (same value as wide screens); timetables get week · day (no month), with a weekday strip and one swipeable column.
 - 2026-11-15, early — scope comes first: the first drag or resize of a repeating event always asks (cancel restores it), the choice lasts while the event stays selected and is shared by drags, the sheet and the edit pane; the edit sheet unlocks only after picking a scope (memos excepted).
+- 2026-11-16 — the edit pane drops X and checkmark again: pane edits save once when the selection ends, and everything done while selected is one undo step (undo registration paused on the document's `UndoManager`, one snapshot on close). Repeat settings follow the picked scope.
+- 2026-11-16, evening — a repeating event asks for its scope on selection (tap or touch and hold; tapping outside selects nothing). Delete and duplicate reuse it. Changing scope mid-selection cuts there.
