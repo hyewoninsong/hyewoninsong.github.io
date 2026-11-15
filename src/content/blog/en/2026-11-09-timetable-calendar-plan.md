@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-15T03:27:54+09:00
+date: 2026-11-15T03:52:24+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -661,6 +661,8 @@ Verified on an iPad simulator in the timetable's Week | Edit split. The calendar
 
 ## 2026-11-13, night — dragging a repeating event no longer asks; a bar under the grid changes the scope
 
+(Reversed on 2026-11-15 — the first drag now always asks; see "pick the scope before you change anything" below.)
+
 Every drag or resize of a repeating event used to raise an alert: this event, this and following, all events, cancel. Nudge a class three times and you answered three times. Now the drop moves **that occurrence only**, and a small scope bar appears above the bottom buttons.
 
 ![Right after a drop: a scope bar above the bottom buttons, with "this event only" selected](/blog/timetable-calendar-plan/drag-scope-bar.png)
@@ -772,6 +774,33 @@ The timetable day view reuses the calendar's: one weekday column, a weekday stri
 
 Checked as still screens in the iPhone simulator only; swipes, the folded Duo and devices are next. With the menu, Today and the ⋯ button side by side, long calendar names get truncated in week and day views.
 
+## 2026-11-15 — pick the scope before you change anything
+
+Two days ago a drag stopped asking. The bar was easy to ignore, and that was the problem: a drop quietly landed as "this event only", and someone who meant to move the whole term found out a week later. Now **you always pick the scope — once.**
+
+| You do | What happens |
+|---|---|
+| Select a repeating event | Nothing is asked |
+| First drag or resize of it | After the drop: this event · this and following · all events · cancel. The block waits where you dropped it |
+| Cancel | Back where it was, nothing left to undo |
+| Drag again while still selected | No question, the scope you picked |
+| Open the edit sheet | The scope card at the top already has that scope checked; the checkmark saves without asking |
+| Deselect or pick another event | Forgotten; the next drag asks again |
+
+![Right after the drop: the "This is a repeating schedule" alert with three scopes and cancel](/blog/timetable-calendar-plan/scope-first-alert.png)
+
+Starting from the edit sheet works the same way. A repeating event opens with a scope card on top; until you pick a row, title, color, weekdays, times, repeat and alerts are dimmed. Memos stay editable — which memo field you type in already is the scope.
+
+![First open of a repeating event: the scope card with a hint, the rest dimmed](/blog/timetable-calendar-plan/scope-card-locked.png)
+
+![After choosing "All schedules" while dragging: the card has it checked](/blog/timetable-calendar-plan/scope-card-remembered.png)
+
+What lost: keeping the silent default (fast, but wrong commits surface late), asking at the checkmark (it asks "how far?" after you've already edited), and remembering the scope per app or calendar (one careless drag days later moves a whole term).
+
+The memory lives in the per-window selection state, not the grid, so the grid, the iPhone sheet, the iPad popover and the wide-screen edit pane all read the same value. It holds the scope plus the block ids it covers, follows an id when "All schedules" moves the block to another weekday, and is dropped when the selection leaves those blocks. The scope bar under the grid stays, and a scope picked there is remembered too.
+
+Checked on the iPhone simulator end to end; the screen check caught a missing one-line hookup that unit tests passed over. iPad popover, the edit pane, Duo and devices are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -803,3 +832,4 @@ Checked as still screens in the iPhone simulator only; swipes, the folded Duo an
 - 2026-11-14, afternoon — the edit pane is back to X and checkmark: edits save on the checkmark, X discards, the pane clears afterwards, and new events are drafts again. The button row sits below the toolbar row (in it, the checkmark was covered and X ignored taps).
 - 2026-11-14, evening — a repeating event has two memos (all dates, this date), shown in that order on the block and the locked info card. Saving only memos never asks for a scope: common notes reach the whole series (the later part for "This and following"), date notes stay on that occurrence. Older "This event only" memos become date notes.
 - 2026-11-15 — month · week · day menu for calendars on iPhone and the folded Duo (same value as wide screens); timetables get week · day (no month), with a weekday strip and one swipeable column.
+- 2026-11-15, early — scope comes first: the first drag or resize of a repeating event always asks (cancel restores it), the choice lasts while the event stays selected and is shared by drags, the sheet and the edit pane; the edit sheet unlocks only after picking a scope (memos excepted).
