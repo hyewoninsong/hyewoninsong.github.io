@@ -1,12 +1,12 @@
 ---
 title: "New timetables start with the type, and Return creates them"
-date: 2026-10-09T01:45:00+09:00
+date: 2026-11-15T13:20:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The New Timetable sheet now opens with nothing selected. Pick the vertical axis and the name field appears; Return creates the timetable. Tapping outside only lowers the keyboard — and building that showed that a blocked sheet stays silent when you tap its dimmed backdrop."
 ---
 
-On Oct 5, creating a timetable in SuperTimetable went in one order: pick the vertical axis (by time or by period), then type a name, and Return created the timetable. On Oct 9 that sheet became a name-only alert and the axis is picked in the Display sheet that opens right after — see the last section. The sections in between are kept as they were written.
+On Oct 5, creating a timetable in SuperTimetable went in one order: pick the vertical axis (by time or by period), then type a name, and Return created the timetable. On Oct 9 that sheet became a name-only alert, and on Nov 15 the alert gave way to four illustrated steps — see the last two sections. The sections in between are kept as they were written.
 
 ## The sheet opens with nothing selected
 
@@ -124,8 +124,42 @@ The store event card for "new period timetable" is still the exception: same ale
 
 Eight UI tests used to tap the period tile in the old sheet. Their fixture schedules are seeded only when a timetable is created as a period timetable, so those tests now enter through the same deep link the event card uses.
 
+## 2026-11-15 — The alert is gone: four steps, and calendars take the same path
+
+The name-only alert was fast, and that was the problem. The axis choice lived in a settings sheet that opened right after creation and closed with one tap, so many people never noticed that a period-based timetable existed. Calendars, added since, showed nothing at all after their name alert.
+
+Creating anything now opens one sheet with four steps.
+
+| Step | What it asks |
+|---|---|
+| 1 | Timetable or calendar — two cards, each with a drawing and a line of explanation |
+| 2 | By time or by period — two more illustrated cards |
+| 3 | Which days, and which hours (or the period rules) |
+| 4 | A name, plus a summary of the choices. The checkmark creates it |
+
+![Step one — two cards under "What would you like to make?". The timetable card shows the same colored blocks repeating across weekdays; the calendar card shows a month of dates with colored marks](/blog/timetable-new-sheet-kind-first/steps-type.png)
+
+![Step two — the By Time card has blocks of uneven length on a 9–12 hour scale; the By Period card has blocks that fit numbered slots exactly](/blog/timetable-new-sheet-kind-first/steps-axis.png)
+
+Every step has a default selected, so three taps on the arrow reach the end. Nothing is forced; the steps only make sure each choice is seen once.
+
+### The name went last
+
+The requested order was name first. It moved to the end for two reasons: the default name depends on the kind ("New Timetable" or "New Calendar"), and a name field on step one raises the keyboard over the very drawings the steps exist to show. The last step does not focus the field on its own, and an empty name falls back to the default.
+
+![Last step — a name field with a placeholder, a four-row summary card, and the checkmark at the top right](/blog/timetable-new-sheet-kind-first/steps-name.png)
+
+### What lost
+
+- **Keeping the alert and adding hints to the settings sheet.** That sheet is opened dozens of times after creation; first-run guidance there is noise every other time.
+- **A fifth step for text color.** Missing it at creation costs nothing, and every extra step pushes "Create" further away.
+- **Shrunken real screenshots as the art.** They turn text into specks and need re-rendering per language. The drawings are schematic — digits only, bars for labels — so one drawing serves all eighteen languages, mirrored in Arabic with the axis on the right.
+
+The settings sheet no longer opens after creation. Still unverified: iPad, the folding iPhone, dark mode, and how the captions wrap in long-worded languages.
+
 ## History
 
 - 2026-10-05 — Type first, Return creates. Backdrop taps are caught separately.
 - 2026-10-06 — One axis tile shared with the Display sheet; fixed the name field hiding behind the keyboard.
 - 2026-10-09 — Type sheet replaced by a name alert; created by time, axis picked in the Display sheet.
+- 2026-11-15 — Alert replaced by four steps (kind → axis → range → name); calendars share the sheet, and the settings sheet no longer follows creation.
