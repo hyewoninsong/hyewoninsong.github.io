@@ -1,6 +1,6 @@
 ---
 title: "Make Mon/Wed/Fri classes in one go — a Repeat switch for the timetable"
-date: 2026-11-15T00:54:35+09:00
+date: 2026-11-15T22:05:05+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Turn on Repeat in the schedule editor, pick several weekdays, and the same class lands on each one. We kept one block per weekday and tied them with a group id instead of storing one schedule with a list of days."
@@ -103,6 +103,23 @@ Moving the held position into the same `withTransaction` as the selection swap d
 
 Earlier checks looked at the shape during the drag and the result after it, both correct; a one-frame glitch passes screenshots and frame assertions. Releases that change selection now get a log probe, run across fresh launches.
 
+## 2026-11-15 — Delete and duplicate ask for the scope at the button
+
+Once a repeating schedule was selected as a group, the bottom trash and duplicate buttons stopped matching the screen: three blocks were outlined, but the trash removed only the one under your finger.
+
+Now, with one repeating block selected, both buttons open a small menu right at the button — the same shape as the "Discard Changes" prompt on the editor's X.
+
+| Where | Trash — "Delete Repeating Schedule" | Duplicate — "Duplicate Repeating Schedule" |
+|---|---|---|
+| Timetable | This schedule only · All repeats | This schedule only · All repeats |
+| Calendar | This only · This and following · All | This only · This and following · All |
+
+- **At the button, not a center alert.** It sits under the finger and follows the editor's discard grammar. On iOS 26 there is no cancel row; tapping outside cancels.
+- **"All repeats" includes hidden days.** Dragging moves only visible days, but deleting or copying based on what is visible would leave a hidden Saturday block as half a group.
+- **A group copy is a new group; a calendar copy is a new series.** A series is one template with dates and weekdays, so it cannot hold two blocks on one day. The copy moves by the same offset as the selected occurrence, including edited occurrences, and starts with alerts off.
+
+It always asks, and either choice undoes in one step.
+
 ## What's left
 
 Verified on the iPhone simulator; for group drag that covers the calendar week view (group selection, the squish on only the blocked block, the swap and what is saved after it), not yet a sideways wall, resizing against a wall, or the timetable grid. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
@@ -114,3 +131,4 @@ Verified on the iPhone simulator; for group drag that covers the calendar week v
 - 2026-11-14 — Only the blocked block squishes; only the dragged block changes day; same-repeat blocks swap. Reverses "sideways moves the whole group"
 - 2026-11-14, later — Blocks in the way are pushed to the nearest empty day (a full week shifts like a list) instead of swapping; only the dragged block's day is saved
 - 2026-11-15 — Fixed a one-frame jump back to the pre-drag position when dropping onto a same-repeat day; display now handles a selection that updates ahead of the grid's own state
+- 2026-11-15 — Bottom trash and duplicate ask for the scope at the button (timetable: this only / all repeats; calendar: three scopes). Group copies form a new group; calendar copies a new series
