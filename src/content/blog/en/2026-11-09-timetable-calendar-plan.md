@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-16T19:16:23+09:00
+date: 2026-11-17T03:35:14+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -861,6 +861,18 @@ The fix is one place: when the series weekday is unchanged but the placed date c
 
 This is verified by unit test only: the same sequence gives "Tue/Wed, new time" before and "Mon/Wed, new time" after. Whether the recording's data was in exactly this state is not confirmed; the symptom and the way it cleared up both fit.
 
+## 2026-11-17, early morning — the month ↔ week transition jolted on iPad only
+
+A screen recording from an iPad in portrait: tapping a date in month view jolted on the way into the week. Frame by frame, the top bar vanished during the transition while the whole month moved up by the bar's height, then snapped back down at the end. The flying event blocks started and landed a little too low and jumped up when the overlay lifted. iPhone was fine.
+
+The transition is a picture laid over the real screen for half a second. The week header and grid record where they are, and the root lines the picture up with those numbers. To make both sides speak the same coordinates, the root opened a named coordinate space and the inner views measured in it.
+
+On iPad the navigation stack lives *inside* the calendar root (the split layout needs it there); on iPhone it sits outside. A view inside the stack cannot see a name declared outside it, and SwiftUI does not complain — it quietly returns screen coordinates. Logged side by side, the "named" frame equalled the global one to the decimal, and the root sat 32pt (the status bar) below the top of the screen. That was exactly how far the blocks were off.
+
+The vanishing bar was separate: the month picture remembered only its size and was drawn at the root's top. On iPad the month view starts under the bar, so the picture covered the bar and sat one bar-height too high.
+
+The fix: measurements are stored in screen coordinates and the root's screen origin is subtracted when they are read (subtracting on write would pin them to a stale origin after rotation), and the month picture remembers its top edge as well as its size. On an iPad Pro 13 simulator recording the bar stays put and the copy's blocks match the real ones frame for frame; iPhone is unchanged. Not yet checked on a device.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -896,3 +908,4 @@ This is verified by unit test only: the same sequence gives "Tue/Wed, new time" 
 - 2026-11-16 — the edit pane drops X and checkmark again: pane edits save once when the selection ends, and everything done while selected is one undo step (undo registration paused on the document's `UndoManager`, one snapshot on close). Repeat settings follow the picked scope.
 - 2026-11-16, evening — a repeating event asks for its scope on selection (tap or touch and hold; tapping outside selects nothing). Delete and duplicate reuse it. Changing scope mid-selection cuts there.
 - 2026-11-16, night — fixed: dragging an occurrence that had been moved with "This event only" back to its original weekday under "All events" saved the new time but left it on the moved day (series shift measured from the original date was zero, and the early return skipped the placed date).
+- 2026-11-17, early morning — fixed the iPad-only jolt in the month ↔ week transition: the named coordinate space did not reach through the navigation stack inside the root (measurements came back 32pt off in screen space), and the month picture drew over the bar. Measure globally and subtract the root origin on read; draw the month picture from the real month view's top.
