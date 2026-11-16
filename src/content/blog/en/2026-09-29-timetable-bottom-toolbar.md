@@ -94,7 +94,7 @@ The iPad had sat out this move. On a wide iPad window, lock, undo, redo, `+` and
 | Where | iPad before | Now (iPad = unfolded foldable) |
 |---|---|---|
 | Top | `‹` · lock · undo · redo · title · `+` · duplicate · `…` | `‹` · title · `…` |
-| Bottom | nothing | lock · undo · redo on the left, duplicate · `+` on the right |
+| Bottom | nothing | lock · undo · redo on the left, a red `+` on the right (duplicate and a red trash once a block is selected) |
 
 ![iPad landscape with the edit pane open — the buttons sit only at the top and bottom corners of the left pane](/blog/timetable-bottom-toolbar/ipad-landscape-split.png)
 
