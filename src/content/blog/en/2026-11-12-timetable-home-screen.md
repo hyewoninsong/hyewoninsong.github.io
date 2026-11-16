@@ -1,6 +1,6 @@
 ---
 title: "The timetable list is now the home screen — the card you pick grows into the document"
-date: 2026-11-13T00:16:22+09:00
+date: 2026-11-16T17:19:25+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The list used to be a sheet over the open timetable. Now it is the floor of the app, and the card you tap grows in place into the timetable. To keep the document alive, home sits underneath it instead of on top."
@@ -110,8 +110,19 @@ A transparent image is not `nil`, so it was cached as a finished preview. Why th
 
 Checked on an iPad Pro 11-inch simulator: two-up in landscape, one-up in portrait, timetables and calendars, one card per swipe, edit target and reordering, previews after a home-first launch. Not yet checked: the folding iPhone's inner display that prompted this, Mac, a real device, right-to-left languages, iPad Split View, and whether the first-call failure happens on hardware.
 
+## 2026-11-16 — On the unfolded foldable, tapping a sliding card always opened the left one
+
+With the foldable iPhone open, home shows two cards at a time. Swipe them, tap the right card while it is still sliding, and the left card opened. Tapping a resting card worked, and iPad landscape — same two-up layout — never did this.
+
+A decelerating scroll view uses the first tap to stop and does not pass it to the card, so two days earlier we added a tap recognizer on the scroll view itself that picks "the card under the finger" directly. It compared the tap in UIKit window coordinates (`location(in: nil)`) with each card's SwiftUI `frame(in: .global)`, assuming those were the same space.
+
+The first guess was that card frames lag while sliding. Logging the tap disproved it: on a 951×669pt screen, a tap at (628, 334) came back as **(334.7, 323.3)** — axes swapped. The app draws in landscape, but the window's coordinate space keeps the panel's native portrait orientation, so every tap landed on the left half. On iPhone and iPad the two spaces agree, and the earlier test only tapped the middle card and only checked that something opened.
+
+The fix puts both values in one space: cards report their frame relative to the scroll content, and the tap is read relative to an invisible view behind that same content. Orientation no longer matters, and content-relative frames do not move while scrolling. The new test flings, taps the right card, and checks that the card under that point is the one that opened — it fails on the old code and passes on the unfolded foldable and iPad landscape. Writing it, XCUITest's `screenPoint` turned out to be portrait-oriented on the unfolded screen too.
+
 ## History
 
 - 2026-11-12 early — list moved from a sheet to a home screen; the picked card grows into the document
 - 2026-11-12 afternoon — crossfade disabled while home is attached, so the previous timetable no longer shows through
 - 2026-11-13 — two cards at a time on wide screens, one per swipe; fixed the first preview after launch coming out blank
+- 2026-11-16 — on the unfolded foldable, tapping a sliding card always opened the left one (window coordinates were rotated); now read in scroll-content space
