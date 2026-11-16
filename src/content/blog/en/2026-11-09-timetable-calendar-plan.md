@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-16T04:19:17+09:00
+date: 2026-11-16T19:16:23+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -843,6 +843,24 @@ Changing the scope mid-selection had three candidates: not allowed, rewrite ever
 
 The pane's save and undo grouping were checked with a finger probe on iPad landscape. The scope menu on calendar screens, touch and hold, the foldable iPhone and Mac have not been seen on screen yet.
 
+## 2026-11-16, night — dragging a moved occurrence back to its own weekday kept the time and lost the day
+
+A screen recording came in. A weekly event sits on Tuesday and Wednesday; the Tuesday block is dragged to Monday and a little earlier. Both blocks take the new time, but the dragged one is back on Tuesday. Later in the same recording the same drag works.
+
+"Sometimes, then it stops" sounds like timing, so the release path got read first and nine drag variants were run in the simulator. All passed. It was not timing.
+
+The difference was in the data. An occurrence carries two dates: the **original date** the rule gives it and the date it is **placed** on. Move Monday's occurrence to Tuesday with "This event only" and it has original = Monday, placed = Tuesday. With the same time it draws as one group with Wednesday, indistinguishable from a plain Tue/Wed series.
+
+An "All events" weekday change measures how far the series moved from the original date, so that editing a moved occurrence still moves that weekday of the series. Drag the block sitting on Tuesday to Monday and both the original date and the drop date are Monday. The shift is zero, and the weekday code returns early on zero. The new time is saved; the placed date stays Tuesday.
+
+An earlier fix in the same family put "the occurrence being edited lands where it was dropped" inside the part that only runs for a non-zero shift, and its test dragged to a third weekday. Dragging back to the original weekday is the one direction where the shift is zero, and it was not in the table.
+
+It also explains why it cleared up: moving the block to any other weekday once has a non-zero shift, the earlier fix runs, and the moved occurrence is tidied into a plain one. The next action erased the state that caused the bug.
+
+The fix is one place: when the series weekday is unchanged but the placed date changed, move that occurrence to the drop date. If that is its original date and its content matches the rest, the per-occurrence record is removed.
+
+This is verified by unit test only: the same sequence gives "Tue/Wed, new time" before and "Mon/Wed, new time" after. Whether the recording's data was in exactly this state is not confirmed; the symptom and the way it cleared up both fit.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -877,3 +895,4 @@ The pane's save and undo grouping were checked with a finger probe on iPad lands
 - 2026-11-15, early — scope comes first: the first drag or resize of a repeating event always asks (cancel restores it), the choice lasts while the event stays selected and is shared by drags, the sheet and the edit pane; the edit sheet unlocks only after picking a scope (memos excepted).
 - 2026-11-16 — the edit pane drops X and checkmark again: pane edits save once when the selection ends, and everything done while selected is one undo step (undo registration paused on the document's `UndoManager`, one snapshot on close). Repeat settings follow the picked scope.
 - 2026-11-16, evening — a repeating event asks for its scope on selection (tap or touch and hold; tapping outside selects nothing). Delete and duplicate reuse it. Changing scope mid-selection cuts there.
+- 2026-11-16, night — fixed: dragging an occurrence that had been moved with "This event only" back to its original weekday under "All events" saved the new time but left it on the moved day (series shift measured from the original date was zero, and the early return skipped the placed date).
