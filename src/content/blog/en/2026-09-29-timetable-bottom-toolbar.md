@@ -1,6 +1,6 @@
 ---
 title: "The floating buttons under the grid moved into the system toolbar"
-date: 2026-10-05T08:40:00+09:00
+date: 2026-11-16T16:27:23+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "SuperTimetable's hand-drawn glass capsule (lock, undo, redo) and round buttons (add, duplicate, delete) at the bottom of the grid moved into the system bottom toolbar — because of a foldable iPhone that hasn't shipped yet."
@@ -43,7 +43,7 @@ The time pills on schedule blocks read the same measurements to steer clear of t
 
 ## Where it stands
 
-The vertical-bar relocation was confirmed on the foldable simulator on October 5, 2026 — see the next section. It hasn't been seen on real hardware yet. The red trash icon reads a bit paler on glass than the old solid red circle did — worth a second look on a real device.
+The vertical-bar relocation was confirmed on the foldable simulator on October 5, 2026 — see the next section. (Since November 13, timetable and calendar screens turn the side strip off on the foldable and use top and bottom bars; the strip stays on the home screen only.) It hasn't been seen on real hardware yet. The red trash icon reads a bit paler on glass than the old solid red circle did — worth a second look on a real device.
 
 ## 2026-10-05 — On the foldable simulator, the buttons really do move to the side
 
@@ -87,7 +87,35 @@ The two failures are the same in both poses and fail identically on a regular iP
 
 Open-portrait and half-folded were only looked at, not exercised. Half-folded, the grid runs straight across the crease — nothing is clipped, but nothing avoids it either. Sheets and settings haven't been checked.
 
+## 2026-11-16 — The iPad moved its buttons down too
+
+The iPad had sat out this move. On a wide iPad window, lock, undo, redo, `+` and duplicate lived in the **top** toolbar and there was no bottom bar, while the unfolded foldable iPhone, the same wide layout, kept them at the bottom. Now the iPad matches the unfolded foldable in landscape.
+
+| Where | iPad before | Now (iPad = unfolded foldable) |
+|---|---|---|
+| Top | `‹` · lock · undo · redo · title · `+` · duplicate · `…` | `‹` · title · `…` |
+| Bottom | nothing | lock · undo · redo on the left, duplicate · `+` on the right |
+
+![iPad landscape with the edit pane open — the buttons sit only at the top and bottom corners of the left pane](/blog/timetable-bottom-toolbar/ipad-landscape-split.png)
+
+With the edit pane open on the right, the bottom buttons stay inside the left grid pane. In portrait the grid takes the whole screen and the buttons sit where they do on iPhone.
+
+![iPad portrait — the same bottom toolbar as iPhone](/blog/timetable-bottom-toolbar/ipad-portrait.png)
+
+### Why the iPad, and why delete the rule
+
+One device check split them: "iPhone goes to the bottom even in the wide layout, iPad stays on top." That exception existed to push the foldable's buttons to the bottom of its side strip. Since November 13 document screens on the foldable use plain top and bottom bars, so all the exception still did was let the device name decide where the same layout's buttons go. Moving the foldable up instead would have changed two devices out of three, since iPhone and the folded foldable already use the bottom. Keeping the check and flipping the iPad value would have left the fork in place for the next one-sided edit, so the function is gone.
+
+### Fixed along the way
+
+The tutorial told iPad users to tap "Duplicate at the top right". That line is gone from all eighteen languages in favor of the iPhone wording, which also fixes the unfolded foldable, which had been reading "top right" with the button at the bottom. The bottom area the tutorial's finger demo avoids went from 24pt, a value from when there was no bottom bar, to the iPhone's 88pt. The wide layout's `+` and duplicate buttons now also count as obstacles for the time pills above blocks.
+
+### Where it stands
+
+Checked on the iPad simulator in landscape (locked and unlocked), portrait and the calendar's split view, where the lock lands under the left month pane, the same as on the foldable. A side-by-side capture with the unfolded foldable, Mac and real devices are still to do.
+
 ## History
 
 - 2026-09-29 — Moved the bottom-left capsule and bottom-right round buttons into the system bottom toolbar, because the foldable's vertical-bar relocation only applies to system toolbar items.
 - 2026-10-05 — Confirmed the vertical strip on the foldable simulator; it appears only in wide poses. Create/edit tests: 14/17 closed, 15/17 open.
+- 2026-11-16 — iPad lock · undo · redo · `+` · duplicate moved to the bottom toolbar to match the unfolded foldable in landscape; the device check is gone.
