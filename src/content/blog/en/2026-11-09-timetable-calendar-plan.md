@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-17T19:05:00+09:00
+date: 2026-11-17T19:53:44+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -911,6 +911,28 @@ The thread is a 14-segment rope, pinned at both ends, with gravity and viscous d
 
 What lost: numbered badges (you have to read and match), highlight-on-tap (needs an action, and tap already deselects), and a spring-following endpoint (the end detaches from the block on fast drags). The rope steps inside the drawing tick, so its end is never a frame behind the block. Mid-drag motion and haptics are not yet checked on a device.
 
+## 2026-11-17, night — the original slot shows faintly before you select anything, and tapping it picks the event
+
+The outline and thread from this evening only appeared once a block was selected, so finding which blocks had been moved meant tapping them one by one. Now every moved occurrence in the week shows a faint dashed outline at its original slot and a faint thread to the block. Selecting one makes only its own pair bold.
+
+![Week view with nothing selected: faint dashed outlines on Tuesday and Thursday at 11:00, each tied by a faint thread to the blocks moved to Friday and Wednesday](/blog/timetable-calendar-plan/home-faint-always.png)
+
+Something always on screen needs a rule for who gets the tap. The rule follows the drawing.
+
+| At that spot | Drawn | Tap |
+|---|---|---|
+| No other event | Faint outline only | Same as tapping the moved occurrence — select when unlocked, info card when locked |
+| Another event | The event covers the outline | The event gets it |
+| Bold outline of a selected occurrence | Above other blocks | Not a target — deselects, as before |
+
+![Unlocked grid after tapping Tuesday's faint outline: Friday's block is selected and the outline and thread are bold](/blog/timetable-calendar-plan/home-faint-tap-selects.png)
+
+Faint outlines sit under the blocks; threads stay in one layer above them and only change opacity per strand. Threads under the blocks would break behind anything in between. Faint and bold threads in separate layers would each keep their own rope state, so every select and deselect would re-spin the thread from its origin.
+
+The outline check runs after the normal event lookup, not inside it — otherwise drags, hover and the pointer menu would all treat an empty outline as a block. Long-press there still creates a new event. The cost: on iPhone a single tap inside a faint outline no longer creates an event.
+
+Checked on an iPhone simulator, locked and unlocked. A tap where another event overlaps the outline, dark mode, iPad and real devices are still unverified.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -949,3 +971,4 @@ What lost: numbered badges (you have to read and match), highlight-on-tap (needs
 - 2026-11-17, early morning — fixed the iPad-only jolt in the month ↔ week transition: the named coordinate space did not reach through the navigation stack inside the root (measurements came back 32pt off in screen space), and the month picture drew over the bar. Measure globally and subtract the root origin on read; draw the month picture from the real month view's top.
 - 2026-11-17, midday — month chips outline what is selected in the week, per scope; "This and following" / "All events" selections carry across week changes (same weekday first), with no grid selection in weeks the scope does not reach.
 - 2026-11-17, evening — moved occurrences selected together each show their original-slot outline, tied to the block by a sagging rope in the event color: its length trails the distance by 0.45s, so it goes taut and relaxes as you drag. Light haptics while pulling taut; no thread when they touch; static under Reduce Motion.
+- 2026-11-17, night — original-slot outlines and threads of moved occurrences are always shown faintly and turn bold on selection; a faint outline is the lowest-priority tap target (taps select that occurrence unless another event is there). Threads stay in one layer and only change opacity.
