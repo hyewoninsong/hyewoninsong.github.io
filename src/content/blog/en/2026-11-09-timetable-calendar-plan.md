@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-17T19:53:44+09:00
+date: 2026-11-17T22:15:44+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -933,6 +933,24 @@ The outline check runs after the normal event lookup, not inside it — otherwis
 
 Checked on an iPhone simulator, locked and unlocked. A tap where another event overlaps the outline, dark mode, iPad and real devices are still unverified.
 
+## 2026-11-17, late night — a Wednesday nobody deleted was empty; the weekday move was deleting it
+
+A user's Mon / Wed / Fri series was missing its first Wednesday — in the week view, in the month view, and with no outline. The exported file showed two entries in the series' deleted-occurrence list, both Wednesdays right inside the span edges. The user had deleted neither.
+
+Moving all occurrences to another weekday can pull the start date earlier, which brings other weekdays into the series' span. The old code blocked those dates by writing them into the same list a user's deletions go into. It looked right at that moment, but the record lived on and later edits turned it into an unexplained hole.
+
+| Change | Now |
+|---|---|
+| Extending the span | The other weekdays in between just appear, like Google Calendar |
+| What is still blocked | Only dates that would duplicate the adjacent piece of a split series |
+| Deleted occurrences | A faint dashed outline at their slot; unlock and tap it (with nothing selected) to restore |
+
+![A faint dashed outline where the deleted Monday occurrence was](/blog/timetable-calendar-plan/deleted-trace.png)
+
+![After tapping the outline, the occurrence is back; one undo deletes it again](/blog/timetable-calendar-plan/deleted-restored.png)
+
+Marking auto-written records in their own field would have changed the save format on both platforms; tapping to restore also fixes the records already out there. The tests had only checked the state right after the move. Lesson kept: for "an event vanished", ask for the exported file first.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -972,3 +990,4 @@ Checked on an iPhone simulator, locked and unlocked. A tap where another event o
 - 2026-11-17, midday — month chips outline what is selected in the week, per scope; "This and following" / "All events" selections carry across week changes (same weekday first), with no grid selection in weeks the scope does not reach.
 - 2026-11-17, evening — moved occurrences selected together each show their original-slot outline, tied to the block by a sagging rope in the event color: its length trails the distance by 0.45s, so it goes taut and relaxes as you drag. Light haptics while pulling taut; no thread when they touch; static under Reduce Motion.
 - 2026-11-17, night — original-slot outlines and threads of moved occurrences are always shown faintly and turn bold on selection; a faint outline is the lowest-priority tap target (taps select that occurrence unless another event is there). Threads stay in one layer and only change opacity.
+- 2026-11-17, late night — a first-week Wednesday nobody deleted went missing: the weekday move was writing auto-deletions. Removed them (only an adjacent split piece blocks a date) and deleted occurrences now show a faint outline you can tap to restore.
