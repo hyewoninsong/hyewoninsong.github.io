@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-17T12:26:47+09:00
+date: 2026-11-17T19:05:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -891,6 +891,26 @@ If the new week has no occurrence the scope covers, the grid has no selection, s
 
 Alternatives we dropped: putting other weeks' occurrences into the selection set (it would become a multi-selection and close the edit pane), keeping an invisible selection in empty weeks (tapping empty space would then deselect), and moving the "and following" start date along as you swipe (going back would lose the selection). The one ordering trap: move the remembered scope to the new occurrence before changing the selection, or the default "All events" overwrites it. Checked on the iPad Pro 13 simulator; iPhone, Duo, Mac and devices are still open.
 
+## 2026-11-17, evening — a sagging thread ties a moved occurrence to where it came from
+
+Move one occurrence of a repeating event with "This event only" and selecting it shows a dashed outline at its original slot. With "All events" two moved occurrences get selected together, and two outlines in the same color cannot tell you which block came from which. Each selected occurrence now draws its own outline, and a thread connects outline and block.
+
+![Monday's block selected with All events: dashed outlines on Tuesday and Thursday, each tied by a sagging green thread to the block that was moved to Friday and Wednesday](/blog/timetable-calendar-plan/thread-selected.png)
+
+The thread is a 14-segment rope, pinned at both ends, with gravity and viscous damping on the middle. Its length is the distance plus a little slack (10% when horizontal, 2% when vertical), and that length follows the distance about 0.45 seconds late. Pull the block away and the rope goes taut and thin, then slowly sags again; bring it closer and it droops, then slowly shortens.
+
+| Situation | Thread |
+|---|---|
+| Select the block | Spins out from the original slot |
+| Drag away | Goes taut, then relaxes; light haptic ticks while pulling |
+| Drag closer | Droops, then shortens; no haptics |
+| Outline and block touch | No thread |
+| Reduce Motion | Static sag, no swing |
+
+![After dragging the series to 12:30: four blocks share the time, and the thread from Tuesday's outline to Friday's block hangs behind Wednesday's block](/blog/timetable-calendar-plan/thread-after-drag.png)
+
+What lost: numbered badges (you have to read and match), highlight-on-tap (needs an action, and tap already deselects), and a spring-following endpoint (the end detaches from the block on fast drags). The rope steps inside the drawing tick, so its end is never a frame behind the block. Mid-drag motion and haptics are not yet checked on a device.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -928,3 +948,4 @@ Alternatives we dropped: putting other weeks' occurrences into the selection set
 - 2026-11-16, night — fixed: dragging an occurrence that had been moved with "This event only" back to its original weekday under "All events" saved the new time but left it on the moved day (series shift measured from the original date was zero, and the early return skipped the placed date).
 - 2026-11-17, early morning — fixed the iPad-only jolt in the month ↔ week transition: the named coordinate space did not reach through the navigation stack inside the root (measurements came back 32pt off in screen space), and the month picture drew over the bar. Measure globally and subtract the root origin on read; draw the month picture from the real month view's top.
 - 2026-11-17, midday — month chips outline what is selected in the week, per scope; "This and following" / "All events" selections carry across week changes (same weekday first), with no grid selection in weeks the scope does not reach.
+- 2026-11-17, evening — moved occurrences selected together each show their original-slot outline, tied to the block by a sagging rope in the event color: its length trails the distance by 0.45s, so it goes taut and relaxes as you drag. Light haptics while pulling taut; no thread when they touch; static under Reduce Motion.
