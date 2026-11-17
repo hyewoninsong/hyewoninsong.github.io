@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-17T03:35:14+09:00
+date: 2026-11-17T12:26:47+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -873,6 +873,24 @@ The vanishing bar was separate: the month picture remembered only its size and w
 
 The fix: measurements are stored in screen coordinates and the root's screen origin is subtracted when they are read (subtracting on write would pin them to a stale origin after rotation), and the month picture remembers its top edge as well as its size. On an iPad Pro 13 simulator recording the bar stays put and the copy's blocks match the real ones frame for frame; iPhone is unchanged. Not yet checked on a device.
 
+## 2026-11-17, midday — what you select in the week shows in the month, and a selected series survives week changes
+
+On iPad landscape, [Month | Week] shows both side by side, yet selecting an event on the right left the month on the left unmarked. You picked a scope (This event · This and following · All events) without seeing which dates it reached.
+
+Now the month chips get the same selection outline as the grid block — an ink line with a thin ground-colored band inside so it reads on light chips and in dark mode. The scope decides which chips: this event only, the series from that date on, or the whole series.
+
+![All events: every chip of the series is outlined](/blog/timetable-calendar-plan/month-selection-all.png)
+
+![This event only: one chip](/blog/timetable-calendar-plan/month-selection-this-only.png)
+
+Changing weeks used to drop the selection every time. With "This and following" or "All events" you picked the series, not one occurrence, so now swiping, Today, or tapping a date in the month selects the same series' occurrence in the new week (same weekday first) with the same scope.
+
+![Next week: the same weekday's occurrence stays selected](/blog/timetable-calendar-plan/month-selection-next-week.png)
+
+If the new week has no occurrence the scope covers, the grid has no selection, so taps and the toolbar behave as with nothing selected. The month outline stays, and coming back to a week with an occurrence selects it again. "This event only" still clears on week change.
+
+Alternatives we dropped: putting other weeks' occurrences into the selection set (it would become a multi-selection and close the edit pane), keeping an invisible selection in empty weeks (tapping empty space would then deselect), and moving the "and following" start date along as you swipe (going back would lose the selection). The one ordering trap: move the remembered scope to the new occurrence before changing the selection, or the default "All events" overwrites it. Checked on the iPad Pro 13 simulator; iPhone, Duo, Mac and devices are still open.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -909,3 +927,4 @@ The fix: measurements are stored in screen coordinates and the root's screen ori
 - 2026-11-16, evening — a repeating event asks for its scope on selection (tap or touch and hold; tapping outside selects nothing). Delete and duplicate reuse it. Changing scope mid-selection cuts there.
 - 2026-11-16, night — fixed: dragging an occurrence that had been moved with "This event only" back to its original weekday under "All events" saved the new time but left it on the moved day (series shift measured from the original date was zero, and the early return skipped the placed date).
 - 2026-11-17, early morning — fixed the iPad-only jolt in the month ↔ week transition: the named coordinate space did not reach through the navigation stack inside the root (measurements came back 32pt off in screen space), and the month picture drew over the bar. Measure globally and subtract the root origin on read; draw the month picture from the real month view's top.
+- 2026-11-17, midday — month chips outline what is selected in the week, per scope; "This and following" / "All events" selections carry across week changes (same weekday first), with no grid selection in weeks the scope does not reach.
