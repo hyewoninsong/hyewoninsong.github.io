@@ -1,6 +1,6 @@
 ---
 title: "To share calendars as files, we turned the share file into a zip, then went back to JSON a day later"
-date: 2026-11-18T11:08:20+09:00
+date: 2026-11-18T12:32:13+09:00
 app: "timetable"
 tags: ["devlog", "data"]
 summary: "The .supertimetable share file now carries calendars too. Adding a type field to the JSON would have made older apps read a calendar as a broken timetable, so the container became a zip. A day later we reversed that and went back to a single JSON file."
@@ -56,20 +56,22 @@ A day later someone asked whether `.ics`, the standard calendar file, is a zip i
 
 Our share file is in the same position. It holds one document and is read whole, once. "Read entries selectively when it grows" was one of the reasons for the zip, and nothing ever needed it. Speed with many events is the on-device store's job, and SQLite already handles that. The cost was that older apps could no longer open plain **timetable** files, which had nothing to do with calendars.
 
-So writing went back:
+So the zip is gone. Both files are a single JSON again:
 
 | File | What is written now | In an older app |
 |---|---|---|
 | Timetable | The same JSON as before November 17, byte for byte | Opens as before |
-| Calendar | The calendar JSON plus a top-level `"documentType": "calendar"` | Opens as a weekly timetable |
+| Calendar | `{"documentType": "calendar", "calendar": { … }}` | "Can't open this file" |
 
-The calendar row is the option we rejected above. This time we accepted the behavior. Because the calendar's keys have the timetable's names and places, an app that doesn't know the marker reads each repeating event as a weekly event on its weekday and skips the date rules. That is a timetable without dates, which we now think is more useful than "can't open this file." The remaining cost is that one-off events also look weekly there, and nothing tells the recipient it was a calendar.
+The calendar file took a second pass. The first version put a marker at the top of the calendar JSON. That caused exactly what we had worried about: because the calendar's keys have the timetable's names and places, an older app imported the file as a weekly timetable, and one-off events became weekly ones. The November 17 judgment that a wrong import is worse than a refusal was right. Going all the way to a zip to avoid it was not.
 
-Reading accepts three forms: the zip bundles made during those two days, calendar JSON, and timetable JSON. The zip writer is gone, and the reader and its limits stay for those files. iOS and Android changed together.
+One level of wrapping is enough. With the calendar under a `calendar` key, the top level has none of the keys a timetable reader looks for, so older apps refuse the file cleanly. Newer apps see the marker and read the inner object as a calendar.
 
-One test stands in for older apps. It feeds an exported calendar file to the timetable reader and expects no loss. Opening the file in the actual store version is still to do.
+The zip reader was removed too. Files made by the test builds of those two days no longer open; exporting again is cheaper than keeping code that vets someone else's zip. iOS and Android changed together.
+
+One test stands in for older apps. It feeds an exported calendar file to the timetable reader and expects it to fail. Opening the file in the actual store version is still to do.
 
 ## History
 
 - 2026-11-17: added calendar file sharing and made the share file a zip bundle
-- 2026-11-18: withdrew zip writing and went back to a single JSON file; a marker tells calendars apart, and old zips are read only
+- 2026-11-18: withdrew the zip, both writing and reading, and went back to a single JSON file; a calendar sits under a `calendar` key so older apps refuse it
