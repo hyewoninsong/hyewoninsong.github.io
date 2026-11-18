@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-18T21:43:05+09:00
+date: 2026-11-18T22:23:46+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -964,6 +964,16 @@ A repeating event that starts on Wednesday leaves Monday and Tuesday of that wee
 
 The first version was a 3pt bar inside the block's edge, and it lasted less than a day. Anything drawn on the block has to fight the block's color: a darkened bar vanished on navy events, and picking black or white by brightness produced a color that was close to, but not the same as, the overlap hatching. The knot is drawn outside the block on the grid's ground, in the event color as is. Month-view chips are left as they are.
 
+## 2026-11-18, night — selecting a repeating event threads its blocks together for the week
+
+With knots in place, the next question was whether blocks of the same repeating event could simply be tied together.
+
+![Week view — selecting a Tue/Thu repeating event draws a thin thread in its color from the left edge through both blocks to the right edge](/blog/2026-11-09-timetable-calendar-plan/series-thread-selected.png)
+
+Select an occurrence and that event's blocks in the week are joined by one thread in the event color. On a side where the event continues into another week the thread runs off the grid's edge; on the side of the first or last occurrence the knot stands instead. A running thread means "continues", a knot means "ends here".
+
+Threading every repeating event all the time lost: a Mon/Wed/Fri event crosses the Tue and Thu columns, and a handful of them covers the grid. Only the selected one is threaded. Unlike the sagging, swaying thread of a moved occurrence, this one is a thin fixed curve — the two mean different things, and dragging a series should not pay for per-frame physics. It passes under other events' blocks.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1005,3 +1015,4 @@ The first version was a 3pt bar inside the block's edge, and it lasted less than
 - 2026-11-17, night — original-slot outlines and threads of moved occurrences are always shown faintly and turn bold on selection; a faint outline is the lowest-priority tap target (taps select that occurrence unless another event is there). Threads stay in one layer and only change opacity.
 - 2026-11-17, late night — a first-week Wednesday nobody deleted went missing: the weekday move was writing auto-deletions. Removed them (only an adjacent split piece blocks a date) and deleted occurrences now show a faint outline you can tap to restore.
 - 2026-11-18 — a knotted thread end in the event color marks the first and last occurrence of a repeating event (faint, bold when selected; vertical where there is no neighbouring column). The edge bar tried first vanished on dark event colors.
+- 2026-11-18, night — selecting a repeating occurrence threads that event's blocks for the week; the thread runs off the edge where the event continues and a knot stands where it ends. Fixed thin curve, selected event only.
