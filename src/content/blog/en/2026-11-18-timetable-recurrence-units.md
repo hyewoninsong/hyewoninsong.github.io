@@ -1,16 +1,16 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-18T11:05:00+09:00
+date: 2026-11-19T04:05:23+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
 ---
 
-Repeating events in the calendar used to mean one thing: every N weeks, on these weekdays. Now "Custom" asks for a unit — day, week, month or year. Nothing changes for someone adding a biweekly class, and a meetup on the first and third Friday, or a pill every three days, is a single event.
+Repeating events in the calendar used to mean one thing: every N weeks, on these weekdays. Now they repeat by day, week, month or year. (At first the unit lived inside a "Custom" chip; a day later the frequency moved to the first row. See the November 19 section below.) Nothing changes for someone adding a biweekly class, and a meetup on the first and third Friday, or a pill every three days, is a single event.
 
 ## Four repeat chips, and a unit inside "Custom"
 
-The repeat row is still `Never · Weekly · Every 2 Weeks · Custom`. Choosing Custom adds a unit row, and each unit brings only what it needs.
+In the November 18 version the repeat row was `Never · Weekly · Every 2 Weeks · Custom` (it is now `Never · Daily · Weekly · Monthly · Yearly`). Choosing Custom adds a unit row, and each unit brings only what it needs.
 
 | Unit | Interval | What you pick | Weekday chips |
 |---|---|---|---|
@@ -27,7 +27,7 @@ With the month unit, the week chips `1st · 2nd · 3rd · 4th · Last` allow sev
 
 ## Why not a "Monthly" chip
 
-A fifth chip is easier to find. But the app ships in eighteen languages and the row is already tight in languages with long words. And a Monthly chip still leaves "every 3 days" and "yearly" homeless, so Custom would need a unit anyway. One place is better than two.
+This call was reversed a day later; the reasoning is kept as it was. A fifth chip is easier to find. But the app ships in eighteen languages and the row is already tight in languages with long words. And a Monthly chip still leaves "every 3 days" and "yearly" homeless, so Custom would need a unit anyway. One place is better than two.
 
 There is no "5th" week chip either. Most months have no fifth Friday, and people asking for it almost always mean the last one.
 
@@ -48,3 +48,32 @@ Dragging a weekly series to another weekday changes that weekday. For "every 3 d
 ## Where it stands
 
 Occurrence math, saving and scoped edits are covered by tests. On screen, only the new-event form on iPhone has been checked by eye. The iPad edit pane, right-to-left languages and alarms following the new patterns are still to be verified by hand.
+
+## 2026-11-19 — A day later, frequency moved to the first row
+
+Using the "Custom" version for real, a monthly repeat took four steps down: Custom, unit, interval, basis. Apple Calendar and Google Calendar both ask for the frequency first, and now so do we.
+
+| Step | What you pick |
+|---|---|
+| 1. Frequency | `Never · Daily · Weekly · Monthly · Yearly` |
+| 2. Interval | one stepper; 1 reads as the frequency name, 2 and up as "Every 2 weeks" |
+| 3. Pattern | Monthly: weekday, date or last day. Yearly: one of two lines |
+| 4. Span | presets that fit the frequency; Yearly offers 5, 10 and 20 years |
+
+![Monthly selected: interval stepper, basis chips and a date grid](/blog/timetable-recurrence-units/frequency-monthly.png)
+
+Yearly borrows from Google Calendar: instead of abstract chips it shows two sentences read from the event's date, "November 16" and "November · third Monday", and you pick one.
+
+![Yearly selected: a date line and a third-Monday line, one checked](/blog/timetable-recurrence-units/frequency-yearly.png)
+
+- **Five chips in eighteen languages** — the worry from the day before still holds. A row that wraps turned out to cost less than a common repeat hidden two levels down.
+- **Every two weeks is now two taps** — interval chips would have kept it at one, but a single stepper works the same for every frequency.
+- **The file format did not change** — the frequency is a name given to the stored rule, not a stored value. Yearly is saved as "every 12 months on that date", so older events simply read as Yearly. The cost: Monthly stops at 11 months, and Yearly lands in one month only.
+- **The end date follows the frequency, if untouched** — a new event spans one year, which would make a yearly repeat a single occurrence. Switching frequency moves an end date that still equals the old default to the new one (ten years for Yearly). A date you picked stays.
+
+Checked by eye on the iPhone new-event form. The grid after saving, the iPad edit pane and languages other than Korean are still to be looked at.
+
+## History
+
+- 2026-11-18 — day, month and year units added inside the "Custom" chip
+- 2026-11-19 — frequency moved to the first row; one stepper for the interval
