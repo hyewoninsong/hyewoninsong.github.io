@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-18T18:48:58+09:00
+date: 2026-11-18T21:43:05+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -951,18 +951,18 @@ Moving all occurrences to another weekday can pull the start date earlier, which
 
 Marking auto-written records in their own field would have changed the save format on both platforms; tapping to restore also fixes the records already out there. The tests had only checked the state right after the move. Lesson kept: for "an event vanished", ask for the exported file first.
 
-## 2026-11-18 — the first and last occurrence of a repeating event carry an edge bar
+## 2026-11-18 — the first and last occurrence of a repeating event end in a knotted thread
 
 A repeating event that starts on Wednesday leaves Monday and Tuesday of that week empty. That is correct, but it reads as "where did Monday's event go?". The block now says "it starts here" itself.
 
-![Week view — the first block of a repeating event that starts this week has a darker vertical bar on its left edge](/blog/2026-11-09-timetable-calendar-plan/series-edge-start.png)
+![Week view — a short thread in the event color leaves the first block toward earlier days and the last block toward later days, ending in a knot; in the first and last columns it goes up or down instead](/blog/2026-11-09-timetable-calendar-plan/series-edge-knot.png)
 
-- The **first occurrence** gets a 3pt bar on the edge facing earlier days; the **last occurrence** gets one on the opposite edge. Occurrences in between and one-off events have none.
-- Deleted occurrences do not count: delete the first one and the bar moves to the next.
-- In right-to-left languages the sides flip — the start bar always faces the earlier days.
-- The neighbouring-week pictures shown while swiping, and the blocks that fly during the month ↔ week transition, draw the same bar.
+- From the **first occurrence** a short thread in the event color sticks out toward earlier days and ends in a knot; from the **last occurrence**, toward later days. Occurrences in between and one-off events have none.
+- It is faint until you select the event, then bold — the same grammar as the dashed outline and thread of a moved occurrence.
+- With no day column on that side (a start in the first column, an end in the last) the thread goes up or down instead.
+- Deleted occurrences do not count, and the sides flip in right-to-left languages.
 
-Two alternatives lost. A small arrowhead outside the block is tiny in the few points between day columns and touches the neighbouring block. An icon inside the block eats the title's room on a 30-minute event. The bar leaves the text alone and is as tall as the block. Its color goes whichever way contrasts more: darker on light event colors, lighter on dark ones (a darkened bar vanished on navy and black). Month-view chips are left as they are.
+The first version was a 3pt bar inside the block's edge, and it lasted less than a day. Anything drawn on the block has to fight the block's color: a darkened bar vanished on navy events, and picking black or white by brightness produced a color that was close to, but not the same as, the overlap hatching. The knot is drawn outside the block on the grid's ground, in the event color as is. Month-view chips are left as they are.
 
 ## History
 
@@ -1004,4 +1004,4 @@ Two alternatives lost. A small arrowhead outside the block is tiny in the few po
 - 2026-11-17, evening — moved occurrences selected together each show their original-slot outline, tied to the block by a sagging rope in the event color: its length trails the distance by 0.45s, so it goes taut and relaxes as you drag. Light haptics while pulling taut; no thread when they touch; static under Reduce Motion.
 - 2026-11-17, night — original-slot outlines and threads of moved occurrences are always shown faintly and turn bold on selection; a faint outline is the lowest-priority tap target (taps select that occurrence unless another event is there). Threads stay in one layer and only change opacity.
 - 2026-11-17, late night — a first-week Wednesday nobody deleted went missing: the weekday move was writing auto-deletions. Removed them (only an adjacent split piece blocks a date) and deleted occurrences now show a faint outline you can tap to restore.
-- 2026-11-18 — the first occurrence of a repeating event has a darker bar on the edge facing earlier days, the last one on the opposite edge; deleted occurrences do not count, sides flip in right-to-left languages.
+- 2026-11-18 — a knotted thread end in the event color marks the first and last occurrence of a repeating event (faint, bold when selected; vertical where there is no neighbouring column). The edge bar tried first vanished on dark event colors.
