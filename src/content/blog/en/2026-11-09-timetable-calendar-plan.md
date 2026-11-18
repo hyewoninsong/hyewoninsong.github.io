@@ -957,12 +957,12 @@ A repeating event that starts on Wednesday leaves Monday and Tuesday of that wee
 
 ![Week view — the first block of a repeating event that starts this week has a darker vertical bar on its left edge](/blog/2026-11-09-timetable-calendar-plan/series-edge-start.png)
 
-- The **first occurrence** gets a 3pt bar, darker than the event color, on the edge facing earlier days; the **last occurrence** gets one on the opposite edge. Occurrences in between and one-off events have none.
+- The **first occurrence** gets a 3pt bar on the edge facing earlier days; the **last occurrence** gets one on the opposite edge. Occurrences in between and one-off events have none.
 - Deleted occurrences do not count: delete the first one and the bar moves to the next.
 - In right-to-left languages the sides flip — the start bar always faces the earlier days.
 - The neighbouring-week pictures shown while swiping, and the blocks that fly during the month ↔ week transition, draw the same bar.
 
-Two alternatives lost. A small arrowhead outside the block is tiny in the few points between day columns and touches the neighbouring block. An icon inside the block eats the title's room on a 30-minute event. The bar leaves the text alone and is as tall as the block. It is drawn by darkening the event color (white only when the color is already near black), and month-view chips are left as they are.
+Two alternatives lost. A small arrowhead outside the block is tiny in the few points between day columns and touches the neighbouring block. An icon inside the block eats the title's room on a 30-minute event. The bar leaves the text alone and is as tall as the block. Its color goes whichever way contrasts more: darker on light event colors, lighter on dark ones (a darkened bar vanished on navy and black). Month-view chips are left as they are.
 
 ## History
 
