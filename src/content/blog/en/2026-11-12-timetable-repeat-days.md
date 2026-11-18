@@ -1,6 +1,6 @@
 ---
 title: "Make Mon/Wed/Fri classes in one go — a Repeat switch for the timetable"
-date: 2026-11-15T22:05:05+09:00
+date: 2026-11-18T11:12:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Turn on Repeat in the schedule editor, pick several weekdays, and the same class lands on each one. We kept one block per weekday and tied them with a group id instead of storing one schedule with a list of days."
@@ -36,7 +36,7 @@ So blocks stay one per weekday, and blocks from the same repeat share a `seriesI
 
 ## When a block leaves the group
 
-A group means "these days, same time." The first version made a block leave the group when you dragged it alone. A day later that changed: dragging a repeating schedule up or down now moves every day's block together and the group stays (see the Nov 13 section; sideways drags changed again on Nov 14). A block still leaves the group when a quick time edit changes only that block — otherwise the next save from another day's editor would quietly pull it back. Undo restores the group. Duplicates start outside any group, and deleting one block deletes only that block.
+A group used to mean "these days, same time" (since 2026-11-18 a group can hold different times — see that section). The first version made a block leave the group when you dragged it alone. A day later that changed: dragging a repeating schedule up or down now moves every day's block together and the group stays (see the Nov 13 section; sideways drags changed again on Nov 14). A block still leaves the group when a quick time edit changes only that block — otherwise the next save from another day's editor would quietly pull it back. Undo restores the group. Duplicates start outside any group, and deleting one block deletes only that block.
 
 ## 2026-11-13 — A repeating schedule is selected and dragged as a group
 
@@ -120,6 +120,26 @@ Now, with one repeating block selected, both buttons open a small menu right at 
 
 It always asks, and either choice undoes in one step.
 
+## 2026-11-18 — A group can hold different times
+
+A Monday 9:00 lecture and a Wednesday 13:00 lab are one course, but the app treated them as strangers: a group assumed one time, and a block whose time changed was cut loose. Renaming the course or deleting it at the end of term took two passes.
+
+Blocks in a group may now have different times. Call the blocks that share a time a slice:
+
+| Action | Reaches |
+|---|---|
+| Drag, resize, weekday chips, time change | The same-time slice only |
+| Change title, color, memo or alerts | The whole group (only the values you changed) |
+| Trash, duplicate, Delete Schedule | The whole group |
+
+Selecting a block outlines the rest of its group. Same-time blocks follow a drag; different-time blocks keep their outline and stay put. Tapping one moves the handles to it without dropping the selection.
+
+There are two ways in. Change the time of one day of a repeat and that block stays in the group as its own slice. For schedules made separately, select one and choose "Group with Other Events" from the `…` menu. A joining schedule takes the selected one's title and color and keeps its own time, memo and alerts.
+
+We did not make a drag move the whole group: pushing the lecture back 30 minutes should not push the lab. For the save file we rejected "one schedule plus a per-day time table" because an older app version would draw every day at the first time — a wrong timetable. Instead each slice is its own entry carrying the group id; an older version ignores the id and still shows the right times.
+
+In a calendar, a repeating event already is "weekdays plus one time", so events get a shared group id. Edits and deletes with scope "All Events" reach the grouped events; "This Event" and "This and Following" do not.
+
 ## What's left
 
 Verified on the iPhone simulator; for group drag that covers the calendar week view (group selection, the squish on only the blocked block, the swap and what is saved after it), not yet a sideways wall, resizing against a wall, or the timetable grid. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
@@ -132,3 +152,4 @@ Verified on the iPhone simulator; for group drag that covers the calendar week v
 - 2026-11-14, later — Blocks in the way are pushed to the nearest empty day (a full week shifts like a list) instead of swapping; only the dragged block's day is saved
 - 2026-11-15 — Fixed a one-frame jump back to the pre-drag position when dropping onto a same-repeat day; display now handles a selection that updates ahead of the grid's own state
 - 2026-11-15 — Bottom trash and duplicate ask for the scope at the button (timetable: this only / all repeats; calendar: three scopes). Group copies form a new group; calendar copies a new series
+- 2026-11-18 — Blocks in a group may have different times (drag and weekday chips act on same-time blocks; title, color, memo, alerts and delete act on the whole group). Added "Group with Other Events". Reverses "a block whose time changes leaves the group". Calendars group whole repeating events. Calendar screens not yet checked by eye
