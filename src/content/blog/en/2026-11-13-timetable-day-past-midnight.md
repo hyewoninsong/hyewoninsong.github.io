@@ -1,6 +1,6 @@
 ---
 title: "A day doesn't have to end at midnight — stretching the timetable into the next morning"
-date: 2026-11-13T14:59:03+09:00
+date: 2026-11-18T17:13:41+09:00
 app: "timetable"
 tags: ["devlog", "data", "design"]
 summary: "A timetable's day can now run from 2 AM to 2 AM the next day. The whole problem was which weekday an after-midnight event belongs to."
@@ -49,3 +49,20 @@ Changing 0–24 to 2–26 leaves a Monday 1 AM event outside the day. We could h
 ## Where it stands
 
 iOS and Android share the same storage rule. Period-based timetables still stay within one day. Settings, the grid and the edit sheet were checked in the simulator; the today highlight at real early-morning hours, the widget rollover and the watch still need a device.
+
+## 2026-11-18 — A day can also start the evening before
+
+The opposite request came five days later: let the start time go before midnight, as far back as noon the previous day. The start wheel now climbs above 00:00 to "Previous day 23:00" … "Previous day 12:00", and the end wheel stops at "Next day 12:00". The 24-hour rule stays — a full 48-hour window would put the same moment in two columns.
+
+![A Tuesday column starting at 18:00 the evening before, with an evening event above midnight and one crossing it](/blog/timetable-day-past-midnight/grid-previous-evening.png)
+
+Storage mirrors the earlier change: an 8 PM event the evening before Tuesday is stored on Tuesday at **−240 minutes**. Storing it as Monday 20:00 and pulling it into Tuesday's column lost for the same reason as before — an event crossing midnight would have to be split. And the weekday matters: prep for a Tuesday class belongs in the Tuesday column.
+
+Negative minutes exposed one trap: Swift's `/` and `%` truncate toward zero, so −90 minutes became −1 hour and −30 minutes. Hours, minutes, snapping and date assembly now use floor division (−90 → −2 h 30 → 22:30 on the clock). "Now" takes the start hour too, and widgets roll over to the next day at the start time instead of midnight.
+
+The end wheel now stops at noon the next day (36:00) instead of 47:00. Timetables saved later than that in the past five days still open as they were.
+
+## History
+
+- 2026-11-13 — end time can run into the next morning (up to 47:00)
+- 2026-11-18 — start time can begin at noon the day before; end stops at noon the next day
