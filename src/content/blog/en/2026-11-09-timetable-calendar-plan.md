@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-20T01:49:02+09:00
+date: 2026-11-20T02:41:05+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1008,6 +1008,14 @@ A month chip is about 15pt tall. Pressing anywhere in the cell lifts the chip ne
 
 One snag: a cell's tap still fires after a long press is released, which would open week view the instant a chip was dropped. The tap that ends a drag is swallowed, and month paging is locked while a chip is held — both through one shared reference, because view state arrives a frame late within the same gesture.
 
+### A moved occurrence leaves a mark in its original week
+
+One gap showed up right after shipping: moving an occurrence to next week left its original slot simply empty, with no way to tell a move from a deletion or where it went.
+
+![Week view — a faint dashed outline where the Tuesday occurrence used to be, with the date it moved to written inside in the event color](/blog/2026-11-09-timetable-calendar-plan/away-home-trace.png)
+
+The original slot now keeps a faint dashed outline with the destination date inside. A deleted occurrence uses the same outline, so that one line of text is what says "moved, not deleted". Long-pressing the outline fades the original event back in and returns the occurrence — the same gesture that restores a deleted one. One-off events leave no mark; the date itself moved.
+
 Verified with scripted touches in the simulator. Haptics and feel on a device, the iPad two-pane layout and right-to-left screens are not yet checked.
 
 ## History
@@ -1053,3 +1061,4 @@ Verified with scripted touches in the simulator. Haptics and feel on a device, t
 - 2026-11-18 — a knotted thread end in the event color marks the first and last occurrence of a repeating event (faint, bold when selected; vertical where there is no neighbouring column). The edge bar tried first vanished on dark event colors.
 - 2026-11-18, night — selecting a repeating occurrence threads that event's blocks for the week; the thread runs off the edge where the event continues and a knot stands where it ends. Fixed thin curve, selected event only.
 - 2026-11-20 — holding a dragged block at the left/right edge for 0.7s changes weeks (one-off events and "this event only" occurrences; one undo; the week swaps in place). In month view a 0.4s press lifts the nearest chip to drop on another date — a repeating occurrence moves alone, with Undo in the toast.
+- 2026-11-20, later — an occurrence moved to another week leaves a faint dashed outline with its destination date in the original week; long-press the outline to bring it back.
