@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-18T22:23:46+09:00
+date: 2026-11-20T01:49:02+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -974,6 +974,42 @@ Select an occurrence and that event's blocks in the week are joined by one threa
 
 Threading every repeating event all the time lost: a Mon/Wed/Fri event crosses the Tue and Thu columns, and a handful of them covers the grid. Only the selected one is threaded. Unlike the sagging, swaying thread of a moved occurrence, this one is a thin fixed curve — the two mean different things, and dragging a series should not pay for per-frame physics. It passes under other events' blocks.
 
+## 2026-11-20 — hold a dragged event at the edge to change weeks; in month view, drag a chip to another date
+
+Dragging could change an event's day and time but never its week. Moving something to next week meant opening the edit form and retyping the date. Two additions close that gap.
+
+**Week view.** Hold a dragged block against the left or right edge of the grid for 0.7 seconds and the week changes under it. The block stays under the finger and is saved where it is dropped. Keep holding and it advances one more week every second. A small chevron beside the block fills its ring while you wait.
+
+![Week view — an event block held at the right edge; a › mark beside it is filling its ring and the date row already shows the next week](/blog/2026-11-09-timetable-calendar-plan/drag-week-edge-dwell.png)
+
+**Month view.** Long-press a date cell for 0.4 seconds and its chip lifts above the finger. Drop it on another date and the event moves there, keeping its time. Holding at the top or bottom edge turns the month.
+
+![Month view — the chip from the 19th floats above the finger, a faint copy stays in place, and the 18th is outlined as the drop target](/blog/2026-11-09-timetable-calendar-plan/month-chip-lifted.png)
+
+### The week swaps in place instead of sliding
+
+Swiping between weeks slides the grid. Doing the same during a drag pushed the dragged block a full page away from the finger, because the one live grid — including the layer that receives touches — moves as a unit. So the week swaps in place, and the chevron and a haptic carry the "you moved" signal.
+
+Nothing about the drag is carried across weeks either. At the moment of the flip the event itself is saved one week over, same weekday and time. A block's identity is "series + original date", so it is still the same block in the new week and the grid simply keeps dragging it. Undo is registered once, on release, against the state before the drag — three weeks crossed is still one undo, and undo follows the event back to its week.
+
+### A repeating event only crosses weeks as a single occurrence
+
+Dragging "all events" of a series into next week means nothing; the series is already there. Only one-off events and occurrences scoped to "this event only" cross. With any other scope the edge shows a toast asking you to switch scope — the app does not change the scope silently.
+
+Month view is different: there is no scope bar, and since new events repeat weekly by default, most chips are occurrences. Blocking them would leave the feature unused. Moving one chip from one day to another points at that day, so only that occurrence moves — and the toast says so.
+
+![Month view — one occurrence moved from the 23rd to the 26th while other weeks are untouched; a toast reads "Moved this schedule only" with Undo](/blog/2026-11-09-timetable-calendar-plan/month-chip-moved-toast.png)
+
+The toast carries Undo because month view has no undo button and no lock. Three things guard against accidents: a longer press than week view's 0.2 seconds, the need to reach another cell, and Undo right there. Asking for scope on drop lost — the post-drag alert was removed four days earlier.
+
+### You don't have to hit the chip
+
+A month chip is about 15pt tall. Pressing anywhere in the cell lifts the chip nearest the finger. Events folded into "+3" cannot be lifted; week view handles those.
+
+One snag: a cell's tap still fires after a long press is released, which would open week view the instant a chip was dropped. The tap that ends a drag is swallowed, and month paging is locked while a chip is held — both through one shared reference, because view state arrives a frame late within the same gesture.
+
+Verified with scripted touches in the simulator. Haptics and feel on a device, the iPad two-pane layout and right-to-left screens are not yet checked.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1016,3 +1052,4 @@ Threading every repeating event all the time lost: a Mon/Wed/Fri event crosses t
 - 2026-11-17, late night — a first-week Wednesday nobody deleted went missing: the weekday move was writing auto-deletions. Removed them (only an adjacent split piece blocks a date) and deleted occurrences now show a faint outline you can tap to restore.
 - 2026-11-18 — a knotted thread end in the event color marks the first and last occurrence of a repeating event (faint, bold when selected; vertical where there is no neighbouring column). The edge bar tried first vanished on dark event colors.
 - 2026-11-18, night — selecting a repeating occurrence threads that event's blocks for the week; the thread runs off the edge where the event continues and a knot stands where it ends. Fixed thin curve, selected event only.
+- 2026-11-20 — holding a dragged block at the left/right edge for 0.7s changes weeks (one-off events and "this event only" occurrences; one undo; the week swaps in place). In month view a 0.4s press lifts the nearest chip to drop on another date — a repeating occurrence moves alone, with Undo in the toast.
