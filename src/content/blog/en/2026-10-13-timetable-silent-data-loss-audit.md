@@ -1,6 +1,6 @@
 ---
 title: "How saved data disappears quietly — eleven holes from one audit"
-date: 2026-11-20T02:56:39+09:00
+date: 2026-11-20T11:48:29+09:00
 app: "timetable"
 tags: ["devlog", "data", "android"]
 summary: "A day spent reading the save-file path and the time/period switch in the timetable app turned up eleven ways user data could change or vanish. None crashed. Every one ended as a success."
@@ -144,9 +144,11 @@ Every test ran within a single version, and there was no seam to inject one. Thr
 
 ### What was left alone
 
-Unifying the date encoding of shared files would make older builds on both platforms reject new files, so it stays. A uniqueness constraint on event ids would turn a tolerated state into a failed save. Protection is there to keep data, not to block saving.
+A uniqueness constraint on event ids would turn a tolerated state into a failed save, so it was dropped. Protection is there to keep data, not to block saving.
 
-Still open: an on-device upgrade and rollback. So far both are covered only by tests that inject the version.
+Unifying the date encoding of shared files was dropped at first and reversed the same day. Calendar files carried times as seconds since 2001 while timetable files used ISO 8601 text, and Android already read and wrote the same spelling, so changing it meant older builds on both platforms refusing new files. But calendars have not shipped: the only builds that would refuse are test builds, and the change only gets more expensive after release. Both apps changed on the same day — ISO text on write, both spellings on read, storage inside the app untouched. One catch: the default ISO reader on iOS does not accept fractional seconds, so Android writes whole seconds too.
+
+Still open: an on-device upgrade and rollback, covered so far only by tests that inject the version, and an actual file exchange between the two platforms.
 
 ## History
 
@@ -154,4 +156,4 @@ Still open: an on-device upgrade and rollback. So far both are covered only by t
 - 2026-10-13, evening — two more from the full suite; off-axis times removed
 - 2026-10-13, final pass — invariant fuzz tests; save-on-disappear bypassing the confirmation
 - 2026-10-13, night — Android port: kept copy instead of a mirror, marker file, one undo without grouping
-- 2026-11-20 — calendar database: no version backup or newer-app notice (second store), mirror moved to a file, shared file decoded once
+- 2026-11-20 — calendar database: no version backup or newer-app notice (second store), mirror moved to a file, shared file decoded once, calendar file times as ISO
