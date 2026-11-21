@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-21T18:09:30+09:00
+date: 2026-11-21T18:56:38+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1034,25 +1034,31 @@ Tapping the chip opens three actions, anchored on the occurrence you selected:
 |---|---|
 | Start from (that day) | earlier occurrences go away |
 | End on (that day) | later occurrences go away |
-| Choose Dates… | start and end fields over a month calendar, saved with the checkmark |
+| Choose Dates… | opens the edit sheet at its Repeat card |
 
 ![The period chip menu — Choose Dates, End on, Start from](/blog/2026-11-09-timetable-calendar-plan/period-chip-menu.png)
 
 Changing the period never asks for a scope: the period belongs to the whole series. It also keeps the pattern. A biweekly event anchors its "on" weeks to the week of its start date, so moving only the start date by a week would flip every week. The chip aligns the stored start to the first slot on or after the day you picked, so the first occurrence is what you expect.
 
-In the wide landscape month-and-week layout the month pane draws the period too: a thin line along the top edge of each day in the period, a knot at each end, and start and end fields under the grid. Tap a field, then tap a date.
+In the wide landscape month-and-week layout the month pane draws the period too: a thin line along the top edge of each day in the period with a knot at each end. It is display only.
 
-![iPad landscape — the month pane shows the period line with end knots and the start/end fields under the grid; the week pane shows the same period in its chip](/blog/2026-11-09-timetable-calendar-plan/month-period-band.png)
+![iPad landscape — the month pane shows the period line with end knots; the week pane shows the same period in its chip](/blog/2026-11-09-timetable-calendar-plan/month-period-band.png)
 
-What lost:
+### Later the same day, half of it came back out
 
-- **Draggable handles on the month line.** Month view already uses vertical swipes to change months and a long press to move a chip; a third gesture would fight both, and you cannot drag to a date in another month. Taps work across months.
-- **Dropping "this and following" for a separate "split here".** Cleaner model, but a common edit becomes two steps.
-- **A confirmation when shortening.** One undo brings everything back.
+The first version had more: "Choose Dates…" opened its own calendar sheet, and the month pane had start and end fields under the grid that you tapped before tapping a date. Then came the question: is this really better than the edit sheet?
 
-Two things the screenshots caught: the start and end fields first floated over the grid and covered the last week, so those dates could not be picked; they now sit in their own row. And the "tap a date" hint was unreadable over event titles until it got its own glass background.
+Partly. Seeing the period, and ending a series in two taps, beats the edit sheet. But the separate sheet was the same calendar the edit sheet already has, and the month fields were a mode you had to learn that also shrank the grid.
 
-Verified on iPhone and iPad simulators only.
+So the edit sheet is the one place where the period is edited. The chip shows the period and keeps its two shortcuts, and "Choose Dates…" opens the edit sheet scrolled to its Repeat card (disabled for "this event only", where that card is locked).
+
+![Choose Dates opens the edit sheet at the Repeat card — interval, weekdays, start and end dates, calendar](/blog/2026-11-09-timetable-calendar-plan/period-opens-edit.png)
+
+That exposed a mismatch: the chip kept a biweekly event's "on" weeks, while moving the start date in the edit sheet flipped them. The edit sheet now keeps the beat too when only the period changes; change the weekdays or interval as well and the picked start date becomes the new anchor.
+
+What lost: the separate period sheet and the month fields (duplicates of the edit sheet), draggable handles on the month line (they fight the month swipe and chip long-press), dropping "this and following" (a common edit becomes two steps), and a confirmation when shortening (one undo brings it back).
+
+Verified on iPhone and iPad simulators; the edit-sheet change is covered by unit tests only.
 
 ## History
 
@@ -1099,4 +1105,4 @@ Verified on iPhone and iPad simulators only.
 - 2026-11-20 — holding a dragged block at the left/right edge for 0.7s changes weeks (one-off events and "this event only" occurrences; one undo; the week swaps in place). In month view a 0.4s press lifts the nearest chip to drop on another date — a repeating occurrence moves alone, with Undo in the toast.
 - 2026-11-20, later — an occurrence moved to another week leaves a faint dashed outline with its destination date in the original week; long-press the outline to bring it back.
 - 2026-11-20, evening — a thread now runs from the outline of a moved-away occurrence off the edge toward its destination week, and from the moved block back toward its original week.
-- 2026-11-21 — dragging a repeating event changes only its pattern; the period is edited from a chip above the scope bar (start from / end on that day / choose dates, no scope question, biweekly phase kept). The wide month-and-week layout draws the period on the month pane with start/end fields under the grid — tap a field, then a date.
+- 2026-11-21 — dragging a repeating event changes only its pattern. The period shows on a chip above the scope bar with two shortcuts (start from / end on that day, no scope question, biweekly phase kept); "Choose Dates…" opens the edit sheet at its Repeat card (a separate period sheet and month-pane date fields were removed the same day). The wide month-and-week layout draws the period line on the month pane. The edit sheet keeps the beat when only the period changes.
