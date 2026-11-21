@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-20T14:17:26+09:00
+date: 2026-11-21T18:09:30+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1020,6 +1020,40 @@ The first version had only the outline and the date — with no block in that we
 
 Verified with scripted touches in the simulator. Haptics and feel on a device, the iPad two-pane layout and right-to-left screens are not yet checked.
 
+## 2026-11-21 — dragging changes the pattern; the period gets its own chip
+
+With a repeating event selected as "this and following" or "all events", it was unclear what a drag changed: the **pattern** (weekday, time) or the **period** (from when to when). One word, "scope", covered both, and the period was not visible anywhere in week view.
+
+Now they are separate. A drag only changes the pattern. Selecting a repeating occurrence shows a **period chip** above the scope bar with the start and end dates.
+
+![Week view — a period chip with start and end dates under the selected repeating event, above the scope bar](/blog/2026-11-09-timetable-calendar-plan/period-chip.png)
+
+Tapping the chip opens three actions, anchored on the occurrence you selected:
+
+| Menu | Effect |
+|---|---|
+| Start from (that day) | earlier occurrences go away |
+| End on (that day) | later occurrences go away |
+| Choose Dates… | start and end fields over a month calendar, saved with the checkmark |
+
+![The period chip menu — Choose Dates, End on, Start from](/blog/2026-11-09-timetable-calendar-plan/period-chip-menu.png)
+
+Changing the period never asks for a scope: the period belongs to the whole series. It also keeps the pattern. A biweekly event anchors its "on" weeks to the week of its start date, so moving only the start date by a week would flip every week. The chip aligns the stored start to the first slot on or after the day you picked, so the first occurrence is what you expect.
+
+In the wide landscape month-and-week layout the month pane draws the period too: a thin line along the top edge of each day in the period, a knot at each end, and start and end fields under the grid. Tap a field, then tap a date.
+
+![iPad landscape — the month pane shows the period line with end knots and the start/end fields under the grid; the week pane shows the same period in its chip](/blog/2026-11-09-timetable-calendar-plan/month-period-band.png)
+
+What lost:
+
+- **Draggable handles on the month line.** Month view already uses vertical swipes to change months and a long press to move a chip; a third gesture would fight both, and you cannot drag to a date in another month. Taps work across months.
+- **Dropping "this and following" for a separate "split here".** Cleaner model, but a common edit becomes two steps.
+- **A confirmation when shortening.** One undo brings everything back.
+
+Two things the screenshots caught: the start and end fields first floated over the grid and covered the last week, so those dates could not be picked; they now sit in their own row. And the "tap a date" hint was unreadable over event titles until it got its own glass background.
+
+Verified on iPhone and iPad simulators only.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1065,3 +1099,4 @@ Verified with scripted touches in the simulator. Haptics and feel on a device, t
 - 2026-11-20 — holding a dragged block at the left/right edge for 0.7s changes weeks (one-off events and "this event only" occurrences; one undo; the week swaps in place). In month view a 0.4s press lifts the nearest chip to drop on another date — a repeating occurrence moves alone, with Undo in the toast.
 - 2026-11-20, later — an occurrence moved to another week leaves a faint dashed outline with its destination date in the original week; long-press the outline to bring it back.
 - 2026-11-20, evening — a thread now runs from the outline of a moved-away occurrence off the edge toward its destination week, and from the moved block back toward its original week.
+- 2026-11-21 — dragging a repeating event changes only its pattern; the period is edited from a chip above the scope bar (start from / end on that day / choose dates, no scope question, biweekly phase kept). The wide month-and-week layout draws the period on the month pane with start/end fields under the grid — tap a field, then a date.
