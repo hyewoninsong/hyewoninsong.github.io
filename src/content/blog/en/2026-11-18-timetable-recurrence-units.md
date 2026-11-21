@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-21T21:16:19+09:00
+date: 2026-11-21T22:25:13+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -57,12 +57,12 @@ Using the "Custom" version for real, a monthly repeat took four steps down: Cust
 |---|---|
 | 1. Frequency | `Never · Daily · Weekly · Monthly · Yearly` |
 | 2. Interval | one stepper; 1 reads as the frequency name, 2 and up as "Every 2 weeks" |
-| 3. Pattern | Monthly: weekday, date or last day. Yearly: one of two lines |
+| 3. Pattern | Monthly: weekday, date or last day. Yearly: one of two lines (a month grid plus the monthly basis since November 21) |
 | 4. Span | presets that fit the frequency; Yearly offers 5, 10 and 20 years |
 
 ![Monthly selected: interval stepper, basis chips and a date grid](/blog/timetable-recurrence-units/frequency-monthly.png)
 
-Yearly borrows from Google Calendar: instead of abstract chips it shows two sentences read from the event's date, "November 16" and "November · third Monday", and you pick one.
+This was replaced on November 21 (last section). At the time, Yearly borrowed from Google Calendar: instead of abstract chips it shows two sentences read from the event's date, "November 16" and "November · third Monday", and you pick one.
 
 ![Yearly selected: a date line and a third-Monday line, one checked](/blog/timetable-recurrence-units/frequency-yearly.png)
 
@@ -88,7 +88,7 @@ How you pick and what gets saved did not change. Only the layout and the selecti
 | Card | Question | Contents |
 |---|---|---|
 | First | How often | Frequency chips, interval |
-| Second | When | Weekdays for weekly; basis and its values for monthly; two lines for yearly. Daily has no card |
+| Second | When | Weekdays for weekly; basis and its values for monthly; two lines for yearly (a month grid and basis from that night on). Daily has no card |
 | Third | Until when | Duration presets, start and end dates, calendar |
 
 - **One black fill per form** — only the frequency chip uses the solid fill. Two months ago we toned this form down to gray pills because all-black was loud. All-gray turned out to have no center. One filled chip at the top is the exception, not a reversal.
@@ -96,8 +96,48 @@ How you pick and what gets saved did not change. Only the layout and the selecti
 
 Collapsing the 1–31 grid, rewording the interval and a summary sentence at the top were proposed and left for later. Checked on iPhone in light mode only.
 
+## 2026-11-21, later — dragging follows the frequency, and Yearly starts with the month
+
+Dragging a repeating event in week view with "All events" or "This and following" now does one clear thing per frequency.
+
+| Frequency | Dragged to another day |
+|---|---|
+| Daily, every N days | the other occurrences in the week slide the same way; on release the whole series, span included, moves by that many days |
+| Weekly | only the dragged block changes weekday; an occurrence already there steps aside to the nearest free weekday |
+| Monthly by weekday | the drop day's "nth weekday" becomes the rule |
+| Monthly by date | the dragged date becomes the drop date; a date already in the pattern is pushed to the nearest free date |
+| Monthly on the last day | not moved; it returns and a toast says why |
+| Yearly | same as monthly |
+
+### The daily rule existed in the model and never reached the screen
+
+Moving a daily series as a whole had been decided earlier the same day, with unit tests. On screen it never happened. The grid's "step aside" behaviour for series companions also applied to daily events: in a full week, dragging Wednesday onto Thursday pushed Thursday's block back to Wednesday, and the release saved the dragged block to the free weekday, which was Wednesday. Zero change, so the new rule was never called. Day-based series now skip that path and their companions slide by the same number of columns.
+
+### The save was right and the block stayed one column over
+
+After the fix, a drop left Monday empty and Tuesday with two blocks, while the span label had correctly moved by a day. Dumping the series after the save showed no moved occurrence. The store was right; the view was not.
+
+The grid holds a dropped block at its drop position until the stored data catches up, and releases the hold in `onChange` of the stored list. Calendar drags save in two beats: a provisional single-occurrence save, then on the next run loop a revert and a rewrite with the chosen scope. Shift a daily series by one day and a mid-span week still has one occurrence per weekday, and occurrence ids are tied to dates. The final stored value equals the value before the drag. With both saves inside one render, `onChange` sees no change and the hold is never released.
+
+Series that move as a whole no longer hold the drop position. Two blocks stacked on the same spot do not show in a screenshot, so the test collects block positions after the drop and counts one per weekday.
+
+### Monthly with several dates: only the dragged date changes
+
+An event on the 1st and the 15th lost its 1st when the 15th was dragged to the 17th; the drag replaced the whole date list with the drop date. Now only the dragged date changes. If the drop date is already in the list, that date moves to the nearest free one, toward where the drag started on a tie.
+
+### Yearly: a month grid instead of two sentences
+
+The November 19 version offered two sentences read from the event's date. Changing the month or day meant moving the start date, and "last day" or several dates were out of reach. Now you pick the month, and below it is the same basis row and values as Monthly.
+
+![Yearly selected: a grid of twelve months, then the same basis row and day grid as Monthly](/blog/timetable-recurrence-units/yearly-month-grid.png)
+
+The month is not stored. Yearly is saved as "every 12 months" and the month is the start date's month, so picking a month moves the start date to that month of the same year, and the end date with it. The file format is unchanged.
+
+The mid-drag frames were not checked by eye; the test captures only the result. iPad and real devices are still open.
+
 ## History
 
 - 2026-11-18 — day, month and year units added inside the "Custom" chip
 - 2026-11-19 — frequency moved to the first row; one stepper for the interval
 - 2026-11-21 — repeat options split into three cards; only the frequency chip is filled
+- 2026-11-21 — dragging aligned per frequency; Yearly picks a month, then the monthly basis
