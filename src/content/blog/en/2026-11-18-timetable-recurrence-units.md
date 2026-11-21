@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-21T20:03:42+09:00
+date: 2026-11-21T21:16:19+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -83,7 +83,7 @@ The problem was not the number of rows. Every row looked equally important: the 
 
 How you pick and what gets saved did not change. Only the layout and the selection style did.
 
-![After: three cards, only the frequency chip filled black, week and weekday inside an outlined box under Basis](/blog/timetable-recurrence-units/hierarchy-after-weekday.png)
+![After: three cards, only the frequency chip filled black, week and weekday sit right under Basis with no divider](/blog/timetable-recurrence-units/hierarchy-after-weekday.png)
 
 | Card | Question | Contents |
 |---|---|---|
@@ -92,7 +92,7 @@ How you pick and what gets saved did not change. Only the layout and the selecti
 | Third | Until when | Duration presets, start and end dates, calendar |
 
 - **One black fill per form** — only the frequency chip uses the solid fill. Two months ago we toned this form down to gray pills because all-black was loud. All-gray turned out to have no center. One filled chip at the top is the exception, not a reversal.
-- **An outline, not a tinted box** — the plan was a light gray box for the values under Basis. The selection pill (#EFEFF4) is almost the same gray, so the selected chip would vanish. A 1pt outline groups them without touching the pill.
+- **Remove a line instead of adding a box** — the plan was a light gray box for the values under Basis, but the selection pill (#EFEFF4) is almost the same gray and the selected chip would vanish. A 1pt outlined box grouped them, yet it put one more rectangle inside the card. In the end the values simply lost the divider above them and got a 12pt indent. Every other row has a divider, so its absence is the grouping.
 
 Collapsing the 1–31 grid, rewording the interval and a summary sentence at the top were proposed and left for later. Checked on iPhone in light mode only.
 
