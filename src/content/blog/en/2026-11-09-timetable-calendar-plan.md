@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-21T18:56:38+09:00
+date: 2026-11-22T02:52:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1060,6 +1060,34 @@ What lost: the separate period sheet and the month fields (duplicates of the edi
 
 Verified on iPhone and iPad simulators; the edit-sheet change is covered by unit tests only.
 
+## 2026-11-22 — the period chip and the scope bar became one pill
+
+Selecting a repeating occurrence stacked two extra rows above the bottom buttons: the period chip and the three-way scope bar. On an iPhone that hid more than an hour of the grid.
+
+![Before — the period chip and the scope segments stacked in two rows above the buttons](/blog/2026-11-09-timetable-calendar-plan/scope-two-rows.png)
+
+We built three options and screenshotted them on the same event:
+
+- **One pill for scope and period, menu on tap** — chosen.
+- **A scope menu in the middle of the bottom toolbar** — hides nothing, but on iPhone the toolbar overflowed and clipped the lock button at the left edge.
+- **Keep the three segments, drop the chip** — leaves no home for the two period shortcuts.
+
+![The toolbar option — the toolbar runs past the screen and the lock button is clipped](/blog/2026-11-09-timetable-calendar-plan/scope-toolbar-clipped.png)
+
+The pill shows the current scope and the series period. Tapping it opens a menu: the three scopes next to the pill, the period section above with the same shortcuts the chip had.
+
+![After — a single pill reading "All events · Nov 16, 2026 – Jan 10, 2027"](/blog/2026-11-09-timetable-calendar-plan/scope-pill.png)
+
+![The pill menu — period section on top, scopes below with a check](/blog/2026-11-09-timetable-calendar-plan/scope-pill-menu.png)
+
+The cost is one extra tap to change scope. Selecting an occurrence already defaults to "All events", so scope changes are rare, while the extra row was in the way every time.
+
+One catch showed up right away. The first version dropped the period when it didn't fit, and choosing the longer "This and following events" made it vanish on a Korean iPhone. Now `ViewThatFits` tries the long form, then a numeric form with years ("26. 11. 16. – 27. 1. 10."), and only then drops it. The lesson: tap through every value a control can show, not just the default.
+
+![After choosing "this and following" — the period shortens to the numeric form instead of disappearing](/blog/2026-11-09-timetable-calendar-plan/scope-pill-following.png)
+
+Checked on the iPhone simulator in Korean and German. Arabic, iPad split view, the unfolded Duo, Mac, dark mode and real devices are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1106,3 +1134,4 @@ Verified on iPhone and iPad simulators; the edit-sheet change is covered by unit
 - 2026-11-20, later — an occurrence moved to another week leaves a faint dashed outline with its destination date in the original week; long-press the outline to bring it back.
 - 2026-11-20, evening — a thread now runs from the outline of a moved-away occurrence off the edge toward its destination week, and from the moved block back toward its original week.
 - 2026-11-21 — dragging a repeating event changes only its pattern. The period shows on a chip above the scope bar with two shortcuts (start from / end on that day, no scope question, biweekly phase kept); "Choose Dates…" opens the edit sheet at its Repeat card (a separate period sheet and month-pane date fields were removed the same day). The wide month-and-week layout draws the period line on the month pane. The edit sheet keeps the beat when only the period changes.
+- 2026-11-22 — the period chip row and the scope segment row merged into one pill (scope · period, menu on tap). The toolbar-middle option lost because it clipped the lock button. A numeric period form keeps the period visible next to long scope names.
