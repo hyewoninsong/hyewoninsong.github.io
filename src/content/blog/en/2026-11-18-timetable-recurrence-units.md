@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-21T22:25:13+09:00
+date: 2026-11-22T03:27:26+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -37,7 +37,7 @@ A monthly event on the 31st does not appear in February. That is what the iCalen
 
 ## What the standard has and we left out
 
-- **Ending after a count** and **never-ending repeats** — the app never counts a series' occurrences up front, and both would undo that. Every repeat has an end date; picking Year stretches it to ten years.
+- **Ending after a count** — the app never counts a series' occurrences up front, and this would undo that. (**Never-ending repeats** were left out here too; they arrived on November 22 — see below.)
 - **Combinations like "last weekday of the month"** — a rule that needs a screen to explain did not make it.
 - **Several dates in one month** — the file format accepts it, the form does not offer it.
 
@@ -135,9 +135,23 @@ The month is not stored. Yearly is saved as "every 12 months" and the month is t
 
 The mid-drag frames were not checked by eye; the test captures only the result. iPad and real devices are still open.
 
+## 2026-11-22 — "No end", written as a far-off date
+
+Four days ago this post said every repeat has an end date. Not anymore: the period row now ends with a **No end** chip for every frequency. The end-date cell, the summary line and the bottom pill all read "No end"; tap the end cell and pick a day to give it an end again.
+
+It turned out easy because of the rule that kept it out. Every question the app asks about a series already stops at the first answer, so a series that runs for centuries costs the same as one that runs for a month.
+
+Apple Calendar, Google Calendar and .ics all express "forever" as *nothing* — no `UNTIL` or `COUNT` in the rule, `recurrenceEnd = nil` in EventKit. We store **December 31, 9000** instead:
+
+- **An empty end date** matches the standard, but older app versions (a rolled-back iPhone, an Android not yet updated) would drop such a series entirely. A far date reads to them as "repeats until 9000" with the same occurrences.
+- **9999-12-31** looks like a better marker, but dragging a whole series moves its end date too; three days past 9999 is a five-digit year the file cannot hold. Anything after the year 8000 counts as "No end" and is written back as the end of 9000.
+
+One date formatter turns the marker into "No end", so no screen prints "9000". When we add exporting this calendar to other apps, the marker becomes an empty `UNTIL`. New events still default to one year; Apple and Google default to no end.
+
 ## History
 
 - 2026-11-18 — day, month and year units added inside the "Custom" chip
 - 2026-11-19 — frequency moved to the first row; one stepper for the interval
 - 2026-11-21 — repeat options split into three cards; only the frequency chip is filled
 - 2026-11-21 — dragging aligned per frequency; Yearly picks a month, then the monthly basis
+- 2026-11-22 — "No end" added (stored as December 31, 9000)
