@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-22T03:27:26+09:00
+date: 2026-11-22T03:39:18+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -37,7 +37,7 @@ A monthly event on the 31st does not appear in February. That is what the iCalen
 
 ## What the standard has and we left out
 
-- **Ending after a count** — the app never counts a series' occurrences up front, and this would undo that. (**Never-ending repeats** were left out here too; they arrived on November 22 — see below.)
+- **Ending after a count** — the app never counts a series' occurrences up front, and this would undo that. (**Never-ending repeats** were left out here too; they arrived on November 22 and became the default — see below.)
 - **Combinations like "last weekday of the month"** — a rule that needs a screen to explain did not make it.
 - **Several dates in one month** — the file format accepts it, the form does not offer it.
 
@@ -135,18 +135,15 @@ The month is not stored. Yearly is saved as "every 12 months" and the month is t
 
 The mid-drag frames were not checked by eye; the test captures only the result. iPad and real devices are still open.
 
-## 2026-11-22 — "No end", written as a far-off date
+## 2026-11-22 — "No end", and it is the default
 
-Four days ago this post said every repeat has an end date. Not anymore: the period row now ends with a **No end** chip for every frequency. The end-date cell, the summary line and the bottom pill all read "No end"; tap the end cell and pick a day to give it an end again.
+Four days ago this post said every repeat has an end date. Not anymore: a new repeating event now starts with **No end**, as in Apple Calendar and Google Calendar. The period row ends with a No end chip; pick 8 weeks, 1 year or a day on the calendar to give it an end. A one-year default had a quiet trap — a weekly class you forgot about would vanish a year later on a date you never chose.
 
-It turned out easy because of the rule that kept it out. Every question the app asks about a series already stops at the first answer, so a series that runs for centuries costs the same as one that runs for a month.
+It turned out easy because of the rule that kept it out. Every question the app asks about a series already stops at the first answer, so an endless series costs the same as a one-month one.
 
-Apple Calendar, Google Calendar and .ics all express "forever" as *nothing* — no `UNTIL` or `COUNT` in the rule, `recurrenceEnd = nil` in EventKit. We store **December 31, 9000** instead:
+Apple, Google and .ics all write "forever" as *nothing* — no `UNTIL` or `COUNT` in the rule, `recurrenceEnd = nil` in EventKit. So do we now: an endless series has no end date in the file. The first version wrote December 31, 9000 instead, so that older app versions would read it rather than drop the series. We switched to the standard form the same day; a far-off date leaks into anything else that reads the file, and the version bump makes older apps warn first.
 
-- **An empty end date** matches the standard, but older app versions (a rolled-back iPhone, an Android not yet updated) would drop such a series entirely. A far date reads to them as "repeats until 9000" with the same occurrences.
-- **9999-12-31** looks like a better marker, but dragging a whole series moves its end date too; three days past 9999 is a five-digit year the file cannot hold. Anything after the year 8000 counts as "No end" and is written back as the end of 9000.
-
-One date formatter turns the marker into "No end", so no screen prints "9000". When we add exporting this calendar to other apps, the marker becomes an empty `UNTIL`. New events still default to one year; Apple and Google default to no end.
+The year 9000 survives in memory only, as the upper bound for counting. Not 9999: dragging a whole series shifts its end too, and three days past 9999 is a five-digit year. Anything after 8000 counts as no end. One date formatter prints it as "No end", so no screen shows "9000".
 
 ## History
 
@@ -154,4 +151,4 @@ One date formatter turns the marker into "No end", so no screen prints "9000". W
 - 2026-11-19 — frequency moved to the first row; one stepper for the interval
 - 2026-11-21 — repeat options split into three cards; only the frequency chip is filled
 - 2026-11-21 — dragging aligned per frequency; Yearly picks a month, then the monthly basis
-- 2026-11-22 — "No end" added (stored as December 31, 9000)
+- 2026-11-22 — "No end" added and made the default (no end date in the file)
