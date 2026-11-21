@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-19T04:05:23+09:00
+date: 2026-11-21T21:16:19+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -73,7 +73,31 @@ Yearly borrows from Google Calendar: instead of abstract chips it shows two sent
 
 Checked by eye on the iPhone new-event form. The grid after saving, the iPad edit pane and languages other than Korean are still to be looked at.
 
+## 2026-11-21 — Same rows, but it looked busy: one card per question
+
+After frequency moved to the first row, the repeat card held up to six rows: repeat, interval, basis, week of month, weekday, duration. Nothing was hard to pick, but the first reaction to the screen was that it looked cluttered and flat.
+
+![Before: one card stacks six rows of the same shape, with five gray selection pills](/blog/timetable-recurrence-units/hierarchy-before.png)
+
+The problem was not the number of rows. Every row looked equally important: the same label-plus-chips shape, the same gray pill for every selection, and the same divider between a setting and the values that belong to it. The duration presets also sat far from the end date they change.
+
+How you pick and what gets saved did not change. Only the layout and the selection style did.
+
+![After: three cards, only the frequency chip filled black, week and weekday sit right under Basis with no divider](/blog/timetable-recurrence-units/hierarchy-after-weekday.png)
+
+| Card | Question | Contents |
+|---|---|---|
+| First | How often | Frequency chips, interval |
+| Second | When | Weekdays for weekly; basis and its values for monthly; two lines for yearly. Daily has no card |
+| Third | Until when | Duration presets, start and end dates, calendar |
+
+- **One black fill per form** — only the frequency chip uses the solid fill. Two months ago we toned this form down to gray pills because all-black was loud. All-gray turned out to have no center. One filled chip at the top is the exception, not a reversal.
+- **Remove a line instead of adding a box** — the plan was a light gray box for the values under Basis, but the selection pill (#EFEFF4) is almost the same gray and the selected chip would vanish. A 1pt outlined box grouped them, yet it put one more rectangle inside the card. In the end the values simply lost the divider above them and got a 12pt indent. Every other row has a divider, so its absence is the grouping.
+
+Collapsing the 1–31 grid, rewording the interval and a summary sentence at the top were proposed and left for later. Checked on iPhone in light mode only.
+
 ## History
 
 - 2026-11-18 — day, month and year units added inside the "Custom" chip
 - 2026-11-19 — frequency moved to the first row; one stepper for the interval
+- 2026-11-21 — repeat options split into three cards; only the frequency chip is filled
