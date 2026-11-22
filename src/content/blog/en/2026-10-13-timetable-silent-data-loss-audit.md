@@ -1,6 +1,6 @@
 ---
 title: "How saved data disappears quietly — eleven holes from one audit"
-date: 2026-10-13T19:51:49+09:00
+date: 2026-11-20T11:48:29+09:00
 app: "timetable"
 tags: ["devlog", "data", "android"]
 summary: "A day spent reading the save-file path and the time/period switch in the timetable app turned up eleven ways user data could change or vanish. None crashed. Every one ended as a success."
@@ -103,9 +103,57 @@ The port finished with every group's tests green. The first unfiltered run of al
 
 On a device I have seen only that a fresh install launches and relaunches after a force stop. The read-failure alert, alarms after relaunch and reboot, and the save-failed alert rest on tests and code reading; manual cases are filed.
 
+## 2026-11-20 — two protections went missing when calendars got their own database
+
+A read-through of the storage layer turned up a comment that was not true. Each calendar format bump said "a backup copy is left on first load" and "the newer-app notice shows first". For calendars, neither happened.
+
+### A second store inherits nothing
+
+Timetables live in one JSON file with several layers of protection: unreadable files are quarantined, a mirror holds the last good save, a copy is made before the first load after a format change, and an older app opening newer data says so once.
+
+Calendars later moved to their own file and then to SQLite. The protections that run **on every launch** came along, because tests fail without them. The two that run **only on a launch where the version changed** did not.
+
+| Protection | Timetables | Calendars (before) |
+|---|---|---|
+| Quarantine unreadable original | yes | yes |
+| Recover from mirror | yes | yes |
+| Copy on first load after a version change | yes | **no** |
+| "Saved by a newer app" notice | yes | **no** |
+
+Both mechanisms lived inside the timetable persistence class and copied only the timetable file. The version stamp did not include the calendar version, and the calendar version decoder folds unknown numbers into the current one without counting a loss. A rolled-back app editing one recurring event would silently drop keys it did not know, with no copy to go back to.
+
+### Why it was missed
+
+Every test ran within a single version, and there was no seam to inject one. Three rules came out of it:
+
+- Adding a store means filling a **store × protection table**; an empty cell says "none" and why.
+- A version-gated mechanism needs an injectable version, tested old-to-new and new-to-old.
+- A comment that promises a protection names the function that provides it.
+
+### Two things a database changes
+
+**A backup is not a file copy.** With WAL, finished transactions can sit in the side file; `VACUUM INTO` writes a standalone database instead. Opening that copy creates WAL siblings next to it, so exclude those suffixes when counting or pruning copies.
+
+**"Last writer's version" is the wrong marker.** The store rewrites only changed rows. After an older app edits one event, hundreds of untouched rows are still in the newer shape. So the marker is the **highest version ever written**, never lowered, and it lives inside the database so a restore cannot leave it describing data that is gone.
+
+### Also cleaned up
+
+- The calendar mirror moved from the settings store shared with the widget to a file. That store is loaded whole by every process that opens it, and calendars have no event cap.
+- A received calendar file is decoded once instead of being parsed four times.
+- An index built for a range query that never arrived was dropped.
+
+### What was left alone
+
+A uniqueness constraint on event ids would turn a tolerated state into a failed save, so it was dropped. Protection is there to keep data, not to block saving.
+
+Unifying the date encoding of shared files was dropped at first and reversed the same day. Calendar files carried times as seconds since 2001 while timetable files used ISO 8601 text, and Android already read and wrote the same spelling, so changing it meant older builds on both platforms refusing new files. But calendars have not shipped: the only builds that would refuse are test builds, and the change only gets more expensive after release. Both apps changed on the same day — ISO text on write, both spellings on read, storage inside the app untouched. One catch: the default ISO reader on iOS does not accept fractional seconds, so Android writes whole seconds too.
+
+Still open: an on-device upgrade and rollback, covered so far only by tests that inject the version, and an actual file exchange between the two platforms.
+
 ## History
 
 - 2026-10-13 — save/load and kind-switch audit, eleven holes
 - 2026-10-13, evening — two more from the full suite; off-axis times removed
 - 2026-10-13, final pass — invariant fuzz tests; save-on-disappear bypassing the confirmation
 - 2026-10-13, night — Android port: kept copy instead of a mirror, marker file, one undo without grouping
+- 2026-11-20 — calendar database: no version backup or newer-app notice (second store), mirror moved to a file, shared file decoded once, calendar file times as ISO

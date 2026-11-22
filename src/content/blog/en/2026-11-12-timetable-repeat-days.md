@@ -1,6 +1,6 @@
 ---
 title: "Make Mon/Wed/Fri classes in one go — a Repeat switch for the timetable"
-date: 2026-11-12T16:34:25+09:00
+date: 2026-11-18T11:12:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data"]
 summary: "Turn on Repeat in the schedule editor, pick several weekdays, and the same class lands on each one. We kept one block per weekday and tied them with a group id instead of storing one schedule with a list of days."
@@ -36,12 +36,120 @@ So blocks stay one per weekday, and blocks from the same repeat share a `seriesI
 
 ## When a block leaves the group
 
-A group means "these days, same time." Drag one block to a different time on the grid and it leaves the group. Otherwise the next save from another day's editor would quietly pull it back. Undo restores the group. Duplicates start outside any group, and deleting one block deletes only that block.
+A group used to mean "these days, same time" (since 2026-11-18 a group can hold different times — see that section). The first version made a block leave the group when you dragged it alone. A day later that changed: dragging a repeating schedule up or down now moves every day's block together and the group stays (see the Nov 13 section; sideways drags changed again on Nov 14). A block still leaves the group when a quick time edit changes only that block — otherwise the next save from another day's editor would quietly pull it back. Undo restores the group. Duplicates start outside any group, and deleting one block deletes only that block.
+
+## 2026-11-13 — A repeating schedule is selected and dragged as a group
+
+"Drag one and it drops out" ran against the reason for grouping. Nudging a Mon/Tue/Thu class by 30 minutes would peel one block off and leave two more to drag by hand. So, for timetable repeats and for calendar repeats (the occurrences in the visible week):
+
+| You do | You get |
+|---|---|
+| Select one block | The same-time blocks on the other days get the selection border too; handles and time pills stay on the one you picked |
+| Drag any of them up or down | All move by the same amount of time |
+| Drag sideways | Only the block under your finger changes day (since Nov 14; the first cut shifted them all) |
+| Any day hits another schedule | Everything stops, and the block that hit it shows the rubber-band tension |
+| Resize by the handle | Every day gets the same start and end |
+
+The walls are the union of every day the group occupies: a schedule at 8 pm on Tuesday stops Monday and Thursday too. The drag code is the single-block one with two filters widened — "other schedules on my day" became "on the days the group would occupy", and "not me" became "not anyone in the group".
+
+Push past the wall until your finger is inside the blocking schedule's time and the whole group overlaps it, exactly as a single block does — the first cut left that out and it read as broken, not blocked. Shrinking to fit a narrow gap went in for an hour and came back out: one tight gap on Tuesday should not shorten Monday and Thursday. A group stays at the last place it fit.
+
+Selection is still one block. Real multi-select already exists here, but it closes the editor and only moves vertically; the other days ride along as companions for drawing, dragging and saving only. Companions must share the exact start and end, so a calendar occurrence you moved on its own stays put.
+
+The cost: you can't change a single day's time by dragging. Change it in the editor instead.
+
+## 2026-11-14 — Only the blocked block squishes; only the dragged block changes day
+
+Two things felt off after a day. Dragging a Tue–Fri class down until Thursday hit something squished all four blocks. And dragging sideways shifted all four, so sending just Friday's block to Monday was impossible by drag.
+
+| You do | You get |
+|---|---|
+| Drag up or down until one day is blocked | Everything still stops; only the blocked day's block looks pressed |
+| Drag sideways | Only the dragged block changes day. The others stay and follow the time |
+| Drag onto a day that holds another block of the same repeat | That block slides to the day you came from. Drop there and the repeat's days are unchanged |
+| Drop one block on an empty day | The repeat stays; its days change (Mon/Wed/Fri → Tue/Wed/Fri) |
+
+**Stopping and squishing are different values.** Stopping belongs to the group: let one day lag and "same time" breaks. The pressed shape means "this one touched a wall", so it now goes only to blocks on days where another schedule actually touches the wall. Walls that apply to every day, like the lunch slot or the end of the day range, still press them all. Haptics fire once, not once per block.
+
+**Time belongs to the group, the day belongs to the block.** That left one question: what if the target day already holds a block of the same repeat? Blocking reads as "can't", though nothing would really change. Overlapping puts the same class on a day twice. So the two swap. Nothing changes in the saved data, and the selection moves to the block on that day, which looks like the block you dragged landed there. The slide is the spring every block already had for a day change.
+
+The first capture showed both swapping blocks hatched as overlapping: the overlap check compares against saved positions, and mid-swap each block sits on the other's saved day. Blocks of the same repeat are no longer each other's overlap reference. The unit tests on the day math were green; only a mid-drag screenshot showed it.
+
+## 2026-11-14, later — Push to the nearest empty day instead of swapping
+
+Swapping felt fine one column over, but a long drag scrambled the order: with a b c d e on Mon–Fri, dragging a to Wednesday sent c two columns back to Monday, giving c b a d e.
+
+Now a block in the way is pushed toward the **nearest empty day**, and any same-repeat blocks in between shift one column along with it; on a tie it goes toward where the drag started. The starting day is always empty during the drag, so a full week behaves like reordering a list:
+
+| Finger on | Grid |
+|---|---|
+| Mon | a b c d e |
+| Tue | b a c d e |
+| Wed | b c a d e |
+| Thu | b c d a e |
+| Fri | b c d e a |
+
+With gaps, the block steps into the closest gap. The layout is recomputed from the start day and the current day only, so moving back un-shifts the blocks.
+
+On drop, the set of days the repeat occupies differs by at most one (the start day out, the filled gap in), so only the dragged block's day is saved and selection passes to the block that was under the finger. Same-repeat blocks look identical, so nothing jumps. The trade-off: per-block notes stay with the weekday rather than travelling with the block.
+
+## 2026-11-15 — The group flickered back to where it started
+
+A day after the push behavior landed, a screen recording showed the group sometimes jumping back to its pre-drag position for a frame on release, then returning. The final result was always right.
+
+It only happened when the block was dropped on a day another block of the same repeat occupied — the one case where selection moves to that other block on release. Even then it was intermittent. Logging every block position showed one evaluation in between where the selection (a parent `@State` passed down as `@Binding`) was already new while the grid's own `@State` — the held drop position and the drag values — was still old. Both swapped blocks then drew at their stored, pre-drag spots. The opposite order showed up too; which came first varied by run.
+
+Moving the held position into the same `withTransaction` as the selection swap did not help (4 of 6 fresh-launch drags still flickered): a transaction picks the animation, it does not make a parent binding and child state land in the same evaluation. The fix was in the display function: it now finds the drag values even in the "new selection, old drag state" combination, so any order reads drag frame → held position → stored position. Zero of six after the fix, and no backward frame in a 30 fps recording.
+
+Earlier checks looked at the shape during the drag and the result after it, both correct; a one-frame glitch passes screenshots and frame assertions. Releases that change selection now get a log probe, run across fresh launches.
+
+## 2026-11-15 — Delete and duplicate ask for the scope at the button
+
+Once a repeating schedule was selected as a group, the bottom trash and duplicate buttons stopped matching the screen: three blocks were outlined, but the trash removed only the one under your finger.
+
+Now, with one repeating block selected, both buttons open a small menu right at the button — the same shape as the "Discard Changes" prompt on the editor's X.
+
+| Where | Trash — "Delete Repeating Schedule" | Duplicate — "Duplicate Repeating Schedule" |
+|---|---|---|
+| Timetable | This schedule only · All repeats | This schedule only · All repeats |
+| Calendar | This only · This and following · All | This only · This and following · All |
+
+- **At the button, not a center alert.** It sits under the finger and follows the editor's discard grammar. On iOS 26 there is no cancel row; tapping outside cancels.
+- **"All repeats" includes hidden days.** Dragging moves only visible days, but deleting or copying based on what is visible would leave a hidden Saturday block as half a group.
+- **A group copy is a new group; a calendar copy is a new series.** A series is one template with dates and weekdays, so it cannot hold two blocks on one day. The copy moves by the same offset as the selected occurrence, including edited occurrences, and starts with alerts off.
+
+It always asks, and either choice undoes in one step.
+
+## 2026-11-18 — A group can hold different times
+
+A Monday 9:00 lecture and a Wednesday 13:00 lab are one course, but the app treated them as strangers: a group assumed one time, and a block whose time changed was cut loose. Renaming the course or deleting it at the end of term took two passes.
+
+Blocks in a group may now have different times. Call the blocks that share a time a slice:
+
+| Action | Reaches |
+|---|---|
+| Drag, resize, weekday chips, time change | The same-time slice only |
+| Change title, color, memo or alerts | The whole group (only the values you changed) |
+| Trash, duplicate, Delete Schedule | The whole group |
+
+Selecting a block outlines the rest of its group. Same-time blocks follow a drag; different-time blocks keep their outline and stay put. Tapping one moves the handles to it without dropping the selection.
+
+There are two ways in. Change the time of one day of a repeat and that block stays in the group as its own slice. For schedules made separately, select one and choose "Group with Other Events" from the `…` menu. A joining schedule takes the selected one's title and color and keeps its own time, memo and alerts.
+
+We did not make a drag move the whole group: pushing the lecture back 30 minutes should not push the lab. For the save file we rejected "one schedule plus a per-day time table" because an older app version would draw every day at the first time — a wrong timetable. Instead each slice is its own entry carrying the group id; an older version ignores the id and still shows the right times.
+
+In a calendar, a repeating event already is "weekdays plus one time", so events get a shared group id. Edits and deletes with scope "All Events" reach the grouped events; "This Event" and "This and Following" do not.
 
 ## What's left
 
-Verified on the iPhone simulator. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
+Verified on the iPhone simulator; for group drag that covers the calendar week view (group selection, the squish on only the blocked block, the swap and what is saved after it), not yet a sideways wall, resizing against a wall, or the timetable grid. iPad, iPhone Duo and real devices are still unchecked, and the Android repeat UI is a separate port.
 
 ## History
 
 - 2026-11-12 — Repeat switch in the timetable editor; one block per day plus a group id (schedule save v20)
+- 2026-11-13 — Repeating schedules are selected and dragged as a group; reverses "dragging one block detaches it"
+- 2026-11-14 — Only the blocked block squishes; only the dragged block changes day; same-repeat blocks swap. Reverses "sideways moves the whole group"
+- 2026-11-14, later — Blocks in the way are pushed to the nearest empty day (a full week shifts like a list) instead of swapping; only the dragged block's day is saved
+- 2026-11-15 — Fixed a one-frame jump back to the pre-drag position when dropping onto a same-repeat day; display now handles a selection that updates ahead of the grid's own state
+- 2026-11-15 — Bottom trash and duplicate ask for the scope at the button (timetable: this only / all repeats; calendar: three scopes). Group copies form a new group; calendar copies a new series
+- 2026-11-18 — Blocks in a group may have different times (drag and weekday chips act on same-time blocks; title, color, memo, alerts and delete act on the whole group). Added "Group with Other Events". Reverses "a block whose time changes leaves the group". Calendars group whole repeating events. Calendar screens not yet checked by eye

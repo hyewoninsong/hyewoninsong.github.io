@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-12T18:50:12+09:00
+date: 2026-11-22T02:52:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -124,8 +124,8 @@ Touching a repeating event asks for scope: three choices, editing or deleting (e
 |---|---|
 | Edit title, time, color, memo | This event · This and following · All events |
 | Delete | This event · This and following · All events |
-| Drag or resize on the grid | Same question after you let go; Cancel puts it back |
-| Change weekdays, range, weekly/biweekly | No question — the whole series |
+| Drag or resize on the grid | No question: that occurrence moves, and a scope bar under the grid changes it (see 2026-11-13, night; at first this asked the same question after the drop) |
+| Change weekdays, range, weekly/biweekly | Follows the scope you picked: "this and following" changes only from that date, "all" changes the whole series (see 2026-11-16; it used to be the whole series, always) |
 
 ![Delete alert for a repeating event: this event, this and following, all events, cancel](/blog/timetable-calendar-plan/event-delete-scope.png)
 
@@ -240,6 +240,7 @@ A quick flick and a short drag-and-release both passed. It took a third capture 
 In Arabic the direction flips. The offset is in screen coordinates, so the sliding layer is pinned left-to-right and only the weekday order inside each page is turned back. The earlier "the pager needed nothing extra" was the scroll view doing that work.
 
 Checked on the folded iPhone Duo screen in Korean and Arabic. The unfolded Duo, a real device, iPad, Reduce Motion and VoiceOver are not checked yet. So whether the unfolded-Duo misalignment noted at the end of the previous section shares a root with this frame overflow is also unknown. And since this is no longer a scroll view, a two-finger horizontal trackpad scroll does not change weeks — still to do.
+
 ## 2026-11-11, midday — the tapped week row becomes the week view's header
 
 Tap a date on the month grid and that week's row rises in place to become the week view's date row. The rows above slide up, the rows below slide down, and the event grid shows through the gap. Going back runs it in reverse: the rows close and the header's dates settle into their row. It is the move Apple's Calendar makes. Until now this was a 0.2s crossfade, which cannot show that both screens are talking about the same dates.
@@ -276,7 +277,7 @@ The midday transition carried only the dates. The tapped row's color bars faded 
 
 ![Mid-rise — under the 30th and the 2nd, red rectangles are growing into blocks with their titles appearing; the dimmed bar of the 2nd, a date outside the month, has reached full color](/blog/timetable-calendar-plan/zoom-blocks-open.png)
 
-The month view draws at most four bars per day; the week view draws only events inside the visible days and hours. So some have no partner.
+At this point the month view drew at most four bars per day; the week view draws only events inside the visible days and hours. So some have no partner. (Since midday on 2026-11-13 the bars are title chips, stacked as far as the cell's height allows, and overflow events leave from the "+n" line rather than the fourth bar's slot — see that day's section below.)
 
 | Bar in the month view | Block in the week view | In the transition |
 |---|---|---|
@@ -448,13 +449,644 @@ On a landscape iPad or an unfolded iPhone Duo the calendar now splits the screen
 
 ![Landscape iPad: month on the left, the week grid on the right, the shown week tinted](/blog/timetable-calendar-plan/split-month-week.png)
 
-Tap a date in the month and the grid slides into the left half while the right half shows that single day, one column of the week view. Swipe it to step a day at a time; stepping past Friday moves the week on the left as well. `‹` goes back to month and week. Portrait stays a single pane.
+Switch to week | day and the grid slides into the left half while the right half shows that single day, one column of the week view. (The first version switched on tapping a date; later that night the switch moved to a menu, see below.) Swipe it to step a day at a time; stepping past Friday moves the week on the left as well. Portrait stays a single pane.
 
 ![After tapping a date: week on the left, that day on the right](/blog/timetable-calendar-plan/split-week-day.png)
 
 There is still only one live grid. The grid owns window-wide things (the edit popover anchor, keyboard shortcuts, the lock, the bottom toolbar), so two of them would fight. The day pane is a picture built from the same piece that draws neighbouring weeks during a swipe; you edit on the left and the day follows. The grid keeps its place in the view tree, so it slides from right to left without losing its lock state or scroll.
 
 One trap on the way: the first build stayed split after rotating to portrait. The split decision read the content's own size, but in split mode each pane has a fixed half width, so the content never shrank and the decision never changed. Deciding from the size a `GeometryReader` is offered fixed it. Checked on the iPad simulator only; Duo, Mac and devices are still to do.
+
+## 2026-11-12, night — four pairs, picked from a menu in the top-right corner
+
+Two pairs left half the wide screen underused, and editing still opened a popover on top of a half-width pane. Now there are four pairs (three since the next day — see below), picked from a "Month | Week ⌃⌄" menu in the top-right corner, where Apple Calendar keeps its view menu.
+
+![The menu: Month | Week, Week | Day, Week | Edit, Day | Edit](/blog/timetable-calendar-plan/split-mode-menu.png)
+
+| Pair | Left | Right |
+|---|---|---|
+| Month \| Week | month; tapping a date moves the week | week grid |
+| Week \| Day | week; picking an event moves the day | that day (a picture) |
+| Week \| Edit | week | editor for the picked event |
+| Day \| Edit | one-day grid | editor for the picked event |
+
+Tapping a date no longer changes the layout. When one tap rearranged the screen, anyone who only wanted to move the week lost the month every time. The pair is a layout choice, not a place you go into, so there is no `‹` in split mode, and the choice survives a relaunch.
+
+**One tap opens the editor.** With the popover, a first tap only selected and a second opened it, because the popover covered the block. The pane covers nothing, so one tap is enough and a second tap shows no popover. The pane is the same screen as the popover (save, delete, scope questions, new events from `+`); one window-wide flag turns the popover off while the pane is on screen.
+
+**The pane has no X or ✓; edits apply as you go.** One undo step is one field: tapped values save at once, the time wheel saves when it stops, title and memo save when typing pauses for about a second or focus leaves. Saving on every keystroke would make undo useless; one step per selected event would undo the title when you only wanted the time back. The questions ✓ used to ask (which occurrences of a repeating event, whether to restyle matching events) are asked once per event and the answer is reused; cancelling drops that change.
+
+![Week | Edit as of Nov 12: no X or ✓ (brought back on Nov 14)](/blog/timetable-calendar-plan/split-week-edit.png)
+
+The pane rebuilds its form when the stored event changes from outside (a drag on the grid, undo). The first version compared the store against the value the form sent, but saving a single occurrence adds fields in the store, so the pane read its own save as an outside change, rebuilt, and forgot the scope it had just been given. It now compares against the value read back after saving, and the answers live in the pane rather than the form.
+
+**Day | Edit uses the live grid, not the picture.** The picture has no toolbar (lock, undo, `+`, Today) and no dragging. Instead the live grid is narrowed to one weekday. Its week swipe is off there, because the neighbour it slides in is the same weekday next week, not tomorrow. You step days by swiping the date strip above it.
+
+Checked on the iPad simulator in landscape only. iPhone Duo, Mac, devices and Arabic are still to do.
+
+## 2026-11-13 — three pairs; portrait shows one of them full screen; timetables get Week | Edit too
+
+The menu now offers three pairs: Month | Week, Week | Edit, Day | Edit. Week | Day is gone — its day pane was a picture you could not edit, and Day | Edit already shows the same day as a live grid. A stored Week | Day choice falls back to Month | Week.
+
+Rotating an iPad to portrait used to drop you into the iPhone layout whatever pair you had picked. Now portrait shows **the left view of the picked pair, full screen**:
+
+| Pair | Landscape | Portrait |
+|---|---|---|
+| Month \| Week | month and week | month (tap a date for its week, `‹` back) |
+| Week \| Edit | week and editor | week |
+| Day \| Edit | one-day grid and editor | one-day grid |
+
+The menu stays in portrait and reads "Month · Week · Day"; it is one setting, so choosing Day in portrait gives Day | Edit in landscape. Hiding it would strand a portrait user in Week | Edit with no way back to the month. Editing falls back to the popover. iPhone is unchanged.
+
+Timetables now split too: on a wide landscape screen a timetable is always Week | Edit, with the same split rule and centered divider as the calendar and no menu. One tap on a block opens it in the pane.
+
+Checked on the iPad simulator in both orientations. iPhone Duo, Mac, devices, Arabic and narrow Split View windows are still to do.
+
+## 2026-11-13, afternoon — a week strip above the day view; swipe the grid and the day follows your finger
+
+The day view lost its "Thursday, November 12" title and gained a **row of the week's weekdays and dates**, as in Apple's Calendar. The day you are looking at sits in a filled circle — the accent color for today, the text color for any other day — and an unselected today keeps an accent-colored number. Tap a date to go there.
+
+Swiping changed too. You used to swipe the title to change days; the grid ignored horizontal swipes. Now **the grid slides with your finger and the previous or next day shows beside it.** Past the halfway point the circle in the strip moves first; let go and the new day settles in. Stop short and it springs back; a quick flick is enough. Only visible weekdays count, so a weekdays-only calendar goes from Friday to next Monday, and the strip slides to the new week. Tapping a date, swiping the grid and the Today button all select that day's first event and scroll to it, and Today now jumps to today's date, not just today's week.
+
+No new machinery: the week pager (a UIKit pan, one offset value, commit on release then spring the rest) now takes a unit — a week or a day. Yesterday's reason for disabling swipes in the one-day grid — the neighbor picture was the same weekday next week — goes away once the neighbor is drawn as that date's column.
+
+One trap on the way: in landscape Day | Edit the app froze on the splash screen at 99% CPU, with `sample` showing grid bodies re-evaluating forever. The parent was handing a freshly built closure down through the environment on every render. Closures can't be compared, so SwiftUI treats the environment as changed each time and redraws the grid; something the grid touches redraws the parent, and the loop closes. Portrait never ran that branch, so builds and unit tests stayed green. The fix is a reference box held in `@State` (only its closure is swapped per render), with the shown date passed as a plain comparable value.
+
+Checked on the iPad simulator in landscape. Mid-swipe frames, iPhone Duo, Mac, Arabic and VoiceOver are still to do.
+
+## 2026-11-13, morning — the edit pane's color reaches the top, and the left headers match across pairs
+
+On an unfolded Duo, two things looked off. The edit pane's event color started below the toolbar, leaving a white band at the top, and the left pane's header changed shape between Week | Edit and Day | Edit — the day strip ran from the screen edge with big 34pt circles, and the time axis labels grew larger in the day view.
+
+![iPad landscape timetable split — the edit pane's event color fills up to the toolbar and across the whole pane](/blog/timetable-calendar-plan/split-pane-header-full.png)
+
+The grid painted an opaque navigation bar background, and the pane's header stopped under it. Wide (regular) layouts now hide the bar background and let the document paint what sits under it. Hiding it only while the edit pane was visible applied inconsistently within one run, so it is fixed per layout. The pane's 560pt readable width moved from the whole form to the cards, so the color band spans the full pane on iPad.
+
+The day strip now uses the week header's exact metrics — offset by the time axis, same column width, 13pt weekday, 12pt date, same height and rule — with the filled circle on the shown day as the only difference. A one-column day grid scales its text by the week's column width rather than its own wide column. In Month | Week, the month's weekday letters match the week header's size.
+
+Fixed along the way: moving from a timetable to a calendar in Day | Edit made the edit popover appear next to the pane. Both documents toggled one window-wide "pane is editing" flag, and the leaving view's `onDisappear` ran after the arriving view had switched it on. The flag is now "does any owner hold it", with one owner per view instance.
+
+Checked on the iPad simulator in landscape. iPhone Duo, dark mode and Mac are still to do.
+
+## 2026-11-13, midday — the month view's color bars become title chips, with "+5" on the last line when they don't fit
+
+A day cell in the month view used to show its events as unlabeled color bars, four at most. With the repeat-range and per-day caps gone, days with dozens of events are real. If some days can never show everything, the few that are shown should at least be readable. So each bar is now a **title chip**: the event's color with one line of title.
+
+![The November month view — each day cell stacks colored chips with event titles. The 13th shows three chips and a gray "+5" line; long titles are cut at the chip's edge with no ellipsis](/blog/timetable-calendar-plan/month-title-chips.png)
+
+Three rules:
+
+- A title wider than its chip is **cut at the chip's edge, with no ellipsis.** In a seventh of the screen's width, "…" costs a letter or two of the title. Half a glyph showing is fine.
+- The number of lines comes from the **cell's measured height**, not a fixed count. Cell height more than doubles between a six-row month on an iPhone and a five-row month on an iPad.
+- When a day doesn't fit, **the last line is a gray "+n".** It takes the last chip's line instead of spilling out of the cell, so "+1" never appears — one leftover event simply gets that line.
+
+Text color follows the same setting as week-view blocks, and chips in out-of-month cells are dimmed. The calendar card on the home screen draws the same cell, so it changed too. The tiny month thumbnail in the title list keeps its color bars; there is no room for letters.
+
+Cutting without an ellipsis is not a one-line setting: give a `Text` a width and SwiftUI adds "…" for you. The chip is an empty frame with only a height; the title is laid over it at its natural width with `fixedSize()`, aligned to the leading edge, and the rounded rectangle clips whatever sticks out. Which edge is leading follows the title's own script, as block titles do.
+
+The month ↔ week transition follows: chips grow into blocks where bars used to. The chip's small title fades as soon as it leaves, so the same words never read twice at two sizes. Events folded into "+n" start from that line, transparent, and grow into their blocks; on the way back they shrink into it.
+
+Adding the chips broke a UI test that nobody touched — it **passed while opening the wrong week.** The day cell carried a date label and an identifier but was never made an accessibility element. On a container that is not an element, an identifier and label apply to each element inside it. With only a date number inside, 42 cells were 42 elements; with titles, the same identifier matched 88, and a test that picked cells by index was off everywhere. Hiding the chips from accessibility did not bring the count down. The cell is now one element (`accessibilityElement(children: .ignore)`) whose value is the first three titles plus "and n more" — better for VoiceOver too, which reads full titles rather than stopping on each clipped chip.
+
+A source check meant to catch exactly this already existed, but its pattern matched only lowercase-and-underscore identifiers and skipped interpolated ones — the kind used on repeated cells and rows, where index-based tests are most exposed. The pattern is wider now.
+
+Checked on the iPhone simulator in Korean, light mode: a six-row month and the transition both ways. iPad, iPhone Duo, Mac, a real device, dark mode, Arabic titles, the largest text size and the home card's chips are still to do. The Android month view still draws bars.
+
+## 2026-11-13, midday — in the edit pane, touch and hold an empty slot and the event is simply there
+
+(Reversed on Nov 14 — new events in the pane are drafts with X and a checkmark again; see the last section.)
+
+The edit pane saves as you edit, with no close or confirm buttons. New events were the exception: double-tapping an empty slot opened a "New Event" form in the pane, and that form alone still had its X and checkmark. On screens that show the pane, touching and holding an empty slot (drag while holding to set the length) now saves the event right away and opens it in the pane for editing, with the cursor in the title field.
+
+![iPad landscape timetable: an untitled block created by touch and hold is selected, and the edit pane on the right waits for a title with no X or checkmark](/blog/timetable-calendar-plan/pane-long-press-create.png)
+
+To back out, use Delete Event at the bottom of the pane, the same button editing uses, or undo once. The toolbar `+` and the right-click "New Event" save the same way. The popover on a portrait iPad and the sheet on iPhone are unchanged: they still open a draft you confirm.
+
+Two alternatives lost. Moving the buttons down (Add and Cancel where Delete sits) puts the save button below the alarm and memo cards, out of sight, and still leaves a form that has to be confirmed inside a pane that otherwise never asks. A single tap that saves immediately turns every stray tap into a real event, and would need a hidden rule to delete untouched ones. Touch and hold was already the start of drag-to-create (0.2 s) and does not happen by accident, so while the pane is visible a tap on empty space only deselects and a double tap creates nothing.
+
+The cost: touch and hold, then walk away, and an untitled event stays. There is no automatic cleanup; delete and undo are enough.
+
+Checked on an iPad simulator in landscape with a timetable. Calendar split pairs, period-based timetables, the unfolded Duo, Mac and real devices are still to do.
+
+## 2026-11-13, midday — drag a block open in the edit pane: the pane follows, and the block stays put
+
+A screen recording from an unfolded Duo showed the timetable's Week | Edit split. With an event open in the right pane, dragging that block on the left and letting go made it **animate back to where it started**. The same recording asked for three more things: let the pane follow the drag, move the title to the top center of the left pane, and pull the pane's content up into the empty strip at the top.
+
+![Mid-drag — the block's time pills and the pane's start and end both read 10:45 and 12:45](/blog/timetable-calendar-plan/split-drag-live.png)
+
+### Why the block jumped back
+
+The pane saves as you edit, and it saves once more when it goes away, so nothing is lost. When the stored event changes from outside (a drag on the grid, an undo), the pane rebuilds its form so a stale draft can't overwrite that change. But the rebuild signal (`onChange`) arrives after one more render, and in that render the old form already received the new event as its input while its `@State` draft still held the old position. When the old form disappeared it compared its draft against that fresh input, saw a difference, and saved the old position.
+
+The fix: compare against the event **as it was when the form opened**, captured once in `@State`. The calendar's edit pane uses the same form and is fixed too. (This covered only drags within one weekday column. A drag to another weekday still snapped back until that night — see "2026-11-13, night" below.) The checklist line for this screen now says "drop, wait two seconds, the block is still there".
+
+![After the drop — the block stays at 11:15–13:15 and the pane agrees](/blog/timetable-calendar-plan/split-drag-dropped.png)
+
+### The pane only displays the drag
+
+While a drag is in progress, the grid publishes the dragged event (only when the pane is visible, only when the 5-minute snap changes) and the pane draws it in the weekday chips and the start and end rows. The form's draft is untouched; swapping the draft would trigger live saving mid-drag.
+
+### Moving the toolbar title without breaking the tap
+
+A layer drawn into the bar row looked right but the navigation bar swallowed its taps, and `.offset` inside the principal item moved only the pixels while the hit area stayed put. What worked was padding the opposite side by twice the shift, computed from layout, so the slot itself grows. Screenshots looked identical in all three attempts; `isHittable` and a real tap told them apart. The edit pane now ignores the top safe area except the status bar (read from the window via UIKit), so its header sits in the toolbar row.
+
+Checked on an iPad simulator in landscape. The Duo, Mac and real devices are still pending.
+
+## 2026-11-13, evening — put a timetable into a calendar, as a copy
+
+Once calendars started owning their own dated events, one thing was missing: there was no way to bring an existing timetable in. Now there are two.
+
+- In a timetable, `…` › Export to Calendar, pick **Calendar in This App** as the destination, then a new calendar or one you already have.
+- In a calendar, `…` › **Import Timetable**, and pick a timetable.
+
+Either way you choose a period and which events to include, and the timetable's events land as **weekly repeating events** for that period.
+
+![The Export to Calendar sheet — below the period card and event picker, the destination is "Calendar in This App" and the target is a new calendar](/blog/timetable-calendar-plan/export-in-app-target.png)
+
+![November in the new calendar — title chips on each weekday from the 13th onward](/blog/timetable-calendar-plan/timetable-imported-month.png)
+
+### One more branch on an existing sheet, not a new screen
+
+The export sheet already asked for a period, the events to include, and where to put them (new calendar or existing). Sending to an in-app calendar asks exactly the same things. A dedicated sheet would have duplicated the period card and the checklist and added a near-identical menu row, so the destination menu got one more option instead. Import Timetable opens the same sheet with the receiving calendar fixed.
+
+### After the copy, the two are strangers
+
+The first design at the top of this post had the calendar *point at* timetables, and it was torn out within two days. This time it is a copy from the start: edit the timetable afterwards and the calendar does not change, and vice versa.
+
+| Decision | Value |
+|---|---|
+| Grouping | Events with the same title, time, color and notes merge into one repeating event across weekdays |
+| Alarms | Not copied — they would ring twice |
+| New calendar | Inherits the timetable's name, axis type, visible hours and day range |
+| Existing calendar | Appended; one undo removes the whole import |
+| Over the limit | Nothing is added rather than a partial import |
+
+There is no "update": importing the same timetable twice gives two sets. Verified end to end on the iPhone simulator; iPad, Duo, Mac and real devices are still to do.
+
+## 2026-11-13, night — a drag to another weekday still snapped back; a form the pane replaced no longer saves on its way out
+
+Another recording arrived from the screen fixed at midday. A block open in the edit pane, dragged and dropped, went back to where it started, and follow-up drags sometimes stuck and sometimes returned to an earlier position. The guess that came with it was duplicate event ids, which had once produced exactly this. It wasn't that: there was one event in the save file, and the midday fix had a hole.
+
+![Before — art class dragged from Tuesday to Saturday, after the drop. The pane says Saturday 12:55–14:05 while the block is back in Tuesday's column](/blog/timetable-calendar-plan/pane-drag-cross-day-before.png)
+
+### The reference had two parts and only one was pinned
+
+The form's "was this edited?" reference is the event plus its repeat rule (which weekdays it sits on). Midday pinned the event at open time. The rule was a constant recomputed in `init` from whatever event the form was handed. A vertical drag within one column leaves the rule alone, so it passed; a drag across columns moved the rule's reference to the new weekday and the disappearing form again looked edited. The midday check had only dragged vertically.
+
+The erratic follow-ups came one step later. The pane remembers the last value its form saved, and treats a store change to that value as the form's own save, so it doesn't rebuild. After the old form rewrote the old position, that memory and the store disagreed, and some drags stuck while others reverted.
+
+### What closes the path: a replaced form doesn't save
+
+Three changes:
+
+- The rule part of the reference is captured at open time too (`@State`).
+- A form the pane replaced (its `.id` changed) does not save when it disappears. The pane hands the form its revision number; if the number differs at teardown, the form only cancels its pending save. A form that disappears because the user picked another event still saves.
+- When an outside change triggers a rebuild, the pane clears its "last value the form saved" memory.
+
+The first alone fixes the recording, but it is the same kind of fix as midday's and reopens the day another input-following part joins the reference. The second closes the path. Checking the store at teardown ("don't save if it isn't what I opened") lost because the form would need its own save log to tell its saves from outside changes, while the pane already knows it did the replacing.
+
+The cost: an edit made in the pane and followed within 0.4 seconds (the save debounce) by a drag of that block on the grid is dropped. The later action wins.
+
+![After — the same drag, after the drop. The block sits where it was dropped on Saturday and matches the pane](/blog/timetable-calendar-plan/pane-drag-cross-day-after.png)
+
+The check drags the block Tuesday → Saturday, back, and across again, reading its frame 0.4, 1.6 and 3.6 seconds after each drop. Before the fix the block was already back in Tuesday's column at 0.4 seconds (363pt from the drop point); after, all three drags stay put at all three times.
+
+### Found while reproducing: unlocking froze the app
+
+On an iPad simulator in landscape, unlocking the grid to reproduce the drag hung the app, every time — not a crash, the main thread never left layout. The cause was the title moved over the left pane at midday. It is a toolbar item that measured where its own leading edge landed and derived its leading padding from that, and the padding was the item's width. On the locked screen this settled in a few passes. Unlocking adds the undo and redo buttons, the toolbar moves its items, and during that move each new width got a different position: the measured value changed 108,686 times in 62 seconds. Why the toolbar places the item differently per width during that move is not something I confirmed.
+
+The fix breaks the loop: the item's width comes from layout values only, and the measured edge decides only how far the title shifts **inside** that fixed width. Across three lock toggles the measurement updated 99 times and stopped, with the title within 0.5pt of the pane's center, right-to-left included. The midday checklist had a line for "unlock, title stays centered" that was never run; every capture ended on the locked screen. Both problems have the same shape: a written check exercised only in its easiest case.
+
+Verified on an iPad simulator in the timetable's Week | Edit split. The calendar splits, the undo path (unit-tested only), the unfolded Duo, Mac and real devices are pending, and the hang was reproduced on this one simulator only.
+
+## 2026-11-13, night — dragging a repeating event no longer asks; a bar under the grid changes the scope
+
+(Reversed on 2026-11-15 — the first drag now always asks; see "pick the scope before you change anything" below.)
+
+Every drag or resize of a repeating event used to raise an alert: this event, this and following, all events, cancel. Nudge a class three times and you answered three times. Now the drop moves **that occurrence only**, and a small scope bar appears above the bottom buttons.
+
+![Right after a drop: a scope bar above the bottom buttons, with "this event only" selected](/blog/timetable-calendar-plan/drag-scope-bar.png)
+
+| You do | What happens |
+|---|---|
+| Drop a repeating event | Only that occurrence moves; the bar shows "This schedule only" |
+| Tap another segment | The drag you just made is re-applied with that scope |
+| Drag again without deselecting | It goes in with the scope you picked |
+| Deselect, or pick another event | The bar goes away; next time starts from "only" again |
+| Undo | One per drag, however many times you changed the scope |
+
+There is no Cancel any more. Undo does that.
+
+**The choice lasts as long as the selection.** Pick "All schedules" once and the following drags keep using it, which is what makes repeated fine-tuning painless. It is forgotten when the selection ends. Remembering it app-wide would let a careless drag a week later move a whole term.
+
+Three alternatives lost. Guessing from the change (weekday moved means one, time changed means all) asks nothing but hides its rule. A "default drag scope" setting cannot fit a choice that differs per situation. A chip next to the selected block, set before dragging, competes with the handles and time pills already there.
+
+Delete and the edit sheet's checkmark still use alerts. The options are the same three everywhere; only how they are asked differs, by how often the action repeats.
+
+**Changing the scope keeps a single undo step.** Tapping another segment calls `undo()` on the drag and saves it again with the new scope in the same pass. `UndoManager` clears the redo stack when a new action registers, so one entry remains. This is only done when the top of the stack is still that drag: the event list is recorded right after the save and compared at tap time. If you undid or edited something in between, the bar is already gone.
+
+**Long labels fall back to one chip.** Three segments fit on an iPhone in Korean, Japanese and Chinese. "This and following schedules" does not, so `ViewThatFits` drops to a chip showing the current scope, with the three options in a menu.
+
+![English: the chip opens a menu with the three scopes and a checkmark on the current one](/blog/timetable-calendar-plan/drag-scope-menu.png)
+
+Checked on the iPhone simulator in Korean and English. The iPad split, the folded Duo, Arabic and dark mode were checked the next day (below). Android still asks with the alert.
+
+## 2026-11-14 — picking "This and following" turned the bar into a chip and pushed it left
+
+Going through the cases left unchecked the day before turned up a bug right away on a Korean iPhone. Tapping **"This and following"** in the three-segment bar replaced it with a single chip stuck to the left, and it never came back. The day before, only "All schedules" had been tapped, and that one was fine.
+
+![Before the fix — after picking "This and following", the bar collapsed into one chip on the left](/blog/timetable-calendar-plan/drag-scope-bar-chip-bug.png)
+
+The bar sits in a `ZStack` inside the grid's `overlay`, and a `ViewThatFits` picks between the segments and the chip. Measuring with `onGeometryChange` showed the chip version was 129pt wide and placed where the segments had started, not centered. `ViewThatFits` was choosing against roughly the segments' own width (about 256pt), not the screen's 370pt. Only the selected segment was semibold, so the row's width changed by a few points per choice; the longest label going bold pushed it over. Fixing only the weight made the chip appear from the start, so the narrow width was the cause and the weight only the trigger. Why the overlay offered that width wasn't pinned down.
+
+The fixes:
+
+- `.frame(maxWidth: .infinity)` on the bar, so it gets the overlay's full width and centers itself. That alone keeps the segments centered for every choice.
+- Segment widths are reserved at the bold weight (a hidden bold copy under the real label), so the row no longer shifts when you tap.
+- The chip's text was accent blue; a `Menu` label prefers the tint over the inner text color. `.tint(.primary)` matches the segments.
+
+![After the fix — with "This and following" picked, the three segments stay centered](/blog/timetable-calendar-plan/drag-scope-bar-following-fixed.png)
+
+Also checked: "This and following" from the screen (this week stays, later weeks move, one undo restores all of them); the iPad [Week | Edit] and [Day | Edit] splits with the edit pane open while switching scopes; the folded Duo and dark mode; Arabic, which gets the chip because three segments don't fit an iPhone. The quick time sheet only opens from the "Time" pointer menu in a narrow iPad window, which UI tests can't trigger, so that stays a manual step. The lesson: a bar that changes shape gets tapped through every value, and its position is measured, not eyeballed. Still open: the unfolded Duo, Mac, and real devices.
+
+## 2026-11-14 — the edit pane gets its X and checkmark back
+
+(Reversed again on 2026-11-16: the pane has no X or checkmark, and edits save when the selection ends. See the last sections. This one stays as the reasoning of that day.)
+
+For two days the edit pane saved as you typed and a touch and hold saved a new event on the spot. Put next to Apple Calendar on iPad, which keeps an X and a checkmark in the same place, that felt off, so the buttons are back.
+
+The pane now uses the same form as the popover: X, "Edit Event", checkmark. Edits preview on the grid and are saved once when you tap the checkmark (one undo step); X throws them away. Repeating-event scope and the shared-style question are asked at the checkmark. After either button the selection clears and the pane says nothing is selected. New events are drafts again: touch and hold, `+` or a secondary click opens a "New Event" form that the checkmark adds and X discards.
+
+Keeping live saving and only adding buttons lost: a checkmark over edits that are already saved has nothing to confirm. Keeping the event open after the checkmark lost to matching the popover.
+
+### Buttons in the toolbar row didn't respond
+
+The pane's header row used to sit in the navigation bar's row, which was fine for a title. With buttons there, the checkmark hid under the grid toolbar's trailing buttons and X didn't receive taps — the bar takes touches in its row first. The button row now sits just below the bar row, which stays filled with the event color.
+
+Checked on an iPad landscape timetable; the calendar split, scope questions, unfolded Duo and real devices are still to check.
+
+## 2026-11-14, evening — two memos: one for every date, one for that date
+
+A repeating event had one memo field. If it held the room number, there was nowhere to write "quiz this week" without choosing "This event only" and replacing the memo for that occurrence, which hid the room number on that day. The memo is now two fields.
+
+- **Notes for all dates** show on every occurrence.
+- **Notes for this date** show on that occurrence only.
+
+Opening an occurrence of a repeating event shows both fields in the edit sheet. New events and one-off events keep a single field.
+
+![The lower part of the edit sheet: a field labelled for all dates, and below it a field labelled with the occurrence's date](/blog/timetable-calendar-plan/date-memo-edit-fields.png)
+
+Everywhere the order is title, notes for all dates, notes for this date: on the grid block and on the card that appears when you tap an event in a locked calendar.
+
+![The info card on a locked calendar: under the title and time, one box for the common notes and one for the date's notes](/blog/timetable-calendar-plan/date-memo-locked-card.png)
+
+### Memos never ask for a scope
+
+Editing a repeating occurrence normally asks "This event only / This and following / All events". Memos skip that question, because the field you typed in already answers it.
+
+| What you edited | Where it goes |
+|---|---|
+| Notes for all dates | The whole repeating event |
+| Notes for this date | That occurrence |
+| Title, time, color | The scope picked in the alert |
+
+A save that changed only memos closes without an alert. If the title changed too, the alert appears but applies to the title alone; the common notes still reach every date. The one exception is "This and following", which splits the series at that date, so edited common notes land on the later part only.
+
+### Both show; neither hides the other
+
+The first design let the date's notes replace the common notes on the block, to save space. It was dropped: the room number matters on quiz day too. Blocks still show at most two memo lines, one each when both exist.
+
+### The date's notes follow the occurrence
+
+They are stored per date on the series, not inside the "edited occurrence" record. Stored there, an "All events" edit would overwrite them, and an occurrence with only a note would count as edited when dragging. Moving an occurrence carries its note; splitting a series sends each note to its side; deleting an occurrence or shortening the range removes it, and undo brings it back. Turning repeat off joins the two memos into the single field, common notes first. The widget and the watch join them the same way. Memos saved earlier with "This event only" become that date's notes.
+
+Checked on iPhone only so far; the iPad edit pane, the foldable, and right-to-left languages are still to be looked at.
+
+## 2026-11-15 — month, week and day on iPhone too; timetables get week and day
+
+The month · week · day menu used to live only on wide single-pane screens like an iPad in portrait. On iPhone and a folded Duo a calendar opened on the month and you tapped a date to reach its week. Now the same menu sits at the top right on iPhone, sharing one value with the wide layouts. Month is still the default.
+
+![iPhone calendar month view with a "Month" menu next to Today](/blog/timetable-calendar-plan/iphone-month-menu.png)
+
+Timetables get the menu too, with only Week and Day. A timetable is a repeating week with no dates, so laying it out four times on a month grid tells you nothing new.
+
+The timetable day view reuses the calendar's: one weekday column, a weekday strip on top (no date numbers, the shown day in a filled pill), and swiping the grid or the strip steps through the visible weekdays. The pager keys pages by date, so the timetable borrows this week's date for that weekday — keeping only the weekday would make Friday → Monday slide in backwards.
+
+![iPhone timetable day view: Monday highlighted in the strip, one column filling the screen](/blog/timetable-calendar-plan/iphone-timetable-day.png)
+
+Checked as still screens in the iPhone simulator only; swipes, the folded Duo and devices are next. With the menu, Today and the ⋯ button side by side, long calendar names get truncated in week and day views.
+
+## 2026-11-15 — pick the scope before you change anything
+
+(Taken one step further on 2026-11-16: the question now comes when you select the event, not after the first drag.)
+
+Two days ago a drag stopped asking. The bar was easy to ignore, and that was the problem: a drop quietly landed as "this event only", and someone who meant to move the whole term found out a week later. Now **you always pick the scope — once.**
+
+| You do | What happens |
+|---|---|
+| Select a repeating event | Nothing is asked |
+| First drag or resize of it | After the drop: this event · this and following · all events · cancel. The block waits where you dropped it |
+| Cancel | Back where it was, nothing left to undo |
+| Drag again while still selected | No question, the scope you picked |
+| Open the edit sheet | The scope card at the top already has that scope checked; the checkmark saves without asking |
+| Deselect or pick another event | Forgotten; the next drag asks again |
+
+![Right after the drop: the "This is a repeating schedule" alert with three scopes and cancel](/blog/timetable-calendar-plan/scope-first-alert.png)
+
+Starting from the edit sheet works the same way. A repeating event opens with a scope card on top; until you pick a row, title, color, weekdays, times, repeat and alerts are dimmed. Memos stay editable — which memo field you type in already is the scope.
+
+![First open of a repeating event: the scope card with a hint, the rest dimmed](/blog/timetable-calendar-plan/scope-card-locked.png)
+
+![After choosing "All schedules" while dragging: the card has it checked](/blog/timetable-calendar-plan/scope-card-remembered.png)
+
+What lost: keeping the silent default (fast, but wrong commits surface late), asking at the checkmark (it asks "how far?" after you've already edited), and remembering the scope per app or calendar (one careless drag days later moves a whole term).
+
+The memory lives in the per-window selection state, not the grid, so the grid, the iPhone sheet, the iPad popover and the wide-screen edit pane all read the same value. It holds the scope plus the block ids it covers, follows an id when "All schedules" moves the block to another weekday, and is dropped when the selection leaves those blocks. The scope bar under the grid stays, and a scope picked there is remembered too.
+
+Checked on the iPhone simulator end to end; the screen check caught a missing one-line hookup that unit tests passed over. iPad popover, the edit pane, Duo and devices are still to do.
+
+## 2026-11-16 — the pane loses its buttons again; edits save when the selection ends, as one undo step
+
+The X and checkmark are gone from the wide-screen edit pane, but this is not a return to save-as-you-type. Edits in the pane show on the grid as a preview and are saved once, at the moment the selected event loses the selection: a tap on empty space, another event, `+`, a week swipe, going home.
+
+![iPad landscape timetable: a selected block on the left, and an edit pane whose header shows only the title, no X or checkmark](/blog/timetable-calendar-plan/pane-no-buttons.png)
+
+Everything done after selecting is one group. Rename in the pane, drag the block, resize it, change the alert, deselect: one undo takes all of it back. Pressing undo while the event is still selected discards everything since the selection and keeps the selection. Undo does what X used to do.
+
+| You do | What happens |
+|---|---|
+| Change a value in the pane | The block follows. Not saved yet |
+| Drag the block with unsaved edits | No question. The edits are saved first, then the drag goes on |
+| Deselect | Everything is saved; one undo restores it all |
+| Undo while selected | Everything since the selection is discarded |
+| Leave a new-event draft | Created if it has a title, dropped if not |
+
+### Grouping undo by pausing registration
+
+A drag has to be saved on release, because scope handling and group drags all run on saved state. That makes three drags and one form edit four undo steps. Turning off undo registration at each edit path would have meant fifty-odd call sites in the grid alone. Instead the document's `UndoManager` is paused in one place: on selection, keep a copy of the document and call `disableUndoRegistration()`; when the selection ends, call `enableUndoRegistration()` and register a single "restore the copy" action if the document changed.
+
+Two things bit. Calling `undo()` while registration is paused throws away its redo counterpart, so undo and redo close the group first and reopen it after. And "changed" must ignore modification timestamps, because merely selecting a block stamps one to raise its stacking order.
+
+The save itself is owned by the selection state, not by the form disappearing. The form only reports "what I would save now"; the function that changes the selection saves it before changing anything.
+
+### Repeat settings follow the scope too
+
+Changing weekdays, interval or range used to apply to the whole series whatever scope was picked. Now "this event only" locks the repeat controls, "this and following" splits the series at that date and changes only the later part, and "all" changes everything.
+
+## 2026-11-16, evening — a repeating event asks for its scope when you select it
+
+Asking after the first drag left three places that asked about scope, and a drag preview that did not match the answer. Now tapping a repeating event in an unlocked calendar shows "This event only · This and following · All events" at the tap, before it is selected. Pick one and the event is selected with that scope; tap outside and nothing is selected. A touch and hold shows the same menu and does not lift the block.
+
+The scope then applies to everything until the selection ends, including delete and duplicate, which no longer ask again.
+
+Changing the scope mid-selection had three candidates: not allowed, rewrite everything so far with the new scope, or cut there. We cut there. What you did so far keeps its old scope, what you do next uses the new one, and the undo group splits at that point. Rewriting was good for fixing a wrong pick, but hard to predict after several drags and edits.
+
+The pane's save and undo grouping were checked with a finger probe on iPad landscape. The scope menu on calendar screens, touch and hold, the foldable iPhone and Mac have not been seen on screen yet.
+
+## 2026-11-16, night — dragging a moved occurrence back to its own weekday kept the time and lost the day
+
+A screen recording came in. A weekly event sits on Tuesday and Wednesday; the Tuesday block is dragged to Monday and a little earlier. Both blocks take the new time, but the dragged one is back on Tuesday. Later in the same recording the same drag works.
+
+"Sometimes, then it stops" sounds like timing, so the release path got read first and nine drag variants were run in the simulator. All passed. It was not timing.
+
+The difference was in the data. An occurrence carries two dates: the **original date** the rule gives it and the date it is **placed** on. Move Monday's occurrence to Tuesday with "This event only" and it has original = Monday, placed = Tuesday. With the same time it draws as one group with Wednesday, indistinguishable from a plain Tue/Wed series.
+
+An "All events" weekday change measures how far the series moved from the original date, so that editing a moved occurrence still moves that weekday of the series. Drag the block sitting on Tuesday to Monday and both the original date and the drop date are Monday. The shift is zero, and the weekday code returns early on zero. The new time is saved; the placed date stays Tuesday.
+
+An earlier fix in the same family put "the occurrence being edited lands where it was dropped" inside the part that only runs for a non-zero shift, and its test dragged to a third weekday. Dragging back to the original weekday is the one direction where the shift is zero, and it was not in the table.
+
+It also explains why it cleared up: moving the block to any other weekday once has a non-zero shift, the earlier fix runs, and the moved occurrence is tidied into a plain one. The next action erased the state that caused the bug.
+
+The fix is one place: when the series weekday is unchanged but the placed date changed, move that occurrence to the drop date. If that is its original date and its content matches the rest, the per-occurrence record is removed.
+
+This is verified by unit test only: the same sequence gives "Tue/Wed, new time" before and "Mon/Wed, new time" after. Whether the recording's data was in exactly this state is not confirmed; the symptom and the way it cleared up both fit.
+
+## 2026-11-17, early morning — the month ↔ week transition jolted on iPad only
+
+A screen recording from an iPad in portrait: tapping a date in month view jolted on the way into the week. Frame by frame, the top bar vanished during the transition while the whole month moved up by the bar's height, then snapped back down at the end. The flying event blocks started and landed a little too low and jumped up when the overlay lifted. iPhone was fine.
+
+The transition is a picture laid over the real screen for half a second. The week header and grid record where they are, and the root lines the picture up with those numbers. To make both sides speak the same coordinates, the root opened a named coordinate space and the inner views measured in it.
+
+On iPad the navigation stack lives *inside* the calendar root (the split layout needs it there); on iPhone it sits outside. A view inside the stack cannot see a name declared outside it, and SwiftUI does not complain — it quietly returns screen coordinates. Logged side by side, the "named" frame equalled the global one to the decimal, and the root sat 32pt (the status bar) below the top of the screen. That was exactly how far the blocks were off.
+
+The vanishing bar was separate: the month picture remembered only its size and was drawn at the root's top. On iPad the month view starts under the bar, so the picture covered the bar and sat one bar-height too high.
+
+The fix: measurements are stored in screen coordinates and the root's screen origin is subtracted when they are read (subtracting on write would pin them to a stale origin after rotation), and the month picture remembers its top edge as well as its size. On an iPad Pro 13 simulator recording the bar stays put and the copy's blocks match the real ones frame for frame; iPhone is unchanged. Not yet checked on a device.
+
+## 2026-11-17, midday — what you select in the week shows in the month, and a selected series survives week changes
+
+On iPad landscape, [Month | Week] shows both side by side, yet selecting an event on the right left the month on the left unmarked. You picked a scope (This event · This and following · All events) without seeing which dates it reached.
+
+Now the month chips get the same selection outline as the grid block — an ink line with a thin ground-colored band inside so it reads on light chips and in dark mode. The scope decides which chips: this event only, the series from that date on, or the whole series.
+
+![All events: every chip of the series is outlined](/blog/timetable-calendar-plan/month-selection-all.png)
+
+![This event only: one chip](/blog/timetable-calendar-plan/month-selection-this-only.png)
+
+Changing weeks used to drop the selection every time. With "This and following" or "All events" you picked the series, not one occurrence, so now swiping, Today, or tapping a date in the month selects the same series' occurrence in the new week (same weekday first) with the same scope.
+
+![Next week: the same weekday's occurrence stays selected](/blog/timetable-calendar-plan/month-selection-next-week.png)
+
+If the new week has no occurrence the scope covers, the grid has no selection, so taps and the toolbar behave as with nothing selected. The month outline stays, and coming back to a week with an occurrence selects it again. "This event only" still clears on week change.
+
+Alternatives we dropped: putting other weeks' occurrences into the selection set (it would become a multi-selection and close the edit pane), keeping an invisible selection in empty weeks (tapping empty space would then deselect), and moving the "and following" start date along as you swipe (going back would lose the selection). The one ordering trap: move the remembered scope to the new occurrence before changing the selection, or the default "All events" overwrites it. Checked on the iPad Pro 13 simulator; iPhone, Duo, Mac and devices are still open.
+
+## 2026-11-17, evening — a sagging thread ties a moved occurrence to where it came from
+
+Move one occurrence of a repeating event with "This event only" and selecting it shows a dashed outline at its original slot. With "All events" two moved occurrences get selected together, and two outlines in the same color cannot tell you which block came from which. Each selected occurrence now draws its own outline, and a thread connects outline and block.
+
+![Monday's block selected with All events: dashed outlines on Tuesday and Thursday, each tied by a sagging green thread to the block that was moved to Friday and Wednesday](/blog/timetable-calendar-plan/thread-selected.png)
+
+The thread is a 14-segment rope, pinned at both ends, with gravity and viscous damping on the middle. Its length is the distance plus a little slack (10% when horizontal, 2% when vertical), and that length follows the distance about 0.45 seconds late. Pull the block away and the rope goes taut and thin, then slowly sags again; bring it closer and it droops, then slowly shortens.
+
+| Situation | Thread |
+|---|---|
+| Select the block | Spins out from the original slot |
+| Drag away | Goes taut, then relaxes; light haptic ticks while pulling |
+| Drag closer | Droops, then shortens; no haptics |
+| Outline and block touch | No thread |
+| Reduce Motion | Static sag, no swing |
+
+![After dragging the series to 12:30: four blocks share the time, and the thread from Tuesday's outline to Friday's block hangs behind Wednesday's block](/blog/timetable-calendar-plan/thread-after-drag.png)
+
+What lost: numbered badges (you have to read and match), highlight-on-tap (needs an action, and tap already deselects), and a spring-following endpoint (the end detaches from the block on fast drags). The rope steps inside the drawing tick, so its end is never a frame behind the block. Mid-drag motion and haptics are not yet checked on a device.
+
+## 2026-11-17, night — the original slot shows faintly before you select anything, and tapping it picks the event
+
+The outline and thread from this evening only appeared once a block was selected, so finding which blocks had been moved meant tapping them one by one. Now every moved occurrence in the week shows a faint dashed outline at its original slot and a faint thread to the block. Selecting one makes only its own pair bold.
+
+![Week view with nothing selected: faint dashed outlines on Tuesday and Thursday at 11:00, each tied by a faint thread to the blocks moved to Friday and Wednesday](/blog/timetable-calendar-plan/home-faint-always.png)
+
+Something always on screen needs a rule for who gets the tap. The rule follows the drawing.
+
+| At that spot | Drawn | Tap |
+|---|---|---|
+| No other event | Faint outline only | Same as tapping the moved occurrence — select when unlocked, info card when locked |
+| Another event | The event covers the outline | The event gets it |
+| Bold outline of a selected occurrence | Above other blocks | Not a target — deselects, as before |
+
+![Unlocked grid after tapping Tuesday's faint outline: Friday's block is selected and the outline and thread are bold](/blog/timetable-calendar-plan/home-faint-tap-selects.png)
+
+Faint outlines sit under the blocks; threads stay in one layer above them and only change opacity per strand. Threads under the blocks would break behind anything in between. Faint and bold threads in separate layers would each keep their own rope state, so every select and deselect would re-spin the thread from its origin.
+
+The outline check runs after the normal event lookup, not inside it — otherwise drags, hover and the pointer menu would all treat an empty outline as a block. Long-press there still creates a new event. The cost: on iPhone a single tap inside a faint outline no longer creates an event.
+
+Checked on an iPhone simulator, locked and unlocked. A tap where another event overlaps the outline, dark mode, iPad and real devices are still unverified.
+
+## 2026-11-17, late night — a Wednesday nobody deleted was empty; the weekday move was deleting it
+
+A user's Mon / Wed / Fri series was missing its first Wednesday — in the week view, in the month view, and with no outline. The exported file showed two entries in the series' deleted-occurrence list, both Wednesdays right inside the span edges. The user had deleted neither.
+
+Moving all occurrences to another weekday can pull the start date earlier, which brings other weekdays into the series' span. The old code blocked those dates by writing them into the same list a user's deletions go into. It looked right at that moment, but the record lived on and later edits turned it into an unexplained hole.
+
+| Change | Now |
+|---|---|
+| Extending the span | The other weekdays in between just appear, like Google Calendar |
+| What is still blocked | Only dates that would duplicate the adjacent piece of a split series |
+| Deleted occurrences | A faint dashed outline at their slot; unlock and tap it (with nothing selected) to restore |
+
+![A faint dashed outline where the deleted Monday occurrence was](/blog/timetable-calendar-plan/deleted-trace.png)
+
+![After tapping the outline, the occurrence is back; one undo deletes it again](/blog/timetable-calendar-plan/deleted-restored.png)
+
+Marking auto-written records in their own field would have changed the save format on both platforms; tapping to restore also fixes the records already out there. The tests had only checked the state right after the move. Lesson kept: for "an event vanished", ask for the exported file first.
+
+## 2026-11-18 — the first and last occurrence of a repeating event end in a knotted thread
+
+A repeating event that starts on Wednesday leaves Monday and Tuesday of that week empty. That is correct, but it reads as "where did Monday's event go?". The block now says "it starts here" itself.
+
+![Week view — a short thread in the event color leaves the first block toward earlier days and the last block toward later days, ending in a knot; in the first and last columns it goes up or down instead](/blog/2026-11-09-timetable-calendar-plan/series-edge-knot.png)
+
+- From the **first occurrence** a short thread in the event color sticks out toward earlier days and ends in a knot; from the **last occurrence**, toward later days. Occurrences in between and one-off events have none.
+- It is faint until you select the event, then bold — the same grammar as the dashed outline and thread of a moved occurrence.
+- With no day column on that side (a start in the first column, an end in the last) the thread goes up or down instead.
+- Deleted occurrences do not count, and the sides flip in right-to-left languages.
+
+The first version was a 3pt bar inside the block's edge, and it lasted less than a day. Anything drawn on the block has to fight the block's color: a darkened bar vanished on navy events, and picking black or white by brightness produced a color that was close to, but not the same as, the overlap hatching. The knot is drawn outside the block on the grid's ground, in the event color as is. Month-view chips are left as they are.
+
+## 2026-11-18, night — selecting a repeating event threads its blocks together for the week
+
+With knots in place, the next question was whether blocks of the same repeating event could simply be tied together.
+
+![Week view — selecting a Tue/Thu repeating event draws a thin thread in its color from the left edge through both blocks to the right edge](/blog/2026-11-09-timetable-calendar-plan/series-thread-selected.png)
+
+Select an occurrence and that event's blocks in the week are joined by one thread in the event color. On a side where the event continues into another week the thread runs off the grid's edge; on the side of the first or last occurrence the knot stands instead. A running thread means "continues", a knot means "ends here".
+
+Threading every repeating event all the time lost: a Mon/Wed/Fri event crosses the Tue and Thu columns, and a handful of them covers the grid. Only the selected one is threaded. Unlike the sagging, swaying thread of a moved occurrence, this one is a thin fixed curve — the two mean different things, and dragging a series should not pay for per-frame physics. It passes under other events' blocks.
+
+## 2026-11-20 — hold a dragged event at the edge to change weeks; in month view, drag a chip to another date
+
+Dragging could change an event's day and time but never its week. Moving something to next week meant opening the edit form and retyping the date. Two additions close that gap.
+
+**Week view.** Hold a dragged block against the left or right edge of the grid for 0.7 seconds and the week changes under it. The block stays under the finger and is saved where it is dropped. Keep holding and it advances one more week every second. A small chevron beside the block fills its ring while you wait.
+
+![Week view — an event block held at the right edge; a › mark beside it is filling its ring and the date row already shows the next week](/blog/2026-11-09-timetable-calendar-plan/drag-week-edge-dwell.png)
+
+**Month view.** Long-press a date cell for 0.4 seconds and its chip lifts above the finger. Drop it on another date and the event moves there, keeping its time. Holding at the top or bottom edge turns the month.
+
+![Month view — the chip from the 19th floats above the finger, a faint copy stays in place, and the 18th is outlined as the drop target](/blog/2026-11-09-timetable-calendar-plan/month-chip-lifted.png)
+
+### The week swaps in place instead of sliding
+
+Swiping between weeks slides the grid. Doing the same during a drag pushed the dragged block a full page away from the finger, because the one live grid — including the layer that receives touches — moves as a unit. So the week swaps in place, and the chevron and a haptic carry the "you moved" signal.
+
+Nothing about the drag is carried across weeks either. At the moment of the flip the event itself is saved one week over, same weekday and time. A block's identity is "series + original date", so it is still the same block in the new week and the grid simply keeps dragging it. Undo is registered once, on release, against the state before the drag — three weeks crossed is still one undo, and undo follows the event back to its week.
+
+### A repeating event only crosses weeks as a single occurrence
+
+Dragging "all events" of a series into next week means nothing; the series is already there. Only one-off events and occurrences scoped to "this event only" cross. With any other scope the edge shows a toast asking you to switch scope — the app does not change the scope silently.
+
+Month view is different: there is no scope bar, and since new events repeat weekly by default, most chips are occurrences. Blocking them would leave the feature unused. Moving one chip from one day to another points at that day, so only that occurrence moves — and the toast says so.
+
+![Month view — one occurrence moved from the 23rd to the 26th while other weeks are untouched; a toast reads "Moved this schedule only" with Undo](/blog/2026-11-09-timetable-calendar-plan/month-chip-moved-toast.png)
+
+The toast carries Undo because month view has no undo button and no lock. Three things guard against accidents: a longer press than week view's 0.2 seconds, the need to reach another cell, and Undo right there. Asking for scope on drop lost — the post-drag alert was removed four days earlier.
+
+### You don't have to hit the chip
+
+A month chip is about 15pt tall. Pressing anywhere in the cell lifts the chip nearest the finger. Events folded into "+3" cannot be lifted; week view handles those.
+
+One snag: a cell's tap still fires after a long press is released, which would open week view the instant a chip was dropped. The tap that ends a drag is swallowed, and month paging is locked while a chip is held — both through one shared reference, because view state arrives a frame late within the same gesture.
+
+### A moved occurrence leaves a mark in its original week
+
+One gap showed up right after shipping: moving an occurrence to next week left its original slot simply empty, with no way to tell a move from a deletion or where it went.
+
+![Week view — a faint dashed outline and destination date where the Tuesday occurrence used to be, with a sagging thread running from the outline off the right edge](/blog/2026-11-09-timetable-calendar-plan/away-home-trace.png)
+
+The original slot now keeps a faint dashed outline with the destination date inside. A deleted occurrence uses the same outline, so that one line of text is what says "moved, not deleted". Long-pressing the outline fades the original event back in and returns the occurrence — the same gesture that restores a deleted one. One-off events leave no mark; the date itself moved.
+
+The first version had only the outline and the date — with no block in that week there seemed nothing to tie a thread to. But a lone outline did not say where it led, so a thread now runs from the outline to the grid edge on the side of the destination week and is cut off there; in the destination week the same thread runs from the block toward the original week. It is the same rope that joins an occurrence moved within a week.
+
+Verified with scripted touches in the simulator. Haptics and feel on a device, the iPad two-pane layout and right-to-left screens are not yet checked.
+
+## 2026-11-21 — dragging changes the pattern; the period gets its own chip
+
+With a repeating event selected as "this and following" or "all events", it was unclear what a drag changed: the **pattern** (weekday, time) or the **period** (from when to when). One word, "scope", covered both, and the period was not visible anywhere in week view.
+
+Now they are separate. A drag only changes the pattern. Selecting a repeating occurrence shows a **period chip** above the scope bar with the start and end dates.
+
+![Week view — a period chip with start and end dates under the selected repeating event, above the scope bar](/blog/2026-11-09-timetable-calendar-plan/period-chip.png)
+
+Tapping the chip opens three actions, anchored on the occurrence you selected:
+
+| Menu | Effect |
+|---|---|
+| Start from (that day) | earlier occurrences go away |
+| End on (that day) | later occurrences go away |
+| Choose Dates… | opens the edit sheet at its Repeat card |
+
+![The period chip menu — Choose Dates, End on, Start from](/blog/2026-11-09-timetable-calendar-plan/period-chip-menu.png)
+
+Changing the period never asks for a scope: the period belongs to the whole series. It also keeps the pattern. A biweekly event anchors its "on" weeks to the week of its start date, so moving only the start date by a week would flip every week. The chip aligns the stored start to the first slot on or after the day you picked, so the first occurrence is what you expect.
+
+In the wide landscape month-and-week layout the month pane draws the period too: a thin line along the top edge of each day in the period with a knot at each end. It is display only.
+
+![iPad landscape — the month pane shows the period line with end knots; the week pane shows the same period in its chip](/blog/2026-11-09-timetable-calendar-plan/month-period-band.png)
+
+### Later the same day, half of it came back out
+
+The first version had more: "Choose Dates…" opened its own calendar sheet, and the month pane had start and end fields under the grid that you tapped before tapping a date. Then came the question: is this really better than the edit sheet?
+
+Partly. Seeing the period, and ending a series in two taps, beats the edit sheet. But the separate sheet was the same calendar the edit sheet already has, and the month fields were a mode you had to learn that also shrank the grid.
+
+So the edit sheet is the one place where the period is edited. The chip shows the period and keeps its two shortcuts, and "Choose Dates…" opens the edit sheet scrolled to its Repeat card (disabled for "this event only", where that card is locked).
+
+![Choose Dates opens the edit sheet at the Repeat card — interval, weekdays, start and end dates, calendar](/blog/2026-11-09-timetable-calendar-plan/period-opens-edit.png)
+
+That exposed a mismatch: the chip kept a biweekly event's "on" weeks, while moving the start date in the edit sheet flipped them. The edit sheet now keeps the beat too when only the period changes; change the weekdays or interval as well and the picked start date becomes the new anchor.
+
+What lost: the separate period sheet and the month fields (duplicates of the edit sheet), draggable handles on the month line (they fight the month swipe and chip long-press), dropping "this and following" (a common edit becomes two steps), and a confirmation when shortening (one undo brings it back).
+
+Verified on iPhone and iPad simulators; the edit-sheet change is covered by unit tests only.
+
+## 2026-11-22 — the period chip and the scope bar became one pill
+
+Selecting a repeating occurrence stacked two extra rows above the bottom buttons: the period chip and the three-way scope bar. On an iPhone that hid more than an hour of the grid.
+
+![Before — the period chip and the scope segments stacked in two rows above the buttons](/blog/2026-11-09-timetable-calendar-plan/scope-two-rows.png)
+
+We built three options and screenshotted them on the same event:
+
+- **One pill for scope and period, menu on tap** — chosen.
+- **A scope menu in the middle of the bottom toolbar** — hides nothing, but on iPhone the toolbar overflowed and clipped the lock button at the left edge.
+- **Keep the three segments, drop the chip** — leaves no home for the two period shortcuts.
+
+![The toolbar option — the toolbar runs past the screen and the lock button is clipped](/blog/2026-11-09-timetable-calendar-plan/scope-toolbar-clipped.png)
+
+The pill shows the current scope and the series period. Tapping it opens a menu: the three scopes next to the pill, the period section above with the same shortcuts the chip had.
+
+![After — a single pill reading "All events · Nov 16, 2026 – Jan 10, 2027"](/blog/2026-11-09-timetable-calendar-plan/scope-pill.png)
+
+![The pill menu — period section on top, scopes below with a check](/blog/2026-11-09-timetable-calendar-plan/scope-pill-menu.png)
+
+The cost is one extra tap to change scope. Selecting an occurrence already defaults to "All events", so scope changes are rare, while the extra row was in the way every time.
+
+One catch showed up right away. The first version dropped the period when it didn't fit, and choosing the longer "This and following events" made it vanish on a Korean iPhone. Now `ViewThatFits` tries the long form, then a numeric form with years ("26. 11. 16. – 27. 1. 10."), and only then drops it. The lesson: tap through every value a control can show, not just the default.
+
+![After choosing "this and following" — the period shortens to the numeric form instead of disappearing](/blog/2026-11-09-timetable-calendar-plan/scope-pill-following.png)
+
+Checked on the iPhone simulator in Korean and German. Arabic, iPad split view, the unfolded Duo, Mac, dark mode and real devices are still to do.
 
 ## History
 
@@ -473,3 +1105,33 @@ One trap on the way: the first build stayed split after rotating to portrait. Th
 - 2026-11-12 — editing a repeating event offers three scopes too. "This and following" splits the series at that date (the later half keeps the id; one undo merges it back). Fixed a phantom occurrence from moving a weekday and a leftover single-day event from deleting "following" at the first occurrence.
 - 2026-11-12, midday — removed the two-year length cap on repeat ranges; the 2100 date ceiling is gone too. The edit sheet no longer counts occurrences (count removed from the summary line and the alert, the 50-per-day limit dropped, dots only for the visible month).
 - 2026-11-12, evening — wide landscape screens split in half: month | week, then week | day after tapping a date. The day pane is a picture; one live grid. Fixed a split that survived rotation (it measured its own content).
+- 2026-11-12, night — four split pairs picked from a top-right menu only; tapping a date no longer switches to week | day. The edit pane opens on one tap, replaces the popover, and saves as you edit (undo per field, scope and style asked once). Day | Edit narrows the live grid to one column.
+- 2026-11-13 — three split pairs (Week | Day and its day picture removed). Portrait shows the picked pair's left view full screen, with the menu reading Month · Week · Day. Timetables split into Week | Edit on wide landscape screens.
+- 2026-11-13, afternoon — week strip above the day view (filled circle on the shown day, tap to jump). The grid slides a day at a time with the finger, neighbors visible. Today goes to today's date. Fixed an infinite redraw from a per-render closure in the environment.
+- 2026-11-13, morning — edit pane color reaches the top and spans the pane (wide layouts hide the bar background). Day strip, day-grid text scale and the Month | Week weekday letters use the week header's metrics. Fixed the popover appearing beside the pane after switching documents.
+- 2026-11-13, midday — month day cells show title chips instead of color bars (titles cut without an ellipsis, line count from the cell's height, a gray "+n" last line on overflow). The month ↔ week transition is chip ↔ block, with folded events leaving from the "+n" line. The day cell is one accessibility element (42 cells had become 88 elements and a UI test tapped the wrong week).
+- 2026-11-13, midday — new events in the edit pane: touch and hold an empty slot (or `+`) saves immediately and opens the event in the pane, no draft, no X or checkmark; back out with Delete Event or undo. Double-tap no longer creates while the pane is visible. Popover and iPhone sheet unchanged.
+- 2026-11-13, midday — fixed a block dragged from the open edit pane snapping back (the disappearing form compared against its live input). The pane follows a drag. The timetable split's title sits over the left pane (inside the toolbar, still tappable), and the edit pane reaches the toolbar row.
+- 2026-11-13, evening — two ways to put a timetable into an in-app calendar: "Calendar in This App" in the export sheet (new or existing calendar) and Import Timetable in the calendar menu. A copy as weekly repeating events; no alarms, no update.
+- 2026-11-13, night — fixed a block dragged to another weekday still snapping back (the repeat-rule part of the reference is pinned at open time; a form the pane replaced doesn't save on teardown). Fixed a hang when unlocking in the wide split (the toolbar title item's width comes from layout, not from its own measured position).
+- 2026-11-13, night — removed the scope alert after dragging or resizing a repeating event. The drop applies to that occurrence only and a scope bar under the grid changes it; the choice lasts while the selection does, and a scope change stays one undo step. Delete and the edit sheet still ask.
+- 2026-11-14 — fixed the scope bar collapsing into a left-aligned chip after picking "This and following" (full overlay width, bold-width segments, chip ink). Checked the iPad split, folded Duo, Arabic, dark mode and "This and following".
+- 2026-11-14, afternoon — the edit pane is back to X and checkmark: edits save on the checkmark, X discards, the pane clears afterwards, and new events are drafts again. The button row sits below the toolbar row (in it, the checkmark was covered and X ignored taps).
+- 2026-11-14, evening — a repeating event has two memos (all dates, this date), shown in that order on the block and the locked info card. Saving only memos never asks for a scope: common notes reach the whole series (the later part for "This and following"), date notes stay on that occurrence. Older "This event only" memos become date notes.
+- 2026-11-15 — month · week · day menu for calendars on iPhone and the folded Duo (same value as wide screens); timetables get week · day (no month), with a weekday strip and one swipeable column.
+- 2026-11-15, early — scope comes first: the first drag or resize of a repeating event always asks (cancel restores it), the choice lasts while the event stays selected and is shared by drags, the sheet and the edit pane; the edit sheet unlocks only after picking a scope (memos excepted).
+- 2026-11-16 — the edit pane drops X and checkmark again: pane edits save once when the selection ends, and everything done while selected is one undo step (undo registration paused on the document's `UndoManager`, one snapshot on close). Repeat settings follow the picked scope.
+- 2026-11-16, evening — a repeating event asks for its scope on selection (tap or touch and hold; tapping outside selects nothing). Delete and duplicate reuse it. Changing scope mid-selection cuts there.
+- 2026-11-16, night — fixed: dragging an occurrence that had been moved with "This event only" back to its original weekday under "All events" saved the new time but left it on the moved day (series shift measured from the original date was zero, and the early return skipped the placed date).
+- 2026-11-17, early morning — fixed the iPad-only jolt in the month ↔ week transition: the named coordinate space did not reach through the navigation stack inside the root (measurements came back 32pt off in screen space), and the month picture drew over the bar. Measure globally and subtract the root origin on read; draw the month picture from the real month view's top.
+- 2026-11-17, midday — month chips outline what is selected in the week, per scope; "This and following" / "All events" selections carry across week changes (same weekday first), with no grid selection in weeks the scope does not reach.
+- 2026-11-17, evening — moved occurrences selected together each show their original-slot outline, tied to the block by a sagging rope in the event color: its length trails the distance by 0.45s, so it goes taut and relaxes as you drag. Light haptics while pulling taut; no thread when they touch; static under Reduce Motion.
+- 2026-11-17, night — original-slot outlines and threads of moved occurrences are always shown faintly and turn bold on selection; a faint outline is the lowest-priority tap target (taps select that occurrence unless another event is there). Threads stay in one layer and only change opacity.
+- 2026-11-17, late night — a first-week Wednesday nobody deleted went missing: the weekday move was writing auto-deletions. Removed them (only an adjacent split piece blocks a date) and deleted occurrences now show a faint outline you can tap to restore.
+- 2026-11-18 — a knotted thread end in the event color marks the first and last occurrence of a repeating event (faint, bold when selected; vertical where there is no neighbouring column). The edge bar tried first vanished on dark event colors.
+- 2026-11-18, night — selecting a repeating occurrence threads that event's blocks for the week; the thread runs off the edge where the event continues and a knot stands where it ends. Fixed thin curve, selected event only.
+- 2026-11-20 — holding a dragged block at the left/right edge for 0.7s changes weeks (one-off events and "this event only" occurrences; one undo; the week swaps in place). In month view a 0.4s press lifts the nearest chip to drop on another date — a repeating occurrence moves alone, with Undo in the toast.
+- 2026-11-20, later — an occurrence moved to another week leaves a faint dashed outline with its destination date in the original week; long-press the outline to bring it back.
+- 2026-11-20, evening — a thread now runs from the outline of a moved-away occurrence off the edge toward its destination week, and from the moved block back toward its original week.
+- 2026-11-21 — dragging a repeating event changes only its pattern. The period shows on a chip above the scope bar with two shortcuts (start from / end on that day, no scope question, biweekly phase kept); "Choose Dates…" opens the edit sheet at its Repeat card (a separate period sheet and month-pane date fields were removed the same day). The wide month-and-week layout draws the period line on the month pane. The edit sheet keeps the beat when only the period changes.
+- 2026-11-22 — the period chip row and the scope segment row merged into one pill (scope · period, menu on tap). The toolbar-middle option lost because it clipped the lock button. A numeric period form keeps the period visible next to long scope names.
