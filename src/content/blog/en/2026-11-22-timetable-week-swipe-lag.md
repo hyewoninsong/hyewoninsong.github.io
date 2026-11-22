@@ -1,6 +1,6 @@
 ---
 title: "Turning a week stuttered because every date cell built its own DateFormatter"
-date: 2026-11-22T15:22:06+09:00
+date: 2026-11-22T16:18:03+09:00
 app: "timetable"
 tags: ["devlog", "swiftui"]
 summary: "On wide screens, swiping the calendar to the next week froze for about 0.15s on release. The profiler's top item was a DateFormatter created per cell; second was a full calendar save on every week turn."
@@ -28,4 +28,11 @@ Month cells resolved recurring events one day at a time, repeating per-series se
 
 ## Where it stands
 
-Comparing frame gaps in `simctl io recordVideo` recordings of the same gesture, the median of the ten worst stalls in an optimized build went from about 390ms to about 285ms. The simulator overstates the cost and real devices are not yet checked. The remaining cost is those four redraw passes; merging the last two touches selection ordering that was split on purpose, so it is left for later.
+Comparing frame gaps in `simctl io recordVideo` recordings of the same gesture, the median of the ten worst stalls in an optimized build went from about 390ms to about 285ms. The simulator overstates the cost and real devices are not yet checked. The remaining cost was those four redraw passes — see the next section.
+
+## 2026-11-22 — four passes down to two
+
+Two of the four passes came from view structure. The late pass was a `Task` that synced the edit pane's selection one beat after the grid's selection changed; syncing it at the moment the selection is carried into the new week lets the grid's `onChange` see "already equal" and skip the `Task`. The calendar root took the selection object as `@EnvironmentObject` but never read its values, only called two methods — so it now gets the same object through a non-observing environment key, and is `Equatable` on its two inputs so the outer shell's redraws stop cascading into it.
+
+Per week turn, the grid body now evaluates 4 times instead of about 10, the root once instead of about 4, and the post-release redraw burst went from about 290ms to 140–167ms (debug simulator). Real devices are still unchecked.
+
