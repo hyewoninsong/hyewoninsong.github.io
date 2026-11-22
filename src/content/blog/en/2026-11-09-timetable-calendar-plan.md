@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-22T02:52:00+09:00
+date: 2026-11-23T03:37:31+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -966,6 +966,8 @@ The first version was a 3pt bar inside the block's edge, and it lasted less than
 
 ## 2026-11-18, night — selecting a repeating event threads its blocks together for the week
 
+> This thread was removed on 2026-11-23. Blocks selected together now show only the selection outline. What follows is the record of adding it; the 2026-11-23 section says why it went.
+
 With knots in place, the next question was whether blocks of the same repeating event could simply be tied together.
 
 ![Week view — selecting a Tue/Thu repeating event draws a thin thread in its color from the left edge through both blocks to the right edge](/blog/2026-11-09-timetable-calendar-plan/series-thread-selected.png)
@@ -1088,6 +1090,23 @@ One catch showed up right away. The first version dropped the period when it did
 
 Checked on the iPhone simulator in Korean and German. Arabic, iPad split view, the unfolded Duo, Mac, dark mode and real devices are still to do.
 
+## 2026-11-23 — the thread between repeating blocks is gone; the selection outline already said it
+
+The thread added five days ago has been removed. Select a repeating event and the same event's other blocks in that week get the selection outline, with no line between them.
+
+Monthly and yearly repeats are what broke it. The rule was "unless this is the end of the series, the thread runs off the grid's edge", meaning "it continues into the next week". True for a weekly event. A monthly event has one block in the week and its next occurrence four weeks away, so a single block sent a thread off both edges toward weeks that held nothing.
+
+Two fixes were on the table:
+
+- **Run off the edge only when the adjacent week has an occurrence.** That stops the false claim, but what the remaining thread says is what the outline says.
+- **Remove the thread.** It answered "what got selected with this?" Blocks selected together were already drawn with the same outline as the picked block (handles and the time pill stay on the picked one). The outline also shows scope: one block for "This event only", the whole week for "All events". The thread tied the whole series regardless.
+
+We removed it. Of two marks saying the same thing, the thread was the less accurate one. It was also costly to keep: it had been raised a layer so other events would not cut it, given its own spring so its ends would not outrun a dragged block, and drawn into the neighbouring week's picture so it would not break mid-swipe. An outline travels with its block and needs none of that.
+
+What is lost is the "continues into other weeks" signal. The knots on the first and last occurrence stay, so no knot reads as "continues". The sagging thread between a moved occurrence and its original slot also stays; it means "moved from here", which an outline cannot say.
+
+This has been built and unit-tested, not yet checked on screen.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1135,3 +1154,4 @@ Checked on the iPhone simulator in Korean and German. Arabic, iPad split view, t
 - 2026-11-20, evening — a thread now runs from the outline of a moved-away occurrence off the edge toward its destination week, and from the moved block back toward its original week.
 - 2026-11-21 — dragging a repeating event changes only its pattern. The period shows on a chip above the scope bar with two shortcuts (start from / end on that day, no scope question, biweekly phase kept); "Choose Dates…" opens the edit sheet at its Repeat card (a separate period sheet and month-pane date fields were removed the same day). The wide month-and-week layout draws the period line on the month pane. The edit sheet keeps the beat when only the period changes.
 - 2026-11-22 — the period chip row and the scope segment row merged into one pill (scope · period, menu on tap). The toolbar-middle option lost because it clipped the lock button. A numeric period form keeps the period visible next to long scope names.
+- 2026-11-23 — removed the thread joining a selected repeating event's blocks. With monthly and yearly repeats a lone block sent the thread off toward empty weeks, and the selection outline on co-selected blocks already shows the same thing, scope included. End knots and the moved-occurrence thread stay.
