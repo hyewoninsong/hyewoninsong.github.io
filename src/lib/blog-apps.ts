@@ -33,6 +33,8 @@ export const BLOG_APPS: BlogAppMeta[] = [
   { key: 'notequiz', name: 'SuperMusicNote', appSlug: 'musicnote' },
   { key: 'supermath', name: 'SuperMathQuiz' },
   { key: 'supertimers', name: 'SuperTimers' },
+  // Godot 로 만드는 게임. 스토어 출시 전이라 소개 페이지(appSlug)가 없다.
+  { key: 'voxel-roguelike', name: 'Voxel Roguelike' },
 ];
 
 const BY_KEY = new Map(BLOG_APPS.map((app) => [app.key, app]));
