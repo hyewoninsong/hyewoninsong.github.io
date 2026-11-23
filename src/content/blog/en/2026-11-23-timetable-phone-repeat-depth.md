@@ -1,6 +1,6 @@
 ---
 title: "Repeat settings on iPhone now live one level down"
-date: 2026-11-23T23:37:20+09:00
+date: 2026-11-24T00:25:49+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The iPhone event editor used to stack every repeat control in one long column. Now there is a single Repeat row that states the current rule, and a screen behind it."
@@ -16,7 +16,7 @@ iPhone has one column, so the two groups were simply stacked. We now show only t
 
 ![First screen: a single Repeat row under the start and end times, showing the rule and date on two lines](/blog/timetable-phone-repeat-depth/repeat-row.png)
 
-![The Repeat screen: frequency chips, interval, weekdays, range, calendar, and a one-line summary](/blog/timetable-phone-repeat-depth/repeat-screen.png)
+![The Repeat screen as of Nov 23: frequency chips, interval, weekdays, range, calendar. The summary was a single line at the bottom then; it moved to the top a day later](/blog/timetable-phone-repeat-depth/repeat-screen.png)
 
 ## The row has to state the value
 
@@ -31,7 +31,7 @@ Move a setting inward and it can look like it was removed. The difference betwee
 
 The last row matters. A rule with zero occurrences cannot be saved, so the confirm button is disabled. If the reason only appeared on the inner screen, the first screen would show a dead button with no explanation.
 
-Joined with a middle dot, the two lines are exactly the summary at the bottom of the inner screen. One function produces both.
+The inner screen shows the same two lines as its summary. One function produces both. (In the first version that summary was one line below the calendar; it moved to the top the next day, see the Nov 24 section.)
 
 ## One confirm button
 
@@ -46,3 +46,31 @@ The inner screen has only a back button. Edits made there go into the same draft
 ## Where it stands
 
 Checked on the iPhone simulator: the row, the inner screen, and the row after coming back. Folded foldables, dark mode, right-to-left languages and languages with long two-line values are still unverified.
+
+## 2026-11-24 — The inner screen, tidied: the result on top, the end date in one card
+
+Once the repeat controls had their own screen, its order stood out. Tapping a chip changes the sentence that states the rule, but that sentence sat below the calendar, off screen. Four changes, layout and wording only.
+
+![Before: the summary is the last line under the calendar; the range presets and the start/end cells are separate](/blog/timetable-phone-repeat-depth/tidy-before.png)
+
+![After: the rule and its range on top, the interval spelled out, a name above the weekday chips, and start, end and presets in one card](/blog/timetable-phone-repeat-depth/tidy-weekly.png)
+
+| What | Before | After |
+|---|---|---|
+| Summary | One grey line under the calendar | Two lines on top: the pattern in bold, the range under it |
+| Until when | A presets card plus two start/end cells | One card: a start row, an end row, presets under the end row |
+| Interval of 1 | "Interval · Weekly" | "Interval · Every 1 week" |
+| Unnamed rows | Weekday chips and the month grid alone | "Weekday" and "Months" above them |
+
+A sentence that changes with every tap belongs above the controls. Presets are shortcuts for the end date, so they hang off the end row; before, "No end" was stated twice, once as a chip and once in the end cell. Tapping a row makes the calendar edit that end, marked by a grey capsule on its value. That mark is quieter than the old outlined cell, which is the cost of this version.
+
+![Yearly: a "Months" name above the month grid](/blog/timetable-phone-repeat-depth/tidy-yearly.png)
+
+On process: the four options were first offered as text, and the answer was "show me a screenshot of each." So all four variants went into one build behind a launch flag and one test run captured each next to the current screen. What was ambiguous in words was obvious in pictures, and all four shipped.
+
+Checked on the iPhone simulator for weekly, monthly, yearly, daily and never. iPad two-column, dark mode, right-to-left and long-string languages are still unverified.
+
+## History
+
+- 2026-11-23 — Repeat settings moved behind a Repeat row on iPhone.
+- 2026-11-24 — Inner screen tidied: summary on top, start/end/presets in one card, interval spelled out, names for the weekday and month rows.
