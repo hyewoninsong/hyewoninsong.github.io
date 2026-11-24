@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-22T03:39:18+09:00
+date: 2026-11-24T13:18:20+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -145,6 +145,34 @@ Apple, Google and .ics all write "forever" as *nothing* — no `UNTIL` or `COUNT
 
 The year 9000 survives in memory only, as the upper bound for counting. Not 9999: dragging a whole series shifts its end too, and three days past 9999 is a five-digit year. Anything after 8000 counts as no end. One date formatter prints it as "No end", so no screen shows "9000".
 
+## 2026-11-24 — "Just ten times" is a count now; the file still stores an end date
+
+Until now a series could only end on a date or never. With dates as the only way to end a series, a ten-session class meant counting to the tenth day on the calendar by hand.
+
+A "count" row sits under the range presets, in the same card, shaped like the interval row: label, value, stepper.
+
+![An open-ended series — the count shows a dash and only plus is enabled](/blog/timetable-recurrence-units/count-open-end.png)
+
+![Plus gives 10 — the end date, the summary and the calendar dots follow](/blog/timetable-recurrence-units/count-ten.png)
+
+- The value is how many times the current range occurs, whichever way the end was picked. An open-ended series shows a dash.
+- Plus and minus move the end date to that occurrence. From "no end", plus starts at 10. The range is 1–365.
+- While you are picking by count, the count owns the range: add a weekday and it stays at 10 while the end date moves earlier. Pick an end date directly and the count goes back to being a readout. Bold versus gray tells the two apart.
+
+### The count is not stored
+
+RFC 5545 has `COUNT`, and Google Calendar stores it. We only write the end date as "the day of the tenth occurrence". File format and version are unchanged.
+
+Storing it would keep "10 times" after reopening. The cost: "does this day occur?" stops being one date comparison and becomes counting from the start, splitting a series has to split the count, and alarms, widgets and the watch all inherit that. Same reasoning as keeping "no end" as a far date. A reopened form shows the counted number in gray.
+
+A three-way "Never | On date | After" control would have undone the start | end cells settled the same day. A text field brings the keyboard-in-a-sheet problems back. A stepper auto-repeats when held.
+
+### Counting stops early
+
+Ranges have no cap, so nothing may walk a whole range while drawing. The row stops at the 366th occurrence and shows a dash. Finding the Nth day stops when found, and never walks past 800 years for patterns like "every February 30th".
+
+Checked by eye on iPhone in Korean only. iPad, long-language labels and right-to-left are still open.
+
 ## History
 
 - 2026-11-18 — day, month and year units added inside the "Custom" chip
@@ -152,3 +180,4 @@ The year 9000 survives in memory only, as the upper bound for counting. Not 9999
 - 2026-11-21 — repeat options split into three cards; only the frequency chip is filled
 - 2026-11-21 — dragging aligned per frequency; Yearly picks a month, then the monthly basis
 - 2026-11-22 — "No end" added and made the default (no end date in the file)
+- 2026-11-24 — the range can be picked by count (still stored as an end date)
