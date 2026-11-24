@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-23T03:37:31+09:00
+date: 2026-11-24T20:17:23+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -921,7 +921,7 @@ Something always on screen needs a rule for who gets the tap. The rule follows t
 
 | At that spot | Drawn | Tap |
 |---|---|---|
-| No other event | Faint outline only | Same as tapping the moved occurrence — select when unlocked, info card when locked |
+| No other event | Faint outline only | Same as tapping the moved occurrence — select when unlocked, info card when locked (since 2026-11-24 an unlocked tap opens a menu instead; see that section) |
 | Another event | The event covers the outline | The event gets it |
 | Bold outline of a selected occurrence | Above other blocks | Not a target — deselects, as before |
 
@@ -943,7 +943,7 @@ Moving all occurrences to another weekday can pull the start date earlier, which
 |---|---|
 | Extending the span | The other weekdays in between just appear, like Google Calendar |
 | What is still blocked | Only dates that would duplicate the adjacent piece of a split series |
-| Deleted occurrences | A faint dashed outline at their slot; unlock and tap it (with nothing selected) to restore |
+| Deleted occurrences | A faint dashed outline at their slot; unlock and tap it (with nothing selected) for an "Undo Delete" menu (at first a single tap restored it) |
 
 ![A faint dashed outline where the deleted Monday occurrence was](/blog/timetable-calendar-plan/deleted-trace.png)
 
@@ -1016,7 +1016,7 @@ One gap showed up right after shipping: moving an occurrence to next week left i
 
 ![Week view — a faint dashed outline and destination date where the Tuesday occurrence used to be, with a sagging thread running from the outline off the right edge](/blog/2026-11-09-timetable-calendar-plan/away-home-trace.png)
 
-The original slot now keeps a faint dashed outline with the destination date inside. A deleted occurrence uses the same outline, so that one line of text is what says "moved, not deleted". Long-pressing the outline fades the original event back in and returns the occurrence — the same gesture that restores a deleted one. One-off events leave no mark; the date itself moved.
+The original slot now keeps a faint dashed outline with the destination date inside. A deleted occurrence uses the same outline, so that one line of text is what says "moved, not deleted". Tap the outline and choose "Undo Move" to return the occurrence (this was a long press until 2026-11-24). One-off events leave no mark; the date itself moved.
 
 The first version had only the outline and the date — with no block in that week there seemed nothing to tie a thread to. But a lone outline did not say where it led, so a thread now runs from the outline to the grid edge on the side of the destination week and is cut off there; in the destination week the same thread runs from the block toward the original week. It is the same rope that joins an occurrence moved within a week.
 
@@ -1107,6 +1107,29 @@ What is lost is the "continues into other weeks" signal. The knots on the first 
 
 This has been built and unit-tested, not yet checked on screen.
 
+## 2026-11-24 — tapping a dashed outline opens a menu; long-press restore is gone
+
+Move or delete one occurrence of a repeating event with "This event only" and a dashed outline stays at its original slot. Getting it back meant holding that outline for about a second. Nothing on screen said so, and it was the same gesture that creates a new event on an empty slot.
+
+Now a tap on the outline opens a small menu right there.
+
+![Week view: tapping the dashed outline of an occurrence moved to another week shows "Undo Move" and "Select Moved Event"](/blog/timetable-calendar-plan/home-trace-menu.png)
+
+| Tapped slot | Menu |
+|---|---|
+| Original slot of a moved occurrence | Undo Move · Select Moved Event |
+| Slot of a deleted occurrence | Undo Delete |
+
+"Select Moved Event" selects the block that was moved, jumping to its week if it lives in another one.
+
+The first draft also had "Select this repeating event". It was dropped: there is no block at the outline to select, and tapping any other block of the series already does it. A deleted slot has a single item but still goes through the menu, because a restore on one stray tap is exactly what was removed a week ago.
+
+Long-press restore was removed rather than kept alongside. Two ways to do one thing means two things to keep verifying, and one of them stays hidden. Long-pressing an outline now creates an event, like any empty slot.
+
+The outline is still the lowest-priority target: another event on that spot gets the tap, and with something selected the tap only deselects. The menu reuses the system edit menu (`UIEditMenuInteraction`) already used for secondary clicks.
+
+Checked on an iPhone simulator. iPad, dark mode, right-to-left languages and real devices are unverified.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1155,3 +1178,4 @@ This has been built and unit-tested, not yet checked on screen.
 - 2026-11-21 — dragging a repeating event changes only its pattern. The period shows on a chip above the scope bar with two shortcuts (start from / end on that day, no scope question, biweekly phase kept); "Choose Dates…" opens the edit sheet at its Repeat card (a separate period sheet and month-pane date fields were removed the same day). The wide month-and-week layout draws the period line on the month pane. The edit sheet keeps the beat when only the period changes.
 - 2026-11-22 — the period chip row and the scope segment row merged into one pill (scope · period, menu on tap). The toolbar-middle option lost because it clipped the lock button. A numeric period form keeps the period visible next to long scope names.
 - 2026-11-23 — removed the thread joining a selected repeating event's blocks. With monthly and yearly repeats a lone block sent the thread off toward empty weeks, and the selection outline on co-selected blocks already shows the same thing, scope included. End knots and the moved-occurrence thread stay.
+- 2026-11-24 — tapping an original-slot outline opens a menu (moved: Undo Move · Select Moved Event; deleted: Undo Delete). Long-press restore removed; long-pressing an outline creates an event.
