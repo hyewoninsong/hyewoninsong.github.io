@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-24T20:17:23+09:00
+date: 2026-11-24T22:42:14+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1130,6 +1130,26 @@ The outline is still the lowest-priority target: another event on that spot gets
 
 Checked on an iPhone simulator. iPad, dark mode, right-to-left languages and real devices are unverified.
 
+## 2026-11-24, night — an occurrence moved several weeks away: the thread does not cross the weeks in between
+
+An occurrence moved to another week with "This event only" sends a thread from its outline to the edge of the grid, and from the moved block to the opposite edge. One week away or five, it looked the same, and the destination week showed a direction but not where the block came from.
+
+The thread still stops at the edge of the week, and nothing is drawn in the weeks in between. A thread passing through them would be a line with nothing to select, at a height nobody can justify when the two slots sit at different times. Counting knots or varying thickness lost too: you have to count, and past four weeks it stops reading.
+
+| Where | What you see |
+|---|---|
+| Destination week | A date chip where the thread meets the edge. Tap it to jump to the original week |
+| Thread to the adjacent week | Ends in a dot at the edge, as before |
+| Thread to a week two or more away | Fades out with no end dot |
+
+![Destination week: the thread from the block runs to a date chip at the left edge](/blog/timetable-calendar-plan/away-origin-chip.png)
+
+![Original week: the thread from the outline of an occurrence moved two weeks ahead fades before the right edge](/blog/timetable-calendar-plan/away-thread-fade.png)
+
+The chip works on a locked grid too, since it only changes the week in view. The original week already had "Select Moved Event" in the outline menu, so that side is unchanged.
+
+Checked on an iPhone simulator with the grid locked. The chip of a selected block, mid-drag, dark mode, iPad, right-to-left languages and real devices are unverified.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1179,3 +1199,4 @@ Checked on an iPhone simulator. iPad, dark mode, right-to-left languages and rea
 - 2026-11-22 — the period chip row and the scope segment row merged into one pill (scope · period, menu on tap). The toolbar-middle option lost because it clipped the lock button. A numeric period form keeps the period visible next to long scope names.
 - 2026-11-23 — removed the thread joining a selected repeating event's blocks. With monthly and yearly repeats a lone block sent the thread off toward empty weeks, and the selection outline on co-selected blocks already shows the same thing, scope included. End knots and the moved-occurrence thread stay.
 - 2026-11-24 — tapping an original-slot outline opens a menu (moved: Undo Move · Select Moved Event; deleted: Undo Delete). Long-press restore removed; long-pressing an outline creates an event.
+- 2026-11-24, night — the thread of an occurrence moved several weeks away does not cross the weeks in between. The destination week gets a date chip at the thread end (tap to jump), and a thread to a week two or more away fades out instead of ending in a dot.
