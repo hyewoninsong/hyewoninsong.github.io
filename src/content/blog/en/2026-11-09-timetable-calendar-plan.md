@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-26T14:30:00+09:00
+date: 2026-11-26T22:44:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1202,7 +1202,21 @@ So the menu is a card the grid draws: right of the block, else left, else below 
 
 The paging never showed in Korean, where the items are short. System menus change shape between pointer and finger, and again with item length. A new menu gets captured with a finger tap in the longest language.
 
-Checked on an iPhone simulator with a block in the leftmost column. Middle columns (card below or above), dark mode, the iPad pane, the foldable, Mac and a real device are not checked yet. The card is a picture, so VoiceOver cannot pick from it; touch and hold plus the pill remains that path.
+Checked on an iPhone simulator with a block in the leftmost column. The other screens and VoiceOver were covered the same night (next section).
+
+## 2026-11-26, night — three things the drawn menu left out
+
+The scope menu is a picture, and the gesture layer under it hit-tests its frame. Fingers worked. Running the screens we had skipped showed three paths that are not a finger on the grid.
+
+- **VoiceOver.** Accessibility activation does not go through the hit test, so the picture had nothing to activate. Each row now has a button action, the block's "select" action opens the same menu, focus lands on the first row, and the escape gesture just closes it.
+- **Taps outside the grid.** The weekday header sits outside the gesture layer, so tapping it opened the settings sheet with the menu still up. A probe on the folded screen found it when its "outside tap" landed on the header. The header and the time axis now only close the menu.
+- **Right-to-left languages.** The grid pins its coordinates left to right, and the card inherited that: Arabic items hugged the left edge. Only the text inside the card follows the app language now.
+
+![Korean: tapping a block in a right-hand column opens the menu on its left](/blog/2026-11-09-timetable-calendar-plan/tap-scope-menu-ko.png)
+
+![Arabic: the menu still sits beside the block and its text is right-aligned](/blog/2026-11-09-timetable-calendar-plan/tap-scope-menu-ar.png)
+
+Checked on iPhone (Korean, German, Arabic, dark), the iPad landscape pane and the folded foldable, tapping left, middle and right columns: the menu never covers the block. VoiceOver wiring is pinned by a test but was not driven by hand; Mac and a real device are still open.
 
 ## History
 
@@ -1256,3 +1270,4 @@ Checked on an iPhone simulator with a block in the leftmost column. Middle colum
 - 2026-11-24, night — the thread of an occurrence moved several weeks away does not cross the weeks in between. The destination week gets a date chip at the thread end (tap to jump), and a thread to a week two or more away fades out instead of ending in a dot.
 - 2026-11-26 — `‹` `›` beside the scope pill step to the previous or next occurrence of the same series, switching weeks when needed. The chosen scope carries over; deleted occurrences and hidden weekdays are skipped.
 - 2026-11-26, afternoon — tapping a repeating event asks for the scope in a menu beside the block (outline on the tapped block only; a moved occurrence is selected as "This schedule only" unasked; touch and hold does not ask). The edit-menu strip paged its items and a button menu covered the block, so the menu is a drawn card.
+- 2026-11-26, night — scope menu follow-up: usable with VoiceOver (row actions; "select" opens the menu), header and time-axis taps only close it, Arabic text alignment. Checked in Korean, German, Arabic, dark, the iPad pane and the folded foldable.
