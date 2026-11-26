@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-24T22:42:14+09:00
+date: 2026-11-26T13:20:58+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1150,6 +1150,29 @@ The chip works on a locked grid too, since it only changes the week in view. The
 
 Checked on an iPhone simulator with the grid locked. The chip of a selected block, mid-drag, dark mode, iPad, right-to-left languages and real devices are unverified.
 
+## 2026-11-26 — ‹ › on either side of the pill: step to the previous or next occurrence
+
+The pill under the grid says which repeating event is selected. Getting to that event's next occurrence still meant swiping weeks and finding the block again — one swipe for a weekly repeat, several for monthly, yearly or every-other-week ones.
+
+The pill now has a `‹` on its left and a `›` on its right. Tapping one selects the previous or next occurrence of the same series, and switches weeks when that occurrence lives in another one.
+
+![The first occurrence selected — two buttons flank the pill, the left one dimmed because nothing comes before](/blog/2026-11-09-timetable-calendar-plan/occurrence-step-first.png)
+
+![After three taps on the right button — the next week is showing, its Monday occurrence is selected and the pill is still up](/blog/2026-11-09-timetable-calendar-plan/occurrence-step-next-week.png)
+
+What we settled:
+
+- **Order** follows the date the rule generated, so an occurrence moved to another day still comes in its own turn.
+- **Deleted occurrences and ones on hidden weekdays** are skipped.
+- **The chosen scope travels with you.** Tapping another block is a new selection and resets to "All events"; these buttons move the same selection sideways, and editing occurrences one at a time is the main use.
+- **At the ends** of the series the matching button dims and stops responding.
+
+The buttons sit outside the pill. A menu entry would have matched our own earlier note ("add to the pill's menu first"), but stepping is something you do several times in a row. Inside the pill was not an option: the pill is the label of a SwiftUI `Menu`, and buttons inside a menu label do not receive taps. The cost is 96pt of width, so on an iPhone the pill falls to its two-line form more often. The period text never drops.
+
+One implementation detail: occurrences are computed from the rule, and the rule only walks forward. The next occurrence is a short walk from the following day. The previous one is found by widening a window — five weeks back, then fourteen months, then from the series start — instead of walking the whole series.
+
+Checked on the iPhone simulator: stepping within a week, crossing into the next week, coming back, the dimmed button on the first occurrence. Not yet checked: carrying "This event only", moved occurrences, the iPad edit pane, dark mode, right-to-left languages, a real device.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1200,3 +1223,4 @@ Checked on an iPhone simulator with the grid locked. The chip of a selected bloc
 - 2026-11-23 — removed the thread joining a selected repeating event's blocks. With monthly and yearly repeats a lone block sent the thread off toward empty weeks, and the selection outline on co-selected blocks already shows the same thing, scope included. End knots and the moved-occurrence thread stay.
 - 2026-11-24 — tapping an original-slot outline opens a menu (moved: Undo Move · Select Moved Event; deleted: Undo Delete). Long-press restore removed; long-pressing an outline creates an event.
 - 2026-11-24, night — the thread of an occurrence moved several weeks away does not cross the weeks in between. The destination week gets a date chip at the thread end (tap to jump), and a thread to a week two or more away fades out instead of ending in a dot.
+- 2026-11-26 — `‹` `›` beside the scope pill step to the previous or next occurrence of the same series, switching weeks when needed. The chosen scope carries over; deleted occurrences and hidden weekdays are skipped.
