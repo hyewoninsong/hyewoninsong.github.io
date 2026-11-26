@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-26T22:44:00+09:00
+date: 2026-11-27T01:54:23+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1128,7 +1128,7 @@ The first draft also had "Select this repeating event". It was dropped: there is
 
 Long-press restore was removed rather than kept alongside. Two ways to do one thing means two things to keep verifying, and one of them stays hidden. Long-pressing an outline now creates an event, like any empty slot.
 
-The outline is still the lowest-priority target: another event on that spot gets the tap, and with something selected the tap only deselects. The menu reuses the system edit menu (`UIEditMenuInteraction`) already used for secondary clicks.
+The outline is still the lowest-priority target: another event on that spot gets the tap, and with something selected the tap only deselects. The menu first reused the system edit menu (`UIEditMenuInteraction`) already used for secondary clicks; on November 27 it became a drawn vertical card (below).
 
 Checked on an iPhone simulator. iPad, dark mode, right-to-left languages and real devices are unverified.
 
@@ -1218,6 +1218,35 @@ The scope menu is a picture, and the gesture layer under it hit-tests its frame.
 
 Checked on iPhone (Korean, German, Arabic, dark), the iPad landscape pane and the folded foldable, tapping left, middle and right columns: the menu never covers the block. VoiceOver wiring is pinned by a test but was not driven by hand; Mac and a real device are still open.
 
+## 2026-11-27 — the outline menu is a vertical card too: one menu shape per grid
+
+After the scope menu became a drawn vertical card, the same grid had two menu shapes. Tap a repeating event and a vertical card appears; tap the dashed outline next to it and "Undo Move | Select Moved Event" appears as a horizontal strip.
+
+The outline menu now uses the same card: same width, row height and glass, only the row count differs. Placement follows the same rule — right of the target, else left, below, above.
+
+![Tapping a dashed outline opens a two-row vertical card beside it](/blog/timetable-calendar-plan/trace-menu-card.png)
+
+![The scope menu on a repeating event — the same card with three rows](/blog/timetable-calendar-plan/scope-menu-card-en.png)
+
+### Splitting by role lost
+
+My first recommendation was to keep both: vertical for picking one of several, horizontal for two short actions, since the strip covers less of the grid. It lost on two counts.
+
+- **People see shape before role.** "Choice versus action" is the builder's taxonomy. On screen it is just two different menus alternating in the same place.
+- **The strip breaks in long languages.** The pagination that pushed the scope menu off the system menu was waiting in the outline menu as well. A vertical fallback only when the items do not fit would make the shape depend on the language, which is worse.
+
+A two-row card covers a little more of the grid than a strip. We accepted that.
+
+### When the card has to dismiss itself
+
+The system menu closed on any outside touch. A drawn card needs each case spelled out: a tap outside, a tap on the day header or time axis, a long press that creates an event, locking the grid, and the outline itself disappearing after a week change or an undo.
+
+The last one needs care. The value that decides whether the card shows must not read the outline list, because the outline list already reads that value to draw the active outline in ink. So visibility looks only at selection and lock state, and a separate observer on the card watches whether its outline still exists.
+
+The secondary-click menu for pointers stays a system menu; with a pointer it is already a vertical list.
+
+Checked on iPhone in English. Long languages, right-to-left languages, iPad and foldables are still to do.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1271,3 +1300,4 @@ Checked on iPhone (Korean, German, Arabic, dark), the iPad landscape pane and th
 - 2026-11-26 — `‹` `›` beside the scope pill step to the previous or next occurrence of the same series, switching weeks when needed. The chosen scope carries over; deleted occurrences and hidden weekdays are skipped.
 - 2026-11-26, afternoon — tapping a repeating event asks for the scope in a menu beside the block (outline on the tapped block only; a moved occurrence is selected as "This schedule only" unasked; touch and hold does not ask). The edit-menu strip paged its items and a button menu covered the block, so the menu is a drawn card.
 - 2026-11-26, night — scope menu follow-up: usable with VoiceOver (row actions; "select" opens the menu), header and time-axis taps only close it, Arabic text alignment. Checked in Korean, German, Arabic, dark, the iPad pane and the folded foldable.
+- 2026-11-27 — the dashed-outline menu moved from the horizontal system strip to the same vertical card as the scope menu. Splitting by role (choices vertical, short actions horizontal) lost: alternating shapes, and pagination in long languages.
