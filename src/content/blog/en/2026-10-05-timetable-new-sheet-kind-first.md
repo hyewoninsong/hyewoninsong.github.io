@@ -1,6 +1,6 @@
 ---
 title: "New timetables start with the type, and Return creates them"
-date: 2026-11-15T13:20:00+09:00
+date: 2026-11-26T11:26:00+09:00
 app: "timetable"
 tags: ["devlog", "design", "swiftui"]
 summary: "The New Timetable sheet now opens with nothing selected. Pick the vertical axis and the name field appears; Return creates the timetable. Tapping outside only lowers the keyboard — and building that showed that a blocked sheet stays silent when you tap its dimmed backdrop."
@@ -153,9 +153,27 @@ The requested order was name first. It moved to the end for two reasons: the def
 
 - **Keeping the alert and adding hints to the settings sheet.** That sheet is opened dozens of times after creation; first-run guidance there is noise every other time.
 - **A fifth step for text color.** Missing it at creation costs nothing, and every extra step pushes "Create" further away.
-- **Shrunken real screenshots as the art.** They turn text into specks and need re-rendering per language. The drawings are schematic — digits only, bars for labels — so one drawing serves all eighteen languages, mirrored in Arabic with the axis on the right.
+- **Shrunken real screenshots as the art.** Lost at the time: they turn text into specks and need re-rendering per language, so the drawings were schematic. Reversed on 2026-11-26 — scaling the live views instead of baking screenshots removes both problems (below).
 
 The settings sheet no longer opens after creation. Still unverified: iPad, the folding iPhone, dark mode, and how the captions wrap in long-worded languages.
+
+## 2026-11-26 — The diagrams are gone: the cards show the real screens
+
+The cards for kind and axis used schematic drawings — gray bars and digits. They did not look like the screen you get after choosing, so the picture could not answer "what will I see?". Now each card holds the real thing.
+
+![Step one — the timetable card shows the top of a real week grid with day headers, a time axis and titled blocks; the calendar card shows the first three weeks of a month view with dates and title chips; both fade out at the bottom](/blog/timetable-new-sheet-kind-first/art-type.png)
+
+![Step two — the same events in both cards; only the vertical axis differs: clock times versus numbered periods](/blog/timetable-new-sheet-kind-first/art-axis.png)
+
+Eleven days ago shrunken screens lost for two reasons: tiny text and one bake per language. Both came from assuming a baked screenshot.
+
+- **Nothing is baked.** The canvas behind the home timetable card and the calendar card's month view are already views in the app. They get sample data and a 0.62 `scaleEffect`. With no image file, language, dark mode and 12/24-hour time follow on their own.
+- **Not the whole screen.** Only the top is visible — day headers and about three hours, or the month title and three weeks — and the bottom fades into the card.
+- **The sample was already translated.** The sample timetable used for store screenshots has its titles in eighteen languages. It is read in the language the app chose, not the device language; otherwise an unsupported device language gets an English app with untranslated samples.
+
+![Arabic — the same two cards with the time axis on the right and Arabic titles, weekdays and month name](/blog/timetable-new-sheet-kind-first/art-arabic.png)
+
+What lost: more detailed hand drawings (they drift every time the real screen changes), bundled images (18 languages × 2 appearances × 4 pictures, and blind to the time format), and offscreen rendering (blocks the main thread as the sheet appears). Still unverified: dark mode, iPad and the folding iPhone.
 
 ## History
 
@@ -163,3 +181,4 @@ The settings sheet no longer opens after creation. Still unverified: iPad, the f
 - 2026-10-06 — One axis tile shared with the Display sheet; fixed the name field hiding behind the keyboard.
 - 2026-10-09 — Type sheet replaced by a name alert; created by time, axis picked in the Display sheet.
 - 2026-11-15 — Alert replaced by four steps (kind → axis → range → name); calendars share the sheet, and the settings sheet no longer follows creation.
+- 2026-11-26 — Kind and axis cards show scaled-down real screens (week grid, month view) instead of diagrams.
