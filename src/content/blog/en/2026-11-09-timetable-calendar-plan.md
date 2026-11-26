@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-26T22:44:00+09:00
+date: 2026-11-27T01:52:50+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1218,6 +1218,27 @@ The scope menu is a picture, and the gesture layer under it hit-tests its frame.
 
 Checked on iPhone (Korean, German, Arabic, dark), the iPad landscape pane and the folded foldable, tapping left, middle and right columns: the menu never covers the block. VoiceOver wiring is pinned by a test but was not driven by hand; Mac and a real device are still open.
 
+## 2026-11-27 — the thread's end covered the title, so it now lands just inside the block's edge
+
+An occurrence moved with "This schedule only" is tied to the dashed outline of its original slot by a thread. That thread ran from the outline's center to the block's center, which is where the title sits. A thread coming up from an outline lower in the same column crossed half the block and put its end dot on the title.
+
+The block end now sits 7pt inside the edge. The 6pt dot is wholly inside the block, so it still says "this one", and it never reaches the title. The outline end stays centered; an outline has no text to cover.
+
+| Outline is | Thread lands |
+|---|---|
+| above or below | just inside the facing edge, where the center-to-center line crosses it |
+| to the side, higher | inside the top corner of that side |
+| to the side, level or lower | inside the bottom corner of that side |
+| block too short to hold the dot | center |
+
+![Wednesday and Friday blocks: each thread ends at a dot just inside the top edge, titles untouched](/blog/2026-11-09-timetable-calendar-plan/thread-end-inside-edge.png)
+
+Side arrivals go to a corner because a same-time move to another day brings the thread in at exactly title height, and in a narrow column the title fills the width. Level arrivals take the bottom corner because the thread sags, and a sagging line reads naturally arriving from below.
+
+Three alternatives lost: edge-to-edge at both ends (dropped three days earlier: short threads vanish into the column lines), a dot straddling the border (ambiguous between stacked blocks), and measuring the title to steer around it (the end would wander with font size and line count).
+
+Not yet checked: the jump between corners while dragging a block past its outline's height, dark mode, iPad and a real device.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1271,3 +1292,4 @@ Checked on iPhone (Korean, German, Arabic, dark), the iPad landscape pane and th
 - 2026-11-26 — `‹` `›` beside the scope pill step to the previous or next occurrence of the same series, switching weeks when needed. The chosen scope carries over; deleted occurrences and hidden weekdays are skipped.
 - 2026-11-26, afternoon — tapping a repeating event asks for the scope in a menu beside the block (outline on the tapped block only; a moved occurrence is selected as "This schedule only" unasked; touch and hold does not ask). The edit-menu strip paged its items and a button menu covered the block, so the menu is a drawn card.
 - 2026-11-26, night — scope menu follow-up: usable with VoiceOver (row actions; "select" opens the menu), header and time-axis taps only close it, Arabic text alignment. Checked in Korean, German, Arabic, dark, the iPad pane and the folded foldable.
+- 2026-11-27 — the thread of a moved occurrence lands just inside the block's edge (the facing edge, or a corner when it arrives from the side) instead of the center, where it covered the title. The outline end stays centered.
