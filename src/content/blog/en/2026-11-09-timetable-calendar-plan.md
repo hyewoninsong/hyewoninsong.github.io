@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-27T01:52:50+09:00
+date: 2026-11-27T02:11:42+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1239,6 +1239,18 @@ Three alternatives lost: edge-to-edge at both ends (dropped three days earlier: 
 
 Not yet checked: the jump between corners while dragging a block past its outline's height, dark mode, iPad and a real device.
 
+## 2026-11-27 — switching weeks sent the date chip sliding across the grid
+
+With an occurrence moved to another week, switching weeks made the edge date chip show up as an empty capsule near the middle of the grid and slide to the edge. Blocks and outlines changed instantly; only the chip travelled.
+
+It looked like a bad insertion transition. Measuring the chip in frames of a screen recording said otherwise: it sat on the line between where it stood in the previous week and where it belongs in the new one. It was not appearing, it was moving.
+
+An occurrence keeps its id across weeks, on purpose, so a block dragged past the edge stays under the finger. The chip was identified in `ForEach` by that same id, so the origin week's "12. 9. →" chip and the destination week's "← 12. 5." chip were one view to SwiftUI, and the position spring added a day earlier interpolated between them.
+
+The fix is the identity: occurrence id plus which end it is plus the date it shows. A week change now removes one chip and places another, in place (`.transition(.identity)`). The dictionary of measured chip widths moved to the same key, otherwise the outgoing chip's `onDisappear` clears the width the incoming chip just reported. Within a week the chip still follows its block with the spring.
+
+Every earlier check had stayed inside one week, and both weeks look right in a still. A layer with a position spring now gets a recording of the first 0.3 seconds after a screen change.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1293,3 +1305,4 @@ Not yet checked: the jump between corners while dragging a block past its outlin
 - 2026-11-26, afternoon — tapping a repeating event asks for the scope in a menu beside the block (outline on the tapped block only; a moved occurrence is selected as "This schedule only" unasked; touch and hold does not ask). The edit-menu strip paged its items and a button menu covered the block, so the menu is a drawn card.
 - 2026-11-26, night — scope menu follow-up: usable with VoiceOver (row actions; "select" opens the menu), header and time-axis taps only close it, Arabic text alignment. Checked in Korean, German, Arabic, dark, the iPad pane and the folded foldable.
 - 2026-11-27 — the thread of a moved occurrence lands just inside the block's edge (the facing edge, or a corner when it arrives from the side) instead of the center, where it covered the title. The outline end stays centered.
+- 2026-11-27 — the edge date chip slid across the grid on a week change: it was identified by an occurrence id that survives the change, so its position spring interpolated between the two weeks. The chip is now keyed by id, end and date.
