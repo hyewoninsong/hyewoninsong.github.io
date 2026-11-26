@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-24T22:42:14+09:00
+date: 2026-11-26T14:30:00+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -843,6 +843,8 @@ Changing the scope mid-selection had three candidates: not allowed, rewrite ever
 
 The pane's save and undo grouping were checked with a finger probe on iPad landscape. The scope menu on calendar screens, touch and hold, the foldable iPhone and Mac have not been seen on screen yet.
 
+(This menu was removed the same afternoon: the block was selected 0.58 seconds after the tap, so selection stopped asking and defaulted to "All events". On 2026-11-26 the question came back for taps only, with a different menu. See the 2026-11-26 afternoon section.)
+
 ## 2026-11-16, night — dragging a moved occurrence back to its own weekday kept the time and lost the day
 
 A screen recording came in. A weekly event sits on Tuesday and Wednesday; the Tuesday block is dragged to Monday and a little earlier. Both blocks take the new time, but the dragged one is back on Tuesday. Later in the same recording the same drag works.
@@ -1150,6 +1152,58 @@ The chip works on a locked grid too, since it only changes the week in view. The
 
 Checked on an iPhone simulator with the grid locked. The chip of a selected block, mid-drag, dark mode, iPad, right-to-left languages and real devices are unverified.
 
+## 2026-11-26 — ‹ › on either side of the pill: step to the previous or next occurrence
+
+The pill under the grid says which repeating event is selected. Getting to that event's next occurrence still meant swiping weeks and finding the block again — one swipe for a weekly repeat, several for monthly, yearly or every-other-week ones.
+
+The pill now has a `‹` on its left and a `›` on its right. Tapping one selects the previous or next occurrence of the same series, and switches weeks when that occurrence lives in another one.
+
+![The first occurrence selected — two buttons flank the pill, the left one dimmed because nothing comes before](/blog/2026-11-09-timetable-calendar-plan/occurrence-step-first.png)
+
+![After three taps on the right button — the next week is showing, its Monday occurrence is selected and the pill is still up](/blog/2026-11-09-timetable-calendar-plan/occurrence-step-next-week.png)
+
+What we settled:
+
+- **Order** follows the date the rule generated, so an occurrence moved to another day still comes in its own turn.
+- **Deleted occurrences and ones on hidden weekdays** are skipped.
+- **The chosen scope travels with you.** Tapping another block is a new selection and sets the scope again (it reset to "All events" when this was written; from the afternoon of the same day a tap asks, see the next section); these buttons move the same selection sideways, and editing occurrences one at a time is the main use.
+- **At the ends** of the series the matching button dims and stops responding.
+
+The buttons sit outside the pill. A menu entry would have matched our own earlier note ("add to the pill's menu first"), but stepping is something you do several times in a row. Inside the pill was not an option: the pill is the label of a SwiftUI `Menu`, and buttons inside a menu label do not receive taps. The cost is 96pt of width, so on an iPhone the pill falls to its two-line form more often. The period text never drops.
+
+One implementation detail: occurrences are computed from the rule, and the rule only walks forward. The next occurrence is a short walk from the following day. The previous one is found by widening a window — five weeks back, then fourteen months, then from the series start — instead of walking the whole series.
+
+Checked on the iPhone simulator: stepping within a week, crossing into the next week, coming back, the dimmed button on the first occurrence. Not yet checked: carrying "This event only", moved occurrences, the iPad edit pane, dark mode, right-to-left languages, a real device.
+
+## 2026-11-26, afternoon — tapping a repeating event asks for the scope first, in a menu we drew ourselves
+
+For ten days a tap on a repeating event selected it as "All schedules" without asking. Moving a single occurrence took an extra trip to the pill, and dragging without looking moved the whole series. The request: ask on tap, and outline the tapped event while the question is up.
+
+| You do | What happens |
+|---|---|
+| Tap a repeating event | The block gets an outline and a menu opens beside it. Pick a scope and the event is selected with it |
+| Tap outside the menu | Menu and outline go away. Nothing is selected |
+| Tap an occurrence already moved on its own | Selected as "This schedule only", no question |
+| Touch and hold | Lifts at once, scope "All schedules" |
+
+![Right after tapping a repeating event: only the tapped block is outlined, and the three scopes are listed beside it](/blog/2026-11-09-timetable-calendar-plan/tap-scope-menu.png)
+
+![A quarter second after choosing "All schedules": every occurrence is selected and the pill is up](/blog/2026-11-09-timetable-calendar-plan/tap-scope-selected.png)
+
+Touch and hold stays unasked. It flows straight into a drag, and a menu would have to cut that drag off.
+
+### Three system menus, none kept
+
+- **`confirmationDialog`** was the version removed ten days ago: its button action runs after the dismiss transition, so the block was selected 0.58 seconds after the tap.
+- **`UIEditMenuInteraction`**, already used for the dashed-outline menu. From a finger tap it is the horizontal copy-and-paste strip, and items that do not fit go to the next page. In English one item filled the strip, so a pick-one-of-three menu became a pager. The outline menu has two short items and never showed it.
+- **A button menu.** A transparent button over the block, opened with `performPrimaryAction()`. All three items show and the action is immediate, but on iOS 26 the menu grows out of its button and covers it. We moved the anchor below, above and beside the block; the menu landed on the block every time, hiding the outline.
+
+So the menu is a card the grid draws: right of the block, else left, else below or above, kept inside the visible area. It takes no touches. The grid's gesture layer hit-tests the card's frame, and a tap while the menu is up either picks a row or just closes it.
+
+The paging never showed in Korean, where the items are short. System menus change shape between pointer and finger, and again with item length. A new menu gets captured with a finger tap in the longest language.
+
+Checked on an iPhone simulator with a block in the leftmost column. Middle columns (card below or above), dark mode, the iPad pane, the foldable, Mac and a real device are not checked yet. The card is a picture, so VoiceOver cannot pick from it; touch and hold plus the pill remains that path.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1200,3 +1254,5 @@ Checked on an iPhone simulator with the grid locked. The chip of a selected bloc
 - 2026-11-23 — removed the thread joining a selected repeating event's blocks. With monthly and yearly repeats a lone block sent the thread off toward empty weeks, and the selection outline on co-selected blocks already shows the same thing, scope included. End knots and the moved-occurrence thread stay.
 - 2026-11-24 — tapping an original-slot outline opens a menu (moved: Undo Move · Select Moved Event; deleted: Undo Delete). Long-press restore removed; long-pressing an outline creates an event.
 - 2026-11-24, night — the thread of an occurrence moved several weeks away does not cross the weeks in between. The destination week gets a date chip at the thread end (tap to jump), and a thread to a week two or more away fades out instead of ending in a dot.
+- 2026-11-26 — `‹` `›` beside the scope pill step to the previous or next occurrence of the same series, switching weeks when needed. The chosen scope carries over; deleted occurrences and hidden weekdays are skipped.
+- 2026-11-26, afternoon — tapping a repeating event asks for the scope in a menu beside the block (outline on the tapped block only; a moved occurrence is selected as "This schedule only" unasked; touch and hold does not ask). The edit-menu strip paged its items and a button menu covered the block, so the menu is a drawn card.
