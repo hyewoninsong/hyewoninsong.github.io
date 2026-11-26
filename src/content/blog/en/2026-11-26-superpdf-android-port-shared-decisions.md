@@ -1,6 +1,6 @@
 ---
 title: "Porting a PDF reader to Android, with one copy of every product decision"
-date: 2026-11-27T01:56:40+09:00
+date: 2026-11-27T02:59:55+09:00
 app: "superpdf"
 tags: ["devlog", "android", "design"]
 summary: "SuperPDF is getting an Android edition. The two apps share decisions, a file format and test cases, not code. Plus: 288 passing JVM tests, and a crash on the first highlight on a phone."
@@ -65,7 +65,18 @@ What the three share: a component's index was trusted as "the page the reader is
 
 The ledger got a cleanup too. Of 87 "not yet" rows, more than half were old screens a later decision had replaced, or rules already ported. It now reads 55 ported, 55 partial, 32 to go.
 
+## 2026-11-27, the same evening — only the first arrow key after a touch went missing
+
+Added: a loupe that magnifies the text under your finger while you draw an underline, dragging a crop to the facing page, fonts for text boxes, and a hardware keyboard.
+
+![A loupe above the finger while an underline is being drawn, showing the enlarged letters at the moving end](/blog/superpdf-android-port-shared-decisions/loupe.png)
+
+The arrow keys turn pages. The key-table tests passed and keys sent back to back worked. But the first key pressed after tapping the page did nothing except put a focus ring on the Home button. With the toolbar hidden, the first key worked too.
+
+A touch puts an Android window in touch mode. When a navigation key arrives, the system leaves touch mode before the app sees the key; if nothing holds focus, it focuses the first button and consumes the key. The app's key handler is never called. The reading board now holds focus itself, so the system has nothing to move and passes the key through. And keys are now checked right after a touch, not in a row.
+
 ## History
 
 - 2026-11-26 — first Android port, decision ledger, on-device tests
 - 2026-11-27 — sixteen user flows run on an emulator, three bugs fixed, ledger cleaned up
+- 2026-11-27 — loupe, moving regions, fonts, keyboard; the first key after a touch
