@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-26T14:30:00+09:00
+date: 2026-11-27T02:30:37+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1128,7 +1128,7 @@ The first draft also had "Select this repeating event". It was dropped: there is
 
 Long-press restore was removed rather than kept alongside. Two ways to do one thing means two things to keep verifying, and one of them stays hidden. Long-pressing an outline now creates an event, like any empty slot.
 
-The outline is still the lowest-priority target: another event on that spot gets the tap, and with something selected the tap only deselects. The menu reuses the system edit menu (`UIEditMenuInteraction`) already used for secondary clicks.
+The outline is still the lowest-priority target: another event on that spot gets the tap, and with something selected the tap only deselects. The menu first reused the system edit menu (`UIEditMenuInteraction`) already used for secondary clicks; on November 27 it became a drawn vertical card (below).
 
 Checked on an iPhone simulator. iPad, dark mode, right-to-left languages and real devices are unverified.
 
@@ -1202,7 +1202,83 @@ So the menu is a card the grid draws: right of the block, else left, else below 
 
 The paging never showed in Korean, where the items are short. System menus change shape between pointer and finger, and again with item length. A new menu gets captured with a finger tap in the longest language.
 
-Checked on an iPhone simulator with a block in the leftmost column. Middle columns (card below or above), dark mode, the iPad pane, the foldable, Mac and a real device are not checked yet. The card is a picture, so VoiceOver cannot pick from it; touch and hold plus the pill remains that path.
+Checked on an iPhone simulator with a block in the leftmost column. The other screens and VoiceOver were covered the same night (next section).
+
+## 2026-11-26, night — three things the drawn menu left out
+
+The scope menu is a picture, and the gesture layer under it hit-tests its frame. Fingers worked. Running the screens we had skipped showed three paths that are not a finger on the grid.
+
+- **VoiceOver.** Accessibility activation does not go through the hit test, so the picture had nothing to activate. Each row now has a button action, the block's "select" action opens the same menu, focus lands on the first row, and the escape gesture just closes it.
+- **Taps outside the grid.** The weekday header sits outside the gesture layer, so tapping it opened the settings sheet with the menu still up. A probe on the folded screen found it when its "outside tap" landed on the header. The header and the time axis now only close the menu.
+- **Right-to-left languages.** The grid pins its coordinates left to right, and the card inherited that: Arabic items hugged the left edge. Only the text inside the card follows the app language now.
+
+![Korean: tapping a block in a right-hand column opens the menu on its left](/blog/2026-11-09-timetable-calendar-plan/tap-scope-menu-ko.png)
+
+![Arabic: the menu still sits beside the block and its text is right-aligned](/blog/2026-11-09-timetable-calendar-plan/tap-scope-menu-ar.png)
+
+Checked on iPhone (Korean, German, Arabic, dark), the iPad landscape pane and the folded foldable, tapping left, middle and right columns: the menu never covers the block. VoiceOver wiring is pinned by a test but was not driven by hand; Mac and a real device are still open.
+
+## 2026-11-27 — the thread's end covered the title, so it now lands just inside the block's edge
+
+An occurrence moved with "This schedule only" is tied to the dashed outline of its original slot by a thread. That thread ran from the outline's center to the block's center, which is where the title sits. A thread coming up from an outline lower in the same column crossed half the block and put its end dot on the title.
+
+The block end now sits 7pt inside the edge. The 6pt dot is wholly inside the block, so it still says "this one", and it never reaches the title. The outline end stays centered; an outline has no text to cover.
+
+| Outline is | Thread lands |
+|---|---|
+| above or below | just inside the facing edge, where the center-to-center line crosses it |
+| to the side, higher | inside the top corner of that side |
+| to the side, level or lower | inside the bottom corner of that side |
+| block too short to hold the dot | center |
+
+![Wednesday and Friday blocks: each thread ends at a dot just inside the top edge, titles untouched](/blog/2026-11-09-timetable-calendar-plan/thread-end-inside-edge.png)
+
+Side arrivals go to a corner because a same-time move to another day brings the thread in at exactly title height, and in a narrow column the title fills the width. Level arrivals take the bottom corner because the thread sags, and a sagging line reads naturally arriving from below.
+
+Three alternatives lost: edge-to-edge at both ends (dropped three days earlier: short threads vanish into the column lines), a dot straddling the border (ambiguous between stacked blocks), and measuring the title to steer around it (the end would wander with font size and line count).
+
+Not yet checked: the jump between corners while dragging a block past its outline's height, dark mode, iPad and a real device.
+
+## 2026-11-27 — switching weeks sent the date chip sliding across the grid
+
+With an occurrence moved to another week, switching weeks made the edge date chip show up as an empty capsule near the middle of the grid and slide to the edge. Blocks and outlines changed instantly; only the chip travelled.
+
+It looked like a bad insertion transition. Measuring the chip in frames of a screen recording said otherwise: it sat on the line between where it stood in the previous week and where it belongs in the new one. It was not appearing, it was moving.
+
+An occurrence keeps its id across weeks, on purpose, so a block dragged past the edge stays under the finger. The chip was identified in `ForEach` by that same id, so the origin week's "12. 9. →" chip and the destination week's "← 12. 5." chip were one view to SwiftUI, and the position spring added a day earlier interpolated between them.
+
+The fix is the identity: occurrence id plus which end it is plus the date it shows. A week change now removes one chip and places another, in place (`.transition(.identity)`). The dictionary of measured chip widths moved to the same key, otherwise the outgoing chip's `onDisappear` clears the width the incoming chip just reported. Within a week the chip still follows its block with the spring.
+
+Every earlier check had stayed inside one week, and both weeks look right in a still. A layer with a position spring now gets a recording of the first 0.3 seconds after a screen change.
+
+## 2026-11-27 — the outline menu is a vertical card too: one menu shape per grid
+
+After the scope menu became a drawn vertical card, the same grid had two menu shapes. Tap a repeating event and a vertical card appears; tap the dashed outline next to it and "Undo Move | Select Moved Event" appears as a horizontal strip.
+
+The outline menu now uses the same card: same width, row height and glass, only the row count differs. Placement follows the same rule — right of the target, else left, below, above.
+
+![Tapping a dashed outline opens a two-row vertical card beside it](/blog/timetable-calendar-plan/trace-menu-card.png)
+
+![The scope menu on a repeating event — the same card with three rows](/blog/timetable-calendar-plan/scope-menu-card-en.png)
+
+### Splitting by role lost
+
+My first recommendation was to keep both: vertical for picking one of several, horizontal for two short actions, since the strip covers less of the grid. It lost on two counts.
+
+- **People see shape before role.** "Choice versus action" is the builder's taxonomy. On screen it is just two different menus alternating in the same place.
+- **The strip breaks in long languages.** The pagination that pushed the scope menu off the system menu was waiting in the outline menu as well. A vertical fallback only when the items do not fit would make the shape depend on the language, which is worse.
+
+A two-row card covers a little more of the grid than a strip. We accepted that.
+
+### When the card has to dismiss itself
+
+The system menu closed on any outside touch. A drawn card needs each case spelled out: a tap outside, a tap on the day header or time axis, a long press that creates an event, locking the grid, and the outline itself disappearing after a week change or an undo.
+
+The last one needs care. The value that decides whether the card shows must not read the outline list, because the outline list already reads that value to draw the active outline in ink. So visibility looks only at selection and lock state, and a separate observer on the card watches whether its outline still exists.
+
+The secondary-click menu for pointers stays a system menu; with a pointer it is already a vertical list.
+
+Checked on iPhone in English. Long languages, right-to-left languages, iPad and foldables are still to do.
 
 ## History
 
@@ -1256,3 +1332,7 @@ Checked on an iPhone simulator with a block in the leftmost column. Middle colum
 - 2026-11-24, night — the thread of an occurrence moved several weeks away does not cross the weeks in between. The destination week gets a date chip at the thread end (tap to jump), and a thread to a week two or more away fades out instead of ending in a dot.
 - 2026-11-26 — `‹` `›` beside the scope pill step to the previous or next occurrence of the same series, switching weeks when needed. The chosen scope carries over; deleted occurrences and hidden weekdays are skipped.
 - 2026-11-26, afternoon — tapping a repeating event asks for the scope in a menu beside the block (outline on the tapped block only; a moved occurrence is selected as "This schedule only" unasked; touch and hold does not ask). The edit-menu strip paged its items and a button menu covered the block, so the menu is a drawn card.
+- 2026-11-26, night — scope menu follow-up: usable with VoiceOver (row actions; "select" opens the menu), header and time-axis taps only close it, Arabic text alignment. Checked in Korean, German, Arabic, dark, the iPad pane and the folded foldable.
+- 2026-11-27 — the thread of a moved occurrence lands just inside the block's edge (the facing edge, or a corner when it arrives from the side) instead of the center, where it covered the title. The outline end stays centered.
+- 2026-11-27 — the edge date chip slid across the grid on a week change: it was identified by an occurrence id that survives the change, so its position spring interpolated between the two weeks. The chip is now keyed by id, end and date.
+- 2026-11-27 — the dashed-outline menu moved from the horizontal system strip to the same vertical card as the scope menu. Splitting by role (choices vertical, short actions horizontal) lost: alternating shapes, and pagination in long languages.

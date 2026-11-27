@@ -1,6 +1,6 @@
 ---
 title: "Porting a PDF reader to Android, with one copy of every product decision"
-date: 2026-11-26T13:15:00+09:00
+date: 2026-11-27T01:56:40+09:00
 app: "superpdf"
 tags: ["devlog", "android", "design"]
 summary: "SuperPDF is getting an Android edition. The two apps share decisions, a file format and test cases, not code. Plus: 288 passing JVM tests, and a crash on the first highlight on a phone."
@@ -43,8 +43,29 @@ Two fixes. Every ported pattern goes through one helper that passes the flag on 
 
 ## Where it stands
 
-No pen, crop, text boxes, map editing, generated contents or server import yet. iOS handwriting is stored in an Apple-only format Android cannot read, so for now it is kept untouched and handed back on export. A shared ink format comes before an Android pen.
+Crop, text boxes, map editing, generated contents and server import have landed since. Still missing: a pen, neural voices, PDF compression and tablet layouts. iOS handwriting is stored in an Apple-only format Android cannot read, so for now it is kept untouched and handed back on export. A shared ink format comes before an Android pen.
+
+## 2026-11-27 — One manual pass through the screens found three bugs in code that passed its tests
+
+With some twenty features in, we finally drove sixteen user flows end to end on an emulator. 473 unit tests were green. Two flows failed on the first pass and two more defects showed up along the way.
+
+**Scrolling the map did not move the book.** In the half view the book and the map scroll together. Book to map worked; map to book did nothing.
+
+![The map has scrolled to marks on pages 3 and 5 while the book still sits at the top of page 1](/blog/superpdf-android-port-shared-decisions/sync-before.png)
+
+The position mapping was ported with its iOS tests and was right. The wiring was wrong. The map reads the book's scroll state, but the book registers that state after the first composition, so the map first sees nothing. It recomposes a moment later, but the coroutine collecting scroll changes does not restart, and the function it calls kept the empty value it first saw. Empty meant "a paged book", which only moves when the page number changes. No crash, no warning. The fix reads the value at the moment of use.
+
+![After the same gesture, the book has followed the map to the last pages](/blog/superpdf-android-port-shared-decisions/sync-after.png)
+
+**Switching view mode went back a page.** In vertical scroll, page 4 could fill the screen while the indicator said 3: we used the list's first visible item, and a few pixels of page 3 at the top are enough to be first. The current page is now the one covering the centre of the screen.
+
+**Dragging the divider turned page 5 into page 3.** A wide book pane shows a two-page spread, a tall one a single page. A pager counts groups, not pages, and it kept group 2 (pages 5–6) across the change, where it meant page 3. The pager state is now rebuilt when the group size changes.
+
+What the three share: a component's index was trusted as "the page the reader is on", and one direction was checked and the other assumed. Both are now on the checklist: test two-way features in each direction, and check the page after anything that reshapes the pane.
+
+The ledger got a cleanup too. Of 87 "not yet" rows, more than half were old screens a later decision had replaced, or rules already ported. It now reads 55 ported, 55 partial, 32 to go.
 
 ## History
 
 - 2026-11-26 — first Android port, decision ledger, on-device tests
+- 2026-11-27 — sixteen user flows run on an emulator, three bugs fixed, ledger cleaned up
