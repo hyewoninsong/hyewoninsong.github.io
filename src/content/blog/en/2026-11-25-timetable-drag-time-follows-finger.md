@@ -1,6 +1,6 @@
 ---
 title: "Dragging a daily repeat left blocks 15 minutes behind the finger — no springs on finger-driven values"
-date: 2026-11-25T17:34:28+09:00
+date: 2026-11-27T12:44:33+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "gesture"]
 summary: "While dragging, block time now follows the finger with no animation curve. Springs stay for the day slide and the settle after release."
@@ -39,6 +39,22 @@ Earlier fixes aligned derived layers to the block's spring, and nobody asked whe
 
 Values the finger sets every frame (drag, resize, pinch) get no implicit spring; springs are for settling after release and for programmatic moves. 120 Hz on a real device is still unchecked.
 
+## 2026-11-27 — The row keeps sliding after a week flip
+
+Two days later a sideways report came in. Within the current week, dragging a daily event slid all seven blocks as one row. But after holding at the edge to flip to the next week and continuing to drag, the row stopped moving together: only the start date seemed to change, and blocks popped in and out column by column.
+
+Before the flip, neighbor-week occurrences were laid out in virtual columns off screen, and the whole row was offset by the dragged block's column shift and clipped at the grid edge. After the flip that layer was dropped and each occurrence was placed directly at its final position. Those blocks have date-keyed ids, so every column change swapped which blocks existed instead of moving any of them. Columns whose source sat in the previous week were left empty, which opened a gap between the dragged block and the row.
+
+The fix keeps the same layer after the flip. Each occurrence is anchored at its source date's virtual column relative to the week now on screen, and the shift is the dragged block's current column minus its original date's virtual column. A flip lowers every virtual column by one week and raises the shift by one week, so on-screen positions don't move and the row doesn't jump. A unit test pins that.
+
+Two alternatives lost:
+
+- **Springs or insert transitions on the final-position blocks**: with date-keyed ids, different blocks come and go instead of moving.
+- **Restart the layer at shift 0 on flip**: the row jumps by a week.
+
+We missed it because XCUITest's `press(…thenDragTo:…thenHoldForDuration:)` is a single segment, so the finger lifts after the hold and only the still frame after the flip got checked. This time the probe built one continuous touch with `XCPointerEventPath` and `XCSynthesizedEventRecord`, called by name at runtime because there are no headers. The touch went press, edge, hold, four columns left, two right, release. The 8 fps recording showed the row staying attached to the dragged block, with edge blocks clipped as they slid in and out. Real devices and the "this and following" scope are still unchecked.
+
 ## History
 
 - 2026-11-25 — detached block time from the spring while dragging
+- 2026-11-27 — row keeps sliding after a week flip; verified with a synthesized multi-segment drag
