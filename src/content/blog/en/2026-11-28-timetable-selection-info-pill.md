@@ -1,6 +1,6 @@
 ---
 title: "One pill for a selected event, locked or not — no scope, tap to edit"
-date: 2026-11-28T12:05:27+09:00
+date: 2026-11-28T13:17:48+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "design"]
 summary: "The pill under the calendar grid said different things depending on the lock. It now shows the editor's own headline — time / length and repeat / period — and opens the editor when tapped."
@@ -30,4 +30,10 @@ Equal columns clipped the period once the occurrence buttons took their space. T
 
 ## What's left
 
-The locked calendar lost the old card's memo box and copy button; memos are read in the block and the editor. Timetables (not calendars) keep their locked card. Checked on the iPhone simulator only so far.
+The locked calendar lost the old card's title (its memo box and copy button came back the same evening, below). Timetables (not calendars) keep their locked card. Checked on the iPhone simulator only so far.
+
+## Evening update — memo and copy are back when locked
+
+The first version dropped the memo box and copy button from the locked calendar. People who keep the calendar locked use the memo to know where to go and the copy button to send an event to a group chat, so both came back. The pill itself is unchanged. Memos sit in a glass card above it, using the old boxes, and copy is a round button to its right. Putting either inside the pill would have made its height vary per event and mixed its tap target (open the editor) with copy.
+
+![Locked calendar — memo card above the pill, copy button on the right](/blog/timetable-selection-info-pill/pill-locked-memo.png)
