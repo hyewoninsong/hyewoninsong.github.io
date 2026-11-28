@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-28T21:43:14+09:00
+date: 2026-11-28T23:15:47+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1302,6 +1302,18 @@ Removing the value and recomputing at each of the four ways to move an occurrenc
 
 It was checked by a unit test on the input alone. This time a UI test selects the moved occurrence, goes to the previous week and comes back, and we looked at all three captures. Verified on iPhone by swiping; the chip path, iPad and a real device are still to check.
 
+## 2026-11-28 late night — drag a block while its menu is open, and the menu still remembered the block from before the drag
+
+An occurrence moved as "This schedule only" leaves a dashed outline at its original slot; tapping the outline opens a menu with "Undo move" and "Select moved schedule". With that menu still open, drag or resize the moved block, then tap "Select moved schedule": the block snapped back to where it was before the drag.
+
+The menu held the block **by value**, captured at the tap. A struct copy does not hear about later saves. The menu item passed that copy to the selection routine, which filled its editing snapshot from it, and the grid redrew the old position.
+
+A day earlier this could not happen. As a system menu it blocked other input while open. Then two changes landed together: the menu became a card the grid draws itself, and tapping the outline also selects the moved block. A hand-drawn card blocks nothing and the block is already selected, so it drags right away. We only tested "open, then pick".
+
+The fix is one line: at the moment of the tap, look the block up again by id. We did not close the menu on drag, since "Undo move" is still useful afterward.
+
+The rule we kept: when a system menu becomes a custom one, write down what the user can now do while it is open, and tap each item after each of those. A menu should hold an id, not a value. This fix is covered by a unit test only; it has not been checked on screen yet.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1359,3 +1371,4 @@ It was checked by a unit test on the input alone. This time a UI test selects th
 - 2026-11-27 — the edge date chip slid across the grid on a week change: it was identified by an occurrence id that survives the change, so its position spring interpolated between the two weeks. The chip is now keyed by id, end and date.
 - 2026-11-27 — the dashed-outline menu moved from the horizontal system strip to the same vertical card as the scope menu. Splitting by role (choices vertical, short actions horizontal) lost: alternating shapes, and pagination in long languages.
 - 2026-11-28 night — a regression dropped the selection of a moved occurrence on every week change: a value added to an `onChange` input was read from the week on screen and flipped on the change itself, erasing the carried selection. The carry is no longer recomputed when the selected occurrence is not in that week.
+- 2026-11-28 late night — with the outline menu open, dragging or resizing the moved block and then tapping "Select moved schedule" snapped it back: the menu held a copy of the block from when it opened. The action now looks the block up by id.
