@@ -12,6 +12,10 @@
 //     renders, but as a bare slug with no icon, name or app-page link
 //   - every BLOG_APPS `appSlug` is a real apps-collection entry, so the
 //     app-page link it produces is not a 404
+//   - no post renders a strikethrough: GFM treats a single `~` pair as `~~`,
+//     so a range like "3~4명 ... 1~2번" silently strikes out the text between
+//     them, and inside image alt text the tildes just vanish. Ranges are
+//     written `3\~4` (fixed in seven posts on 2026-11-11, #699)
 //
 // Translation itself is optional (docs/specs/website.md §4.3), so a post that
 // exists in only one language is not a failure.
@@ -23,6 +27,11 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// The same micromark/mdast GFM parser Astro's markdown pipeline uses
+// (transitive dependencies of astro via @astrojs/markdown-remark).
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { gfm } from 'micromark-extension-gfm';
+import { gfmFromMarkdown } from 'mdast-util-gfm';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const locales = ['ko', 'en'];
@@ -154,4 +163,28 @@ test("a post's app is a BLOG_APPS key, and every BLOG_APPS appSlug is a real app
     if (!appSlugs.includes(slug)) bad.push(`BLOG_APPS appSlug "${slug}" has no src/content/apps/ko entry`);
   }
   assert.deepEqual(bad, []);
+});
+
+test('no blog post renders a strikethrough or loses a tilde from image alt text', () => {
+  const bad = [];
+  for (const locale of locales) {
+    for (const file of postFiles(locale)) {
+      const source = readPost(locale, file).replace(/^---\r?\n[\s\S]*?\r?\n---/, (fm) => fm.replace(/[^\n]/g, ''));
+      const tree = fromMarkdown(source, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] });
+      const visit = (node) => {
+        if (node.type === 'delete') {
+          bad.push(`${locale}/${file}:${node.position.start.line} strikethrough`);
+        }
+        if (node.type === 'image') {
+          const label = source.slice(node.position.start.offset, node.position.end.offset).split('](')[0];
+          const written = (label.replace(/\\~/g, '').match(/~/g) ?? []).length + (label.match(/\\~/g) ?? []).length;
+          const kept = (node.alt ?? '').split('~').length - 1;
+          if (kept < written) bad.push(`${locale}/${file}:${node.position.start.line} image alt drops "~"`);
+        }
+        for (const child of node.children ?? []) visit(child);
+      };
+      visit(tree);
+    }
+  }
+  assert.deepEqual(bad, [], 'write ranges as 3\\~4 — a bare ~ pair is GFM strikethrough');
 });

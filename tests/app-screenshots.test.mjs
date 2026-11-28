@@ -2,11 +2,14 @@
 // (src/pages/{en,ko}/apps/<slug>.astro) exists under public/, and that the
 // en and ko pages reference the same set of screenshots.
 //
-// Two layouts are covered:
+// Two legacy layouts are covered:
 //   - localized: `img('<name>')` helper -> public/apps/<slug>/<locale>/<name>.png
-//     (currently timetable)
 //   - flat: absolute "/apps/<slug>/<name>.png" paths written directly in the
-//     page, shared by both locales (superfont, notequiz, supertimers)
+//     page, shared by both locales
+// No live page uses either layout any more (2026-11-04): every static app page
+// renders through AppPage.astro with `shots: { iphone, ipad }`, which
+// tests/app-page-shots.test.mjs covers. These checks stay for pages restored
+// from src/_archive/.
 //
 // Run with: npm test   (node --test "tests/**/*.test.mjs")
 
