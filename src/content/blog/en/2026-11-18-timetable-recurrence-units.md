@@ -1,6 +1,6 @@
 ---
 title: "Adding 'first and third Friday' and 'every 3 days' without adding a chip"
-date: 2026-11-24T14:50:27+09:00
+date: 2026-11-28T11:52:40+09:00
 app: "timetable"
 tags: ["devlog", "design", "data"]
 summary: "Calendar repeats were weekly only. Two requests made us lay out everything the iCalendar standard offers and decide what to take and what to leave."
@@ -103,9 +103,9 @@ Dragging a repeating event in week view with "All events" or "This and following
 | Frequency | Dragged to another day |
 |---|---|
 | Daily, every N days | the other occurrences in the week slide the same way; on release the whole series, span included, moves by that many days |
-| Weekly | only the dragged block changes weekday; an occurrence already there steps aside to the nearest free weekday |
-| Monthly by weekday | the drop day's "nth weekday" becomes the rule |
-| Monthly by date | the dragged date becomes the drop date; a date already in the pattern is pushed to the nearest free date |
+| Weekly | only the dragged block changes weekday; an occurrence already there steps aside to the nearest free weekday. Never into another week (Nov 28) |
+| Monthly by weekday | the drop day's "nth weekday" becomes the rule. Never into another week (Nov 28) |
+| Monthly by date | the dragged date becomes the drop date; a date already in the pattern is pushed to the nearest free date. Never into another month (Nov 28) |
 | Monthly on the last day | not moved; it returns and a toast says why |
 | Yearly | same as monthly |
 
@@ -185,6 +185,28 @@ Ranges have no cap, so nothing may walk a whole range while drawing. Counting st
 
 Checked by eye on iPhone in Korean only. iPad, long chip labels and right-to-left are still open.
 
+## 2026-11-28 — A repeating event stays inside its own period
+
+Last-day repeats already refused to move to another day. The rest did not. A weekly event held at the screen edge showed "switch the scope to This event only", a "30th of every month" event dropped on December 1st quietly became "the 1st", and a yearly November 25th dragged into December took next year's occurrence with it.
+
+![Dragging a last-day repeat sideways keeps it on its day and shows a toast](/blog/timetable-recurrence-units/last-day-drag-toast.png)
+
+Dragging with "All events" or "This and following" now stays inside the period the rule ties each occurrence to:
+
+| Repeat | Bound to | Crossing it |
+|---|---|---|
+| Weekly, biweekly, nth weekday of the month or year | its week | "Events that repeat on a weekday can't move to another week." |
+| A date of the month or year | its month | "Events that repeat on a date can't move to another month." |
+| Last day of the month or year | its day | "…can only move to a different time on that day." |
+
+The block snaps back with a warning haptic. Moves inside the week or month still rewrite the rule; daily and every-N-days keep shifting the whole series.
+
+**Why the period.** Monday-weekly dropped on next week's Wednesday can only be read as "every Wednesday", but the hand also skipped a week, and the rule has nowhere to put that. Inside the period a drag changes one value; across it, it carries a meaning the rule cannot hold. Two options lost: silently switching to "This event only" (the app never changes the chosen scope behind your back), and keeping the old "switch the scope" message (it gave a way out but no reason, and said "week" even when the problem was the month).
+
+**At the edge.** Date-based repeats may still flip weeks at the screen edge, but only into a week that still has a day of the original month. Drop on one of those days and it moves; drop on a day of the next month and it returns.
+
+To move a single occurrence anywhere, pick "This event only" first. One function decides all of this, unit-tested; on device only the last-day case has been tried.
+
 ## History
 
 - 2026-11-18 — day, month and year units added inside the "Custom" chip
@@ -193,3 +215,4 @@ Checked by eye on iPhone in Korean only. iPad, long chip labels and right-to-lef
 - 2026-11-21 — dragging aligned per frequency; Yearly picks a month, then the monthly basis
 - 2026-11-22 — "No end" added and made the default (no end date in the file)
 - 2026-11-24 — the end is picked first: on a date, after a count, or never (the file still stores an end date)
+- 2026-11-28 — scope drags stay inside the repeat's period (week, month or day) and a toast says why
