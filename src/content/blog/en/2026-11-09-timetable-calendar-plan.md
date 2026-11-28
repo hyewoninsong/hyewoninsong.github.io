@@ -1,6 +1,6 @@
 ---
 title: "A calendar on top of the timetable — alternating weeks and \"this day only\" changes"
-date: 2026-11-27T02:30:37+09:00
+date: 2026-11-28T21:43:14+09:00
 app: "timetable"
 tags: ["devlog", "swiftui", "data", "android"]
 summary: "Assign a timetable to each week (alternating weeks included) and keep cancellations and makeup classes on their dates only. The grid was reused as is."
@@ -1280,6 +1280,28 @@ The secondary-click menu for pointers stays a system menu; with a pointer it is 
 
 Checked on iPhone in English. Long languages, right-to-left languages, iPad and foldables are still to do.
 
+## 2026-11-28 night — selecting a moved occurrence and changing weeks dropped the selection every time; an hour-old fix caused it
+
+Select an occurrence that was moved to another week, go back to its original week, and the dashed outline there should stay selected; return and the occurrence is selected again. Instead the selection was lost on every week change, by chip or by swipe.
+
+![The original week after arriving with a moved occurrence selected — the dashed outline, thread and date chip stay in black](/blog/timetable-calendar-plan/carry-parked-home-week.png)
+
+### A value added to a trigger also changed for another reason
+
+Earlier that evening we fixed a neighbor bug: select first, then move the occurrence, and the carried selection stayed stale. The carry is recomputed only when an `onChange` input bundle (selection, scope, lock) changes, and moving changes none of them. So we added "is the selected occurrence a moved one" to the bundle.
+
+That value is looked up in **the week on screen**. On the first evaluation after a week change the selection still belongs to the old week, the lookup finds nothing, and the value flips from true to false. The bundle changed, so the carry is recomputed, without an occurrence to read, and returns "nothing to carry", erasing what it held. The week-change handler that runs next has nothing left to continue.
+
+Unmoved occurrences never flip that value, so only moved ones broke, and the unit test from the earlier fix passed.
+
+### Guard the computation, not the trigger
+
+Removing the value and recomputing at each of the four ways to move an occurrence lost; so did reordering the `onChange` handlers, and reading the value from the whole plan (another input changing in the same evaluation reopens the hole). The fix: with a single selection that is not in the week on screen, do not recompute. That only happens right after a week change, and the handler takes over from there.
+
+### The earlier fix shipped without looking at the screen
+
+It was checked by a unit test on the input alone. This time a UI test selects the moved occurrence, goes to the previous week and comes back, and we looked at all three captures. Verified on iPhone by swiping; the chip path, iPad and a real device are still to check.
+
 ## History
 
 - 2026-11-09, early morning — calendar phase 1: week assignment, day-only exceptions, month view, virtual timetable.
@@ -1336,3 +1358,4 @@ Checked on iPhone in English. Long languages, right-to-left languages, iPad and 
 - 2026-11-27 — the thread of a moved occurrence lands just inside the block's edge (the facing edge, or a corner when it arrives from the side) instead of the center, where it covered the title. The outline end stays centered.
 - 2026-11-27 — the edge date chip slid across the grid on a week change: it was identified by an occurrence id that survives the change, so its position spring interpolated between the two weeks. The chip is now keyed by id, end and date.
 - 2026-11-27 — the dashed-outline menu moved from the horizontal system strip to the same vertical card as the scope menu. Splitting by role (choices vertical, short actions horizontal) lost: alternating shapes, and pagination in long languages.
+- 2026-11-28 night — a regression dropped the selection of a moved occurrence on every week change: a value added to an `onChange` input was read from the week on screen and flipped on the change itself, erasing the carried selection. The carry is no longer recomputed when the selected occurrence is not in that week.
