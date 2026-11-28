@@ -1310,9 +1310,9 @@ The menu held the block **by value**, captured at the tap. A struct copy does no
 
 A day earlier this could not happen. As a system menu it blocked other input while open. Then two changes landed together: the menu became a card the grid draws itself, and tapping the outline also selects the moved block. A hand-drawn card blocks nothing and the block is already selected, so it drags right away. We only tested "open, then pick".
 
-The fix is one line: at the moment of the tap, look the block up again by id. We did not close the menu on drag, since "Undo move" is still useful afterward.
+The first fix was one line: at the moment of the tap, look the block up again by id. But a block moving under an open menu was odd in itself, so drags and long presses no longer start while the menu is up. An attempted drag just closes the menu, the same as a tap outside the card. Closing the menu and letting the drag continue lost: a tap outside only dismisses, so a drag that goes through would split the grammar. The lookup stays as a guard.
 
-The rule we kept: when a system menu becomes a custom one, write down what the user can now do while it is open, and tap each item after each of those. A menu should hold an id, not a value. This fix is covered by a unit test only; it has not been checked on screen yet.
+The rule we kept: a custom menu loses what a modal one gives for free, namely nothing else happening while it is open. Decide which gestures to block, and tap each item after each one you leave. A menu should hold an id, not a value. This fix is covered by a unit test only; it has not been checked on screen yet.
 
 ## History
 
@@ -1371,4 +1371,4 @@ The rule we kept: when a system menu becomes a custom one, write down what the u
 - 2026-11-27 — the edge date chip slid across the grid on a week change: it was identified by an occurrence id that survives the change, so its position spring interpolated between the two weeks. The chip is now keyed by id, end and date.
 - 2026-11-27 — the dashed-outline menu moved from the horizontal system strip to the same vertical card as the scope menu. Splitting by role (choices vertical, short actions horizontal) lost: alternating shapes, and pagination in long languages.
 - 2026-11-28 night — a regression dropped the selection of a moved occurrence on every week change: a value added to an `onChange` input was read from the week on screen and flipped on the change itself, erasing the carried selection. The carry is no longer recomputed when the selected occurrence is not in that week.
-- 2026-11-28 late night — with the outline menu open, dragging or resizing the moved block and then tapping "Select moved schedule" snapped it back: the menu held a copy of the block from when it opened. The action now looks the block up by id.
+- 2026-11-28 late night — with the outline menu open, dragging or resizing the moved block and then tapping "Select moved schedule" snapped it back: the menu held a copy of the block from when it opened. Drags and long presses are blocked while the menu is up, and the action looks the block up by id.
